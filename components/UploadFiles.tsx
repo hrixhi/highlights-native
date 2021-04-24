@@ -1,27 +1,35 @@
 import React, { useCallback, useState } from 'react'
-import { Text, View } from './Themed'
+import { Text, TouchableOpacity, View } from './Themed'
 import axios from 'axios'
 import { Ionicons } from '@expo/vector-icons'
 import { Dimensions } from 'react-native'
+import * as DocumentPicker from 'expo-document-picker';
+
 
 // const mime = require('mime-types')
 
 const FileUpload: React.FC<any> = (props: any) => {
 
     const [uploading, setUploading] = useState(false)
-    const onChange = useCallback((e) => {
+    const onClick = useCallback(async () => {
         setUploading(true)
-        e.preventDefault();
-        const file = e.target.files[0]
-        if (file === null) {
+        const result = await DocumentPicker.getDocumentAsync()
+        if (result.type === 'cancel') {
             setUploading(false)
             return;
         }
-        //let type = mime.extension(file.type);
-        let type = ''
-        if (type === 'mpga') {
-            type = 'mp3'
-        }
+
+        // ImagePicker saves the taken photo to disk and returns a local URI to it
+        let { name, size, uri } = result;
+        let nameParts = name.split('.');
+        let type = nameParts[nameParts.length - 1];
+        const file = {
+            name: name,
+            size: size,
+            uri: uri,
+            type: "application/" + type
+        };
+
         fileUpload(file, type).then(response => {
             const { data } = response;
             if (data.status === "success") {
@@ -47,6 +55,7 @@ const FileUpload: React.FC<any> = (props: any) => {
     }, [])
 
     return <View style={{
+        backgroundColor: '#fff',
         paddingTop: 3.5,
         paddingBottom: Dimensions.get('window').width < 768 ? 5 : 0
     }}>
@@ -54,9 +63,24 @@ const FileUpload: React.FC<any> = (props: any) => {
             uploading ? <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                 Importing...
             </Text> :
-                <Text>
-                    Upload here...
-                </Text>
+                <TouchableOpacity
+                    onPress={() => onClick()}
+                    style={{ backgroundColor: 'white', borderRadius: 15, }}>
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 25,
+                        color: '#202025',
+                        fontSize: 12,
+                        backgroundColor: '#f4f4f6',
+                        borderRadius: 10,
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        overflow: 'hidden',
+                        height: 25
+                    }}>
+                        CHOOSE FILE
+                    </Text>
+                </TouchableOpacity>
             // <div style={{
             //     display: 'flex', flexDirection: 'row'
             // }}>

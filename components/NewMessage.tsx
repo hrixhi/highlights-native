@@ -202,7 +202,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 }
                                 setShowImportOptions(!showImportOptions)
                             }}
-                            style={{ alignSelf: 'flex-end', flex: 1 }}
+                            style={{ alignSelf: 'flex-end', flex: 1, backgroundColor: '#fff' }}
                         >
                             <Text style={{
                                 color: '#a2a2aa',
@@ -218,7 +218,12 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         </TouchableOpacity>
                 }
             </View>
-            <View style={{ flexDirection: 'row', paddingVertical: 10 }}>
+            <View style={{ flexDirection: 'row', paddingVertical: 10, backgroundColor: '#fff' }}>
+                {
+                    showImportOptions && !imported ?
+                        <Ionicons name='arrow-back' size={13} color={'a2a2aa'} onPress={() => setShowImportOptions(false)} style={{ marginRight: 10, marginTop: 10 }} />
+                        : null
+                }
                 {
                     showImportOptions && !imported ?
                         <FileUpload
@@ -235,7 +240,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
             {
                 imported ?
                     <View style={{ backgroundColor: 'white', flex: 1 }}>
-                        <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%' }}>
+                        <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%', backgroundColor: '#fff' }}>
                             <TextInput
                                 value={title}
                                 style={styles.input}
@@ -244,7 +249,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 placeholderTextColor={'#a2a2aa'}
                             />
                         </View>
-                        <View>
+                        <View style={{ backgroundColor: '#fff' }}>
                             <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingVertical: 50, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                 <Ionicons name='document-outline' size={50} color='#a2a2aa' />
                             </Text>
@@ -299,7 +304,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
             }
             {
                 props.users ? null :
-                    <View style={{ display: 'flex', flexDirection: 'row' }}>
+                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
                         {
                             !cueId && !parentId ?
                                 <View style={{ width: '33.33%', backgroundColor: 'white' }}>

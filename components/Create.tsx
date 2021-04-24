@@ -26,6 +26,8 @@ import QuizCreate from './QuizCreate';
 import TeXToSVG from "tex-to-svg";
 // import EquationEditor from "equation-editor-react";
 import { WebView } from 'react-native-webview';
+import * as DocumentPicker from 'expo-document-picker';
+import { TimePicker } from 'react-native-simple-time-picker';
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -515,6 +517,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }).start();
     }, [])
 
+
     const onChange = useCallback((value, { action, removedValue }) => {
         switch (action) {
             case 'remove-value':
@@ -601,46 +604,44 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     paddingBottom: 4,
                     backgroundColor: 'white',
                 }} onTouchStart={() => Keyboard.dismiss()}>
-                    <View style={{ flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', flex: 1 }}>
-                        {
-                            showImportOptions ? null :
-                                <RichToolbar
-                                    style={{
-                                        flexWrap: 'wrap',
-                                        backgroundColor: 'white',
-                                        height: 28,
-                                        overflow: 'visible'
-                                    }}
-                                    iconSize={12}
-                                    editor={RichText}
-                                    disabled={false}
-                                    iconTint={"#a2a2aa"}
-                                    selectedIconTint={"#a2a2aa"}
-                                    disabledIconTint={"#a2a2aa"}
-                                    actions={
-                                        imported || isQuiz ? ["clear"] :
-                                            [
-                                                actions.setBold,
-                                                actions.setItalic,
-                                                actions.setUnderline,
-                                                actions.insertBulletsList,
-                                                actions.insertOrderedList,
-                                                actions.checkboxList,
-                                                actions.insertLink,
-                                                actions.insertImage,
-                                                // "insertCamera",
-                                                actions.undo,
-                                                actions.redo,
-                                                "clear"
-                                            ]}
-                                    iconMap={{
-                                        ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
-                                        ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />
-                                    }}
-                                    onPressAddImage={galleryCallback}
-                                    insertCamera={cameraCallback}
-                                />
-                        }
+                    <View style={{ flexDirection: imported || isQuiz || showImportOptions ? 'row' : 'column', flex: 1 }}>
+                        <RichToolbar
+                            style={{
+                                flexWrap: 'wrap',
+                                backgroundColor: 'white',
+                                height: 28,
+                                overflow: 'visible'
+                            }}
+                            iconSize={12}
+                            editor={RichText}
+                            disabled={false}
+                            iconTint={"#a2a2aa"}
+                            selectedIconTint={"#a2a2aa"}
+                            disabledIconTint={"#a2a2aa"}
+                            actions={
+                                imported || isQuiz || showImportOptions ? ["back", "clear"] :
+                                    [
+                                        actions.setBold,
+                                        actions.setItalic,
+                                        actions.setUnderline,
+                                        actions.insertBulletsList,
+                                        actions.insertOrderedList,
+                                        actions.checkboxList,
+                                        actions.insertLink,
+                                        actions.insertImage,
+                                        // "insertCamera",
+                                        actions.undo,
+                                        actions.redo,
+                                        "clear"
+                                    ]}
+                            iconMap={{
+                                ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
+                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />,
+                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={13} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                            }}
+                            onPressAddImage={galleryCallback}
+                            insertCamera={cameraCallback}
+                        />
                         {
                             imported || !showImportOptions ? null :
                                 <FileUpload
@@ -803,11 +804,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             <Text>
                                                 duration picker...
                                           </Text>
-                                            {/* <DurationPicker
+                                            <TimePicker
+                                                hoursUnit={'h'}
+                                                minutesUnit={'m'}
+                                                secondsUnit={'s'}
+                                                value={duration}
                                                 onChange={onChangeDuration}
-                                                initialDuration={{ hours: 1, minutes: 0, seconds: 0 }}
-                                                maxHours={6}
-                                            /> */}
+                                                pickerShows={['hours', 'minutes', 'seconds']} />
                                         </View> : null
                                 }
                             </View> : null

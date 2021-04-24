@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkChannelStatus, createChannel, createUser, subscribe, updateUser } from '../graphql/QueriesAndMutations';
 import Alert from '../components/Alert'
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -187,7 +189,15 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             const displayName = uniqueNamesGenerator({
                 dictionaries: [adjectives, colors, animals]
             });
-            const notificationId = 'NOT_SET';
+            let experienceId = undefined;
+            if (!Constants.manifest) {
+                // Absence of the manifest means we're in bare workflow
+                experienceId = '@username/example';
+            }
+            const expoToken = await Notifications.getExpoPushTokenAsync({
+                experienceId,
+            });
+            const notificationId = expoToken.data
             server.mutate({
                 mutation: createUser,
                 variables: {

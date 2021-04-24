@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Linking, StyleSheet } from 'react-native';
 import { Text, TouchableOpacity, View } from './Themed';
 import _ from 'lodash'
 import { Ionicons } from '@expo/vector-icons';
@@ -57,11 +57,13 @@ const ThreadReplyCard: React.FunctionComponent<{ [label: string]: any }> = (prop
                         {
                             imported ?
                                 // <a download={true} href={url} style={{ textDecoration: 'none' }}>
-                                    <View style={{ backgroundColor: '#f4f4f6', flex: 1 }}>
-                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 17, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                            <Ionicons name='document-outline' size={17} color='#a2a2aa' /> {title}.{type}
-                                        </Text>
-                                    </View>
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(url)}
+                                    style={{ backgroundColor: '#f4f4f6', flex: 1 }}>
+                                    <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 17, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                        <Ionicons name='document-outline' size={17} color='#a2a2aa' /> {title}.{type}
+                                    </Text>
+                                </TouchableOpacity>
                                 // </a>
                                 : <HTMLView value={props.thread.message} />
                         }

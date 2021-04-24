@@ -203,7 +203,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 <View style={{ backgroundColor: 'white', flex: 1 }}>
                     {
                         isOwner ?
-                            <View>
+                            <View style={{ backgroundColor: '#fff' }}>
                                 <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white' }}>
                                     <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                         Initiate Meeting & Allow Participants
@@ -227,7 +227,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 </View>
                             </View> : null
                     }
-                    {
+                    {/* {
                         meetingOn ?
                             <View>
                                 <Text
@@ -235,13 +235,13 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 >
                                     Switching from this window to any other window within Cues will revoke your participation from the classroom. {'\n'}
                                         To continue using Cues without exiting the classroom, open it in a
-                                        {/* <a href='https://web.cuesapp.co' style={{ color: '#3B64F8' }} target='_blank'> */}
+                                        {/* <a href='https://web.cuesapp.co' style={{ color: '#3B64F8' }} target='_blank'> 
                                             new tab
-                                            {/* </a> */}
+                                            {/* </a> 
                                              and continue working simultaneously.
                                 </Text>
                             </View> : null
-                    }
+                    } */}
                     {
                         meetingOn ?
                             <Text>
@@ -295,7 +295,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             </View>
                     }
                     {
-                        !isOwner ? <View>
+                        !isOwner ? <View style={{ backgroundColor: '#fff' }}>
                             <Text
                                 ellipsizeMode="tail"
                                 style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, marginVertical: 25 }}>
@@ -306,11 +306,12 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     {
                         isOwner ?
                             <View style={{
+                                backgroundColor: '#fff',
                                 flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                                 marginBottom: 40,
                                 marginTop: 25
                             }}>
-                                <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%' }}>
+                                <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%', backgroundColor: '#fff' }}>
                                     <Text
                                         ellipsizeMode="tail"
                                         style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
@@ -321,6 +322,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     width: Dimensions.get('window').width < 768 ? '100%' : '30%',
                                     flexDirection: 'row',
                                     marginTop: 12,
+                                    backgroundColor: '#fff',
                                     marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
                                 }}>
                                     <Text style={styles.text}>
@@ -358,7 +360,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 <View style={{
                                     width: Dimensions.get('window').width < 768 ? '100%' : '30%',
                                     flexDirection: 'row',
-                                    marginTop: 12,
+                                    paddingTop: 12,
+                                    backgroundColor: '#fff',
                                     marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
                                 }}>
                                     <Text style={styles.text}>
@@ -394,6 +397,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     />
                                 </View>
                                 <View style={{
+                                    backgroundColor: '#fff',
                                     width: Dimensions.get('window').width < 768 ? '100%' : '10%',
                                     flexDirection: 'row',
                                     display: 'flex',
@@ -401,7 +405,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 }}>
                                     <TouchableOpacity
                                         style={{
-                                            marginTop: 9
+                                            marginTop: 9,
+                                            backgroundColor: '#fff'
                                         }}
                                         onPress={() => handleCreate()}
                                     >
@@ -436,8 +441,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     }
                     {
                         isOwner ?
-                            <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25 }}>
-                                <View style={{ paddingVertical: 15 }}>
+                            <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25, backgroundColor: '#fff' }}>
+                                <View style={{ paddingVertical: 15, backgroundColor: '#fff' }}>
                                     {
                                         showAttendances ?
                                             <TouchableOpacity
@@ -467,10 +472,10 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 {
 
                                     showAttendances ?
-                                        <View>
+                                        <View style={{ backgroundColor: '#fff' }}>
                                             {
                                                 attendances.length === 0 ?
-                                                    <View style={{ backgroundColor: 'white', flex: 1 }}>
+                                                    <View style={{ backgroundColor: 'white', flex: 1, }}>
                                                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                                             No attendances.
                                                         </Text>

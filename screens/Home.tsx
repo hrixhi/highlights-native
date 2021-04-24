@@ -7,6 +7,7 @@ import { Text, TouchableOpacity, View } from '../components/Themed';
 import TopBar from '../components/TopBar';
 import { Ionicons } from '@expo/vector-icons';
 import Menu from '../components/Menu'
+import Constants from 'expo-constants';
 import Create from '../components/Create';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Update from '../components/Update';
@@ -15,7 +16,7 @@ import { defaultCues, defaultRandomShuffleFrequency, defaultSleepInfo } from '..
 import Walkthrough from '../components/Walkthrough';
 import Channels from '../components/Channels';
 import { fetchAPI } from '../graphql/FetchAPI';
-import { createUser, getSubscriptions, getCues, unsubscribe, saveConfigToCloud, saveCuesToCloud, login, getCuesFromCloud, findUserById, resetPassword } from '../graphql/QueriesAndMutations';
+import { createUser, getSubscriptions, getCues, unsubscribe, saveConfigToCloud, saveCuesToCloud, login, getCuesFromCloud, findUserById, resetPassword, updateNotificationId } from '../graphql/QueriesAndMutations';
 import Discussion from '../components/Discussion';
 import Subscribers from '../components/Subscribers';
 import Profile from '../components/Profile';
@@ -23,6 +24,7 @@ import { validateEmail } from '../helpers/emailCheck';
 import Grades from '../components/Grades';
 import Calendar from '../components/Calendar';
 import Meeting from '../components/Meeting';
+import * as Notifications from 'expo-notifications';
 
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -344,7 +346,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         const displayName = uniqueNamesGenerator({
           dictionaries: [adjectives, colors, animals]
         });
-        const notificationId = 'NOT_SET';
+        let experienceId = undefined;
+        if (!Constants.manifest) {
+          // Absence of the manifest means we're in bare workflow
+          experienceId = '@username/example';
+        }
+        const expoToken = await Notifications.getExpoPushTokenAsync({
+          experienceId,
+        });
+        const notificationId = expoToken.data
         server.mutate({
           mutation: createUser,
           variables: {
@@ -365,6 +375,33 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             // no message needed here
           })
         // OPEN LOGIN WINDOW
+      } else {
+        // update notification Id if its missing...
+        const user = JSON.parse(u)
+        if (user.notificationId === 'NOT_SET') {
+          let experienceId = undefined;
+          if (!Constants.manifest) {
+            // Absence of the manifest means we're in bare workflow
+            experienceId = '@username/example';
+          }
+          const expoToken = await Notifications.getExpoPushTokenAsync({
+            experienceId,
+          });
+          const notificationId = expoToken.data
+          server.mutate({
+            mutation: updateNotificationId,
+            variables: {
+              userId: user._id,
+              notificationId
+            }
+          }).then(async res => {
+            if (res.data && res.data.user.updateNotificationId) {
+              user.notificationId = notificationId;
+              const sU = JSON.stringify(user)
+              await AsyncStorage.setItem('user', sU)
+            }
+          }).catch(err => console.log(err))
+        }
       }
       // LOAD RANDOM SHUFFLE FREQUENCY
       if (f) {

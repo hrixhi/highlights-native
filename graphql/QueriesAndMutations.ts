@@ -235,6 +235,13 @@ mutation($email: String!) {
     }
 }
 `
+export const updateNotificationId = gql`
+mutation($notificationId: String!, $userId: String!) {
+    user {
+        updateNotificationId(userId: $userId, notificationId: $notificationId) 
+    }
+}
+`
 /**
  * ALL
  * QUERIES

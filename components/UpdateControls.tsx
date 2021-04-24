@@ -11,7 +11,7 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import { createCue, deleteForEveryone, getChannels, getQuiz, getSharedWith, markAsRead, shareCueWithMoreIds, start, submit } from '../graphql/QueriesAndMutations';
 import * as ImagePicker from 'expo-image-picker';
 // import * as ImageManipulator from 'expo-image-manipulator';
-// import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import {
     actions,
     RichEditor,
@@ -28,6 +28,7 @@ import TeXToSVG from "tex-to-svg";
 // import EquationEditor from "equation-editor-react";
 import Collapsible from 'react-native-collapsible';
 import { WebView } from 'react-native-webview';
+import * as DocumentPicker from 'expo-document-picker';
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -392,6 +393,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
     }, [props.cue._id, solutions, deadline])
 
+    const fileUpload = useCallback(async () => {
+        const file = await DocumentPicker.getDocumentAsync()
+        console.log(file)
+    }, [])
+
     const handleUpdate = useCallback(async () => {
         if (submissionImported && submissionTitle === '') {
             Alert("Enter title.")
@@ -719,6 +725,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         updateStatusAsRead()
     }, [props.cue.status])
 
+    const download = useCallback(async (original: boolean) => {
+        Linking.openURL(original ? url : submissionUrl);
+    }, [submissionUrl, url, submissionTitle, submissionType, type, title])
+
     const width = Dimensions.get('window').width;
 
     if (loading) {
@@ -865,12 +875,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     paddingBottom: 4,
                     backgroundColor: 'white'
                 }} onTouchStart={() => Keyboard.dismiss()}>
-                    <View style={{ flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', flex: 1 }}>
+                    <View style={{ flexDirection: submissionImported || showImportOptions ? 'row' : 'column', flex: 1, backgroundColor: '#fff' }}>
                         {
                             (showOriginal)
                                 ? <View style={{ height: 28, backgroundColor: '#fff' }} />
                                 : (
-                                    showImportOptions || (props.cue.submittedAt && props.cue.submittedAt !== '') || submitted ?
+                                    (props.cue.submittedAt && props.cue.submittedAt !== '') || submitted ?
                                         <View style={{ height: 28, backgroundColor: '#fff' }} />
                                         :
                                         <RichToolbar
@@ -888,7 +898,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             selectedIconTint={"#a2a2aa"}
                                             disabledIconTint={"#a2a2aa"}
                                             actions={
-                                                submissionImported ? ["clear"] :
+                                                submissionImported || showImportOptions ? ["back", "clear"] :
                                                     [
                                                         actions.setBold,
                                                         actions.setItalic,
@@ -905,7 +915,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                     ]}
                                             iconMap={{
                                                 ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
-                                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />
+                                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />,
+                                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={13} color={tintColor} onPress={() => setShowImportOptions(false)} />
                                             }}
                                             onPressAddImage={galleryCallback}
                                             insertCamera={cameraCallback}
@@ -951,7 +962,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     textAlign: 'right',
                                     paddingRight: 10,
                                 }}
-                                    onPress={() => setShowImportOptions(true)}
+                                    onPress={() => {
+                                        setShowImportOptions(true)
+                                        fileUpload()
+                                    }}
                                 >
                                     IMPORT     {Dimensions.get('window').width < 768 ? '' : '|  '}
                                 </Text> :
@@ -1066,7 +1080,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         :
                                         <View style={{ marginLeft: 25, marginTop: 20, alignSelf: 'flex-start', backgroundColor: '#fff' }}>
                                             {/* <a download={true} href={url} style={{ textDecoration: 'none' }}> */}
-                                            <Ionicons name='cloud-download-outline' color='#a2a2aa' size={20} />
+                                            <Ionicons name='cloud-download-outline' color='#a2a2aa' size={20} onPress={() => download(true)} />
                                             {/* </a> */}
                                         </View>
                                 }
@@ -1114,7 +1128,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 {props.cue.submittedAt && props.cue.submittedAt !== '' ?
                                     <View style={{ width: 175, marginLeft: 25, marginTop: 5, alignSelf: 'flex-start' }}>
                                         {/* <a download={true} href={submissionUrl} style={{ textDecoration: 'none' }}> */}
-                                        <Ionicons name='cloud-download-outline' color='#a2a2aa' size={20} />
+                                        <Ionicons name='cloud-download-outline' color='#a2a2aa' size={20} onPress={() => download(false)} />
                                         {/* </a> */}
                                     </View> : null
                                 }
