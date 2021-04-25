@@ -47,7 +47,6 @@ export const duringSleep = (a: number, b: number, n: number) => {
 export const getNextDate = (frequency: string, date: Date) => {
 
     let newDate = new Date(date)
-
     switch (frequency) {
         case "0":
             // never

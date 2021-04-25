@@ -76,7 +76,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
         loadThreads()
     }, [props.channelId])
 
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 75 : Dimensions.get('window').height;
+    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
     return (
         <ScrollView style={{
             width: '100%',

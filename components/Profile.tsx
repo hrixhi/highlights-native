@@ -21,6 +21,7 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             backgroundColor: 'white',
             borderTopRightRadius: 30,
             borderTopLeftRadius: 30,
+            height: Dimensions.get('window').width < 1024 ? (Dimensions.get('window').height - 85) : Dimensions.get('window').height,
         }}
             onTouchMove={() => Keyboard.dismiss()}
         >

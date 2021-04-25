@@ -289,35 +289,37 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             base64: true
         });
         if (!result.cancelled) {
-            RichText.current.insertImage(result.uri, 'border-radius: 8px')
-            // const dir = FileSystem.documentDirectory + 'images'
-            // const dirInfo = await FileSystem.getInfoAsync(dir);
-            // if (!dirInfo.exists) {
-            //     await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-            // }
-            // const fileName = Math.round((Math.random() * 100)).toString();
-            // FileSystem.copyAsync({
-            //     from: result.uri,
-            //     to: dir + '/' + fileName + '.jpg'
-            // }).then(r => {
-            //     ImageManipulator.manipulateAsync(
-            //         (dir + '/' + fileName + '.jpg'),
-            //         [],
-            //         { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-            //     ).then(res => {
-            //         RichText.current.insertImage(
-            //             'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
-            //         )
-            //     }).catch(err => {
-            //         Alert("Unable to load image.")
-            //     });
-            // }).catch((err) => {
-            //     Alert("Something went wrong.")
-            // })
+            const dir = FileSystem.documentDirectory + 'images'
+            const dirInfo = await FileSystem.getInfoAsync(dir);
+            if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+            }
+            const fileName = Math.round((Math.random() * 100)).toString();
+            FileSystem.copyAsync({
+                from: result.uri,
+                to: dir + '/' + fileName + '.jpg'
+            }).then(r => {
+                ImageManipulator.manipulateAsync(
+                    (dir + '/' + fileName + '.jpg'),
+                    [],
+                    { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+                ).then(res => {
+                    RichText.current.insertImage(
+                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
+                    )
+                    // setReloadEditorKey(Math.random())
+                }).catch(err => {
+                    Alert("Unable to load image.")
+                });
+            }).catch((err) => {
+                Alert("Something went wrong.")
+            })
         }
+
     }, [RichText, RichText.current])
 
     const galleryCallback = useCallback(async () => {
+
         const gallerySettings = await ImagePicker.getMediaLibraryPermissionsAsync()
         if (!gallerySettings.granted) {
             await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -326,37 +328,37 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 return;
             }
         }
+
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 1,
             base64: true
         });
         if (!result.cancelled) {
-            RichText.current.insertImage(result.uri, 'border-radius: 8px')
-            // const dir = FileSystem.documentDirectory + 'images'
-            // const dirInfo = await FileSystem.getInfoAsync(dir);
-            // if (!dirInfo.exists) {
-            //     await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-            // }
-            // const fileName = Math.round((Math.random() * 100)).toString();
-            // FileSystem.copyAsync({
-            //     from: result.uri,
-            //     to: dir + '/' + fileName + '.jpg'
-            // }).then((r) => {
-            //     ImageManipulator.manipulateAsync(
-            //         (dir + '/' + fileName + '.jpg'),
-            //         [],
-            //         { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-            //     ).then(res => {
-            //         RichText.current.insertImage(
-            //             'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
-            //         )
-            //     }).catch(err => {
-            //         Alert("Unable to load image.")
-            //     });
-            // }).catch((err) => {
-            //     Alert("Something went wrong.")
-            // })
+            const dir = FileSystem.documentDirectory + 'images'
+            const dirInfo = await FileSystem.getInfoAsync(dir);
+            if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+            }
+            const fileName = Math.round((Math.random() * 100)).toString();
+            FileSystem.copyAsync({
+                from: result.uri,
+                to: dir + '/' + fileName + '.jpg'
+            }).then((r) => {
+                ImageManipulator.manipulateAsync(
+                    (dir + '/' + fileName + '.jpg'),
+                    [],
+                    { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+                ).then(res => {
+                    RichText.current.insertImage(
+                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
+                    )
+                }).catch(err => {
+                    Alert("Unable to load image.")
+                });
+            }).catch((err) => {
+                Alert("Something went wrong.")
+            })
         }
     }, [RichText, RichText.current])
 
@@ -738,7 +740,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     return (
         <View style={{
             width: '100%',
-            // height: Dimensions.get('window').height - 75,
+            // height: Dimensions.get('window').height - 85,
             backgroundColor: 'white',
             borderTopLeftRadius: 30,
             borderTopRightRadius: 30,
@@ -908,7 +910,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                         actions.checkboxList,
                                                         actions.insertLink,
                                                         actions.insertImage,
-                                                        // "insertCamera",
+                                                        "insertCamera",
                                                         actions.undo,
                                                         actions.redo,
                                                         "clear"
@@ -1898,14 +1900,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             }
                             {
                                 notify && !shuffle ?
-                                    <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
+                                    <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: '#fff' }}>
                                         <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                             <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                                 <Ionicons
                                                     name='infinite-outline' size={20} color={'#a2a2aa'} />
                                             </Text>
                                         </View>
-                                        <View style={{ flexDirection: 'row' }}>
+                                        <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
                                             <View style={{
                                                 backgroundColor: 'white',
                                                 height: 40,

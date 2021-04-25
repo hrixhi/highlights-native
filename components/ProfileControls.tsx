@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     screen: {
         paddingHorizontal: 30,
         width: '100%',
-        height: Dimensions.get('window').height - 75,
+        height: Dimensions.get('window').height - 85,
         backgroundColor: 'white',
     },
     outline: {

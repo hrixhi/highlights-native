@@ -21,10 +21,12 @@ import Discussion from '../components/Discussion';
 import Subscribers from '../components/Subscribers';
 import Profile from '../components/Profile';
 import { validateEmail } from '../helpers/emailCheck';
+import { getNextDate, duringSleep } from '../helpers/DateParser';
 import Grades from '../components/Grades';
 import Calendar from '../components/Calendar';
 import Meeting from '../components/Meeting';
 import * as Notifications from 'expo-notifications';
+import { htmlStringParser } from '../helpers/HTMLParser';
 
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -53,6 +55,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   const [password, setPassword] = useState('')
   const [reopenUpdateWindow, setReopenUpdateWindow] = useState(Math.random())
   const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [firstOpened, setFirstOpened] = useState(new Date())
+  const responseListener: any = useRef()
 
   const onDimensionsChange = useCallback(({ w, s }: any) => {
     // window.location.reload()
@@ -314,6 +318,186 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     );
   }, [channelId, filterChoice])
 
+  const notificationScheduler = useCallback(async () => {
+
+    try {
+
+      // Clean out all already scheduled notifications
+      await Notifications.cancelAllScheduledNotificationsAsync()
+
+      // This is the object where we are going to collect all notifications that can be scheduled
+      // between two time points A and B 
+      const notificationRequests: any[] = []
+
+      // Get notification permission
+      const settings = await Notifications.getPermissionsAsync();
+      if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+        // permission granted
+      } else {
+        await Notifications.requestPermissionsAsync({
+          ios: {
+            allowAlert: true,
+            allowBadge: true,
+            allowSound: true,
+            allowAnnouncements: true
+          },
+        });
+        const settings = await Notifications.getPermissionsAsync();
+        if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+          // permission granted
+        } else {
+          // leave scheduler
+          return;
+        }
+      }
+
+      // Setting notification handler
+      Notifications.setNotificationHandler({
+        handleNotification: async (n) => {
+          return {
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true
+          }
+        },
+        handleError: (err) => console.log(err),
+        handleSuccess: (res) => loadData()
+      })
+
+      // for when user taps on a notification   
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        loadData()
+      });
+
+      // for the ones that are on shuffle
+      // const shuffledCues: any[] = []
+      // const unShuffledCues: any[] = []
+
+      // choose two dates - now (A) & now + 1 month (B) for timed cues
+      const A = new Date()
+      const B = new Date()
+      B.setMonth(B.getMonth() + 1)
+
+      // For sleep calculations
+      // let from = new Date(sleepFrom)
+      // let to = new Date(sleepTo)
+      // let a = from.getHours()
+      // let b = to.getHours()
+      // a += (from.getMinutes() / 60)
+      // b += (to.getMinutes() / 60)
+
+      const cuesArray: any[] = []
+      if (cues !== {}) {
+        Object.keys(cues).map((key) => {
+          cues[key].map((cue: any, index: number) => {
+            cuesArray.push({
+              ...cue,
+              key,
+              index
+            })
+          })
+        })
+      }
+
+      // First filter shuffled and unshuffled cues
+      cuesArray.map((item: any) => {
+        if (item.shuffle) {
+          if (item.frequency === "0" || !item.endPlayAt || item.endPlayAt === '') {
+            return;
+          }
+          // One time reminder
+          // must have endplayat stored
+          let trigger = new Date(item.endPlayAt)
+          if (trigger > A && trigger < B) {
+            // if trigger is in the next 30 days
+            const { title, subtitle } = htmlStringParser(item.cue)
+            notificationRequests.push({
+              content: {
+                title,
+                subtitle,
+                sound: true
+              },
+              trigger,
+            })
+          }
+          // shuffledCues.push(item)
+        } else {
+          if (item.frequency !== "0") {
+            let trigger = new Date(item.date)
+            let loopCheck = 0;
+            let end = B
+            if (item.endPlayAt && item.endPlayAt !== '') {
+              const playLimit = new Date(item.endPlayAt)
+              if (playLimit < B) {
+                end = playLimit
+              }
+            }
+            while (trigger < end) {
+              if (trigger < A) {
+                trigger = getNextDate(item.frequency, trigger)
+                continue;
+              }
+              loopCheck++
+              if (loopCheck > 64) {
+                // upto 50 valid notifications can be considered
+                break;
+              }
+              const { title, subtitle } = htmlStringParser(item.cue)
+              notificationRequests.push({
+                content: {
+                  title,
+                  subtitle,
+                  sound: true
+                },
+                trigger,
+              })
+              trigger = getNextDate(item.frequency, trigger)
+            }
+          } else {
+            // if frequency === 0 
+            // no reminder set - do nothing
+          }
+        }
+      })
+
+      const sortedRequests: any[] = notificationRequests.sort((a: any, b: any) => {
+        return a.trigger - b.trigger
+      })
+      if (sortedRequests.length === 0) {
+        // no requests to process
+        return
+      }
+
+      let lastTriggerDate = new Date()
+      lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 5)
+      const iterateUpTo = sortedRequests.length >= 64 ? 63 : sortedRequests.length
+      // iOS has a limit on scheduled notifications - 64 which is why we have to 
+      // choose the first 64 notifications
+      // After that make the user revisit the app again
+      for (let i = 0; i < iterateUpTo; i++) {
+        // Schedule notification
+        await Notifications.scheduleNotificationAsync(sortedRequests[i])
+        // The last notification in the scheduling queue has to be the one
+        if (i === (iterateUpTo - 1)) {
+          lastTriggerDate = new Date(sortedRequests[i].trigger)
+          lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 1)
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: 'Continue receiving notifications?',
+              subtitle: 'Open Cues! It\'s been a while...',
+              sound: true,
+            },
+            trigger: lastTriggerDate
+          })
+        }
+      }
+
+    } catch (e) {
+      console.log(e)
+    }
+
+  }, [randomShuffleFrequency, sleepFrom, sleepTo, firstOpened, cues, responseListener])
+
   const loadData = useCallback(async () => {
     setReLoading(true)
     try {
@@ -321,6 +505,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       const version = 'v0.9'
       const server = fetchAPI('')
       const fO = await AsyncStorage.getItem(version)
+      const first = await AsyncStorage.getItem("first")
 
       // LOAD FIRST OPENED
       if (fO === undefined || fO === null) {
@@ -329,6 +514,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           await AsyncStorage.setItem(version, 'SET')
         } catch (e) {
         }
+      }
+
+      if (first === undefined || first === null) {
+        const now = new Date()
+        const fOString = now.toString()
+        await AsyncStorage.setItem(version, fOString)
+        setFirstOpened(new Date(now))
+      } else {
+        setFirstOpened(new Date(first))
       }
 
       let u = await AsyncStorage.getItem('user')
@@ -514,6 +708,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       if (!sC) {
         setReLoading(false)
       }
+
+      notificationScheduler()
+
     } catch (e) {
       console.log(e)
     }
@@ -1221,16 +1418,21 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           }}>
             {
               Dimensions.get('window').width < 1024 ?
-                <TouchableOpacity
-                  onPress={() => closeModal()}
-                  style={{ height: 75, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f4f4f6', width: '100%' }}>
-                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 45, color: '#202025' }}>
-                    Close <Ionicons name='chevron-down-outline' size={15} />
-                  </Text>
-                </TouchableOpacity> :
-                <View style={{ backgroundColor: '#f4f4f6', height: 0 }} />
+                <View style={{ backgroundColor: '#fff', height: 30 }} /> :
+                <View style={{ backgroundColor: '#fff', height: 0 }} />
             }
             {modalContent}
+            {
+              Dimensions.get('window').width < 1024 ?
+                <TouchableOpacity
+                  onPress={() => closeModal()}
+                  style={{ height: 45, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#a2a2aa', width: '100%' }}>
+                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 15, color: '#202025' }}>
+                    Hide <Ionicons name='chevron-down-outline' size={15} />
+                  </Text>
+                </TouchableOpacity> :
+                <View style={{ backgroundColor: '#fff', height: 0 }} />
+            }
           </View>
       }
     </View>

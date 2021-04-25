@@ -206,6 +206,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     }, [])
 
     const cameraCallback = useCallback(async () => {
+
         const cameraSettings = await ImagePicker.getCameraPermissionsAsync()
         if (!cameraSettings.granted) {
             await ImagePicker.requestCameraPermissionsAsync();
@@ -214,39 +215,40 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 return;
             }
         }
+
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 1,
             base64: true
         });
         if (!result.cancelled) {
-            RichText.current.insertImage(result.uri, 'border-radius: 8px')
-            // const dir = FileSystem.documentDirectory + 'images'
-            // const dirInfo = await FileSystem.getInfoAsync(dir);
-            // if (!dirInfo.exists) {
-            //     await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-            // }
-            // const fileName = Math.round((Math.random() * 100)).toString();
-            // FileSystem.copyAsync({
-            //     from: result.uri,
-            //     to: dir + '/' + fileName + '.jpg'
-            // }).then(r => {
-            //     ImageManipulator.manipulateAsync(
-            //         (dir + '/' + fileName + '.jpg'),
-            //         [],
-            //         { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-            //     ).then(res => {
-            //         RichText.current.insertImage(
-            //             'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
-            //         )
-            //         // setReloadEditorKey(Math.random())
-            //     }).catch(err => {
-            //         Alert("Unable to load image.")
-            //     });
-            // }).catch((err) => {
-            //     Alert("Something went wrong.")
-            // })
+            const dir = FileSystem.documentDirectory + 'images'
+            const dirInfo = await FileSystem.getInfoAsync(dir);
+            if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+            }
+            const fileName = Math.round((Math.random() * 100)).toString();
+            FileSystem.copyAsync({
+                from: result.uri,
+                to: dir + '/' + fileName + '.jpg'
+            }).then(r => {
+                ImageManipulator.manipulateAsync(
+                    (dir + '/' + fileName + '.jpg'),
+                    [],
+                    { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+                ).then(res => {
+                    RichText.current.insertImage(
+                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
+                    )
+                    // setReloadEditorKey(Math.random())
+                }).catch(err => {
+                    Alert("Unable to load image.")
+                });
+            }).catch((err) => {
+                Alert("Something went wrong.")
+            })
         }
+
     }, [RichText, RichText.current])
 
     const galleryCallback = useCallback(async () => {
@@ -265,33 +267,31 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             quality: 1,
             base64: true
         });
-
         if (!result.cancelled) {
-            RichText.current.insertImage(result.uri, 'border-radius: 8px')
-            // const dir = FileSystem.documentDirectory + 'images'
-            // const dirInfo = await FileSystem.getInfoAsync(dir);
-            // if (!dirInfo.exists) {
-            //     await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-            // }
-            // const fileName = Math.round((Math.random() * 100)).toString();
-            // FileSystem.copyAsync({
-            //     from: result.uri,
-            //     to: dir + '/' + fileName + '.jpg'
-            // }).then((r) => {
-            //     ImageManipulator.manipulateAsync(
-            //         (dir + '/' + fileName + '.jpg'),
-            //         [],
-            //         { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-            //     ).then(res => {
-            //         RichText.current.insertImage(
-            //             'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
-            //         )
-            //     }).catch(err => {
-            //         Alert("Unable to load image.")
-            //     });
-            // }).catch((err) => {
-            //     Alert("Something went wrong.")
-            // })
+            const dir = FileSystem.documentDirectory + 'images'
+            const dirInfo = await FileSystem.getInfoAsync(dir);
+            if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+            }
+            const fileName = Math.round((Math.random() * 100)).toString();
+            FileSystem.copyAsync({
+                from: result.uri,
+                to: dir + '/' + fileName + '.jpg'
+            }).then((r) => {
+                ImageManipulator.manipulateAsync(
+                    (dir + '/' + fileName + '.jpg'),
+                    [],
+                    { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+                ).then(res => {
+                    RichText.current.insertImage(
+                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
+                    )
+                }).catch(err => {
+                    Alert("Unable to load image.")
+                });
+            }).catch((err) => {
+                Alert("Something went wrong.")
+            })
         }
     }, [RichText, RichText.current])
 
@@ -390,7 +390,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     _id++;
                 }
             }
-            subCues['local'].push({
+            const newCue = {
                 _id,
                 cue: saveCue,
                 date: new Date(),
@@ -400,7 +400,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 starred,
                 customCategory,
                 endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : ''
-            })
+            }
+            subCues['local'].push(newCue)
             const stringifiedCues = JSON.stringify(subCues)
             await AsyncStorage.setItem('cues', stringifiedCues)
             storeDraft('cueDraft', '')
@@ -542,7 +543,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     return (
         <View style={{
             width: '100%',
-            height: Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 75 : Dimensions.get('window').height,
+            height: Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height,
             backgroundColor: 'white',
             borderTopLeftRadius: 30,
             borderTopRightRadius: 30,
@@ -629,7 +630,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         actions.checkboxList,
                                         actions.insertLink,
                                         actions.insertImage,
-                                        // "insertCamera",
+                                        "insertCamera",
                                         actions.undo,
                                         actions.redo,
                                         "clear"

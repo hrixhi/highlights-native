@@ -139,7 +139,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         </View>
     }
 
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 75 : Dimensions.get('window').height;
+    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
     return (
         <View style={{
             backgroundColor: 'white',
@@ -248,7 +248,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 </View> :
                                 <View style={{
                                     width: '100%',
-                                    height: props.cueId ? 'auto' : windowHeight - 75,
+                                    height: props.cueId ? 'auto' : windowHeight - 85,
                                     backgroundColor: 'white'
                                 }}
                                     key={JSON.stringify(filteredThreads)}
@@ -261,7 +261,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 // style={{ height: '100%' }}
                                                 contentContainerStyle={{
                                                     width: '100%',
-                                                    height: props.cueId ? 'auto' : windowHeight - 75,
+                                                    height: props.cueId ? 'auto' : windowHeight - 85,
                                                 }}
                                             >
                                                 {
