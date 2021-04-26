@@ -1198,7 +1198,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             </Text>
             <Text style={{ fontSize: 18, color: '#a2a2aa', fontFamily: 'overpass', paddingBottom: 25, maxWidth: 400, textAlign: 'center' }}>
               {
-                showForgotPassword ? 'We\'ll send you a temporary password.' : 'Continue where you left.'
+                showForgotPassword ? 'We\'ll send you a temporary password.' : 'Continue where you left off.'
               }
             </Text>
             <View style={{

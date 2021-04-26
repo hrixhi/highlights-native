@@ -358,48 +358,52 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Ionicons name='chevron-back-outline' size={23} color={'#202025'} />
                             </Text>
                         </TouchableOpacity>
-                        {
-                            loadedChatWithUser !== {} ?
-                                <View style={{ marginHorizontal: 20 }}>
-                                    <Text>
-                                        {loadedChatWithUser.displayName}, {loadedChatWithUser.fullName} {loadedChatWithUser.email ? ("(" + loadedChatWithUser.email + ")") : ''}
-                                    </Text>
-                                </View> : null
-                        }
-                        {
-                            isOwner && !props.cueId
-                                ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
-                                    <TouchableOpacity
-                                        onPress={() => handleSubStatusChange()}
-                                    >
-                                        <Text style={{
-                                            color: '#a2a2aa',
-                                            fontSize: 11,
-                                            lineHeight: 30,
-                                            textAlign: 'right',
-                                            paddingRight: 20
-                                        }}>
-                                            {
-                                                isLoadedUserInactive ? 'MAKE ACTIVE' : 'MAKE INACTIVE'
-                                            }
+                        <View style={{ flexDirection: 'column', backgroundColor: '#fff' }}>
+                            {
+                                loadedChatWithUser !== {} ?
+                                    <View style={{ paddingHorizontal: 20, backgroundColor: '#fff' }}>
+                                        <Text style={{ color: '#202025' }}>
+                                            {loadedChatWithUser.displayName}, {loadedChatWithUser.fullName} {loadedChatWithUser.email ? ("(" + loadedChatWithUser.email + ")") : ''}
                                         </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => handleDelete()}
-                                    >
-                                        <Text style={{
-                                            color: '#a2a2aa',
-                                            fontSize: 11,
-                                            lineHeight: 30,
-                                            textAlign: 'right',
-                                            paddingRight: 10
-                                        }}>
-                                            REMOVE FROM CHANNEL
+                                    </View> : null
+                            }
+                            {
+                                isOwner && !props.cueId
+                                    ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
+                                        <TouchableOpacity
+                                            style={{ backgroundColor: '#fff' }}
+                                            onPress={() => handleSubStatusChange()}
+                                        >
+                                            <Text style={{
+                                                color: '#a2a2aa',
+                                                fontSize: 11,
+                                                lineHeight: 30,
+                                                textAlign: 'right',
+                                                paddingRight: 20
+                                            }}>
+                                                {
+                                                    isLoadedUserInactive ? 'MAKE ACTIVE' : 'MAKE INACTIVE'
+                                                }
+                                            </Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={{ backgroundColor: '#fff' }}
+                                            onPress={() => handleDelete()}
+                                        >
+                                            <Text style={{
+                                                color: '#a2a2aa',
+                                                fontSize: 11,
+                                                lineHeight: 30,
+                                                textAlign: 'right',
+                                                paddingRight: 10
+                                            }}>
+                                                REMOVE FROM CHANNEL
                                         </Text>
-                                    </TouchableOpacity>
-                                </View>
-                                : null
-                        }
+                                        </TouchableOpacity>
+                                    </View>
+                                    : null
+                            }
+                        </View>
                     </View>
                     :
                     <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
@@ -604,11 +608,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     showsVerticalScrollIndicator={false}
                                                     horizontal={false}
                                                     key={filterChoice + key}
-                                                    // contentContainerStyle={{
-                                                    //     width: '100%',
-                                                    //     height: props.cueId ? windowHeight - 200 : '100%',
-                                                    //     marginBottom: props.cueId ? 20 : 0
-                                                    // }}
+                                                // contentContainerStyle={{
+                                                //     width: '100%',
+                                                //     height: props.cueId ? windowHeight - 200 : '100%',
+                                                //     marginBottom: props.cueId ? 20 : 0
+                                                // }}
                                                 >
                                                     {
                                                         !props.cueId || props.cueId === '' ?

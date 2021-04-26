@@ -657,7 +657,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }
                     </View>
                     <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
-                        {
+                        {/* {
                             !isQuiz ?
                                 <Text style={{
                                     color: '#a2a2aa',
@@ -672,7 +672,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         showEquationEditor ? 'HIDE' : 'FORMULA'
                                     }
                                 </Text> : null
-                        }
+                        } */}
                         {
                             isQuiz ? null :
                                 <Text style={{

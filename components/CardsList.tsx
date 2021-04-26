@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Animated, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, Animated, Dimensions, ScrollView, RefreshControl } from 'react-native';
 import Alert from '../components/Alert'
 import { Text, View } from '../components/Themed';
 import Card from './Card'
 import _ from 'lodash'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Updates from 'expo-updates';
 
 
 const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -45,6 +46,12 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
         noChannelCuesAlert()
     }, [])
 
+    const [refreshing] = useState(false);
+
+    const onRefresh = useCallback(async () => {
+        await Updates.reloadAsync()
+    }, []);
+
     return (
         <View style={{
             height: ((Dimensions.get('window').height) * 0.7) - 2,
@@ -55,50 +62,54 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
             {/* <Animated.View style={{
                 opacity: props.fadeAnimation,
             }}> */}
-                <ScrollView
-                    scrollEnabled={true}
-                    showsVerticalScrollIndicator={false}
-                    horizontal={false}
-                >
-                    <View style={styles.marginSmall} />
-                    {
-                        filteredCues.map((cue: any, index: number) => {
-                            return <View style={{ height: 100, paddingBottom: 12 }} key={index}>
-                                <Card
-                                    fadeAnimation={props.fadeAnimation}
-                                    updateModal={() => props.openUpdate(
-                                        filteredCues[index].key,
-                                        filteredCues[index].index,
-                                        0,
-                                        filteredCues[index]._id,
-                                        (filteredCues[index].createdBy ? filteredCues[index].createdBy : ''),
-                                        (filteredCues[index].channelId ? filteredCues[index].channelId : '')
-                                    )}
-                                    cue={filteredCues[index]}
-                                    channelId={props.channelId}
-                                />
-                                {
-                                    cue.status && (cue.status !== 'read' && cue.status !== 'submitted')
-                                        ? <View style={styles.blueBadge}>
-                                            <Text style={{ color: 'white', lineHeight: 20, fontSize: 10, textAlign: 'center' }}>
-                                                !
+            <ScrollView
+                scrollEnabled={true}
+                showsVerticalScrollIndicator={false}
+                horizontal={false}
+            >
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                />
+                <View style={styles.marginSmall} />
+                {
+                    filteredCues.map((cue: any, index: number) => {
+                        return <View style={{ height: 100, paddingBottom: 12 }} key={index}>
+                            <Card
+                                fadeAnimation={props.fadeAnimation}
+                                updateModal={() => props.openUpdate(
+                                    filteredCues[index].key,
+                                    filteredCues[index].index,
+                                    0,
+                                    filteredCues[index]._id,
+                                    (filteredCues[index].createdBy ? filteredCues[index].createdBy : ''),
+                                    (filteredCues[index].channelId ? filteredCues[index].channelId : '')
+                                )}
+                                cue={filteredCues[index]}
+                                channelId={props.channelId}
+                            />
+                            {
+                                cue.status && (cue.status !== 'read' && cue.status !== 'submitted')
+                                    ? <View style={styles.blueBadge}>
+                                        <Text style={{ color: 'white', lineHeight: 20, fontSize: 10, textAlign: 'center' }}>
+                                            !
                                         </Text>
-                                        </View>
-                                        : null
-                                }
-                                {
-                                    cue.channelId && cue.unreadThreads !== 0 ?
-                                        <View style={styles.badge}>
-                                            <Text style={{ color: 'white', lineHeight: 20, fontSize: 10, textAlign: 'center' }}>
-                                                {cue.unreadThreads}
-                                            </Text>
-                                        </View> : null
-                                }
-                            </View>
-                        })
-                    }
-                    <View style={styles.marginSmall} />
-                </ScrollView>
+                                    </View>
+                                    : null
+                            }
+                            {
+                                cue.channelId && cue.unreadThreads !== 0 ?
+                                    <View style={styles.badge}>
+                                        <Text style={{ color: 'white', lineHeight: 20, fontSize: 10, textAlign: 'center' }}>
+                                            {cue.unreadThreads}
+                                        </Text>
+                                    </View> : null
+                            }
+                        </View>
+                    })
+                }
+                <View style={styles.marginSmall} />
+            </ScrollView>
             {/* </Animated.View> */}
         </View >
     );

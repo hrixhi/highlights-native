@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, ActivityIndicator, Dimensions, ScrollView } from 'react-native';
+import { Animated, ActivityIndicator, Dimensions, ScrollView, Keyboard } from 'react-native';
 import Alert from '../components/Alert'
 import { View } from '../components/Themed';
 // import Swiper from 'react-native-web-swiper'
@@ -167,12 +167,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <ActivityIndicator color={'#a2a2aa'} />
                     </View>
                     :
-                    <Animated.View style={{
+                    <View style={{
                         width: '100%',
                         height: windowHeight,
-                        opacity: modalAnimation,
-                        borderTopLeftRadius: 30,
-                        borderTopRightRadius: 30,
                     }}
                         key={JSON.stringify(threads)}
                     >
@@ -182,7 +179,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             activeDotColor={'#0079FE'}
                             containerStyle={{
                                 marginTop: 0,
-                                flex: 1
+                                // flex: 1
                             }}
                             dotStyle={{
                                 opacity: 1
@@ -195,7 +192,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             nestedScrollEnabled={true}
                             keyboardDismissMode={'on-drag'}
                             overScrollMode={'always'}
-                            alwaysBounceVertical={true}
+                            alwaysBounceVertical={false}
                             scrollEnabled={true}
                             loadMinimal={true}
                             loadMinimalSize={3}
@@ -203,15 +200,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <ScrollView
                                 nestedScrollEnabled={true}
                                 horizontal={false}
-                                style={{
-                                    borderTopRightRadius: 30,
-                                    borderTopLeftRadius: 30,
-                                }}
-                            // contentContainerStyle={{
-                            //     borderTopRightRadius: 30,
-                            //     borderTopLeftRadius: 30,
-                            //     minHeight: windowHeight
-                            // }}
+                                keyboardDismissMode='on-drag'
+                                onScroll={() => Keyboard.dismiss()}
                             >
                                 <UpdateControls
                                     key={props.reopenUpdateWindow}
@@ -287,7 +277,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     </ScrollView> : null
                             }
                         </Swiper>
-                    </Animated.View>
+                    </View>
             }
         </View >
     );

@@ -10,7 +10,7 @@ import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
 import { fetchAPI } from '../graphql/FetchAPI';
 import { createCue, deleteForEveryone, getChannels, getQuiz, getSharedWith, markAsRead, shareCueWithMoreIds, start, submit } from '../graphql/QueriesAndMutations';
 import * as ImagePicker from 'expo-image-picker';
-// import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
 import {
     actions,
@@ -29,6 +29,7 @@ import TeXToSVG from "tex-to-svg";
 import Collapsible from 'react-native-collapsible';
 import { WebView } from 'react-native-webview';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Updates from 'expo-updates';
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -101,6 +102,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [initDuration, setInitDuration] = useState(0)
     const [equation, setEquation] = useState('y = x + 1')
     const [showEquationEditor, setShowEquationEditor] = useState(false)
+    const [handlingSubmit, setHandlingSubmit] = useState(false)
 
     const insertEquation = useCallback(() => {
         const SVGEquation = TeXToSVG(equation, { width: 100 }); // returns svg in html format
@@ -512,6 +514,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         if (isQuiz) {
             if (now >= deadline) {
                 Alert("Submission failed.", "If you started a timed quiz, your last recorded edit will be recorded.")
+                setHandlingSubmit(false)
                 return;
             }
             // over here check that all options have been selected
@@ -519,6 +522,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         } else {
             if (now >= deadline) {
                 Alert("Submission failed.", "Deadline has passed.")
+                setHandlingSubmit(false)
                 return;
             }
         }
@@ -526,6 +530,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             const parsedUser = JSON.parse(u)
             if (!parsedUser.email || parsedUser.email === '') {
                 // cannot submit
+                setHandlingSubmit(false)
                 return
             }
             let saveCue = ''
@@ -543,7 +548,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 saveCue = JSON.stringify(obj)
             } else {
                 if (cue === '') {
-                    // submission cannot be empty
+                    setHandlingSubmit(false)
                     return;
                 }
                 saveCue = cue
@@ -568,8 +573,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 text: "Cancel", style: "cancel"
                             },
                             {
-                                text: "Okay", onPress: () => {// window.location.reload()
-                                    console.log('here')
+                                text: "Okay", onPress: async () => {
+                                    await Updates.reloadAsync()
+                                    setHandlingSubmit(false)
                                 }
                             }
                         ]
@@ -939,7 +945,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         }
                     </View>
                     <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
-                        {
+                        {/* {
                             !showOriginal && !submissionImported && !props.cue.graded ?
                                 <Text style={{
                                     color: '#a2a2aa',
@@ -954,7 +960,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         showEquationEditor ? 'HIDE' : 'FORMULA'
                                     }
                                 </Text> : null
-                        }
+                        } */}
                         {
                             !showOriginal && props.cue.submission && !submissionImported && !props.cue.graded ?
                                 <Text style={{
@@ -1029,7 +1035,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 <ScrollView
                     style={{
                         paddingBottom: 25,
-                        // height: '100%', 
                         borderBottomColor: '#f4f4f6', borderBottomWidth: 1
                     }}
                     showsVerticalScrollIndicator={false}
@@ -1037,6 +1042,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     scrollEventThrottle={1}
                     keyboardDismissMode={'on-drag'}
                     overScrollMode={'always'}
+                    onScroll={() => Keyboard.dismiss()}
                     nestedScrollEnabled={true}
                 >
                     {
@@ -1062,13 +1068,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                             size={120}
                                                             key={initDuration}
                                                             children={({ remainingTime }: any) => {
-                                                                if (!remainingTime || remainingTime === 0) {
+                                                                if ((!remainingTime || remainingTime === 0) && !handlingSubmit) {
+                                                                    setHandlingSubmit(true)
                                                                     handleSubmit()
                                                                 }
                                                                 const hours = Math.floor(remainingTime / 3600)
                                                                 const minutes = Math.floor((remainingTime % 3600) / 60)
                                                                 const seconds = remainingTime % 60
-                                                                return `${hours}h ${minutes}m ${seconds}s`
+                                                                return <Text style={{ color: '#3B64F8' }}>
+                                                                    {hours}h {minutes}m {seconds}s
+                                                                </Text>
                                                             }}
                                                             isPlaying={true}
                                                             duration={duration}
@@ -1157,7 +1166,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                         problems={problems}
                                                         setSolutions={(s: any) => setSolutions(s)}
                                                     /> : <View>
-                                                        <View>
+                                                        <View style={{ backgroundColor: '#fff' }}>
                                                             <TouchableOpacity
                                                                 onPress={() => initQuiz()}
                                                                 style={{
@@ -1173,6 +1182,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                     lineHeight: 35,
                                                                     color: '#202025',
                                                                     fontSize: 12,
+                                                                    overflow: 'hidden',
                                                                     backgroundColor: '#f4f4f6',
                                                                     paddingHorizontal: 25,
                                                                     fontFamily: 'inter',
@@ -2010,7 +2020,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 {
                                     !isOwner && (props.cue.channelId && props.cue.channelId !== '') && submission ?
                                         <TouchableOpacity
-                                            disabled={!userSetupComplete || currentDate >= deadline || props.cue.graded || (isQuiz && isQuizTimed && !initiatedAt) || (isQuiz && (!props.cue.submittedAt || props.cue.submittedAt === ''))}
+                                            disabled={!userSetupComplete || currentDate >= deadline || props.cue.graded || (isQuiz && isQuizTimed && !initiatedAt) || (isQuiz && (props.cue.submittedAt && props.cue.submittedAt !== ''))}
                                             onPress={() => handleSubmit()}
                                             style={{ backgroundColor: 'white', borderRadius: 15, }}>
                                             <Text style={{

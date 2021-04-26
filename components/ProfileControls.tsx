@@ -7,6 +7,7 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import { signup, updatePassword, updateUser } from '../graphql/QueriesAndMutations';
 import { validateEmail } from '../helpers/emailCheck';
 import Alert from '../components/Alert'
+import * as Updates from 'expo-updates';
 
 const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -140,7 +141,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     const logout = useCallback(async () => {
         await AsyncStorage.clear()
-        // window.location.reload()
+        await Updates.reloadAsync()
     }, [])
 
     useEffect(() => {
@@ -235,7 +236,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             />
                             {
                                 loggedIn ? null :
-                                    <View>
+                                    <View style={{ backgroundColor: '#fff' }}>
                                         <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
                                             Password
                             </Text>
@@ -299,7 +300,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     showSavePassword ? 'BACK' : 'PASSWORD'
                                 }
                             </Text>
-                        </TouchableOpacity> : <View style={{ height: 50 }} />
+                        </TouchableOpacity> : <View style={{ height: 20, backgroundColor: '#fff' }} />
                     }
                     <TouchableOpacity
                         onPress={() => handleSubmit()}
@@ -327,35 +328,41 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             {loggedIn ? (showSavePassword ? 'UPDATE' : 'SAVE') : 'SIGN UP'}
                         </Text>
                     </TouchableOpacity>
-                    {
-                        loggedIn ? <TouchableOpacity
-                            onPress={() => logout()}
-                            style={{
-                                backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
-                                borderRadius: 15,
-                                marginTop: 15,
-                                width: '100%', justifyContent: 'center', flexDirection: 'row',
-                                marginBottom: 50
-                            }}>
-                            <Text style={{
-                                textAlign: 'center',
-                                lineHeight: 35,
-                                color: '#202025',
-                                overflow: 'hidden',
-                                fontSize: 12,
-                                backgroundColor: '#f4f4f6',
-                                paddingHorizontal: 25,
-                                fontFamily: 'inter',
-                                height: 35,
-                                width: 150,
-                                borderRadius: 15,
-                            }}>
-                                LOGOUT
-                  </Text>
-                        </TouchableOpacity> : <View style={{ height: 50 }} />
-                    }
+                    <TouchableOpacity
+                        onPress={async () => {
+                            if (loggedIn) {
+                                logout()
+                            } else {
+                                await Updates.reloadAsync()
+                            }
+                        }}
+                        style={{
+                            backgroundColor: 'white',
+                            overflow: 'hidden',
+                            height: 35,
+                            borderRadius: 15,
+                            marginTop: 15,
+                            width: '100%', justifyContent: 'center', flexDirection: 'row',
+                            marginBottom: 200
+                        }}>
+                        <Text style={{
+                            textAlign: 'center',
+                            lineHeight: 35,
+                            color: '#202025',
+                            overflow: 'hidden',
+                            fontSize: 12,
+                            backgroundColor: '#f4f4f6',
+                            paddingHorizontal: 25,
+                            fontFamily: 'inter',
+                            height: 35,
+                            width: 150,
+                            borderRadius: 15,
+                        }}>
+                            {
+                                loggedIn ? 'LOGOUT' : 'LOGIN'
+                            }
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </View>
