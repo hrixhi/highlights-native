@@ -19,6 +19,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [unreadDiscussionThreads, setUnreadDiscussionThreads] = useState(0)
     const [unreadMessages, setUnreadMessages] = useState(0)
     const [meetingOn, setMeetingOn] = useState(false)
+    const [hideExclaimation, setHideExclaimation] = useState(false)
 
     useEffect(() => {
 
@@ -81,6 +82,15 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setChannelCategories(cat)
     }, [cues])
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setHideExclaimation(exclaim => !exclaim);
+        }, 750);
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
+
     return (
         <View style={styles.topbar} key={Math.random()}>
             <View style={{ width: '80%', height: Dimensions.get('window').height * 0.15 * 0.22, alignSelf: 'center' }} />
@@ -93,7 +103,15 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
                         style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025' }}>
                         <Image
-                            source={colorScheme === 'light' ? require('./default-images/cues-logo-black-exclamation-hidden.jpg') : require('./default-images/cues-logo-white-exclamation-hidden.jpg')}
+                            source={colorScheme === 'light' ?
+                                (
+                                    !hideExclaimation ? require('./default-images/cues-logo-black.jpg') : require('./default-images/cues-logo-black-exclamation-hidden.jpg')
+                                )
+                                :
+                                (
+                                    !hideExclaimation ? require('./default-images/cues-logo-white.jpg') : require('./default-images/cues-logo-white-exclamation-hidden.jpg')
+                                )
+                            }
                             style={{
                                 width: Dimensions.get('window').height * 0.16 * 0.53456,
                                 height: Dimensions.get('window').height * 0.16 * 0.2
@@ -111,17 +129,6 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
                                     <TouchableOpacity
                                         style={{ marginRight: 15 }}
-                                        onPress={() => props.openDiscussion()}>
-                                        <Text style={styles.channelText}>
-                                            <Ionicons name='chatbubble-ellipses-outline' size={19} color={'#a2a2aa'} />
-                                        </Text>
-                                        {
-                                            unreadDiscussionThreads !== 0 ?
-                                                <View style={styles.badge} /> : null
-                                        }
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={{ marginRight: 15 }}
                                         onPress={() => props.openMeeting()}>
                                         <Text style={styles.channelText}>
                                             <Ionicons name='videocam-outline' size={21} color={'#a2a2aa'} />
@@ -135,10 +142,21 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{ marginRight: 15 }}
                                         onPress={() => props.openSubscribers()}>
                                         <Text style={styles.channelText}>
-                                            <Ionicons name='people-circle-outline' size={21} color={'#a2a2aa'} />
+                                            <Ionicons name='mail-outline' size={21} color={'#a2a2aa'} />
                                         </Text>
                                         {
                                             unreadMessages !== 0 ?
+                                                <View style={styles.badge} /> : null
+                                        }
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={{ marginRight: 15 }}
+                                        onPress={() => props.openDiscussion()}>
+                                        <Text style={styles.channelText}>
+                                            <Ionicons name='chatbubble-ellipses-outline' size={19} color={'#a2a2aa'} />
+                                        </Text>
+                                        {
+                                            unreadDiscussionThreads !== 0 ?
                                                 <View style={styles.badge} /> : null
                                         }
                                     </TouchableOpacity>

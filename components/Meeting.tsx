@@ -222,7 +222,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                             false: '#f4f4f6',
                                             true: '#3B64F8'
                                         }}
-                                        activeThumbColor='white'
+                                        thumbColor='white'
                                     />
                                 </View>
                             </View> : null
@@ -367,6 +367,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     <Text style={styles.text}>
                                         End
                                 </Text>
+                                    <View style={{ width: 6, backgroundColor: '#fff' }} />
                                     {/* <Datetime
                                         value={end}
                                         onChange={(event: any) => {
@@ -405,12 +406,30 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 }}>
                                     <TouchableOpacity
                                         style={{
-                                            marginTop: 9,
-                                            backgroundColor: '#fff'
+                                            backgroundColor: 'white',
+                                            overflow: 'hidden',
+                                            height: 35,
+                                            marginTop: 15,
+                                            borderRadius: 15,
+                                            width: '100%', justifyContent: 'center', flexDirection: 'row',
                                         }}
                                         onPress={() => handleCreate()}
                                     >
-                                        <Ionicons name='add-outline' size={21} color='#202025' />
+                                        <Text style={{
+                                            textAlign: 'center',
+                                            lineHeight: 35,
+                                            color: '#202025',
+                                            overflow: 'hidden',
+                                            fontSize: 12,
+                                            backgroundColor: '#f4f4f6',
+                                            paddingHorizontal: 25,
+                                            fontFamily: 'inter',
+                                            height: 35,
+                                            width: 150,
+                                            borderRadius: 15,
+                                        }}>
+                                            ADD
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
                             </View> : null

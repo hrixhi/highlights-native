@@ -6,10 +6,7 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import { createDate, deleteDate, getEvents } from '../graphql/QueriesAndMutations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Calendar } from 'react-native-big-calendar'
-// import Datetime from 'react-datetime';
 import DateTimePicker from '@react-native-community/datetimepicker';
-// import moment from 'moment'
-// import 'react-big-calendar/lib/css/react-big-calendar.css'
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -153,7 +150,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <Text
                     ellipsizeMode="tail"
                     style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25, paddingHorizontal: 20, }}>
-                    Calendar
+                    Events
                                 </Text>
             </View>
             <ScrollView style={{
@@ -200,7 +197,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <TextInput
                                         value={title}
                                         style={styles.input}
-                                        placeholder={'Event'}
+                                        placeholder={'Title'}
                                         onChangeText={val => setTitle(val)}
                                         placeholderTextColor={'#a2a2aa'}
                                     />
@@ -254,6 +251,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <Text style={styles.text}>
                                         End
                                     </Text>
+                                    <View style={{ width: 6, backgroundColor: '#fff' }} />
                                     {/* <Datetime
                                         value={end}
                                         onChange={(event: any) => {
@@ -292,12 +290,30 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 }}>
                                     <TouchableOpacity
                                         style={{
-                                            marginTop: 9,
-                                            backgroundColor: '#fff'
+                                            backgroundColor: 'white',
+                                            overflow: 'hidden',
+                                            height: 35,
+                                            marginTop: 15,
+                                            borderRadius: 15,
+                                            width: '100%', justifyContent: 'center', flexDirection: 'row',
                                         }}
                                         onPress={() => handleCreate()}
                                     >
-                                        <Ionicons name='add-outline' size={21} color='#202025' />
+                                        <Text style={{
+                                            textAlign: 'center',
+                                            lineHeight: 35,
+                                            color: '#202025',
+                                            overflow: 'hidden',
+                                            fontSize: 12,
+                                            backgroundColor: '#f4f4f6',
+                                            paddingHorizontal: 25,
+                                            fontFamily: 'inter',
+                                            height: 35,
+                                            width: 150,
+                                            borderRadius: 15,
+                                        }}>
+                                            ADD
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>

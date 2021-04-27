@@ -265,11 +265,11 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 }
                 <View
                     style={{
-                        flex: 1,
+                        // flex: 1,
                         backgroundColor: 'white',
                         justifyContent: 'center',
-                        display: 'flex',
-                        height: 50,
+                        // display: 'flex',
+                        // height: 50,
                         marginTop: 90
                     }}>
                     {

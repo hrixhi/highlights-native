@@ -339,13 +339,13 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 }
                 <View
                     style={{
-                        flex: 1,
+                        // flex: 1,
                         backgroundColor: 'white',
                         justifyContent: 'center',
-                        display: 'flex',
+                        // display: 'flex',
                         flexDirection: 'row',
-                        height: 50,
-                        paddingTop: 75
+                        // height: 50,
+                        marginTop: 75
                     }}>
                     {
                         option === 'About' ? null :
@@ -357,7 +357,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     overflow: 'hidden',
                                     height: 35,
                                     marginTop: 15
-                                }}>
+                                }}
+                                >
                                 <Text style={{
                                     textAlign: 'center',
                                     lineHeight: 35,

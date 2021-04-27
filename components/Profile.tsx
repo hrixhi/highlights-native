@@ -25,11 +25,10 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         }}
             onTouchMove={() => Keyboard.dismiss()}
         >
-            <Animated.View style={{
+            <View style={{
                 width: Dimensions.get('window').width < 1024 ? '100%' : '60%',
                 paddingHorizontal: Dimensions.get('window').width < 1024 ? 20 : 0,
                 backgroundColor: 'white',
-                opacity: modalAnimation,
                 alignSelf: 'center'
             }}>
                 <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 20 }}>
@@ -41,7 +40,7 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     closeModal={() => props.closeModal()}
                     reloadData={() => props.reloadData()}
                 />
-            </Animated.View>
+            </View>
         </View >
     );
 }

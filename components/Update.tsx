@@ -149,8 +149,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     return (
         <View style={{
             width: '100%',
+            backgroundColor: 'white',
             height: windowHeight,
-            backgroundColor: '#fff',
         }}>
             {
                 loading
@@ -180,6 +180,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             containerStyle={{
                                 marginTop: 0,
                                 // flex: 1
+                                backgroundColor: 'white',
                             }}
                             dotStyle={{
                                 opacity: 1
@@ -201,6 +202,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 nestedScrollEnabled={true}
                                 horizontal={false}
                                 keyboardDismissMode='on-drag'
+                                onScrollBeginDrag={Keyboard.dismiss}
                                 onScroll={() => Keyboard.dismiss()}
                             >
                                 <UpdateControls

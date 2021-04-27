@@ -52,11 +52,6 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                     >
                         My Cues
-                        {/* <Ionicons name='home-outline' size={15} color={colorScheme === 'light' ? (
-                            choice === 'All' ? 'white' : '#202025'
-                        ) : (
-                            choice === 'All' ? '#202025' : 'white'
-                        )} /> */}
                     </Text>
                 </TouchableOpacity>
                 {
@@ -97,7 +92,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 30 }}>
-                            <Ionicons name='radio-outline' size={21} color={color} />
+                            <Ionicons name='book-outline' size={21} color={color} />
                         </Text>
                     </TouchableOpacity>
                 </View>

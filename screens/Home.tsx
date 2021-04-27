@@ -21,7 +21,7 @@ import Discussion from '../components/Discussion';
 import Subscribers from '../components/Subscribers';
 import Profile from '../components/Profile';
 import { validateEmail } from '../helpers/emailCheck';
-import { getNextDate, duringSleep } from '../helpers/DateParser';
+import { getNextDate } from '../helpers/DateParser';
 import Grades from '../components/Grades';
 import Calendar from '../components/Calendar';
 import Meeting from '../components/Meeting';
@@ -136,6 +136,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   allCues[cue.channelId] = [cue]
                 }
               } else {
+                // ADDED THIS
+                if (channelId !== 'local') {
+                  // delete the CUE object itself and save the rest back...
+                  const dup = { ...item }
+                  delete dup.cue // the delete...
+                  // save new changes
+                  allCues[item.channelId][index] = { ...allCues[item.channelId][index], ...dup }
+                }
+                // update number of threads and status... assign it an original if it doesnt already have one
                 allCues[item.channelId][index].unreadThreads = item.unreadThreads ? item.unreadThreads : 0;
                 allCues[item.channelId][index].status = item.status;
                 if (!allCues[item.channelId][index].original) {
@@ -171,7 +180,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           }
         })
         .catch(err => {
-          Alert("Unable to refresh channel cues.", "Check connection.")
+          // Alert("Unable to refresh channel cues.", "Check connection.")
           const custom: any = {}
           setCues(allCues)
           if (allCues['local']) {
@@ -741,6 +750,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         await AsyncStorage.setItem('user', sU)
         setShowLoginWindow(false)
         loadDataFromCloud()
+      } else {
+        Alert("Invalid credentials!")
       }
     }).catch(e => console.log(e))
   }, [email, password])
@@ -1427,8 +1438,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 <TouchableOpacity
                   onPress={() => closeModal()}
                   style={{ height: 45, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#a2a2aa', width: '100%' }}>
-                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 15, color: '#202025' }}>
-                    Hide <Ionicons name='chevron-down-outline' size={15} />
+                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#a2a2aa' }}>
+                    <Ionicons name='chevron-back-outline' size={15} /> Back
                   </Text>
                 </TouchableOpacity> :
                 <View style={{ backgroundColor: '#fff', height: 0 }} />

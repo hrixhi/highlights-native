@@ -392,7 +392,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     false: '#f4f4f6',
                                                     true: '#a2a2aa'
                                                 }}
-                                                activeThumbColor='white'
+                                                thumbColor='white'
                                                 style={{ height: 20 }}
                                             />
                                         </View>
@@ -411,7 +411,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     false: '#f4f4f6',
                                     true: '#a2a2aa'
                                 }}
-                                activeThumbColor='white'
+                                thumbColor='white'
                                 style={{ height: 20 }}
                             />
                         </View>

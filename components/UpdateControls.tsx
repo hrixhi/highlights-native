@@ -5,7 +5,6 @@ import { Text, View, TouchableOpacity } from './Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import Datetime from 'react-datetime';
 import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
 import { fetchAPI } from '../graphql/FetchAPI';
 import { createCue, deleteForEveryone, getChannels, getQuiz, getSharedWith, markAsRead, shareCueWithMoreIds, start, submit } from '../graphql/QueriesAndMutations';
@@ -17,19 +16,16 @@ import {
     RichEditor,
     RichToolbar,
 } from "react-native-pell-rich-editor";
-// import FileViewer from 'react-file-viewer';
 import FileUpload from './UploadFiles';
 import DateTimePicker from '@react-native-community/datetimepicker';
-// import Select from 'react-select';
-// import { Collapse } from 'react-collapse';
 import Quiz from './Quiz';
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
 import TeXToSVG from "tex-to-svg";
-// import EquationEditor from "equation-editor-react";
 import Collapsible from 'react-native-collapsible';
 import { WebView } from 'react-native-webview';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Updates from 'expo-updates';
+import MultiSelect from 'react-native-multiple-select';
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -172,12 +168,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 })
                     .then((res: any) => {
                         if (res.data && res.data.cue.getSharedWith) {
-                            setSubscribers(res.data.cue.getSharedWith)
-                            // clear selected
-                            const sel = res.data.cue.getSharedWith.filter((item: any) => {
-                                return item.isFixed
+                            const sharedWith = res.data.cue.getSharedWith
+                            const shared: any[] = []
+                            const ids: any[] = []
+                            sharedWith.map((s: any) => {
+                                shared.push({
+                                    value: s.value,
+                                    label: s.label
+                                })
+                                if (s.isFixed) {
+                                    ids.push(s.value)
+                                }
                             })
-                            setSelected(sel)
+                            setSubscribers(shared)
+                            setSelected(ids)
                         }
                     })
                     .catch((err: any) => console.log(err))
@@ -700,34 +704,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         submission, deadline, notify, playChannelCueIndef, endPlayAt,
         shareWithChannelId, props.cue])
 
-    const onChange = useCallback((value, { action, option, removedValue }) => {
-        switch (action) {
-            case 'remove-value':
-            case 'select-option':
-                const server = fetchAPI('')
-                server.mutate({
-                    mutation: shareCueWithMoreIds,
-                    variables: {
-                        cueId: props.cue._id,
-                        userId: option.value
-                    }
-                }).then(res => {
-                    if (res.data && res.data.cue.shareCueWithMoreIds) {
-                        loadChannelsAndSharedWith()
-                    }
-                }).catch(err => console.log(err))
-                return;
-            case 'pop-value':
-                if (removedValue.isFixed) {
-                    return;
-                }
-                break;
-            case 'clear':
-                value = subscribers.filter(v => v.isFixed);
-                break;
-        }
-        setSelected(value)
-    }, [subscribers, props.cue])
+    const onAddNew = useCallback((userId) => {
+        const server = fetchAPI('')
+        server.mutate({
+            mutation: shareCueWithMoreIds,
+            variables: {
+                cueId: props.cue._id,
+                userId
+            }
+        }).then(res => {
+            if (res.data && res.data.cue.shareCueWithMoreIds) {
+                loadChannelsAndSharedWith()
+            }
+        }).catch(err => console.log(err))
+        const updatedSelected: any[] = [...selected]
+        updatedSelected.push(userId)
+        setSelected(updatedSelected)
+    }, [subscribers, props.cue, selected])
 
     useEffect(() => {
         updateStatusAsRead()
@@ -1037,6 +1030,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         paddingBottom: 25,
                         borderBottomColor: '#f4f4f6', borderBottomWidth: 1
                     }}
+                    onScrollBeginDrag={Keyboard.dismiss}
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={true}
                     scrollEventThrottle={1}
@@ -1209,7 +1203,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     : (imported ?
                                         (
                                             // null
-                                            <WebView source={{ uri: "http://docs.google.com/gview?embedded=true&url=" + url }} />                                            //     type === 'pptx' ?
+                                            <WebView source={{ uri: "http://docs.google.com/gview?embedded=true&url=" + url }} style={{ overflow: 'scroll' }} />                                            //     type === 'pptx' ?
                                             //         <iframe src={'https://view.officeapps.live.com/op/embed.aspx?src=' + url} width='100%' height='600px' frameBorder='0' />
                                             //         : <FileViewer
                                             //             unsupportedComponent={() =>
@@ -1363,7 +1357,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         </Text>
                         <Ionicons size={17} name={showOptions ? 'caret-down-circle-outline' : 'caret-forward-circle-outline'} color='#a2a2aa' />
                     </TouchableOpacity>
-                    <Collapsible collapsed={!showOptions}>
+                    <Collapsible collapsed={!showOptions} key={showOptions.toString()}>
                         <View style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                             {
                                 props.cue.channelId ?
@@ -1391,68 +1385,56 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             </View>
                                             {
                                                 props.cue.channelId !== '' && isOwner ?
-                                                    <View style={{ maxHeight: 200, flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
-                                                        <View style={{ width: '90%', padding: 5, height: expandMenu ? 175 : 'auto', backgroundColor: 'white' }}>
-                                                            {/* <Select
-                                                                isClearable={false}
-                                                                placeholder='Share with'
-                                                                styles={{
-                                                                    menu: (provided: any, state: any) => ({
-                                                                        ...provided,
-                                                                        zIndex: 9999,
-                                                                        overflow: 'scroll',
-                                                                        height: 125,
-                                                                        display: 'flex',
-                                                                        margin: 5,
-                                                                        width: '97%',
-                                                                        boxShadow: 'none'
-                                                                    }),
-                                                                    option: (provided: any, state: any) => ({
-                                                                        ...provided,
-                                                                        fontFamily: 'overpass',
-                                                                        color: '#a2a2aa',
-                                                                        fontSize: 10,
-                                                                        height: 25,
-                                                                        width: '97%'
-                                                                    }),
-                                                                    input: (styles: any) => ({
-                                                                        // ...styles,
-                                                                        width: '100%',
-                                                                        // border: 'none',
-                                                                        borderWidth: 0,
-                                                                        fontSize: 12
-                                                                    }),
-                                                                    placeholder: (styles: any) => ({
-                                                                        ...styles,
-                                                                        fontFamily: 'overpass',
-                                                                        color: '#a2a2aa',
-                                                                        fontSize: 12
-                                                                    }),
-                                                                    multiValueLabel: (styles: any, { data }: any) => ({
-                                                                        ...styles,
-                                                                        color: '#202025',
-                                                                        fontFamily: 'overpass'
-                                                                    }),
-                                                                    multiValue: (styles: any, { data }: any) => ({
-                                                                        ...styles,
-                                                                        backgroundColor: '#f4f4f6',
-                                                                        fontFamily: 'overpass'
-                                                                    }),
-                                                                    multiValueRemove: (base: any, state: any) => {
-                                                                        return state.data.isFixed ? { ...base, display: 'none' } : base;
-                                                                    },
+                                                    <View style={{ height: 350, flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
+                                                        <ScrollView style={{
+                                                            width: '100%',
+                                                            padding: 5,
+                                                            backgroundColor: '#fff'
+                                                        }}>
+                                                            <MultiSelect
+                                                                hideTags={false}
+                                                                items={subscribers}
+                                                                uniqueKey="value"
+                                                                ref={RichText}
+                                                                styleTextDropdown={{
+                                                                    fontFamily: 'overpass'
                                                                 }}
-                                                                value={selected}
-                                                                isMulti={true}
-                                                                onMenuOpen={() => setExpandMenu(true)}
-                                                                onMenuClose={() => setExpandMenu(false)}
-                                                                name="Share with"
-                                                                className="basic-multi-select"
-                                                                classNamePrefix="select"
-                                                                onChange={onChange}
-                                                                options={subscribers}
-                                                            /> */}
-                                                        </View>
+                                                                styleDropdownMenuSubsection={{
+                                                                    height: 50,
+                                                                }}
+                                                                styleSelectorContainer={{
+                                                                    height: 350,
+                                                                }}
+                                                                styleItemsContainer={{
+                                                                    height: 250
+                                                                }}
+                                                                styleListContainer={{
+                                                                    height: 250,
+                                                                    backgroundColor: '#fff'
+                                                                }}
+                                                                onSelectedItemsChange={(sel: any) => {
+                                                                    if (sel.length > selected.length) {
+                                                                        onAddNew(sel[selected.length])
+                                                                    } else {
+                                                                        Alert("Cannot un-share!")
+                                                                    }
+                                                                }}
+                                                                selectedItems={selected}
+                                                                selectText="Share with"
+                                                                searchInputPlaceholderText="Search..."
+                                                                altFontFamily="overpass"
+                                                                tagRemoveIconColor="#a2a2aa"
+                                                                tagBorderColor="#a2a2aa"
+                                                                tagTextColor="#a2a2aa"
+                                                                selectedItemTextColor="#202025"
+                                                                selectedItemIconColor="#202025"
+                                                                itemTextColor="#202025"
+                                                                displayKey="label"
+                                                                textColor="#202025"
+                                                                submitButtonColor={'#202025'}
+                                                                submitButtonText="Done"
+                                                            />
+                                                        </ScrollView>
                                                     </View> : null
                                             }
                                         </View>
@@ -1483,7 +1465,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                             false: '#f4f4f6',
                                                                             true: '#a2a2aa'
                                                                         }}
-                                                                        activeThumbColor='white'
+                                                                        thumbColor='white'
                                                                     />
                                                                 </View>
                                                                 : <View style={{ flex: 1, backgroundColor: '#fff' }} />
@@ -1566,7 +1548,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                     false: '#f4f4f6',
                                                                     true: '#a2a2aa'
                                                                 }}
-                                                                activeThumbColor='white'
+                                                                thumbColor='white'
                                                             />
                                                         </View>
                                                         {
@@ -1802,7 +1784,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             false: '#f4f4f6',
                                             true: '#3B64F8'
                                         }}
-                                        activeThumbColor='white'
+                                        thumbColor='white'
                                     />
                                 </View>
                             </View>
@@ -1829,7 +1811,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                         false: '#f4f4f6',
                                                         true: '#a2a2aa'
                                                     }}
-                                                    activeThumbColor='white'
+                                                    thumbColor='white'
                                                 />
                                             </View>
                                             {
@@ -1931,7 +1913,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                         false: '#f4f4f6',
                                                         true: '#a2a2aa'
                                                     }}
-                                                    activeThumbColor='white'
+                                                    thumbColor='white'
                                                 />
                                             </View>
                                             {

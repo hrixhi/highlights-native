@@ -65,9 +65,11 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
             <ScrollView
                 scrollEnabled={true}
                 showsVerticalScrollIndicator={false}
+                alwaysBounceVertical={true}
                 horizontal={false}
             >
                 <RefreshControl
+                    enabled={true}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                 />

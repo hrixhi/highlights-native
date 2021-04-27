@@ -26,6 +26,7 @@ import QuizCreate from './QuizCreate';
 import TeXToSVG from "tex-to-svg";
 // import EquationEditor from "equation-editor-react";
 import { WebView } from 'react-native-webview';
+import MultiSelect from 'react-native-multiple-select';
 import * as DocumentPicker from 'expo-document-picker';
 import { TimePicker } from 'react-native-simple-time-picker';
 
@@ -188,9 +189,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         })
             .then((res: any) => {
                 if (res.data && res.data.cue.getSharedWith) {
-                    setSubscribers(res.data.cue.getSharedWith)
-                    // clear selected
-                    setSelected(res.data.cue.getSharedWith)
+                    const sharedWith = res.data.cue.getSharedWith
+                    const shared: any[] = []
+                    const ids: any[] = []
+                    sharedWith.map((s: any) => {
+                        shared.push({
+                            value: s.value,
+                            label: s.label
+                        })
+                        ids.push(s.value)
+                    })
+                    setSubscribers(shared)
+                    setSelected(ids)
                 }
             })
             .catch((err: any) => console.log(err))
@@ -420,12 +430,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
             const user = JSON.parse(uString)
             const server = fetchAPI('')
-            const userIds: any[] = []
-            if (selected.length !== 0) {
-                selected.map((item) => {
-                    userIds.push(item.value)
-                })
-            }
+            // const userIds: any[] = []
+            // if (selected.length !== 0) {
+            //     selected.map((item) => {
+            //         userIds.push(item.value)
+            //     })
+            // }
 
             const variables = {
                 cue: saveCue,
@@ -440,7 +450,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 submission: submission || isQuiz,
                 deadline: submission || isQuiz ? deadline.toISOString() : '',
                 endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : '',
-                shareWithUserIds: selected.length === subscribers.length ? null : userIds
+                shareWithUserIds: selected.length === subscribers.length ? null : selected
             }
 
             server.mutate({
@@ -538,6 +548,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         const { hours, minutes, seconds } = duration;
         setDuration({ hours, minutes, seconds });
     }, [])
+
 
     const width = Dimensions.get('window').width;
     return (
@@ -794,7 +805,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         false: '#f4f4f6',
                                                         true: '#3B64F8'
                                                     }}
-                                                    activeThumbColor='white'
+                                                    thumbColor='white'
                                                 />
                                             </View>
                                         </View> : null
@@ -956,64 +967,50 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     </View>
                                     {
                                         channelId !== '' ?
-                                            <View style={{ maxHeight: 200, flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
-                                                <View style={{ width: '90%', padding: 5, height: expandMenu ? 175 : 'auto', backgroundColor: '#fff' }}>
-                                                    {/* <Select
-                                                        placeholder='Share with'
-                                                        styles={{
-                                                            menu: (provided: any, state: any) => ({
-                                                                ...provided,
-                                                                zIndex: 9999,
-                                                                overflow: 'scroll',
-                                                                height: 125,
-                                                                display: 'flex',
-                                                                margin: 5,
-                                                                width: '97%',
-                                                                boxShadow: 'none'
-                                                            }),
-                                                            option: (provided: any, state: any) => ({
-                                                                ...provided,
-                                                                fontFamily: 'overpass',
-                                                                color: '#a2a2aa',
-                                                                fontSize: 10,
-                                                                height: 25,
-                                                                width: '97%'
-                                                            }),
-                                                            input: (styles: any) => ({
-                                                                // ...styles,
-                                                                width: '100%',
-                                                                // border: 'none',
-                                                                borderWidth: 0,
-                                                                fontSize: 12
-                                                            }),
-                                                            placeholder: (styles: any) => ({
-                                                                ...styles,
-                                                                fontFamily: 'overpass',
-                                                                color: '#a2a2aa',
-                                                                fontSize: 12
-                                                            }),
-                                                            multiValueLabel: (styles: any, { data }: any) => ({
-                                                                ...styles,
-                                                                color: '#202025',
-                                                                fontFamily: 'overpass'
-                                                            }),
-                                                            multiValue: (styles: any, { data }: any) => ({
-                                                                ...styles,
-                                                                backgroundColor: '#f4f4f6',
-                                                                fontFamily: 'overpass'
-                                                            })
+                                            <View style={{ height: 350, flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
+                                                <ScrollView style={{
+                                                    width: '100%',
+                                                    padding: 5,
+                                                    backgroundColor: '#fff'
+                                                }}>
+                                                    <MultiSelect
+                                                        hideTags={false}
+                                                        items={subscribers}
+                                                        uniqueKey="value"
+                                                        ref={RichText}
+                                                        styleTextDropdown={{
+                                                            fontFamily: 'overpass'
                                                         }}
-                                                        value={selected}
-                                                        isMulti={true}
-                                                        onMenuOpen={() => setExpandMenu(true)}
-                                                        onMenuClose={() => setExpandMenu(false)}
-                                                        name="Share with"
-                                                        className="basic-multi-select"
-                                                        classNamePrefix="select"
-                                                        onChange={onChange}
-                                                        options={subscribers}
-                                                    /> */}
-                                                </View>
+                                                        styleDropdownMenuSubsection={{
+                                                            height: 50,
+                                                        }}
+                                                        styleSelectorContainer={{
+                                                            height: 350,
+                                                        }}
+                                                        styleItemsContainer={{
+                                                            height: 250
+                                                        }}
+                                                        styleListContainer={{
+                                                            height: 250,
+                                                            backgroundColor: '#fff'
+                                                        }}
+                                                        onSelectedItemsChange={(sel: any) => setSelected(sel)}
+                                                        selectedItems={selected}
+                                                        selectText="Share with"
+                                                        searchInputPlaceholderText="Search..."
+                                                        altFontFamily="overpass"
+                                                        tagRemoveIconColor="#a2a2aa"
+                                                        tagBorderColor="#a2a2aa"
+                                                        tagTextColor="#a2a2aa"
+                                                        selectedItemTextColor="#202025"
+                                                        selectedItemIconColor="#202025"
+                                                        itemTextColor="#202025"
+                                                        displayKey="label"
+                                                        textColor="#202025"
+                                                        submitButtonColor={'#202025'}
+                                                        submitButtonText="Done"
+                                                    />
+                                                </ScrollView>
                                             </View> : null
                                     }
                                 </View>
@@ -1042,7 +1039,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             false: '#f4f4f6',
                                                             true: '#a2a2aa'
                                                         }}
-                                                        activeThumbColor='white'
+                                                        thumbColor='white'
                                                     />
                                                 </View>
                                                 {
@@ -1114,7 +1111,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             false: '#f4f4f6',
                                                             true: '#a2a2aa'
                                                         }}
-                                                        activeThumbColor='white'
+                                                        thumbColor='white'
                                                     />
                                                 </View>
                                                 {
@@ -1275,7 +1272,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             false: '#f4f4f6',
                                             true: '#3B64F8'
                                         }}
-                                        activeThumbColor='white'
+                                        thumbColor='white'
                                     />
                                 </View>
                             </View>
@@ -1302,7 +1299,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         false: '#f4f4f6',
                                                         true: '#a2a2aa'
                                                     }}
-                                                    activeThumbColor='white'
+                                                    thumbColor='white'
                                                 />
                                             </View>
                                             {
@@ -1403,7 +1400,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         false: '#f4f4f6',
                                                         true: '#a2a2aa'
                                                     }}
-                                                    activeThumbColor='white'
+                                                    thumbColor='white'
                                                 />
                                             </View>
                                             {

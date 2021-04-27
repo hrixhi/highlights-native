@@ -179,7 +179,7 @@ const styles: any = () => StyleSheet.create({
     },
     dateContainer: {
         fontSize: 10,
-        height: '22%',
+        height: '24%',
         backgroundColor: '#f4f4f6',
         display: 'flex',
         flexDirection: 'row'
