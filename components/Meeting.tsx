@@ -10,11 +10,13 @@ import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
 import { ScrollView } from 'react-native-gesture-handler';
 import DateTimePicker from '@react-native-community/datetimepicker';
+// import JitsiMeet, { JitsiMeetView } from 'react-native-jitsi-meet';
 
 const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const [modalAnimation] = useState(new Animated.Value(0))
     const [room] = useState(props.channelId)
+    const [email, setEmail] = useState('')
     const [name, setName] = useState('')
     const [password] = useState(props.channelCreatedBy)
     const [isOwner, setIsOwner] = useState(false)
@@ -158,6 +160,13 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         })
     }, [start, end, props.channelId])
 
+    useEffect(() => {
+        const userInfo = { displayName: 'User', email };
+        // JitsiMeet.call(room, userInfo);
+        /* You can also use JitsiMeet.audioCall(url) for audio only call */
+        /* You can programmatically end the call with JitsiMeet.endCall() */
+    }, [room, name, email])
+
     if (name === '') {
         return null
     }
@@ -227,26 +236,37 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 </View>
                             </View> : null
                     }
-                    {/* {
+                    {
                         meetingOn ?
                             <View>
                                 <Text
                                     style={{ color: '#a2a2aa', fontSize: 13, lineHeight: 20, marginVertical: 25 }}
                                 >
                                     Switching from this window to any other window within Cues will revoke your participation from the classroom. {'\n'}
-                                        To continue using Cues without exiting the classroom, open it in a
-                                        {/* <a href='https://web.cuesapp.co' style={{ color: '#3B64F8' }} target='_blank'> 
+                                        To continue using Cues without exiting the classroom, open it in a new tab
+                                       {/* <a href='https://web.cuesapp.co' style={{ color: '#3B64F8' }} target='_blank'> 
                                             new tab
-                                            {/* </a> 
+                                           </a>  */}
                                              and continue working simultaneously.
                                 </Text>
                             </View> : null
-                    } */}
+                    }
                     {
                         meetingOn ?
-                            <Text>
-                                meeting on
-                        </Text>
+                            // <JitsiMeetView
+                            //     onConferenceTerminated={() => {
+                            //         if (isOwner) {
+                            //             updateMeetingStatus();
+                            //         }
+                            //         setMeetingOn(false);
+                            //         setMeetingEndText('Meeting exited.');
+                            //     }}
+                            //     room={room}
+                            //     // onConferenceJoined={this.onConferenceJoined}
+                            //     // onConferenceWillJoin={this.onConferenceWillJoin}
+                            //     style={{ flex: 1, height: '100%', width: '100%' }}
+                            // />
+                            <Text>Meeting on</Text>
                             // <Jutsu
                             //     containerStyles={{
                             //         width: '100%',
