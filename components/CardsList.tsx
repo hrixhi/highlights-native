@@ -12,7 +12,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const unparsedCues: any[] = JSON.parse(JSON.stringify(props.cues))
     const [cues] = useState<any[]>(unparsedCues.reverse())
-    const [numCards] = useState(5)
+    // const [numCards] = useState(5)
     const [filterChoice, setFilterChoice] = useState(props.channelFilterChoice)
     let filteredCues: any[] = []
     if (filterChoice === 'All') {
@@ -117,9 +117,10 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
     );
 }
 
-export default React.memo(CardsList, (prev, next) => {
-    return _.isEqual(prev.cues, next.cues)
-})
+export default CardsList
+// export default React.memo(CardsList, (prev, next) => {
+//     return _.isEqual(prev.cues, next.cues)
+// })
 
 
 const styleObject = (channelId: any) => {

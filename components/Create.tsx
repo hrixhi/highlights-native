@@ -335,12 +335,24 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         if (!init) {
             return
         }
-        if (cue && cue !== "") {
-            storeDraft('cueDraft', cue)
+        let saveCue = ''
+        // Current limitation - not able to save quizzes...
+        if (imported) {
+            const obj = {
+                type,
+                url,
+                title
+            }
+            saveCue = JSON.stringify(obj)
+        } else {
+            saveCue = cue
+        }
+        if (saveCue && saveCue !== "") {
+            storeDraft('cueDraft', saveCue)
         } else {
             storeDraft('cueDraft', '')
         }
-    }, [cue, init])
+    }, [cue, init, type, url, imported, title])
 
     const storeDraft = useCallback(async (type, value) => {
         await AsyncStorage.setItem(type, value)

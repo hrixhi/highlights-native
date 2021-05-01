@@ -507,7 +507,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }, [randomShuffleFrequency, sleepFrom, sleepTo, firstOpened, cues, responseListener])
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (saveData?: boolean) => {
     setReLoading(true)
     try {
 
@@ -702,10 +702,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       if (u) {
         const parsedUser = JSON.parse(u)
         if (parsedUser.email) {
-          if (!init) {
-            loadDataFromCloud()
+          if (init || saveData) {
+            await saveDataInCloud()
           } else {
-            saveDataInCloud()
+            await loadDataFromCloud()
           }
         }
       }
@@ -718,7 +718,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         setReLoading(false)
       }
 
-      notificationScheduler()
+      await notificationScheduler()
 
     } catch (e) {
       console.log(e)
@@ -870,7 +870,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           // delete cueInput.gradeWeight;
           // delete cueInput.submission;
           delete cueInput.comment;
-
           delete cueInput.unreadThreads;
           // delete cueInput.createdBy;
           delete cueInput.original;
@@ -906,18 +905,54 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
     }).then(async res => {
       if (res.data.cue.saveCuesToCloud) {
-        res.data.cue.saveCuesToCloud.map((item: any) => {
-          parsedCues["local"][Number(item.oldId)]._id = item.newId
+        const newIds: any = res.data.cue.saveCuesToCloud;
+        const updatedCuesArray: any[] = []
+        allCues.map((c: any) => {
+          const id = c._id;
+          const updatedItem = newIds.find((i: any) => {
+            return id.toString().trim() === i.oldId.toString().trim()
+          })
+          if (updatedItem) {
+            updatedCuesArray.push({
+              ...c,
+              _id: updatedItem.newId
+            })
+          } else {
+            updatedCuesArray.push(c)
+          }
         })
-        const updatedCues = JSON.stringify(parsedCues)
-        await AsyncStorage.setItem('cues', updatedCues)
-        if (res.data.cue.saveCuesToCloud.length !== 0) {
-          setCues(parsedCues)
-          setReopenUpdateWindow(Math.random())
+        const updatedCuesObj: any = {};
+        updatedCuesArray.map((c: any) => {
+          if (c.channelId && c.channelId !== '') {
+            if (updatedCuesObj[c.channelId]) {
+              updatedCuesObj[c.channelId].push(c)
+            } else {
+              updatedCuesObj[c.channelId] = [c]
+            }
+          } else {
+            if (updatedCuesObj["local"]) {
+              updatedCuesObj["local"].push(c)
+            } else {
+              updatedCuesObj["local"] = [c]
+            }
+          }
+        });
+        (async () => {
+          const updatedCues = JSON.stringify(updatedCuesObj)
+          await AsyncStorage.setItem('cues', updatedCues)
+        })();
+        if (newIds.length !== 0) {
+          // setCues(updatedCuesObj)
+          updateCuesHelper(updatedCuesObj)
+          // setReopenUpdateWindow(Math.random())
         }
       }
     }).catch(err => console.log(err))
-  }, [])
+  }, [cues, setCues])
+
+  const updateCuesHelper = useCallback((obj: any) => {
+    setCues(obj)
+  }, [setCues, cues])
 
   useEffect(() => {
     // Called when component is loaded
@@ -980,7 +1015,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     if (u) {
       const user = JSON.parse(u)
       if (user.email) {
-        saveDataInCloud()
+        await saveDataInCloud()
       }
     }
   }, [])
@@ -1007,7 +1042,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [email])
 
   const closeModal = useCallback(() => {
-    setInit(true)
     setCueId('')
     setModalType('')
     setCreatedBy('')
@@ -1018,8 +1052,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         setChannelId('')
       }
     }
-    loadData()
+    loadData(true)
   }, [sheetRef, fadeAnimation, modalType, filterChoice])
+
+  console.log(cues && cues.local ? cues.local[cues.local.length - 1] : 0)
 
   const modalContent = modalType === 'Menu' ? <Menu
     sleepFrom={sleepFrom}
@@ -1085,7 +1121,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     (
                       modalType === 'Profile' ? <Profile
                         closeModal={() => closeModal()}
-                        saveDataInCloud={() => saveDataInCloud()}
+                        saveDataInCloud={async () => await saveDataInCloud()}
                         reOpenProfile={() => {
                           setModalType('')
                           openModal('Profile')

@@ -160,13 +160,6 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         })
     }, [start, end, props.channelId])
 
-    useEffect(() => {
-        const userInfo = { displayName: 'User', email };
-        // JitsiMeet.call(room, userInfo);
-        /* You can also use JitsiMeet.audioCall(url) for audio only call */
-        /* You can programmatically end the call with JitsiMeet.endCall() */
-    }, [room, name, email])
-
     if (name === '') {
         return null
     }

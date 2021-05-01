@@ -7,7 +7,7 @@ import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
 import { fetchAPI } from '../graphql/FetchAPI';
-import { createCue, deleteForEveryone, getChannels, getQuiz, getSharedWith, markAsRead, shareCueWithMoreIds, start, submit } from '../graphql/QueriesAndMutations';
+import { createCue, deleteCue, deleteForEveryone, getChannels, getQuiz, getSharedWith, markAsRead, shareCueWithMoreIds, start, submit } from '../graphql/QueriesAndMutations';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
@@ -157,7 +157,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 })
                 .catch(err => {
                 })
-            if (user._id.toString().trim() === props.cue.createdBy) {
+            if (user._id.toString().trim() === props.cue.createdBy && props.cue.channelId && props.cue.channelId !== '') {
                 // owner
                 server.query({
                     query: getSharedWith,
@@ -473,8 +473,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const handleDelete = useCallback(async () => {
 
+        const server = fetchAPI('')
         if (props.cue.channelId && isOwner) {
-            const server = fetchAPI('')
             server.mutate({
                 mutation: deleteForEveryone,
                 variables: {
@@ -483,6 +483,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             }).then(res => {
                 if (res.data.cue.deleteForEveryone) {
                     Alert("Cue Deleted!");
+                }
+            })
+        }
+
+        if (!props.cue.channelId) {
+            server.mutate({
+                mutation: deleteCue,
+                variables: {
+                    cueId: props.cue._id
                 }
             })
         }
