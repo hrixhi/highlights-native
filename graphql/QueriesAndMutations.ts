@@ -628,3 +628,10 @@ query($userId: String!, $channelId: String!) {
     }
 }
 `
+export const getMeetingLink = gql`
+query($channelId: String!, $userId: String!) {
+    channel {
+        getMeetingLink(channelId: $channelId, userId: $userId)
+    }
+}
+`
