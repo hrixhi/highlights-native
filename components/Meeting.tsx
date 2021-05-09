@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Animated, Dimensions, Switch, StyleSheet } from 'react-native';
+import { Animated, Dimensions, Switch, StyleSheet, Linking } from 'react-native';
 import { Text, TouchableOpacity, View } from './Themed';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { Jutsu } from 'react-jutsu'
 import { fetchAPI } from '../graphql/FetchAPI';
 // import Datetime from 'react-datetime';
-import { createScheduledMeeting, editMeeting, getAttendances, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance } from '../graphql/QueriesAndMutations';
+import { createScheduledMeeting, editMeeting, getAttendances, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance } from '../graphql/QueriesAndMutations';
 import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
 import { ScrollView } from 'react-native-gesture-handler';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Alert from './Alert';
 // import JitsiMeet, { JitsiMeetView } from 'react-native-jitsi-meet';
 
 const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -28,6 +29,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [pastMeetings, setPastMeetings] = useState<any[]>([])
     const [showAttendances, setShowAttendances] = useState(false)
     const [attendances, setAttendances] = useState<any[]>([])
+    const [meetingLink, setMeetingLink] = useState('')
 
     const loadAttendances = useCallback((dateId) => {
         const server = fetchAPI('')
@@ -89,6 +91,19 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 const u = await AsyncStorage.getItem('user')
                 if (u) {
                     const user = JSON.parse(u)
+
+                    server.query({
+                        query: getMeetingLink,
+                        variables: {
+                            userId: user._id,
+                            channelId: props.channelId
+                        }
+                    }).then(res => {
+                        if (res && res.data.channel.getMeetingLink && res.data.channel.getMeetingLink !== 'error') {
+                            setMeetingLink(res.data.channel.getMeetingLink)
+                        }
+                    })
+
                     server.mutate({
                         mutation: markAttendance,
                         variables: {
@@ -229,86 +244,40 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 </View>
                             </View> : null
                     }
-                    {
-                        meetingOn ?
-                            <View>
-                                <Text
-                                    style={{ color: '#a2a2aa', fontSize: 13, lineHeight: 20, marginVertical: 25 }}
-                                >
-                                    Switching from this window to any other window within Cues will revoke your participation from the classroom. {'\n'}
-                                        To continue using Cues without exiting the classroom, open it in a new tab
-                                       {/* <a href='https://web.cuesapp.co' style={{ color: '#3B64F8' }} target='_blank'> 
-                                            new tab
-                                           </a>  */}
-                                             and continue working simultaneously.
+                    <TouchableOpacity
+                        onPress={() => {
+                            if (meetingOn) {
+                                Linking.openURL(meetingLink);
+                            } else {
+                                Alert("Classroom not in session.", "You will be notified when initiated.")
+                            }
+                        }}
+                        style={{
+                            backgroundColor: 'white',
+                            overflow: 'hidden',
+                            height: 35,
+                            marginTop: 15,
+                            width: '100%', justifyContent: 'center', flexDirection: 'row',
+                            marginBottom: 100
+                        }}>
+                        <Text style={{
+                            overflow: 'hidden',
+                            textAlign: 'center',
+                            lineHeight: 35,
+                            color: meetingOn ? '#fff' : '#202025',
+                            fontSize: 12,
+                            backgroundColor: meetingOn ? '#3B64F8' : '#f4f4f6',
+                            paddingHorizontal: 25,
+                            fontFamily: 'inter',
+                            height: 35,
+                            width: 200,
+                            borderRadius: 15,
+                        }}>
+                            ENTER CLASSROOM
                                 </Text>
-                            </View> : null
-                    }
+                    </TouchableOpacity>
                     {
-                        meetingOn ?
-                            // <JitsiMeetView
-                            //     onConferenceTerminated={() => {
-                            //         if (isOwner) {
-                            //             updateMeetingStatus();
-                            //         }
-                            //         setMeetingOn(false);
-                            //         setMeetingEndText('Meeting exited.');
-                            //     }}
-                            //     room={room}
-                            //     // onConferenceJoined={this.onConferenceJoined}
-                            //     // onConferenceWillJoin={this.onConferenceWillJoin}
-                            //     style={{ flex: 1, height: '100%', width: '100%' }}
-                            // />
-                            <Text>Meeting on</Text>
-                            // <Jutsu
-                            //     containerStyles={{
-                            //         width: '100%',
-                            //         height: 500,
-                            //         marginTop: isOwner ? 20 : 70,
-                            //         borderRadius: 20
-                            //     }}
-                            //     configOverwrite={{
-                            //         // disableInviteFunctions: true,
-                            //         startWithAudioMuted: true,
-                            //         startWithVideoMuted: true,
-                            //         prejoinPageEnabled: false,
-                            //         disableProfile: true,
-                            //         remoteVideoMenu:
-                            //         {
-                            //             disableKick: !isOwner,
-                            //         },
-                            //         toolbarButtons,
-                            //     }}
-                            //     interfaceConfigOverwrite={{
-                            //         TOOLBAR_BUTTONS: toolbarButtons,
-                            //         SHOW_JITSI_WATERMARK: false,
-                            //         showJitsiWatermark: false,
-                            //         SHOW_POWERED_BY: false,
-                            //         SHOW_PROMOTIONAL_CLOSE_PAGE: false
-                            //     }}
-                            //     // domain='cuesapp.co'
-                            //     roomName={room}
-                            //     displayName={name}
-                            //     subject={props.channelName}
-                            //     password={password}
-                            //     onMeetingEnd={() => {
-                            //         if (isOwner) {
-                            //             updateMeetingStatus();
-                            //         }
-                            //         setMeetingOn(false);
-                            //         setMeetingEndText('Meeting exited.');
-                            //     }}
-                            //     loadingComponent={<p>loading ...</p>}
-                            //     errorComponent={<p>Oops, something went wrong</p>}
-                            //      />
-                            : <View style={{ backgroundColor: 'white', flex: 1, paddingBottom: 25, borderBottomColor: '#f4f4f6', borderBottomWidth: 1 }}>
-                                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                    {meetingEndText}
-                                </Text>
-                            </View>
-                    }
-                    {
-                        !isOwner ? <View style={{ backgroundColor: '#fff' }}>
+                        !isOwner ? <View style={{ borderColor: '#f4f4f6', borderTopWidth: 1, backgroundColor: '#fff' }}>
                             <Text
                                 ellipsizeMode="tail"
                                 style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, marginVertical: 25 }}>
@@ -319,10 +288,10 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     {
                         isOwner ?
                             <View style={{
-                                backgroundColor: '#fff',
                                 flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                                 marginBottom: 40,
-                                marginTop: 25
+                                borderColor: '#f4f4f6', borderTopWidth: 1,
+                                paddingTop: 25
                             }}>
                                 <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%', backgroundColor: '#fff' }}>
                                     <Text

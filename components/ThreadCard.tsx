@@ -119,6 +119,7 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             textAlign: 'center',
                                             zIndex: 150,
                                             marginLeft: 10,
+                                            overflow: 'hidden',
                                             marginTop: 7,
                                             color: 'white', lineHeight: 20, fontSize: 10
                                         }}>

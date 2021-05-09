@@ -139,7 +139,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         </View>
     }
 
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
+    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 50 : Dimensions.get('window').height;
     return (
         <View style={{
             backgroundColor: 'white',
@@ -149,8 +149,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             borderTopRightRadius: props.cueId ? 0 : 30,
             borderTopLeftRadius: props.cueId ? 0 : 30,
             // marginBottom: props.cueId ? 0 : 25,
-            borderBottomColor: '#f4f4f6',
-            borderBottomWidth: props.cueId ? 0 : 1
+            // borderBottomColor: '#f4f4f6',
+            // borderBottomWidth: props.cueId ? 0 : 1
         }}>
             <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25 }}>
                 {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
