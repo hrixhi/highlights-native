@@ -93,7 +93,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
           }
         })
         .then(async res => {
-          if (res.data.user.signup && res.data.user.signup === "") {
+          if (res.data.user.signup === "") {
             const user = JSON.parse(u);
             user.email = email;
             user.fullName = fullName;
