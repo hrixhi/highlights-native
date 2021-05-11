@@ -150,7 +150,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <Text
                     ellipsizeMode="tail"
                     style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25, paddingHorizontal: 20, }}>
-                    Events
+                    Planner
                                 </Text>
             </View>
             <ScrollView style={{
