@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dimensions, StyleSheet, TextInput } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+import { TextInput } from "./CustomTextInput";
 import { Text, View, TouchableOpacity } from './Themed';
 import { fetchAPI } from '../graphql/FetchAPI';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +19,30 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [displayName, setDisplayName] = useState('')
     const [fullName, setFullName] = useState('')
     const [userFound, setUserFound] = useState(false)
+
+    const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+
+    useEffect(() => {
+        if (option === "Subscribe") {
+            if (!passwordRequired && name) {
+                setIsSubmitDisabled(false);
+                return;
+            } else if (passwordRequired && name && password) {
+                setIsSubmitDisabled(false);
+                return;
+            } 
+            
+        } else {
+            if (name) {
+                setIsSubmitDisabled(false)
+                return;
+            }
+
+        }
+
+        setIsSubmitDisabled(true);
+
+    }, [name, password, passwordRequired, option])
 
     const handleSubscribe = useCallback(async () => {
 
@@ -245,6 +270,18 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     return (
         <View style={styles.screen} key={1}>
             <View style={{ width: '100%', backgroundColor: 'white' }}>
+                <Text
+                    style={{
+                        fontSize: 30,
+                        color: "#202025",
+                        fontFamily: "inter",
+                        paddingBottom: 15,
+                        textAlign: "center",
+                        paddingTop: 30
+                    }}
+                >
+                    Channels
+                </Text>
                 <View style={styles.colorBar}>
                     <TouchableOpacity
                         style={option === 'Subscribe' ? styles.allOutline : styles.all}
@@ -282,7 +319,6 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </Text>
                             <TextInput
                                 value={displayName}
-                                style={styles.input}
                                 placeholder={''}
                                 onChangeText={val => setDisplayName(val)}
                                 placeholderTextColor={'#a2a2aa'}
@@ -292,7 +328,6 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </Text>
                             <TextInput
                                 value={fullName}
-                                style={styles.input}
                                 placeholder={''}
                                 onChangeText={val => setFullName(val)}
                                 placeholderTextColor={'#a2a2aa'}
@@ -305,13 +340,14 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </Text>
                             <TextInput
                                 value={name}
-                                style={styles.input}
                                 placeholder={''}
                                 onChangeText={val => {
                                     setName(val)
                                     setPasswordRequired(false)
                                 }}
                                 placeholderTextColor={'#a2a2aa'}
+                                required={true}
+                                footerMessage={'Channel name is case sensitive'}
                             />
                         </View>
                 }
@@ -328,6 +364,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 onChangeText={val => setPassword(val)}
                                 placeholderTextColor={'#a2a2aa'}
                                 secureTextEntry={true}
+                                required={option === "Subscribe" ? true : false}
                             />
                         </View>
                         : (
@@ -358,6 +395,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     height: 35,
                                     marginTop: 15
                                 }}
+                                disabled={isSubmitDisabled}
                                 >
                                 <Text style={{
                                     textAlign: 'center',
