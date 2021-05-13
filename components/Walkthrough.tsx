@@ -4,6 +4,7 @@ import { Text, TouchableOpacity, View } from './Themed';
 import Swiper from 'react-native-web-swiper'
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+// import { Linking } from 'react-native';
 
 const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -187,6 +188,33 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         </Text>
                     </View>
                 </Swiper>
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        height: 35,
+                        marginTop: 15,
+                        borderRadius: 15,
+                        width: '100%', justifyContent: 'center', flexDirection: 'row',
+                    }} 
+                    onPress={() => Linking.openURL('https://www.cuesapp.co')}              
+                >
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 35,
+                        color: '#202025',
+                        overflow: 'hidden',
+                        fontSize: 12,
+                        backgroundColor: '#f4f4f6',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        width: 200,
+                        borderRadius: 15,
+                    }}>
+                        CONTACT SUPPORT
+                    </Text>
+                </TouchableOpacity>
             </Animated.View>
         </View >
     );

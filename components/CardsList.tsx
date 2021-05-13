@@ -110,6 +110,11 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </View>
                     })
                 }
+                {
+                    filteredCues.length === 0 ? <Text style={{ fontSize: 25, color: '#a2a2aa', textAlign: 'center' }}>
+                        No cues created.
+                    </Text> : null
+                }
                 <View style={styles.marginSmall} />
             </ScrollView>
             {/* </Animated.View> */}

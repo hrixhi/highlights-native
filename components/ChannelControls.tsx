@@ -347,7 +347,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 }}
                                 placeholderTextColor={'#a2a2aa'}
                                 required={true}
-                                footerMessage={'Channel name is case sensitive'}
+                                footerMessage={'case sensitive'}
                             />
                         </View>
                 }

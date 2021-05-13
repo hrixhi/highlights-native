@@ -370,7 +370,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               }
             />
             <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
-              Re-type New Password
+              Confirm New Password
             </Text>
             <TextInput
               secureTextEntry={true}
@@ -446,7 +446,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                 <Text
                   style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}
                 >
-                  Re-enter Password
+                  Confirm Password
                 </Text>
                 <TextInput
                   value={confirmPassword}
