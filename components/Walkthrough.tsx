@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Animated, Dimensions, Switch } from 'react-native';
+import { StyleSheet, Animated, Dimensions, Switch, TouchableOpacity } from 'react-native';
 import { Text, View } from './Themed';
 import Swiper from 'react-native-web-swiper'
 import { Ionicons } from '@expo/vector-icons';
