@@ -104,7 +104,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
     }, [props.users, message, props.channelId, imported, type, title, url])
 
     const createThreadMessage = useCallback(async () => {
-        console.log(message)
+        // console.log(message)
         if (!message || message === '') {
             return
         }
