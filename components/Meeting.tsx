@@ -11,6 +11,7 @@ import SubscriberCard from './SubscriberCard';
 import { ScrollView } from 'react-native-gesture-handler';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Alert from './Alert';
+import moment from 'moment';
 // import JitsiMeet, { JitsiMeetView } from 'react-native-jitsi-meet';
 
 const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -30,6 +31,20 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [showAttendances, setShowAttendances] = useState(false)
     const [attendances, setAttendances] = useState<any[]>([])
     const [meetingLink, setMeetingLink] = useState('')
+
+    const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+
+    useEffect(() => {
+        if (end > start) {
+            setIsSubmitDisabled(false);
+            return;
+        } 
+
+        setIsSubmitDisabled(true);
+
+    }, [start, end])
+
+
 
     const loadAttendances = useCallback((dateId) => {
         const server = fetchAPI('')
@@ -396,6 +411,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                             width: '100%', justifyContent: 'center', flexDirection: 'row',
                                         }}
                                         onPress={() => handleCreate()}
+                                        disabled={isSubmitDisabled}
                                     >
                                         <Text style={{
                                             textAlign: 'center',
@@ -430,7 +446,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         hideChevron={true}
                                         fadeAnimation={props.fadeAnimation}
                                         subscriber={{
-                                            displayName: (new Date(date.start)).toString() + ' to ' + (new Date(date.end)).toString(),
+                                            displayName: moment(new Date(date.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(date.end)).format('MMMM Do YYYY, h:mm a'),
                                             fullName: 'scheduled'
                                         }}
                                         onPress={() => { }}
@@ -511,7 +527,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                                         chat={!props.cueId}
                                                         fadeAnimation={props.fadeAnimation}
                                                         subscriber={{
-                                                            displayName: (new Date(date.start)).toString() + ' to ' + (new Date(date.end)).toString(),
+                                                            displayName: moment(new Date(date.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(date.end)).format('MMMM Do YYYY, h:mm a'),
                                                             fullName: 'ended'
                                                         }}
                                                         onPress={() => {

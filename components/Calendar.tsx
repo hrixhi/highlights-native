@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, StyleSheet, ScrollView } from 'react-native';
+import { TextInput } from './CustomTextInput';
 import Alert from './Alert'
 import { Text, View, TouchableOpacity } from './Themed';
 import { fetchAPI } from '../graphql/FetchAPI';
@@ -9,6 +10,7 @@ import { Calendar } from 'react-native-big-calendar'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { Ionicons } from '@expo/vector-icons';
+import moment from "moment";
 
 const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -24,7 +26,19 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const [title, setTitle] = useState('')
     const [start, setStart] = useState(new Date())
-    const [end, setEnd] = useState(new Date())
+    const [end, setEnd] = useState(new Date(start.getTime() + 1000 * 60 * 60))
+
+    const [isSubmitDisabled, setIsSubmitDisabled] = useState(true)
+
+    useEffect(() => {
+        if (title !== "" && end > start) {
+            setIsSubmitDisabled(false);
+            return;
+        } 
+
+        setIsSubmitDisabled(true);
+
+    }, [title, start, end])
 
     const onDateClick = useCallback((title, date, dateId) => {
         Alert(
@@ -56,6 +70,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, [])
 
     const handleCreate = useCallback(async () => {
+
+        if (start < new Date()) {
+            Alert('Event must be set in the future.')
+            return;
+        }
+
         const u = await AsyncStorage.getItem('user')
         if (u) {
             const user = JSON.parse(u)
@@ -196,10 +216,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%', backgroundColor: '#fff' }}>
                                     <TextInput
                                         value={title}
-                                        style={styles.input}
                                         placeholder={'Title'}
                                         onChangeText={val => setTitle(val)}
                                         placeholderTextColor={'#a2a2aa'}
+                                        required={true}
                                     />
                                 </View>
                                 <View style={{
@@ -298,6 +318,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             width: '100%', justifyContent: 'center', flexDirection: 'row',
                                         }}
                                         onPress={() => handleCreate()}
+                                        disabled={isSubmitDisabled}
                                     >
                                         <Text style={{
                                             textAlign: 'center',
@@ -321,9 +342,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 height={400}
                                 onPressEvent={(e: any) => {
                                     if (e.dateId !== 'channel') {
-                                        onDateClick(e.title, e.start.toString() + ' to ' + e.end.toString(), e.dateId)
+                                        onDateClick(e.title, moment(new Date(e.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(e.end)).format('MMMM Do YYYY, h:mm a'), e.dateId)
                                     } else {
-                                        Alert(e.title, e.start.toString() + ' to ' + e.end.toString())
+                                        Alert(e.title, moment(new Date(e.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(e.end)).format('MMMM Do YYYY, h:mm a'))
                                     }
                                 }}
                                 events={events}
