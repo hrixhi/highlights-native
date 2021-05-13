@@ -105,7 +105,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     emailValidError,
   ]);
 
-  console.log(emailValidError);
   useEffect(() => {
     Dimensions.addEventListener("change", onDimensionsChange);
     return () => {
@@ -1100,8 +1099,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }
     loadData(true)
   }, [sheetRef, fadeAnimation, modalType, filterChoice])
-
-  console.log(cues && cues.local ? cues.local[cues.local.length - 1] : 0)
 
   const modalContent = modalType === 'Menu' ? <Menu
     sleepFrom={sleepFrom}

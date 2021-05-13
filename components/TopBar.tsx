@@ -82,14 +82,14 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setChannelCategories(cat)
     }, [cues])
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setHideExclaimation(exclaim => !exclaim);
-        }, 750);
-        return () => {
-            clearInterval(interval);
-        };
-    }, []);
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         setHideExclaimation(exclaim => !exclaim);
+    //     }, 750);
+    //     return () => {
+    //         clearInterval(interval);
+    //     };
+    // }, []);
 
     return (
         <View style={styles.topbar} key={Math.random()}>
@@ -105,11 +105,13 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <Image
                             source={colorScheme === 'light' ?
                                 (
-                                    !hideExclaimation ? require('./default-images/cues-logo-black.jpg') : require('./default-images/cues-logo-black-exclamation-hidden.jpg')
+                                    // !hideExclaimation ? require('./default-images/cues-logo-black.jpg') : 
+                                    require('./default-images/cues-logo-black-exclamation-hidden.jpg')
                                 )
                                 :
                                 (
-                                    !hideExclaimation ? require('./default-images/cues-logo-white.jpg') : require('./default-images/cues-logo-white-exclamation-hidden.jpg')
+                                    // !hideExclaimation ? require('./default-images/cues-logo-white.jpg') : 
+                                    require('./default-images/cues-logo-white-exclamation-hidden.jpg')
                                 )
                             }
                             style={{
@@ -175,10 +177,18 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={{ marginRight: 5 }}
+                                        style={{ marginRight: 15 }}
                                         onPress={() => props.deleteChannel()}>
                                         <Text style={styles.channelText}>
                                             <Ionicons name='trash-outline' size={21} color={'#a2a2aa'} />
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => props.openWalkthrough()}
+                                        style={{ marginRight: 5 }}
+                                    >
+                                        <Text style={styles.channelText}>
+                                            <Ionicons name='help-circle-outline' size={21} color={'#a2a2aa'} />
                                         </Text>
                                     </TouchableOpacity>
                                 </View> :

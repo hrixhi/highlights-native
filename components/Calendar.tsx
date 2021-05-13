@@ -320,7 +320,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Calendar
                                 height={400}
                                 onPressEvent={(e: any) => {
-                                    console.log(e.dateId)
                                     if (e.dateId !== 'channel') {
                                         onDateClick(e.title, e.start.toString() + ' to ' + e.end.toString(), e.dateId)
                                     } else {

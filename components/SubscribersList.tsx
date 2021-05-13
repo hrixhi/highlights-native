@@ -645,7 +645,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                                 setUserId(subscriber.userId)
                                                                             }
                                                                         } else {
-                                                                            console.log(subscriber)
                                                                             loadChat(subscriber._id, subscriber.groupId)
                                                                         }
                                                                     }}
