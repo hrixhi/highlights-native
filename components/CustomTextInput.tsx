@@ -5,6 +5,11 @@ import {
   TextInput as DefaultTextInput,
   StyleSheet
 } from "react-native";
+import { PreferredLanguageText } from "../helpers/LanguageContext";
+
+type FieldTypeProps = {
+  hasMultipleLines?: boolean
+}
 
 type ValidationProps = {
   required?: boolean;
@@ -18,15 +23,17 @@ type FooterProps = {
 
 export type TextInputProps = ValidationProps &
   FooterProps &
+  FieldTypeProps &
   DefaultTextInput["props"];
 
 export function TextInput(props: TextInputProps) {
   const [errorType, setErrorType] = useState(""); // Error description; Empty String if none;
+  const requiredErrorText = PreferredLanguageText('required')
 
   const onValidateValue = (value: string) => {
     const { errorText, regEx } = props;
     if (props.required && !value) {
-      setErrorType("Required");
+      setErrorType(requiredErrorText);
       return;
     }
 
@@ -67,6 +74,8 @@ export function TextInput(props: TextInputProps) {
         style={styles.input}
         {...props}
         onBlur={() => onValidateValue(props.value || "")}
+        multiline={props.hasMultipleLines}
+        numberOfLines={props.hasMultipleLines ? 3 : 1}
       />
       {renderFormFooter()}
       {renderErrorMessage()}

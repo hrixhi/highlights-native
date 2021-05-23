@@ -22,6 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 
 import { Agenda } from "react-native-calendars";
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   props: any
@@ -292,7 +293,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             paddingHorizontal: 20
           }}
         >
-          Planner
+          {PreferredLanguageText('planner')}
         </Text>
         {!showAddEvent ? (
           <Ionicons
@@ -358,7 +359,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             >
               <TextInput
                 value={title}
-                placeholder={"Title"}
+                placeholder={PreferredLanguageText('event')}
                 onChangeText={val => setTitle(val)}
                 placeholderTextColor={"#a2a2aa"}
                 required={true}
@@ -373,7 +374,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
               }}
             >
-              <Text style={styles.text}>Start</Text>
+              <Text style={styles.text}>{PreferredLanguageText('start')}</Text>
               <DateTimePicker
                 style={styles.timePicker}
                 value={start}
@@ -412,7 +413,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
               }}
             >
-              <Text style={styles.text}>End</Text>
+              <Text style={styles.text}>{PreferredLanguageText('end')}</Text>
               <View style={{ width: 6, backgroundColor: "#fff" }} />
               {/* <Datetime
                                             value={end}

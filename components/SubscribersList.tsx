@@ -18,6 +18,7 @@ import { validateEmail } from '../helpers/emailCheck';
 // import FileViewer from 'react-file-viewer';
 import WebView from 'react-native-webview';
 import MultiSelect from 'react-native-multiple-select';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -48,6 +49,26 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [title, setTitle] = useState('')
     const [loadedChatWithUser, setLoadedChatWithUser] = useState<any>({})
     const [isLoadedUserInactive, setIsLoadedUserInactive] = useState(false)
+
+    const categoriesLanguageMap: { [label:string]: string } = {
+        All: 'all',
+        Read: 'read',
+        Delivered: 'delivered',
+        "Not Delivered": 'notDelivered',
+        "Submitted": 'submitted',
+        "Graded": "graded"
+    }
+
+    // Alerts
+    const usersAddedAlert = PreferredLanguageText('usersAdded')
+    const emailInviteSentAlert = PreferredLanguageText('emailInviteSent')
+    const unableToLoadMessagesAlert = PreferredLanguageText('unableToLoadMessages') 
+    const checkConnectionAlert = PreferredLanguageText('checkConnection')
+    const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
+    const userSubscriptionActivatedAlert = PreferredLanguageText('userSubscriptionActivated') 
+    const userSubscriptionInactivatedAlert = PreferredLanguageText('userSubscriptionInactivated')
+    const userRemovedAlert = PreferredLanguageText('userRemoved');
+    const alreadyUnsubscribedAlert = PreferredLanguageText('alreadyUnsubscribed')
 
     if (props.cue && props.cue.submission) {
         categories.push('Submitted')
@@ -165,7 +186,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         }).then(res => {
             if (res.data.user.inviteByEmail) {
-                Alert("Users Added!", "Email invite sent.")
+                Alert(usersAddedAlert, emailInviteSentAlert)
             }
         }).catch(err => {
             console.log(err)
@@ -189,7 +210,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     setShowChat(true)
                 })
                 .catch(err => {
-                    Alert("Unable to load messages.", "Check connection.")
+                    Alert(unableToLoadMessagesAlert, checkConnectionAlert)
                 })
             // mark chat as read here
             server.mutate({
@@ -242,7 +263,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     setShowChat(true)
                 })
                 .catch(err => {
-                    Alert("Unable to load messages.", "Check connection.")
+                    Alert(unableToLoadMessagesAlert, checkConnectionAlert)
                 })
             // mark as read here
             server.mutate({
@@ -267,16 +288,16 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         }).then(async res => {
             if (res.data.subscription && res.data.subscription.unsubscribe) {
-                Alert("User Removed")
+                Alert(userRemovedAlert)
                 props.reload()
                 setShowChat(false)
                 setIsLoadedUserInactive(false)
                 setLoadedChatWithUser({})
             } else {
-                Alert("Already unsubscribed.")
+                Alert(alreadyUnsubscribedAlert)
             }
         }).catch(err => {
-            Alert("Something went wrong.", "Check connection.")
+            Alert(somethingWentWrongAlert, checkConnectionAlert)
         })
     }, [loadedChatWithUser, props.channelId, props.reload])
 
@@ -292,7 +313,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             if (isLoadedUserInactive) {
                 // changed to active
                 if (res.data && res.data.subscription.makeActive) {
-                    Alert("User subscription activated!")
+                    Alert(userSubscriptionActivatedAlert)
                     props.reload()
                     setShowChat(false)
                     setIsLoadedUserInactive(false)
@@ -301,7 +322,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             } else {
                 // changed to inactive
                 if (res.data && res.data.subscription.makeInactive) {
-                    Alert("User subscription inactivated!")
+                    Alert(userSubscriptionInactivatedAlert)
                     props.reload()
                     setShowChat(false)
                     setIsLoadedUserInactive(false)
@@ -376,10 +397,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 fontSize: 11,
                                                 lineHeight: 30,
                                                 textAlign: 'right',
-                                                paddingRight: 20
+                                                paddingRight: 20,
+                                                textTransform: 'uppercase'
                                             }}>
                                                 {
-                                                    isLoadedUserInactive ? 'MAKE ACTIVE' : 'MAKE INACTIVE'
+                                                    isLoadedUserInactive ?  PreferredLanguageText('makeActive') : PreferredLanguageText('makeInactive')
                                                 }
                                             </Text>
                                         </TouchableOpacity>
@@ -392,9 +414,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 fontSize: 11,
                                                 lineHeight: 30,
                                                 textAlign: 'right',
-                                                paddingRight: 10
+                                                paddingRight: 10,
+                                                textTransform: 'uppercase'
                                             }}>
-                                                REMOVE FROM CHANNEL
+                                                {PreferredLanguageText('removeFromChannel')}
                                         </Text>
                                         </TouchableOpacity>
                                     </View>
@@ -409,12 +432,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Text
                                     ellipsizeMode="tail"
                                     style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
-                                    Status
+                                    {PreferredLanguageText('status')}
                         </Text> :
                                 <Text
                                     ellipsizeMode="tail"
                                     style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
-                                    Inbox
+                                    {PreferredLanguageText('inbox')}
                         </Text>
                         }
                         {
@@ -434,7 +457,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         fontSize: 10,
                                         color: '#a2a2aa'
                                     }}>
-                                        NEW GROUP
+                                        {PreferredLanguageText('newGroup')}
                                     </Text>
                                 </TouchableOpacity> : null
                         }
@@ -466,7 +489,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     <View style={{ backgroundColor: 'white', flex: 1 }}>
                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                             {
-                                props.cueId ? 'No statuses.' : 'No students.'
+                                props.cueId ? PreferredLanguageText('noStatuses') : PreferredLanguageText('noStudents')
                             }
                         </Text>
                     </View> :
@@ -488,7 +511,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             {
                                                 messages.length === 0 ?
                                                     <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingVertical: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                                        No messages.
+                                                        {PreferredLanguageText('noMessages')}
                                                     </Text>
                                                     : null
                                             }
@@ -512,7 +535,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         setIsLoadedUserInactive(false)
                                                         setLoadedChatWithUser({})
                                                     }}
-                                                    placeholder='Message...'
+                                                    placeholder={`${PreferredLanguageText('message')}...`}
                                                 />
                                             </View>
                                         </ScrollView>
@@ -526,7 +549,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     <Text
                                                         ellipsizeMode="tail"
                                                         style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
-                                                        New Group
+                                                        {PreferredLanguageText('newGroup')}
                                                     </Text>
                                                     <View style={{ height: 350, flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
                                                         <ScrollView style={{
@@ -587,7 +610,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                 setLoadedChatWithUser({})
                                                                 setShowNewGroup(false)
                                                             }}
-                                                            placeholder='Message...'
+                                                            placeholder={`${PreferredLanguageText('message')}...`}
                                                         />
                                                     </View>
                                                 </ScrollView>
@@ -620,7 +643,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                         </View>
                                                                     })) : <View style={{ backgroundColor: 'white', flex: 1 }}>
                                                                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingHorizontal: 50, paddingBottom: 100, paddingTop: 50, fontFamily: 'inter', flex: 1 }}>
-                                                                            No groups.
+                                                                            {PreferredLanguageText('noGroups')}
                                                                     </Text>
                                                                     </View>
                                                                 }
@@ -664,7 +687,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center'
                                         }}>
                                             <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                                Score
+                                                {PreferredLanguageText('score')}
                                         </Text>
                                             <TextInput
                                                 value={score}
@@ -674,7 +697,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 placeholderTextColor={'#a2a2aa'}
                                             />
                                             <Text style={{ color: '#202025', fontSize: 14, paddingVertical: 10, }}>
-                                                Comment
+                                                {PreferredLanguageText('comment')}
                                             </Text>
                                             <TextInput
                                                 value={comment}
@@ -728,7 +751,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             </View>
                                         </View>
                                         <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 25, marginLeft: '5%' }}>
-                                            View Submission
+                                            {PreferredLanguageText('viewSubmission')}
                                         </Text>
                                         {
                                             imported ?
@@ -837,7 +860,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             color: '#a2a2aa',
                                                             lineHeight: 20
                                                         }}>
-                                                        {category}
+                                                        {PreferredLanguageText(categoriesLanguageMap[category])}
                                                     </Text>
                                                 </TouchableOpacity>
                                             })
@@ -848,7 +871,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     </View>) :
                     <View style={{ alignSelf: 'center', width: 400 }}>
                         <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                            Invite By Email
+                            {PreferredLanguageText('inviteByEmail')}
                             </Text>
                         <TextInput
                             value={emails}
@@ -890,8 +913,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 height: 35,
                                 width: 150,
                                 borderRadius: 15,
+                                textTransform: 'uppercase'
                             }}>
-                                ADD USERS
+                                {PreferredLanguageText("addUsers")}
                   </Text>
                         </TouchableOpacity>
                     </View>

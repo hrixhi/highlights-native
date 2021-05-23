@@ -708,6 +708,24 @@ export const getAttendances = gql`
     }
   }
 `;
+export const getAttendancesForChannel = gql`
+  query($channelId: String!) {
+    attendance {
+      getAttendancesForChannel(channelId: $channelId) {
+        userId
+        displayName
+        fullName
+        email
+        attendances {
+          userId
+	        dateId
+	        joinedAt
+        }
+        
+      }
+    }
+  }
+`;
 export const getQuiz = gql`
   query($quizId: String!) {
     quiz {

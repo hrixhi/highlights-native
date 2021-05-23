@@ -28,6 +28,7 @@ import Calendar from '../components/Calendar';
 import Meeting from '../components/Meeting';
 import * as Notifications from 'expo-notifications';
 import { htmlStringParser } from '../helpers/HTMLParser';
+import { PreferredLanguageText, LanguageSelect } from '../helpers/LanguageContext';
 
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -64,13 +65,27 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   // Login Validation
   const [emailValidError, setEmailValidError] = useState("");
 
+  const enterValidEmailError = PreferredLanguageText('enterValidEmail')
+  const alreadyUnsubscribedAlert = PreferredLanguageText('alreadyUnsubscribed')
+  const checkConnectionAlert = PreferredLanguageText('checkConnection')
+  const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrongAlert')
+  const eraseContentLeaveChannelAlert = PreferredLanguageText('eraseContentLeaveChannel')
+  const thisActionWillIrreversiblyAlert = PreferredLanguageText('thisActionWillIrreversibly')
+  const eraseContentAndUnsubscrbeAlert = PreferredLanguageText('eraseContentAndUnsubscrbe')
+  const weHaveEmailedPasswordAlert = PreferredLanguageText('weHaveEmailedPassword')
+  const invalidCredentialsAlert = PreferredLanguageText('invalidCredentials')
+  const unableToRefreshCuesAlert = PreferredLanguageText('unableToRefreshCues')
+  const leaveChannelAlert = PreferredLanguageText('leaveChannel')
+  const areYouSureUnsubscribeAlert = PreferredLanguageText('areYouSureUnsubscribe')
+  const keepContentAndUnsubscribeAlert = PreferredLanguageText('keepContentAndUnsubscribe')
+
   const onDimensionsChange = useCallback(({ w, s }: any) => {
     // window.location.reload()
   }, []);
 
   useEffect(() => {
     if (email && !validateEmail(email.toString().toLowerCase())) {
-      setEmailValidError("Enter a valid email.");
+      setEmailValidError(enterValidEmailError);
       return;
     }
 
@@ -278,14 +293,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const unsubscribeChannel = useCallback(() => {
     Alert(
-      "Leave Channel",
-      "Are you sure you want to unsubscribe from " + filterChoice + "?",
+      leaveChannelAlert,
+      areYouSureUnsubscribeAlert + filterChoice + "?",
       [
         {
           text: "Cancel", style: "cancel"
         },
         {
-          text: "Keep Content & Unsubscribe", onPress: async () => {
+          text: keepContentAndUnsubscribeAlert, onPress: async () => {
             let user = await AsyncStorage.getItem('user')
             if (user) {
               const parsedUser = JSON.parse(user)
@@ -304,10 +319,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   closeModal()
                   loadData()
                 } else {
-                  Alert("Already unsubscribed.")
+                  Alert(alreadyUnsubscribedAlert)
                 }
               }).catch(err => {
-                Alert("Something went wrong.", "Check connection.")
+                Alert(somethingWentWrongAlert, checkConnectionAlert)
               })
             }
           }
@@ -318,14 +333,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const deleteChannel = useCallback(() => {
     Alert(
-      "Erase content and leave channel?",
-      "This action will irreversibly remove shared content, comunication and any notes directly taken inside " + filterChoice + ".",
+      eraseContentLeaveChannelAlert,
+      thisActionWillIrreversiblyAlert + filterChoice + ".",
       [
         {
           text: "Cancel", style: "cancel"
         },
         {
-          text: "Erase Content & Unsubscribe", onPress: async () => {
+          text: eraseContentAndUnsubscrbeAlert, onPress: async () => {
             let user = await AsyncStorage.getItem('user')
             if (user) {
               const parsedUser = JSON.parse(user)
@@ -358,10 +373,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   closeModal()
                   loadData()
                 } else {
-                  Alert("Already unsubscribed.")
+                  Alert(alreadyUnsubscribedAlert)
                 }
               }).catch(err => {
-                Alert("Something went wrong.", "Check connection.")
+                Alert(somethingWentWrongAlert, checkConnectionAlert)
               })
             }
           }
@@ -1078,10 +1093,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
     }).then(res => {
       if (res.data && res.data.user.resetPassword) {
-        Alert('We have emailed you a new password!')
+        Alert(weHaveEmailedPasswordAlert)
         setShowForgotPassword(false)
       } else {
-        Alert("Invalid credentials. Ensure email is correct.");
+        Alert(invalidCredentialsAlert);
       }
     })
   }, [email])
@@ -1245,6 +1260,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     return null;
   }
 
+  const alertText = PreferredLanguageText('savedLocally');
+
   return (
     <View style={styles.container}>
       {
@@ -1283,12 +1300,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             </View>
             <Text style={{ fontSize: 30, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 400, textAlign: 'center' }}>
               {
-                showForgotPassword ? '' : 'Login'
+                showForgotPassword ? '' : PreferredLanguageText('login')
               }
             </Text>
             <Text style={{ fontSize: 18, color: '#a2a2aa', fontFamily: 'overpass', paddingBottom: 25, maxWidth: 400, textAlign: 'center' }}>
               {
-                showForgotPassword ? 'We\'ll send you a temporary password.' : 'Continue where you left off.'
+                showForgotPassword ? PreferredLanguageText('temporaryPassword') : PreferredLanguageText('continueLeftOff')
               }
             </Text>
             <View style={{
@@ -1298,7 +1315,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
               paddingTop: 25
             }}>
               <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 5, paddingTop: 10 }}>
-                Email
+                {PreferredLanguageText('email')}
                 </Text>
               <TextInput
                 value={email}
@@ -1313,7 +1330,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     backgroundColor: 'white',
                   }}>
                     <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 5 }}>
-                      Password
+                      {PreferredLanguageText('password')}
                     </Text>
                     <TextInput
                       secureTextEntry={true}
@@ -1332,7 +1349,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   display: 'flex',
                   flexDirection: 'column',
                   paddingBottom: 10,
-                  marginTop: 40
+                  marginTop: 40,
                 }}>
                 <TouchableOpacity
                   disabled={isSubmitDisabled}
@@ -1362,9 +1379,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     height: 35,
                     width: 180,
                     borderRadius: 15,
+                    textTransform: 'uppercase'
                   }}>
                     {
-                      showForgotPassword ? 'RESET' : 'LOGIN'
+                      showForgotPassword ? PreferredLanguageText('reset') : PreferredLanguageText('login')
                     }
                   </Text>
                 </TouchableOpacity>
@@ -1389,22 +1407,24 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     height: 35,
                     width: 180,
                     borderRadius: 15,
+                    textTransform: 'uppercase'
                   }}>
                     {
-                      showForgotPassword ? 'BACK' : 'FORGOT PASSWORD'
+                      showForgotPassword ? PreferredLanguageText('back') : PreferredLanguageText('forgotPassword')
                     }
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
                     setShowLoginWindow(false)
-                    Alert("Your changes will be saved locally but not in the cloud.")
+                    Alert(alertText);
                   }}
                   style={{
                     backgroundColor: 'white',
                     overflow: 'hidden',
                     height: 35,
                     marginTop: 15,
+                    marginBottom: 30,
                     width: '100%', justifyContent: 'center', flexDirection: 'row'
                   }}>
                   <Text style={{
@@ -1419,10 +1439,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     height: 35,
                     width: 180,
                     borderRadius: 15,
+                    textTransform: 'uppercase'
                   }}>
-                    SKIP FOR NOW
+                    {PreferredLanguageText('skipForNow')}
                   </Text>
                 </TouchableOpacity>
+                <LanguageSelect />
               </View>
             </View>
           </View>
@@ -1518,7 +1540,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   onPress={() => closeModal()}
                   style={{ height: 45, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#a2a2aa', width: '100%' }}>
                   <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#a2a2aa' }}>
-                    <Ionicons name='chevron-back-outline' size={15} /> Back
+                    <Ionicons name='chevron-back-outline' size={15} /> {PreferredLanguageText('back')}
                   </Text>
                 </TouchableOpacity> :
                 <View style={{ backgroundColor: '#fff', height: 0 }} />

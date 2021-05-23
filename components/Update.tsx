@@ -10,6 +10,7 @@ import { getCueThreads, getStatuses } from '../graphql/QueriesAndMutations';
 import ThreadsList from './ThreadsList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SubscribersList from './SubscribersList';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -23,6 +24,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const scroll2: any = useRef()
     const scroll3: any = useRef()
     const [channelOwner, setChannelOwner] = useState(false)
+
+    const unableToLoadStatusesAlert = PreferredLanguageText('unableToLoadStatuses');
+    const checkConnectionAlert = PreferredLanguageText('checkConnection');
+    const unableToLoadCommentsAlert = PreferredLanguageText('unableToLoadComments')
 
     const loadThreadsAndStatuses = useCallback(async () => {
         const u = await AsyncStorage.getItem('user')
@@ -92,7 +97,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 }).start();
                             }
                         }).catch(err => {
-                            Alert("Unable to load statuses.", "Check connection.")
+                            Alert(unableToLoadStatusesAlert, checkConnectionAlert)
                             setLoading(false)
                             modalAnimation.setValue(0)
                             Animated.timing(modalAnimation, {
@@ -121,7 +126,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     }).start();
                 }
             }).catch(err => {
-                Alert("Unable to load comments.", "Check connection.")
+                Alert(unableToLoadCommentsAlert, checkConnectionAlert)
                 setLoading(false)
                 modalAnimation.setValue(0)
                 Animated.timing(modalAnimation, {

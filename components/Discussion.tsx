@@ -7,12 +7,15 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import { getChannelThreads } from '../graphql/QueriesAndMutations';
 import ThreadsList from './ThreadsList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const [modalAnimation] = useState(new Animated.Value(1))
     const [loading, setLoading] = useState(true)
     const [threads, setThreads] = useState<any[]>([])
+    const unableToLoadDiscussionAlert = PreferredLanguageText('unableToLoadDiscussion')
+    const checkConnectionAlert = PreferredLanguageText('checkConnection')
 
     const loadThreads = useCallback(async () => {
 
@@ -52,7 +55,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     }).start();
                 })
                 .catch((err) => {
-                    Alert("Unable to load discussion.", "Check connection.")
+                    Alert(unableToLoadDiscussionAlert, checkConnectionAlert)
                     setLoading(false)
                     modalAnimation.setValue(0)
                     Animated.timing(modalAnimation, {

@@ -5,6 +5,7 @@ import useColorScheme from '../hooks/useColorScheme';
 import { Text, View, TouchableOpacity } from '../components/Themed';
 import Alert from './Alert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -51,7 +52,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             fontSize: 14
                         }}
                     >
-                        My Cues
+                        {PreferredLanguageText('myCues')}
                     </Text>
                 </TouchableOpacity>
                 {
