@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Image, ScrollView, Dimensions, Linking } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Image, ScrollView, Dimensions, Linking, Alert } from 'react-native';
 import { View, Text, TouchableOpacity } from '../components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchAPI } from '../graphql/FetchAPI';
-import { getMeetingStatus, totalUnreadDiscussionThreads, totalUnreadMessages } from '../graphql/QueriesAndMutations';
+import { doesChannelNameExist, getMeetingStatus, totalUnreadDiscussionThreads, totalUnreadMessages, updateChannel } from '../graphql/QueriesAndMutations';
 import useColorScheme from '../hooks/useColorScheme';
+import alert from './Alert';
 
 const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -19,7 +20,49 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [unreadDiscussionThreads, setUnreadDiscussionThreads] = useState(0)
     const [unreadMessages, setUnreadMessages] = useState(0)
     const [meetingOn, setMeetingOn] = useState(false)
-    const [hideExclaimation, setHideExclaimation] = useState(false)
+    const [isOwner, setIsOwner] = useState(false)
+
+    const editChannelInfo = useCallback(() => {
+        Alert.prompt('Update Name', undefined, (name) => {
+            if (!name || name === '') {
+                alert("Enter channel name.")
+                return;
+            }
+            Alert.prompt('Update Password', 'Leave blank for for public access.', (password) => {
+                const server = fetchAPI("")
+                server.query({
+                    query: doesChannelNameExist,
+                    variables: {
+                        name
+                    }
+                }).then(res => {
+                    if (res.data && (res.data.channel.doesChannelNameExist !== true || name.trim() === props.filterChoice.trim())) {
+                        server.mutate({
+                            mutation: updateChannel,
+                            variables: {
+                                name: name.trim(),
+                                password,
+                                channelId: props.channelId
+                            }
+                        }).then(res => {
+                            if (res.data && res.data.channel.update) {
+                                props.loadData()
+                                alert("Channel updated!")
+                            } else {
+                                alert("Something went wrong.")
+                            }
+                        }).catch(err => {
+                            alert("Something went wrong.")
+                        })
+                    } else {
+                        alert("Channel name in use.")
+                    }
+                }).catch(err => {
+                    alert("Something went wrong.")
+                })
+            })
+        }, undefined, props.filterChoice)
+    }, [props.filterChoice, props.loadData])
 
     useEffect(() => {
 
@@ -29,6 +72,9 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     const u = await AsyncStorage.getItem('user')
                     if (u) {
                         const user = JSON.parse(u)
+                        if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
+                            setIsOwner(true)
+                        }
                         const server = fetchAPI('')
                         server.query({
                             query: totalUnreadDiscussionThreads,
@@ -81,15 +127,6 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         })
         setChannelCategories(cat)
     }, [cues])
-
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         setHideExclaimation(exclaim => !exclaim);
-    //     }, 750);
-    //     return () => {
-    //         clearInterval(interval);
-    //     };
-    // }, []);
 
     return (
         <View style={styles.topbar} key={Math.random()}>
@@ -176,13 +213,16 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             <Ionicons name='stats-chart-outline' size={19} color={'#a2a2aa'} />
                                         </Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={{ marginRight: 15 }}
-                                        onPress={() => props.deleteChannel()}>
-                                        <Text style={styles.channelText}>
-                                            <Ionicons name='trash-outline' size={21} color={'#a2a2aa'} />
-                                        </Text>
-                                    </TouchableOpacity>
+                                    {
+                                        isOwner ?
+                                            <TouchableOpacity
+                                                style={{ marginRight: 15 }}
+                                                onPress={() => editChannelInfo()}>
+                                                <Text style={styles.channelText}>
+                                                    <Ionicons name='hammer-outline' size={19} color={'#a2a2aa'} />
+                                                </Text>
+                                            </TouchableOpacity> : null
+                                    }
                                     <TouchableOpacity
                                         onPress={() => props.openWalkthrough()}
                                         style={{ marginRight: 5 }}

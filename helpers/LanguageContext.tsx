@@ -52,7 +52,7 @@ const EnglishBank: {[key: string]: string} = {
     viewShared: "View Shared", // Done
     viewSubmission: "View Submission",
     viewAttendance: "View Attendance",
-    inviteByEmail: "Invite by Email", 
+    inviteByEmail: "Add by Email", 
     myNotes: "My notes", // Done
     mySubmission: "My Submission", // Done
     status: "Status", // DOne
@@ -172,7 +172,7 @@ const EnglishBank: {[key: string]: string} = {
     usersAdded: "Users Added!",
     userRemoved: "User removed",
     alreadyUnsubscribed: "Already unsubscribed",
-    emailInviteSent: "Email invite sent.",
+    emailInviteSent: "Emails have been added and notified. New users receive credentials.",
     unableToLoadMessages: "Unable to load messages.",
     userSubscriptionActivated: "User subscription activated!",
     userSubscriptionInactivated: "User subscription inactivated!",

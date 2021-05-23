@@ -329,7 +329,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
                 ).then(res => {
                     RichText.current.insertImage(
-                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
+                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px; max-width: 400px; width: 100%;'
                     )
                     // setReloadEditorKey(Math.random())
                 }).catch(err => {
@@ -375,7 +375,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     { compress: 0.25, format: ImageManipulator.SaveFormat.JPEG, base64: true }
                 ).then(res => {
                     RichText.current.insertImage(
-                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px'
+                        'data:image/jpeg;base64,' + res.base64, 'border-radius: 10px; max-width: 400px; width: 100%;'
                     )
                 }).catch(err => {
                     Alert("Unable to load image.")
@@ -613,7 +613,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     );
                 }
             }).catch(err => {
-                Alert(somethingWentWrongAlert ,tryAgainLaterAlert)
+                Alert(somethingWentWrongAlert, tryAgainLaterAlert)
             })
         }
     }, [props.cue, cue, submissionTitle, submissionType, submissionUrl, submissionImported, isQuiz, quizId, initiatedAt, solutions, deadline])
@@ -1559,7 +1559,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                                         <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                                             {PreferredLanguageText('graded')}
-                                                </Text>
+                                                        </Text>
                                                     </View>
                                                     <View style={{ flexDirection: 'row', backgroundColor: 'white', }}>
                                                         <View style={{
@@ -1594,7 +1594,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                         paddingRight: 10
                                                                     }}>
                                                                         Grade Weight {'\n'}{PreferredLanguageText('percentageOverall')}
-                                                        </Text>
+                                                                    </Text>
                                                                     {
                                                                         isOwner ?
                                                                             <TextInput
@@ -1625,8 +1625,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6' }}>
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                         <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                                        {PreferredLanguageText('category')}
-                                    </Text>
+                                            {PreferredLanguageText('category')}
+                                        </Text>
                                     </View>
                                     {
                                         props.cue.channelId ?
@@ -1666,7 +1666,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                     }}>
                                                                     <Text style={{ color: '#a2a2aa', lineHeight: 20 }}>
                                                                         {PreferredLanguageText('none')}
-                                                                </Text>
+                                                                    </Text>
                                                                 </TouchableOpacity>
                                                                 {
                                                                     customCategories.map((category: string) => {
@@ -1709,7 +1709,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                         <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                             {PreferredLanguageText('priority')}
-                                </Text>
+                                        </Text>
                                     </View>
                                     <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
                                         <View style={{ width: '100%', backgroundColor: 'white' }}>
@@ -1741,7 +1741,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                                 <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                                     {PreferredLanguageText('share')}
-                                            </Text>
+                                                </Text>
                                             </View>
                                             <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
                                                 <View style={{ width: '85%', backgroundColor: 'white' }}>
@@ -1954,7 +1954,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                     }}>
                                                         <Text style={styles.text}>
                                                             {PreferredLanguageText('remindTill')}
-                                                            </Text>
+                                                        </Text>
                                                         <View style={{ backgroundColor: '#fff' }}>
                                                             <DateTimePicker
                                                                 style={styles.timePicker}
@@ -2023,7 +2023,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                 {
                                                     isOwner ? (
                                                         props.cue.channelId && props.cue.channelId !== '' ? PreferredLanguageText('deleteForEveryone') : PreferredLanguageText('delete')
-                                                        ) : PreferredLanguageText('delete')
+                                                    ) : PreferredLanguageText('delete')
                                                 }
                                             </Text>
                                         </TouchableOpacity> : null
@@ -2060,7 +2060,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                 {
                                                     userSetupComplete ? (
                                                         ((props.cue.submittedAt && props.cue.submittedAt !== '') || submitted
-                                                            ? (props.cue.graded ? PreferredLanguageText('graded') : (isQuiz ? PreferredLanguageText('submitted') : PreferredLanguageText('resubmit')))
+                                                            ? (props.cue.graded ? PreferredLanguageText('graded') : (isQuiz ? PreferredLanguageText('submitted') : ((currentDate < deadline ? PreferredLanguageText('resubmit') : PreferredLanguageText('submissionEnded')))))
                                                             : (currentDate < deadline ? PreferredLanguageText('submit') : PreferredLanguageText('submissionEnded')))
                                                     ) : PreferredLanguageText('signupToSubmit')
                                                 }

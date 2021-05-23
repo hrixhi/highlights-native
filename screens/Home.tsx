@@ -100,14 +100,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       !showForgotPassword &&
       email &&
       password &&
-      !emailValidError 
+      !emailValidError
     ) {
       setIsSubmitDisabled(false);
       return;
     }
 
     // 
-    if (showForgotPassword && email && !emailValidError ) {
+    if (showForgotPassword && email && !emailValidError) {
       setIsSubmitDisabled(false);
       return;
     }
@@ -116,7 +116,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [
     showForgotPassword,
     email,
-    password,   
+    password,
     emailValidError,
   ]);
 
@@ -785,7 +785,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   // Move to profile page
   const handleLogin = useCallback(() => {
-   
+
     const server = fetchAPI('')
     server.query({
       query: login,
@@ -978,7 +978,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             updatedCuesArray.push(c)
           }
         })
-        
+
         const updatedCuesObj: any = {};
         updatedCuesArray.map((c: any) => {
           if (c.channelId && c.channelId !== '') {
@@ -1316,7 +1316,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             }}>
               <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 5, paddingTop: 10 }}>
                 {PreferredLanguageText('email')}
-                </Text>
+              </Text>
               <TextInput
                 value={email}
                 placeholder={''}
@@ -1459,12 +1459,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 2
       }}>
         <TopBar
-          key={JSON.stringify(channelFilterChoice) + JSON.stringify(filteredCues) + JSON.stringify(modalType)}
+          key={JSON.stringify(channelFilterChoice) + JSON.stringify(filteredCues) + JSON.stringify(modalType) + JSON.stringify(filterChoice)}
           openChannels={() => openModal('Channels')}
           cues={filteredCues}
           filterChoice={filterChoice}
           channelId={channelId}
           channelFilterChoice={channelFilterChoice}
+          channelCreatedBy={channelCreatedBy}
+          loadData={() => loadData()}
           setChannelFilterChoice={(choice: any) => setChannelFilterChoice(choice)}
           openDiscussion={() => openModal('Discussion')}
           openSubscribers={() => openModal('Subscribers')}

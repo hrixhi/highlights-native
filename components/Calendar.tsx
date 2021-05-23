@@ -13,6 +13,7 @@ import { fetchAPI } from "../graphql/FetchAPI";
 import {
   createDate,
   deleteDate,
+  getChannels,
   getEvents
 } from "../graphql/QueriesAndMutations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -32,11 +33,32 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   const [title, setTitle] = useState("");
   const [start, setStart] = useState(new Date());
   const [end, setEnd] = useState(new Date(start.getTime() + 1000 * 60 * 60));
-
   const [showAddEvent, setShowAddEvent] = useState(false);
-
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
-  const [items, setItems] = useState({});
+  const [items, setItems] = useState<any>({});
+  const [channels, setChannels] = useState<any[]>([])
+  const [channelId, setChannelId] = useState('')
+
+  const loadChannels = useCallback(async () => {
+    const uString: any = await AsyncStorage.getItem('user')
+    if (uString) {
+      const user = JSON.parse(uString)
+      const server = fetchAPI('')
+      server.query({
+        query: getChannels,
+        variables: {
+          userId: user._id
+        }
+      })
+        .then(res => {
+          if (res.data.channel.findByUserId) {
+            setChannels(res.data.channel.findByUserId)
+          }
+        })
+        .catch(err => {
+        })
+    }
+  }, [])
 
   useEffect(() => {
     if (title !== "" && end > start) {
@@ -92,7 +114,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             title,
             userId: user._id,
             start: start.toUTCString(),
-            end: end.toUTCString()
+            end: end.toUTCString(),
+            channelId
           }
         })
         .then(res => {
@@ -102,7 +125,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         })
         .catch(err => console.log(err));
     }
-  }, [title, start, end]);
+  }, [title, start, end, channelId]);
 
   const loadEvents = useCallback(async () => {
     const u = await AsyncStorage.getItem("user");
@@ -150,7 +173,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
           setItems(loadedItems);
         }
-      
+
         modalAnimation.setValue(0);
         Animated.timing(modalAnimation, {
           toValue: 1,
@@ -173,6 +196,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
   useEffect(() => {
     loadEvents();
+    loadChannels();
   }, []);
 
   const loadItemsForMonth = (month: any) => {
@@ -225,16 +249,16 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onDateClick(
               displayTitle,
               moment(new Date(item.start)).format("MMMM Do YYYY, h:mm a") +
-                " to " +
-                moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a"),
+              " to " +
+              moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a"),
               item.dateId
             );
           } else {
             Alert(
               displayTitle,
               moment(new Date(item.start)).format("MMMM Do YYYY, h:mm a") +
-                " to " +
-                moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a")
+              " to " +
+              moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a")
             );
           }
         }}
@@ -487,6 +511,44 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               </TouchableOpacity>
             </View>
           </View>
+          <View style={{ marginBottom: 40 }}>
+            <View style={{ width: '100%', paddingBottom: 15, backgroundColor: 'white' }}>
+              <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                {PreferredLanguageText('channel')}
+                {/* <Ionicons
+                                                name='school-outline' size={20} color={'#a2a2aa'} /> */}
+              </Text>
+            </View>
+            <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
+              <View style={{ width: '85%', backgroundColor: 'white', display: 'flex' }}>
+                <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
+                  <TouchableOpacity
+                    style={channelId === '' ? styles.allOutline : styles.allBlack}
+                    onPress={() => {
+                      setChannelId('')
+                    }}>
+                    <Text style={{ lineHeight: 20, fontSize: 12, color: channelId === '' ? '#fff' : '#202025' }}>
+                      {PreferredLanguageText('myCues')}
+                    </Text>
+                  </TouchableOpacity>
+                  {
+                    channels.map((channel) => {
+                      return <TouchableOpacity
+                        key={Math.random()}
+                        style={channelId === channel._id ? styles.allOutline : styles.allBlack}
+                        onPress={() => {
+                          setChannelId(channel._id)
+                        }}>
+                        <Text style={{ lineHeight: 20, fontSize: 12, color: channelId === channel._id ? '#fff' : '#202025' }}>
+                          {channel.name}
+                        </Text>
+                      </TouchableOpacity>
+                    })
+                  }
+                </ScrollView>
+              </View>
+            </View>
+          </View>
         </View>
       )}
     </Animated.View>
@@ -528,5 +590,20 @@ const styles: any = StyleSheet.create({
     color: "#202025",
     borderRadius: 10,
     marginLeft: 10
+  },
+  allBlack: {
+    fontSize: 12,
+    color: '#202025',
+    height: 22,
+    paddingHorizontal: 10,
+    backgroundColor: 'white'
+  },
+  allOutline: {
+    fontSize: 12,
+    color: '#FFF',
+    height: 22,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: '#202025'
   }
 });
