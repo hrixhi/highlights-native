@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Cues!",
+    "name": "Cues - Classroom Notebook",
     "slug": "Cues",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -21,7 +21,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.vora.cues",
-      "buildNumber": "1.1.1",
+      "buildNumber": "1.2.0",
       "usesIcloudStorage": true
     },
     "android": {
@@ -29,7 +29,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#202025"
-      }
+      },
+      "package": "com.vora.cues"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
