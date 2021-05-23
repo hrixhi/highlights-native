@@ -53,6 +53,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     borderTopRightRadius: 30,
                     alignSelf: 'center'
                 }}>
+                
                 <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 20 }}>
                     {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                 </Text>
@@ -177,7 +178,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         backgroundColor: 'white',
                         overflow: 'hidden',
                         height: 35,
-                        marginTop: 15,
+                        marginTop: 50,
                         borderRadius: 15,
                         width: '100%', justifyContent: 'center', flexDirection: 'row',
                     }} 

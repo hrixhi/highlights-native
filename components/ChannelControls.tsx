@@ -9,6 +9,7 @@ import Alert from '../components/Alert'
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -21,6 +22,16 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [userFound, setUserFound] = useState(false)
 
     const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+
+    // Alert messages
+    const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
+    const alreadySubscribedAlert = PreferredLanguageText('alreadySubscribed');
+    const somethingWrongAlert = PreferredLanguageText('somethingWentWrong');
+    const checkConnectionAlert = PreferredLanguageText('checkConnection') 
+    const doesNotExistAlert = PreferredLanguageText('doesNotExists');
+    const invalidChannelNameAlert = PreferredLanguageText('invalidChannelName');
+    const nameAlreadyInUseAlert = PreferredLanguageText('nameAlreadyInUse');
+    const changesNotSavedAlert = PreferredLanguageText('changesNotSaved')
 
     useEffect(() => {
         if (option === "Subscribe") {
@@ -66,22 +77,22 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             props.closeModal()
                             break;
                         case "incorrect-password":
-                            Alert("Incorrect password.")
+                            Alert(incorrectPasswordAlert)
                             break;
                         case "already-subbed":
-                            Alert("Already subscribed.")
+                            Alert(alreadySubscribedAlert)
                             break;
                         case "error":
-                            Alert("Something went wrong.", "Check connection.")
+                            Alert(somethingWrongAlert, checkConnectionAlert)
                             break;
                         default:
-                            Alert("Something went wrong.", "Check connection.")
+                            Alert(somethingWrongAlert, checkConnectionAlert)
                             break;
                     }
                 }
             })
             .catch(err => {
-                Alert("Something went wrong.", "Check connection.")
+                Alert(somethingWrongAlert, checkConnectionAlert)
             })
 
     }, [name, password, props.closeModal])
@@ -117,15 +128,15 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 setPasswordRequired(true)
                                 break;
                             case "non-existant":
-                                Alert("Does not exist.")
+                                Alert(doesNotExistAlert)
                                 break;
                             default:
-                                Alert("Something went wrong.", "Check connection.")
+                                Alert(somethingWrongAlert, checkConnectionAlert)
                                 break
                         }
                     }
                 }).catch(err => {
-                    Alert("Something went wrong.", "Check connection.")
+                    Alert(somethingWrongAlert, checkConnectionAlert)
                 })
             }
         } else if (option === 'Create') {
@@ -151,22 +162,22 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 props.closeModal()
                                 break;
                             case "invalid-name":
-                                Alert("Invalid channel name.")
+                                Alert(invalidChannelNameAlert)
                                 break;
                             case "exists":
-                                Alert("Name already in use.")
+                                Alert(nameAlreadyInUseAlert)
                                 break;
                             case "error":
-                                Alert("Something went wrong.", "Check connection.")
+                                Alert(somethingWrongAlert, checkConnectionAlert)
                                 break;
                             default:
-                                Alert("Something went wrong.", "Check connection.")
+                                Alert(somethingWrongAlert, checkConnectionAlert)
                                 break;
                         }
                     }
                 })
                 .catch(err => {
-                    Alert("Something went wrong.", "Check connection.")
+                    Alert(somethingWrongAlert, checkConnectionAlert)
                 })
         } else if (option === 'Profile') {
             if (displayName.toString().trim() === '' || fullName.toString().trim() === '') {
@@ -192,7 +203,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         props.closeModal()
                     }
                 }).catch(err => {
-                    Alert("Changes not saved.", "Check connection.")
+                    Alert(changesNotSavedAlert, checkConnectionAlert)
                 })
             }
         }
@@ -260,7 +271,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         fontSize: 25, color: '#a2a2aa',
                         // 
                     }}>
-                        Internet connection required to initialise.
+                         {PreferredLanguageText('internetRequired')}
                     </Text>
                 </View>
             </View>
@@ -280,7 +291,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         paddingTop: 30
                     }}
                 >
-                    Channels
+                    {PreferredLanguageText('channels')}
                 </Text>
                 <View style={styles.colorBar}>
                     <TouchableOpacity
@@ -289,7 +300,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             setOption('Subscribe')
                         }}>
                         <Text style={{ color: '#a2a2aa', lineHeight: 20 }}>
-                            Subscribe
+                            {PreferredLanguageText('subscribe')}
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -298,7 +309,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             setOption('Create')
                         }}>
                         <Text style={{ color: '#a2a2aa', lineHeight: 20 }}>
-                            Create
+                            {PreferredLanguageText('create')}
                         </Text>
                     </TouchableOpacity>
                     {/* <TouchableOpacity
@@ -336,7 +347,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         :
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                Channel
+                                {PreferredLanguageText('channel')}
                             </Text>
                             <TextInput
                                 value={name}
@@ -355,12 +366,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     (option === 'Subscribe' && passwordRequired) || option === 'Create' ?
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                Enrolment Password
+                                {PreferredLanguageText('enrolmentPassword')}
                             </Text>
                             <TextInput
                                 value={password}
                                 style={styles.input}
-                                placeholder={option === 'Subscribe' ? '' : '(optional)'}
+                                placeholder={option === 'Subscribe' ? '' : `(${PreferredLanguageText('optional')})`}
                                 onChangeText={val => setPassword(val)}
                                 placeholderTextColor={'#a2a2aa'}
                                 secureTextEntry={true}
@@ -406,8 +417,9 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     paddingHorizontal: 25,
                                     fontFamily: 'inter',
                                     height: 35,
+                                    textTransform: 'uppercase'
                                 }}>
-                                    {option === 'Profile' ? 'SAVE' : option.toUpperCase()}
+                                    {option === 'Subscribe' ? PreferredLanguageText('subscribe') : PreferredLanguageText('create')}
                                 </Text>
                             </TouchableOpacity>
                     }

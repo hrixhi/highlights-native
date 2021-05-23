@@ -7,6 +7,7 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import { getGrades, getGradesList } from '../graphql/QueriesAndMutations';
 import GradesList from './GradesList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -14,6 +15,8 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [loading, setLoading] = useState(true)
     const [cues, setCues] = useState<any[]>([])
     const [scores, setScores] = useState<any[]>([])
+    const couldNotLoadSubscribersAlert = PreferredLanguageText('couldNotLoadSubscribers');
+    const checkConnectionAlert = PreferredLanguageText('checkConnection');
 
     const loadCuesAndScores = useCallback(() => {
         setLoading(true)
@@ -60,7 +63,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 }).start();
                             }
                         }).catch(err => {
-                            Alert("Unable to load subscribers.", "Check connection.")
+                            Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
                             setLoading(false)
                             modalAnimation.setValue(0)
                             Animated.timing(modalAnimation, {
@@ -80,7 +83,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     }
                 })
                 .catch((err) => {
-                    Alert("Unable to load subscribers.", "Check connection.")
+                    Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
                     setLoading(false)
                     modalAnimation.setValue(0)
                     Animated.timing(modalAnimation, {

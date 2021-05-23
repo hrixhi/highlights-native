@@ -3,6 +3,7 @@ import { StyleSheet, ScrollView } from 'react-native';
 import { View, Text } from './Themed';
 import _ from 'lodash'
 import { htmlStringParser } from '../helpers/HTMLParser';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -27,7 +28,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 <Text
                     ellipsizeMode="tail"
                     style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
-                    Grades
+                    {PreferredLanguageText('grades')}
                 </Text>
             </View>
             {
@@ -35,7 +36,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     <View style={{ backgroundColor: 'white' }}>
                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
-                                cues.length === 0 ? 'No graded assignments.' : 'No students.'
+                                cues.length === 0  ? PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
                             }
                         </Text>
                     </View>
@@ -75,7 +76,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     cues.length === 0 ? null :
                                         <View style={styles.col} key={'total'}>
                                             <Text style={{ textAlign: 'center', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
-                                                Total
+                                                {PreferredLanguageText('total')}
                                                     </Text>
                                             <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
                                                 100%

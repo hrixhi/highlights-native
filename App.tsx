@@ -7,6 +7,7 @@ import useColorScheme from './hooks/useColorScheme';
 import Navigation from './navigation/Navigator';
 import * as SplashScreen from 'expo-splash-screen';
 // import "react-datetime/css/react-datetime.css"
+import { LanguageProvider } from "./helpers/LanguageContext";
 
 export default function App() {
 
@@ -32,7 +33,9 @@ export default function App() {
   } else {
     return (
       <SafeAreaProvider style={styles.font}>
-        <Navigation colorScheme={colorScheme} />
+        <LanguageProvider>
+          <Navigation colorScheme={colorScheme} />
+        </LanguageProvider>
         <StatusBar />
       </SafeAreaProvider>
     );
