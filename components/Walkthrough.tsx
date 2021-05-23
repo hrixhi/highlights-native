@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Animated, Dimensions, Switch, TouchableOpacity } from 'react-native';
-import { Text, View } from './Themed';
+import { StyleSheet, Animated, Dimensions, Switch } from 'react-native';
+import { Text, View, TouchableOpacity } from './Themed';
 import Swiper from 'react-native-web-swiper'
-import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import YoutubePlayer from "react-native-youtube-iframe";
@@ -31,8 +30,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
         }).start();
     }, [])
 
-    const headings: any[] = ["1. Introduction", "2. Working with Content", "3. Meetings", "4. Text-based Communication", "5. Testing & Grading", "6. Miscellaneous"]
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
+    const headings: any[] = ["Introduction", "Working with Content", "Meetings", "Text-based Communication", "Testing & Grading", "Miscellaneous"]
+    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 90 : Dimensions.get('window').height;
 
     return (
         <View style={{
@@ -57,23 +56,31 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 20 }}>
                     {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                 </Text>
+                <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 50 }}>
+                    <Text
+                        style={{
+                            paddingTop: 25,
+                            flex: 1,
+                            textAlign: 'center',
+                            fontSize: 25,
+                            color: "#202025",
+                            fontFamily: "inter",
+                        }}
+                        ellipsizeMode="tail">
+                        Walkthrough
+                    </Text>
+                </View>
                 <View
                     style={{
+                        paddingHorizontal: Dimensions.get('window').width < 768 ? 0 : 100,
                         width: '100%',
-                        height: 80,
+                        height: 50,
                         backgroundColor: 'white',
                         flexDirection: 'row'
                     }}>
-                    <View style={{
-                        flex: 1, backgroundColor: 'white',
-                    }}>
+                    <View style={{ flex: 1, backgroundColor: 'white' }}>
                         <Text
-                            style={{
-                                flex: 1,
-                                fontSize: 23,
-                                color: "#202025",
-                                fontFamily: "inter", paddingLeft: 10
-                            }}
+                            style={{ color: '#202025', fontSize: 17, flex: 1, lineHeight: 25 }}
                         >
                             {headings[index]}
                         </Text>
@@ -179,10 +186,11 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         overflow: 'hidden',
                         height: 35,
                         marginTop: 50,
+                        marginBottom: 20,
                         borderRadius: 15,
                         width: '100%', justifyContent: 'center', flexDirection: 'row',
-                    }} 
-                    onPress={() => Linking.openURL('https://www.cuesapp.co')}              
+                    }}
+                    onPress={() => Linking.openURL('https://www.cuesapp.co')}
                 >
                     <Text style={{
                         textAlign: 'center',
