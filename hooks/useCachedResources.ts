@@ -19,6 +19,7 @@ export default function useCachedResources() {
           'overpass': require('../assets/fonts/atlas-grotesk-regular.ttf')
         });
       } catch (e) {
+        console.log(e)
         // We might want to provide this error information to an error reporting service
         console.warn(e);
       } finally {
