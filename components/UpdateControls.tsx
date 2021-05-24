@@ -1527,6 +1527,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                                         const currentDate: any = selectedDate;
                                                                                         setDeadline(currentDate)
                                                                                     }}
+                                                                                    minimumDate={new Date()}
                                                                                 />
                                                                                 <View style={{ height: 10, backgroundColor: 'white' }} />
                                                                                 <DateTimePicker
@@ -1538,6 +1539,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                                         const currentDate: any = selectedDate;
                                                                                         setDeadline(currentDate)
                                                                                     }}
+                                                                                    minimumDate={new Date()}
                                                                                 />
                                                                             </View>
                                                                             : <Text style={{
@@ -1894,6 +1896,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                             <View style={{ height: 10, backgroundColor: 'white' }} />
                                                             <DateTimePicker
@@ -1905,6 +1908,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                         </View>
                                                         {/* <Datetime
@@ -1966,6 +1970,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                             <View style={{ height: 10, backgroundColor: 'white' }} />
                                                             <DateTimePicker
@@ -1977,6 +1982,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                         </View>
                                                         {/* <Datetime
