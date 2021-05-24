@@ -62,6 +62,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(true)
 
+  const [saveDataInProgress, setSaveDataInProgress] = useState(false)
+
   // Login Validation
   const [emailValidError, setEmailValidError] = useState("");
 
@@ -891,6 +893,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const saveDataInCloud = useCallback(async () => {
 
+    if (saveDataInProgress) return;
+
+    setSaveDataInProgress(true);
+
     const draft = await AsyncStorage.getItem('cueDraft')
     const f: any = await AsyncStorage.getItem('randomShuffleFrequency')
     const sF: any = await AsyncStorage.getItem('sleepFrom')
@@ -995,16 +1001,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             }
           }
         });
-        (async () => {
-          const updatedCues = JSON.stringify(updatedCuesObj)
-          await AsyncStorage.setItem('cues', updatedCues)
-        })();
+        // (async () => {
+        const updatedCues = JSON.stringify(updatedCuesObj)
+        await AsyncStorage.setItem('cues', updatedCues)
+        // })();
         if (newIds.length !== 0) {
           // setCues(updatedCuesObj)
           updateCuesHelper(updatedCuesObj)
           // setReopenUpdateWindow(Math.random())
         }
       }
+
+      setSaveDataInProgress(false)
+      
     }).catch(err => console.log(err))
   }, [cues, setCues])
 

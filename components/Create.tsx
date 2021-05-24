@@ -1103,6 +1103,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         const currentDate: any = selectedDate;
                                                                         setDeadline(currentDate)
                                                                     }}
+                                                                    minimumDate={new Date()}
                                                                 />
                                                                 <View style={{ height: 10, backgroundColor: 'white' }} />
                                                                 <DateTimePicker
@@ -1114,6 +1115,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         const currentDate: any = selectedDate;
                                                                         setDeadline(currentDate)
                                                                     }}
+                                                                    minimumDate={new Date()}
                                                                 />
                                                             </View>
                                                         </View>
@@ -1392,6 +1394,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                             <View style={{ height: 10, backgroundColor: 'white' }} />
                                                             <DateTimePicker
@@ -1403,6 +1406,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                         </View>
                                                     </View>
@@ -1464,6 +1468,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                             <View style={{ height: 10, backgroundColor: 'white' }} />
                                                             <DateTimePicker
@@ -1475,6 +1480,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     const currentDate: any = selectedDate;
                                                                     setEndPlayAt(currentDate)
                                                                 }}
+                                                                minimumDate={new Date()}
                                                             />
                                                         </View>
                                                     </View>
