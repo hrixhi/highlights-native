@@ -228,7 +228,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     reloadCueListAfterUpdate={() => props.reloadCueListAfterUpdate()}
                                 />
                                 {
-                                    !Number.isNaN(Number(cueId)) || !props.channelId ? <View
+                                    !Number.isNaN(Number(cueId))
+                                        || !props.channelId
+                                        || (
+                                            props.cue.original && props.cue.original.includes("quizId")
+                                        ) ? <View
                                         style={{ flex: 1, backgroundColor: 'white' }}
                                     /> :
                                         <View

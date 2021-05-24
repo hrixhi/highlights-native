@@ -221,6 +221,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     if (isQuiz) {
                         return;
                     }
+                    setShowOptions(true)
                     // load quiz here and set problems
                     const server = fetchAPI('')
                     server.query({
