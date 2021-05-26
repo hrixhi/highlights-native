@@ -170,6 +170,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               loadedItems[strTime] = [...existingItems, item];
             }
           });
+          // Selected date (current date) should never be empty, otherwise Calendar will keep loading
+          const todayStr = timeToString(new Date())
+
+          if (!loadedItems[todayStr]) {
+            loadedItems[todayStr] = []
+          }
 
           setItems(loadedItems);
         }
@@ -213,6 +219,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     Object.keys(items).forEach(key => {
       itemsWithEmptyDates[key] = items[key];
     });
+
+    // Selected date (current date) should never be empty, otherwise Calendar will keep loading
+    const todayStr = timeToString(new Date())
+
+    if (!itemsWithEmptyDates[todayStr]) {
+      itemsWithEmptyDates[todayStr] = []
+    }
+
     setItems(itemsWithEmptyDates);
   };
 
