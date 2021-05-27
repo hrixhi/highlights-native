@@ -19,7 +19,7 @@ import { validateEmail } from '../helpers/emailCheck';
 import WebView from 'react-native-webview';
 import MultiSelect from 'react-native-multiple-select';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
-
+import { Video } from 'expo-av';
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -50,7 +50,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [loadedChatWithUser, setLoadedChatWithUser] = useState<any>({})
     const [isLoadedUserInactive, setIsLoadedUserInactive] = useState(false)
 
-    const categoriesLanguageMap: { [label:string]: string } = {
+    const categoriesLanguageMap: { [label: string]: string } = {
         All: 'all',
         Read: 'read',
         Delivered: 'delivered',
@@ -62,10 +62,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     // Alerts
     const usersAddedAlert = PreferredLanguageText('usersAdded')
     const emailInviteSentAlert = PreferredLanguageText('emailInviteSent')
-    const unableToLoadMessagesAlert = PreferredLanguageText('unableToLoadMessages') 
+    const unableToLoadMessagesAlert = PreferredLanguageText('unableToLoadMessages')
     const checkConnectionAlert = PreferredLanguageText('checkConnection')
     const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
-    const userSubscriptionActivatedAlert = PreferredLanguageText('userSubscriptionActivated') 
+    const userSubscriptionActivatedAlert = PreferredLanguageText('userSubscriptionActivated')
     const userSubscriptionInactivatedAlert = PreferredLanguageText('userSubscriptionInactivated')
     const userRemovedAlert = PreferredLanguageText('userRemoved');
     const alreadyUnsubscribedAlert = PreferredLanguageText('alreadyUnsubscribed')
@@ -401,7 +401,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 textTransform: 'uppercase'
                                             }}>
                                                 {
-                                                    isLoadedUserInactive ?  PreferredLanguageText('makeActive') : PreferredLanguageText('makeInactive')
+                                                    isLoadedUserInactive ? PreferredLanguageText('makeActive') : PreferredLanguageText('makeInactive')
                                                 }
                                             </Text>
                                         </TouchableOpacity>
@@ -418,7 +418,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 textTransform: 'uppercase'
                                             }}>
                                                 {PreferredLanguageText('removeFromChannel')}
-                                        </Text>
+                                            </Text>
                                         </TouchableOpacity>
                                     </View>
                                     : null
@@ -433,12 +433,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     ellipsizeMode="tail"
                                     style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
                                     {PreferredLanguageText('status')}
-                        </Text> :
+                                </Text> :
                                 <Text
                                     ellipsizeMode="tail"
                                     style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
                                     {PreferredLanguageText('inbox')}
-                        </Text>
+                                </Text>
                         }
                         {
                             !props.cueId ?
@@ -644,7 +644,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                     })) : <View style={{ backgroundColor: 'white', flex: 1 }}>
                                                                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingHorizontal: 50, paddingBottom: 100, paddingTop: 50, fontFamily: 'inter', flex: 1 }}>
                                                                             {PreferredLanguageText('noGroups')}
-                                                                    </Text>
+                                                                        </Text>
                                                                     </View>
                                                                 }
                                                             </View>
@@ -688,7 +688,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         }}>
                                             <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
                                                 {PreferredLanguageText('score')}
-                                        </Text>
+                                            </Text>
                                             <TextInput
                                                 value={score}
                                                 style={styles.input}
@@ -802,30 +802,21 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     allowsLinkPreview={true}
                                                     allowsBackForwardNavigationGestures={true}
                                                 /> : (
-                                                    // null
-                                                    <WebView source={{ uri: "http://docs.google.com/gview?embedded=true&url=" + url }} />
-                                                    // type === 'pptx' ?
-                                                    //     <iframe src={'https://view.officeapps.live.com/op/embed.aspx?src=' + url} width='100%' height='600px' frameBorder='0' />
-                                                    //     : <FileViewer
-                                                    //         unsupportedComponent={() =>
-                                                    //             <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                                    //                 <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                                    //                     <Ionicons name='document-outline' size={50} color='#a2a2aa' />
-                                                    //                 </Text>
-                                                    //             </View>
-                                                    //         }
-                                                    //         style={{
-                                                    //             fontFamily: 'overpass'
-                                                    //         }}
-                                                    //         fileType={type}
-                                                    //         key={url + type}
-                                                    //         filePath={url}
-                                                    //         errorComponent={<View>
-                                                    //             <Text>
-                                                    //                 ERROR!!
-                                                    //     </Text>
-                                                    //         </View>}
-                                                    //         onError={(e: any) => console.log(e)} />
+                                                    type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
+                                                        <Video
+                                                            ref={RichText}
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '50%'
+                                                            }}
+                                                            source={{
+                                                                uri: url,
+                                                            }}
+                                                            useNativeControls={true}
+                                                            resizeMode="contain"
+                                                            isLooping={false}
+                                                        />
+                                                        : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }} style={{ flex: 1 }} />
                                                 )
                                         }
                                     </ScrollView>
@@ -872,7 +863,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     <View style={{ alignSelf: 'center', width: 400 }}>
                         <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
                             {PreferredLanguageText('inviteByEmail')}
-                            </Text>
+                        </Text>
                         <TextInput
                             value={emails}
                             style={{
@@ -916,7 +907,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 textTransform: 'uppercase'
                             }}>
                                 {PreferredLanguageText("addUsers")}
-                  </Text>
+                            </Text>
                         </TouchableOpacity>
                     </View>
             }

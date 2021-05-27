@@ -27,9 +27,10 @@ import TeXToSVG from "tex-to-svg";
 // import EquationEditor from "equation-editor-react";
 import { WebView } from 'react-native-webview';
 import MultiSelect from 'react-native-multiple-select';
-import * as DocumentPicker from 'expo-document-picker';
 import { TimePicker } from 'react-native-simple-time-picker';
 import { PreferredLanguageText } from "../helpers/LanguageContext";
+import { Video } from 'expo-av';
+
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -873,30 +874,21 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 />
                                 : (imported ?
                                     (
-                                        // null
-                                        <WebView source={{ uri: "http://docs.google.com/gview?embedded=true&url=" + url }} />
-                                        // type === 'pptx' ?
-                                        //     <iframe src={'https://view.officeapps.live.com/op/embed.aspx?src=' + url} width='100%' height='600px' frameBorder='0' />
-                                        //     : <FileViewer
-                                        //         unsupportedComponent={() =>
-                                        //             <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                        //                 <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                        //                     <Ionicons name='document-outline' size={50} color='#a2a2aa' />
-                                        //                 </Text>
-                                        //             </View>
-                                        //         }
-                                        //         style={{
-                                        //             fontFamily: 'overpass'
-                                        //         }}
-                                        //         fileType={type}
-                                        //         key={url + type}
-                                        //         filePath={url}
-                                        //         errorComponent={<View>
-                                        //             <Text>
-                                        //                 ERROR!!
-                                        //         </Text>
-                                        //         </View>}
-                                        //         onError={(e: any) => console.log(e)} />
+                                        type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
+                                            <Video
+                                                ref={RichText}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '50%'
+                                                }}
+                                                source={{
+                                                    uri: url,
+                                                }}
+                                                useNativeControls={true}
+                                                resizeMode="contain"
+                                                isLooping={false}
+                                            />
+                                            : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }} style={{ flex: 1 }} />
                                     )
                                     :
                                     <RichEditor
@@ -1084,8 +1076,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             backgroundColor: 'white',
                                                         }}>
                                                             <Text style={styles.text}>
-                                                            {PreferredLanguageText('deadline')}
-                                                        </Text>
+                                                                {PreferredLanguageText('deadline')}
+                                                            </Text>
                                                             {/* <Datetime
                                                                 value={deadline}
                                                                 onChange={(event: any) => {
@@ -1159,7 +1151,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         }}>
                                                             <Text style={styles.text}>
                                                                 Grade Weight {'\n'}{PreferredLanguageText('percentageOverall')}
-                                                        </Text>
+                                                            </Text>
                                                             <TextInput
                                                                 value={gradeWeight}
                                                                 style={styles.input}
@@ -1206,7 +1198,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             }}>
                                                             <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 12 }}>
                                                                 {PreferredLanguageText('none')}
-                                                    </Text>
+                                                            </Text>
                                                         </TouchableOpacity>
                                                         {
                                                             customCategories.map((category: string) => {
@@ -1249,7 +1241,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                     <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                         {PreferredLanguageText('priority')}
-                                </Text>
+                                    </Text>
                                 </View>
                                 <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
                                     <View style={{ width: '100%', backgroundColor: 'white' }}>
@@ -1346,7 +1338,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     }}>
                                                         <Text style={styles.text}>
                                                             {PreferredLanguageText('remindEvery')}
-                                                    </Text>
+                                                        </Text>
                                                         <Picker
                                                             style={styles.picker}
                                                             itemStyle={{
@@ -1376,7 +1368,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     }}>
                                                         <Text style={styles.text}>
                                                             {PreferredLanguageText('RemindOn')}
-                                                            </Text>
+                                                        </Text>
                                                         {/* <Datetime
                                                             value={endPlayAt}
                                                             onChange={(event: any) => {
@@ -1450,7 +1442,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     }}>
                                                         <Text style={styles.text}>
                                                             {PreferredLanguageText('remindTill')}
-                                                            </Text>
+                                                        </Text>
                                                         {/* <Datetime
                                                             value={endPlayAt}
                                                             onChange={(event: any) => {

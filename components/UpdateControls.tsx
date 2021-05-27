@@ -27,6 +27,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Updates from 'expo-updates';
 import MultiSelect from 'react-native-multiple-select';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
+import { Video } from 'expo-av';
 
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -1231,28 +1232,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     )
                                     : (imported ?
                                         (
-                                            // null
-                                            <WebView source={{ uri: "http://docs.google.com/gview?embedded=true&url=" + url }} style={{ overflow: 'scroll' }} />                                            //     type === 'pptx' ?
-                                            //         <iframe src={'https://view.officeapps.live.com/op/embed.aspx?src=' + url} width='100%' height='600px' frameBorder='0' />
-                                            //         : <FileViewer
-                                            //             unsupportedComponent={() =>
-                                            //                 <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                            //                     <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                            //                         <Ionicons name='document-outline' size={50} color='#a2a2aa' />
-                                            //                     </Text>
-                                            //                 </View>
-                                            //             }
-                                            //             style={{ fontFamily: 'overpass' }}
-                                            //             fileType={type}
-                                            //             filePath={url}
-                                            //             key={Math.random()}
-                                            //             errorComponent={<View>
-                                            //                 <Text>
-                                            //                     ERROR!!
-                                            // </Text>
-                                            //             </View>}
-                                            //             onError={(e: any) => console.log(e)} />
-
+                                            type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
+                                                <Video
+                                                    isMuted={false}
+                                                    ref={RichText}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '50%'
+                                                    }}
+                                                    source={{
+                                                        uri: url,
+                                                    }}
+                                                    volume={1}
+                                                    useNativeControls={true}
+                                                    resizeMode="contain"
+                                                    isLooping={false}
+                                                />
+                                                : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }} style={{ flex: 1 }} />
                                         )
                                         :
                                         <RichEditor
@@ -1300,28 +1296,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         {showOriginal ? null
                             : (submissionImported ?
                                 (
-                                    // null
-                                    <WebView source={{ uri: "http://docs.google.com/gview?embedded=true&url=" + submissionUrl }} />
-                                    // submissionType === 'pptx' ?
-                                    //     <iframe src={'https://view.officeapps.live.com/op/embed.aspx?src=' + submissionUrl} width='100%' height='600px' frameBorder='0' />
-                                    //     : <FileViewer
-                                    //         unsupportedComponent={() =>
-                                    //             <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                    //                 <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                    //                     <Ionicons name='document-outline' size={50} color='#a2a2aa' />
-                                    //                 </Text>
-                                    //             </View>
-                                    //         }
-                                    //         key={submissionUrl + submissionType}
-                                    //         style={{ fontFamily: 'overpass' }}
-                                    //         fileType={submissionType}
-                                    //         filePath={submissionUrl}
-                                    //         errorComponent={<View>
-                                    //             <Text>
-                                    //                 ERROR!!
-                                    //     </Text>
-                                    //         </View>}
-                                    //         onError={(e: any) => console.log(e)} />
+                                    submissionType === 'mp4' || submissionType === 'mp3' || submissionType === 'mov' || submissionType === 'mpeg' || submissionType === 'mp2' || submissionType === 'wav' ?
+                                        <Video
+                                            ref={RichText}
+                                            style={{
+                                                width: '100%',
+                                                height: '50%'
+                                            }}
+                                            source={{
+                                                uri: submissionUrl,
+                                            }}
+                                            isMuted={false}
+                                            volume={1}
+                                            useNativeControls={true}
+                                            resizeMode="contain"
+                                            isLooping={false}
+                                        />
+                                        : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + submissionUrl }} style={{ flex: 1 }} />
                                 )
                                 :
                                 <RichEditor
