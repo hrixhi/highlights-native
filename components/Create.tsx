@@ -875,19 +875,21 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 : (imported ?
                                     (
                                         type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
-                                            <Video
-                                                ref={RichText}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '50%'
-                                                }}
-                                                source={{
-                                                    uri: url,
-                                                }}
-                                                useNativeControls={true}
-                                                resizeMode="contain"
-                                                isLooping={false}
-                                            />
+                                            <View style={{ backgroundColor: '#fff', height: 300 }}>
+                                                <Video
+                                                    ref={RichText}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: 300
+                                                    }}
+                                                    source={{
+                                                        uri: url,
+                                                    }}
+                                                    useNativeControls={true}
+                                                    resizeMode="contain"
+                                                    isLooping={false}
+                                                />
+                                            </View>
                                             : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }} style={{ flex: 1 }} />
                                     )
                                     :

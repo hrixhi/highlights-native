@@ -913,44 +913,47 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     (props.cue.submittedAt && props.cue.submittedAt !== '') || submitted ?
                                         <View style={{ height: 28, backgroundColor: '#fff' }} />
                                         :
-                                        <RichToolbar
-                                            key={reloadEditorKey.toString() + showOriginal.toString()}
-                                            style={{
-                                                flexWrap: 'wrap',
-                                                backgroundColor: 'white',
-                                                height: 28,
-                                                overflow: 'visible'
-                                            }}
-                                            iconSize={12}
-                                            editor={RichText}
-                                            disabled={false}
-                                            iconTint={"#a2a2aa"}
-                                            selectedIconTint={"#a2a2aa"}
-                                            disabledIconTint={"#a2a2aa"}
-                                            actions={
-                                                submissionImported || showImportOptions ? ["back", "clear"] :
-                                                    [
-                                                        actions.setBold,
-                                                        actions.setItalic,
-                                                        actions.setUnderline,
-                                                        actions.insertBulletsList,
-                                                        actions.insertOrderedList,
-                                                        actions.checkboxList,
-                                                        actions.insertLink,
-                                                        actions.insertImage,
-                                                        "insertCamera",
-                                                        actions.undo,
-                                                        actions.redo,
-                                                        "clear"
-                                                    ]}
-                                            iconMap={{
-                                                ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
-                                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />,
-                                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={13} color={tintColor} onPress={() => setShowImportOptions(false)} />
-                                            }}
-                                            onPressAddImage={galleryCallback}
-                                            insertCamera={cameraCallback}
-                                        />
+                                        (
+                                            RichText && RichText.current ?
+                                                <RichToolbar
+                                                    key={reloadEditorKey.toString() + showOriginal.toString()}
+                                                    style={{
+                                                        flexWrap: 'wrap',
+                                                        backgroundColor: 'white',
+                                                        height: 28,
+                                                        overflow: 'visible'
+                                                    }}
+                                                    iconSize={12}
+                                                    editor={RichText}
+                                                    disabled={false}
+                                                    iconTint={"#a2a2aa"}
+                                                    selectedIconTint={"#a2a2aa"}
+                                                    disabledIconTint={"#a2a2aa"}
+                                                    actions={
+                                                        submissionImported || showImportOptions ? ["back", "clear"] :
+                                                            [
+                                                                actions.setBold,
+                                                                actions.setItalic,
+                                                                actions.setUnderline,
+                                                                actions.insertBulletsList,
+                                                                actions.insertOrderedList,
+                                                                actions.checkboxList,
+                                                                actions.insertLink,
+                                                                actions.insertImage,
+                                                                "insertCamera",
+                                                                actions.undo,
+                                                                actions.redo,
+                                                                "clear"
+                                                            ]}
+                                                    iconMap={{
+                                                        ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
+                                                        ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />,
+                                                        ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={13} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                                                    }}
+                                                    onPressAddImage={galleryCallback}
+                                                    insertCamera={cameraCallback}
+                                                /> : null
+                                        )
                                 )
                         }
                         {
@@ -1168,6 +1171,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 }
                             </View> : null
                     }
+                    {
+                        submissionImported || imported ?
+                            // This is because the toolbar wont have an editor to connect with if the file is imported
+                            <RichEditor
+                                key={showOriginal.toString() + reloadEditorKey.toString()}
+                                disabled={true}
+                                containerStyle={{
+                                    display: 'none'
+                                }}
+                                ref={RichText}
+                                style={{
+                                    display: 'none'
+                                }}
+                            /> : null
+                    }
                     <View style={{
                         width: '100%',
                         minHeight: 475,
@@ -1233,21 +1251,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     : (imported ?
                                         (
                                             type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
-                                                <Video
-                                                    isMuted={false}
-                                                    ref={RichText}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '50%'
-                                                    }}
-                                                    source={{
-                                                        uri: url,
-                                                    }}
-                                                    volume={1}
-                                                    useNativeControls={true}
-                                                    resizeMode="contain"
-                                                    isLooping={false}
-                                                />
+                                                <View style={{ backgroundColor: '#fff', height: 300 }}>
+                                                    <Video
+                                                        isMuted={false}
+                                                        // ref={RichText}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: 300
+                                                        }}
+                                                        source={{
+                                                            uri: url,
+                                                        }}
+                                                        volume={1}
+                                                        useNativeControls={true}
+                                                        resizeMode="contain"
+                                                        isLooping={false}
+                                                    />
+                                                </View>
                                                 : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }} style={{ flex: 1 }} />
                                         )
                                         :
@@ -1297,21 +1317,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             : (submissionImported ?
                                 (
                                     submissionType === 'mp4' || submissionType === 'mp3' || submissionType === 'mov' || submissionType === 'mpeg' || submissionType === 'mp2' || submissionType === 'wav' ?
-                                        <Video
-                                            ref={RichText}
-                                            style={{
-                                                width: '100%',
-                                                height: '50%'
-                                            }}
-                                            source={{
-                                                uri: submissionUrl,
-                                            }}
-                                            isMuted={false}
-                                            volume={1}
-                                            useNativeControls={true}
-                                            resizeMode="contain"
-                                            isLooping={false}
-                                        />
+                                        <View style={{ backgroundColor: '#fff', height: 300 }}>
+                                            <Video
+                                                // ref={RichText}
+                                                style={{
+                                                    width: '100%',
+                                                    height: 300
+                                                }}
+                                                source={{
+                                                    uri: submissionUrl,
+                                                }}
+                                                isMuted={false}
+                                                volume={1}
+                                                useNativeControls={true}
+                                                resizeMode="contain"
+                                                isLooping={false}
+                                            />
+                                        </View>
                                         : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + submissionUrl }} style={{ flex: 1 }} />
                                 )
                                 :
