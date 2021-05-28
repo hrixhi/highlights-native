@@ -518,6 +518,7 @@ export const getSubscribers = gql`
         _id
         displayName
         fullName
+        email
         unreadMessages
         groupId
       }

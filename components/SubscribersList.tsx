@@ -177,6 +177,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 parsedEmails.push(email)
             }
         })
+        if (parsedEmails.length === 0) return;
         const server = fetchAPI('')
         server.mutate({
             mutation: inviteByEmail,
@@ -186,7 +187,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         }).then(res => {
             if (res.data.user.inviteByEmail) {
+                setEmails('')
                 Alert(usersAddedAlert, emailInviteSentAlert)
+                props.reload()
             }
         }).catch(err => {
             console.log(err)
@@ -374,11 +377,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Ionicons name='chevron-back-outline' size={23} color={'#202025'} />
                             </Text>
                         </TouchableOpacity>
-                        <View style={{ flexDirection: 'column', backgroundColor: '#fff' }}>
+                        <View style={{ flexDirection: 'column', backgroundColor: '#fff', height: 50, alignItems: 'center' }}>
                             {
                                 loadedChatWithUser !== {} ?
                                     <View style={{ paddingHorizontal: 20, backgroundColor: '#fff' }}>
-                                        <Text style={{ color: '#202025' }}>
+                                        <Text style={{ color: '#202025', marginBottom: 10 }}>
                                             {loadedChatWithUser.displayName}
                                             {showNewGroup ? '' : ', '}
                                             {loadedChatWithUser.fullName} {loadedChatWithUser.email ? ("(" + loadedChatWithUser.email + ")") : ''}
@@ -386,7 +389,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </View> : null
                             }
                             {
-                                isOwner && !props.cueId
+                                isOwner && !props.cueId && !showAddUsers 
                                     ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
                                         <TouchableOpacity
                                             style={{ backgroundColor: '#fff' }}
@@ -455,7 +458,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         marginRight: 20,
                                         marginTop: -1,
                                         fontSize: 10,
-                                        color: '#a2a2aa'
+                                        color: '#a2a2aa',
+                                        textTransform: 'uppercase'
                                     }}>
                                         {PreferredLanguageText('newGroup')}
                                     </Text>
@@ -476,9 +480,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         marginRight: 20,
                                         marginTop: -1,
                                         fontSize: 10,
-                                        color: '#a2a2aa'
+                                        color: '#a2a2aa',
+                                        textTransform: 'uppercase'
                                     }}>
-                                        INVITE USER
+                                        {PreferredLanguageText('inviteUser')}
                                     </Text>
                                 </TouchableOpacity> : null
                         }
@@ -862,7 +867,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 </View>
                         }
                     </View>) :
-                    <View style={{ alignSelf: 'center', width: 400 }}>
+                    <View style={{ backgroundColor: '#fff', alignSelf: 'center', width: 400, maxWidth: '100%' }}>
                         <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
                             {PreferredLanguageText('inviteByEmail')}
                         </Text>
@@ -893,7 +898,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 marginTop: 15,
                                 width: '100%',
                                 justifyContent: 'center', flexDirection: 'row',
-                                marginBottom: 50
+                                marginBottom: 50,
+                                borderRadius: 15,
                             }}>
                             <Text style={{
                                 textAlign: 'center',
@@ -903,14 +909,49 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 backgroundColor: '#f4f4f6',
                                 paddingHorizontal: 25,
                                 fontFamily: 'inter',
+                                borderRadius: 15,
                                 height: 35,
                                 width: 150,
-                                borderRadius: 15,
+                               
                                 textTransform: 'uppercase'
                             }}>
                                 {PreferredLanguageText("addUsers")}
                             </Text>
                         </TouchableOpacity>
+
+                        <Text style={{
+                                textAlign: 'center',
+                                lineHeight: 35,
+                                color: '#202025',
+                                fontSize: 12,
+                                paddingHorizontal: 25,
+                                width: "100%",
+                                fontFamily: 'inter',
+                                borderRadius: 15,
+                                textTransform: 'uppercase'
+                            }}>
+                                {filteredSubscribers.length !== 0 ? PreferredLanguageText('existingUsers') : PreferredLanguageText('noExistingUsers')}
+                        </Text>
+                        <View style={{ display: "flex", flexDirection: 'column', alignItems: 'center', backgroundColor: 'fff', }}> 
+                            {
+                                filteredSubscribers.map((sub: any) => {
+                                    return (<View style={{ 
+                                        backgroundColor: '#f4f4f6',
+                                        width: '100%',
+                                        padding: 10,
+                                        borderRadius: 8,
+                                        marginBottom: 10
+                                    }}>
+                                        <Text style={{ color: '#202025', }}>
+                                            {sub.displayName}
+                                        </Text>
+                                        <Text style={{ color: '#202025', }}>
+                                            {sub.email}
+                                        </Text>
+                                    </View>)
+                                })
+                            }
+                        </View>
                     </View>
             }
         </View >
