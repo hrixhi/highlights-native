@@ -1115,11 +1115,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             ) : null
                                         )
                                         :
-                                        <View style={{ marginLeft: 25, marginTop: 20, alignSelf: 'flex-start', backgroundColor: '#fff' }}>
+                                        (imported && (type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav') ? null : <View style={{ marginLeft: 25, marginTop: 20, alignSelf: 'flex-start', backgroundColor: '#fff' }}>
                                             {/* <a download={true} href={url} style={{ textDecoration: 'none' }}> */}
                                             <Ionicons name='cloud-download-outline' color='#a2a2aa' size={20} onPress={() => download(true)} />
                                             {/* </a> */}
-                                        </View>
+                                        </View>)
                                 }
                             </View> : null
                     }
