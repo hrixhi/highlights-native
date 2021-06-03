@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { StyleSheet, Animated, ActivityIndicator, Dimensions, Image } from 'react-native';
+import { StyleSheet, Animated, ActivityIndicator, Dimensions, Image, Platform } from 'react-native';
 import { TextInput } from "../components/CustomTextInput";
 import Alert from '../components/Alert'
 import BottomBar from '../components/BottomBar';
@@ -1568,7 +1568,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomWidth: 0,
     borderColor: '#f4f4f6',
-    height: '70%',
+    height: Platform.OS === "ios" ? '70%' : '75%',
     width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,
     justifyContent: "center",
   },

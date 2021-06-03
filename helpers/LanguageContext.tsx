@@ -76,7 +76,7 @@ const EnglishBank: {[key: string]: string} = {
     atleast8char: 'At least 8 characters, 1 uppercase letter, 1 number & 1 symbol', // Done
     confirmNewPassword: "Confirm New Password", // Done
     logout: "Logout", // Done
-    enrolmentPassword: "Enrolment password",
+    enrolmentPassword: "Enrollment password",
     backUp: 'Back up', // Done
     createAccount: 'Create an account to save your work to the cloud.', // Done
     signUp: 'Sign up', // Done

@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import useColorScheme from '../hooks/useColorScheme';
 import { Text, View, TouchableOpacity } from '../components/Themed';
@@ -86,7 +86,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     })
                 }
             </ScrollView>
-            <View style={{ display: 'flex', flexDirection: 'row', height: '50%' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', height:  Platform.OS === "ios" ? '50%' : '30%' }}>
                 <View style={styles.icons}>
                     <TouchableOpacity
                         onPress={() => props.openChannels()}
@@ -130,11 +130,12 @@ export default BottomBar
 
 const styleObject: any = (colorScheme: any) => StyleSheet.create({
     bottombar: {
-        height: '15%',
+        height: Platform.OS === "ios" ? '15%' : "10%",
         width: '100%',
         display: 'flex',
         paddingHorizontal: 20,
-        paddingBottom: 20
+        paddingTop: 0, 
+        paddingBottom: Platform.OS === "ios" ? 20 : 0
     },
     icons: {
         width: '33.33%',
@@ -153,7 +154,7 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
     },
     colorBar: {
         width: '98.5%',
-        height: '50%',
+        height: Platform.OS === "ios" ? '50%' : '50%',
         flexDirection: 'row',
         paddingTop: 15
     },

@@ -267,7 +267,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 // style={{ height: '100%' }}
                                                 contentContainerStyle={{
                                                     width: '100%',
-                                                    height: props.cueId ? 'auto' : windowHeight - 85,
+                                                    // height: props.cueId ? 'auto' : windowHeight - 85,
                                                 }}
                                             >
                                                 {
