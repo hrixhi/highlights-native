@@ -4,7 +4,8 @@ import {
   Animated,
   Dimensions,
   StyleSheet,
-  ScrollView
+  ScrollView,
+  Platform
 } from "react-native";
 import { TextInput } from "./CustomTextInput";
 import Alert from "./Alert";
@@ -23,7 +24,7 @@ import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 
 import { Agenda } from "react-native-calendars";
-import { PreferredLanguageText } from '../helpers/LanguageContext';
+import { PreferredLanguageText } from "../helpers/LanguageContext";
 
 const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   props: any
@@ -36,29 +37,42 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
   const [items, setItems] = useState<any>({});
-  const [channels, setChannels] = useState<any[]>([])
-  const [channelId, setChannelId] = useState('')
+  const [channels, setChannels] = useState<any[]>([]);
+  const [channelId, setChannelId] = useState("");
+  const [currentMonth, setCurrentMonth] = useState(
+    moment(new Date()).format("MMMM YYYY")
+  );
+
+  const [showStartTimeAndroid, setShowStartTimeAndroid] = useState(false);
+  const [showStartDateAndroid, setShowStartDateAndroid] = useState(false);
+
+  const [showEndTimeAndroid, setShowEndTimeAndroid] = useState(false);
+  const [showEndDateAndroid, setShowEndDateAndroid] = useState(false);
+
+  const onUpdateSelectedDate = (date: any) => {
+    setCurrentMonth(moment(date.dateString).format("MMMM YYYY"));
+  };
 
   const loadChannels = useCallback(async () => {
-    const uString: any = await AsyncStorage.getItem('user')
+    const uString: any = await AsyncStorage.getItem("user");
     if (uString) {
-      const user = JSON.parse(uString)
-      const server = fetchAPI('')
-      server.query({
-        query: getChannels,
-        variables: {
-          userId: user._id
-        }
-      })
-        .then(res => {
-          if (res.data.channel.findByUserId) {
-            setChannels(res.data.channel.findByUserId)
+      const user = JSON.parse(uString);
+      const server = fetchAPI("");
+      server
+        .query({
+          query: getChannels,
+          variables: {
+            userId: user._id
           }
         })
-        .catch(err => {
+        .then(res => {
+          if (res.data.channel.findByUserId) {
+            setChannels(res.data.channel.findByUserId);
+          }
         })
+        .catch(err => {});
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (title !== "" && end > start) {
@@ -149,6 +163,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           const parsedEvents: any[] = [];
           res.data.date.getCalendar.map((e: any) => {
             const { title } = htmlStringParser(e.title);
+            console.log(title);
             parsedEvents.push({
               title: e.channelName ? e.channelName + " - " + title : title,
               start: new Date(e.start),
@@ -163,6 +178,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           res.data.date.getCalendar.map((item: any) => {
             const strTime = timeToString(item.start);
 
+            console.log(strTime);
+
             if (!loadedItems[strTime]) {
               loadedItems[strTime] = [item];
             } else {
@@ -171,10 +188,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             }
           });
           // Selected date (current date) should never be empty, otherwise Calendar will keep loading
-          const todayStr = timeToString(new Date())
+          const todayStr = timeToString(new Date());
 
           if (!loadedItems[todayStr]) {
-            loadedItems[todayStr] = []
+            loadedItems[todayStr] = [];
           }
 
           setItems(loadedItems);
@@ -200,6 +217,296 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       });
   }, [, modalAnimation]);
 
+  const renderStartDateTimePicker = () => {
+    return (
+      <View style={{ backgroundColor: "#fff"}}>
+        {Platform.OS === "ios" ? (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={start}
+            mode={"date"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              const currentDate: any = selectedDate;
+              setStart(currentDate);
+            }}
+          />
+        ) : null}
+        {Platform.OS === "android" && showStartDateAndroid ? (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={start}
+            mode={"date"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              if (!selectedDate) return;
+              const currentDate: any = selectedDate;
+              setShowStartDateAndroid(false);
+              setStart(currentDate);
+            }}
+          />
+        ) : null}
+        {Platform.OS === "android" ? (
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "row",
+              marginTop: 12,
+              backgroundColor: "#fff",
+              marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                backgroundColor: "white",
+                overflow: "hidden",
+                height: 35,
+                borderRadius: 15,
+                marginBottom: 10,
+                width: 150,
+                justifyContent: "center",
+                flexDirection: "row"
+              }}
+              onPress={() => {
+                setShowStartDateAndroid(true);
+                setShowStartTimeAndroid(false);
+                setShowEndDateAndroid(false);
+                setShowEndTimeAndroid(false);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  lineHeight: 35,
+                  color: "#202025",
+                  overflow: "hidden",
+                  fontSize: 10,
+                  // backgroundColor: '#f4f4f6',
+                  paddingHorizontal: 25,
+                  fontFamily: "inter",
+                  height: 35,
+                  width: 150,
+                  borderRadius: 15
+                }}
+              >
+                Set Date
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "white",
+                overflow: "hidden",
+                height: 35,
+                borderRadius: 15,
+                width: 150,
+                justifyContent: "center",
+                flexDirection: "row"
+              }}
+              onPress={() => {
+                setShowStartDateAndroid(false);
+                setShowStartTimeAndroid(true);
+                setShowEndDateAndroid(false);
+                setShowEndTimeAndroid(false);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  lineHeight: 35,
+                  color: "#202025",
+                  overflow: "hidden",
+                  fontSize: 10,
+                  // backgroundColor: '#f4f4f6',
+                  paddingHorizontal: 25,
+                  fontFamily: "inter",
+                  height: 35,
+                  width: 150,
+                  borderRadius: 15
+                }}
+              >
+                Set Time
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        <View style={{ height: 10, backgroundColor: "white" }} />
+        {Platform.OS === "ios" && (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={start}
+            mode={"time"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              if (!selectedDate) return;
+              const currentDate: any = selectedDate;
+              setStart(currentDate);
+            }}
+          />
+        )}
+        {Platform.OS === "android" && showStartTimeAndroid && (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={start}
+            mode={"time"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              if (!selectedDate) return;
+              const currentDate: any = selectedDate;
+              setShowStartTimeAndroid(false);
+              setStart(currentDate);
+            }}
+          />
+        )}
+      </View>
+    );
+  };
+
+  const renderEndDateTimePicker = () => {
+    return (
+      <View style={{ backgroundColor: "#fff"}}>
+        {Platform.OS === "ios" && (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={end}
+            mode={"date"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              if (!selectedDate) return;
+              const currentDate: any = selectedDate;
+              setEnd(currentDate);
+            }}
+          />
+        )}
+        {Platform.OS === "android" && showEndDateAndroid ? (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={end}
+            mode={"date"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              if (!selectedDate) return;
+              const currentDate: any = selectedDate;
+              setShowEndDateAndroid(false);
+              setEnd(currentDate);
+            }}
+          />
+        ) : null}
+        {Platform.OS === "android" ? (
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "row",
+              marginTop: 12,
+              backgroundColor: "#fff",
+              marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                backgroundColor: "white",
+                overflow: "hidden",
+                height: 35,
+                width: 150,
+                borderRadius: 15,
+                marginBottom: 10,
+                justifyContent: "center",
+                flexDirection: "row"
+              }}
+              onPress={() => {
+                setShowStartDateAndroid(false);
+                setShowStartTimeAndroid(false);
+                setShowEndDateAndroid(true);
+                setShowEndTimeAndroid(false);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  lineHeight: 35,
+                  color: "#202025",
+                  overflow: "hidden",
+                  fontSize: 10,
+                  // backgroundColor: '#f4f4f6',
+                  paddingHorizontal: 25,
+                  fontFamily: "inter",
+                  height: 35,
+                  width: 150,
+                  borderRadius: 15
+                }}
+              >
+                Set Date
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "white",
+                overflow: "hidden",
+                height: 35,
+                borderRadius: 15,
+                width: 150,
+                justifyContent: "center",
+                flexDirection: "row"
+              }}
+              onPress={() => {
+                setShowStartDateAndroid(false);
+                setShowStartTimeAndroid(false);
+                setShowEndDateAndroid(false);
+                setShowEndTimeAndroid(true);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  lineHeight: 35,
+                  color: "#202025",
+                  overflow: "hidden",
+                  fontSize: 10,
+                  // backgroundColor: '#f4f4f6',
+                  paddingHorizontal: 25,
+                  fontFamily: "inter",
+                  height: 35,
+                  width: 150,
+                  borderRadius: 15
+                }}
+              >
+                Set Time
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        <View style={{ height: 10, backgroundColor: "white" }} />
+        {Platform.OS === "ios" && (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={end}
+            mode={"time"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              if (!selectedDate) return;
+              const currentDate: any = selectedDate;
+              setEnd(currentDate);
+            }}
+          />
+        )}
+        {Platform.OS === "android" && showEndTimeAndroid && (
+          <DateTimePicker
+            style={styles.timePicker}
+            value={end}
+            mode={"time"}
+            textColor={"#202025"}
+            onChange={(event, selectedDate) => {
+              if (!selectedDate) return;
+              const currentDate: any = selectedDate;
+              setShowEndTimeAndroid(false);
+              setEnd(currentDate);
+            }}
+          />
+        )}
+      </View>
+    );
+  };
+
   useEffect(() => {
     loadEvents();
     loadChannels();
@@ -221,10 +528,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     });
 
     // Selected date (current date) should never be empty, otherwise Calendar will keep loading
-    const todayStr = timeToString(new Date())
+    const todayStr = timeToString(new Date());
 
     if (!itemsWithEmptyDates[todayStr]) {
-      itemsWithEmptyDates[todayStr] = []
+      itemsWithEmptyDates[todayStr] = [];
     }
 
     setItems(itemsWithEmptyDates);
@@ -263,16 +570,16 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onDateClick(
               displayTitle,
               moment(new Date(item.start)).format("MMMM Do YYYY, h:mm a") +
-              " to " +
-              moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a"),
+                " to " +
+                moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a"),
               item.dateId
             );
           } else {
             Alert(
               displayTitle,
               moment(new Date(item.start)).format("MMMM Do YYYY, h:mm a") +
-              " to " +
-              moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a")
+                " to " +
+                moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a")
             );
           }
         }}
@@ -318,7 +625,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           backgroundColor: "white",
           flexDirection: "row",
           paddingBottom: 25,
-          alignItems: "center"
+          alignItems: "center",
+          justifyContent: "space-between"
         }}
       >
         <Text
@@ -328,10 +636,24 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             fontSize: 17,
             flex: 1,
             lineHeight: 25,
-            paddingHorizontal: 20
+            paddingLeft: 10
+            // paddingHorizontal: 20
           }}
         >
-          {PreferredLanguageText('planner')}
+          {PreferredLanguageText("planner")}
+        </Text>
+        <Text
+          ellipsizeMode="tail"
+          style={{
+            color: "black",
+            fontSize: 17,
+            flex: 1,
+            lineHeight: 25,
+            // paddingHorizontal: 0,
+            marginTop: 10
+          }}
+        >
+          {currentMonth}
         </Text>
         {!showAddEvent ? (
           <Ionicons
@@ -351,6 +673,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           />
         )}
       </View>
+
       {!showAddEvent ? (
         <View style={{ flex: 1 }}>
           <Agenda
@@ -368,6 +691,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               selectedDayBackgroundColor: "#3B64F8", // calendar sel date
               dotColor: "#3B64F8" // dots
             }}
+            onDayPress={onUpdateSelectedDate}
           />
         </View>
       ) : (
@@ -397,7 +721,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             >
               <TextInput
                 value={title}
-                placeholder={PreferredLanguageText('event')}
+                placeholder={PreferredLanguageText("event")}
                 onChangeText={val => setTitle(val)}
                 placeholderTextColor={"#a2a2aa"}
                 required={true}
@@ -406,34 +730,20 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             <View
               style={{
                 width: Dimensions.get("window").width < 768 ? "100%" : "30%",
-                flexDirection: "row",
+                flexDirection: Platform.OS === "ios" ? "row" : "column",
                 paddingTop: 12,
                 backgroundColor: "#fff",
                 marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
               }}
             >
-              <Text style={styles.text}>{PreferredLanguageText('start')}</Text>
-              <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={"date"}
-                textColor={"#202025"}
-                onChange={(event, selectedDate) => {
-                  const currentDate: any = selectedDate;
-                  setStart(currentDate);
-                }}
-              />
-              <View style={{ height: 10, backgroundColor: "white" }} />
-              <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={"time"}
-                textColor={"#202025"}
-                onChange={(event, selectedDate) => {
-                  const currentDate: any = selectedDate;
-                  setStart(currentDate);
-                }}
-              />
+              <Text style={styles.text}>
+                {PreferredLanguageText("start")}{" "}
+                {Platform.OS === "android"
+                  ? ": " +
+                    moment(new Date(start)).format("MMMM Do YYYY, h:mm a")
+                  : null}
+              </Text>
+              {renderStartDateTimePicker()}
               {/* <Datetime
                                             value={start}
                                             onChange={(event: any) => {
@@ -445,42 +755,19 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             <View
               style={{
                 width: Dimensions.get("window").width < 768 ? "100%" : "30%",
-                flexDirection: "row",
+                flexDirection: Platform.OS === "ios" ? "row" : "column",
                 backgroundColor: "#fff",
                 marginTop: 12,
                 marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
               }}
             >
-              <Text style={styles.text}>{PreferredLanguageText('end')}</Text>
-              <View style={{ width: 6, backgroundColor: "#fff" }} />
-              {/* <Datetime
-                                            value={end}
-                                            onChange={(event: any) => {
-                                                const date = new Date(event)
-                                                setEnd(date)
-                                            }}
-                                        /> */}
-              <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={"date"}
-                textColor={"#202025"}
-                onChange={(event, selectedDate) => {
-                  const currentDate: any = selectedDate;
-                  setEnd(currentDate);
-                }}
-              />
-              <View style={{ height: 10, backgroundColor: "white" }} />
-              <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={"time"}
-                textColor={"#202025"}
-                onChange={(event, selectedDate) => {
-                  const currentDate: any = selectedDate;
-                  setEnd(currentDate);
-                }}
-              />
+              <Text style={styles.text}>
+                {PreferredLanguageText("end")}{" "}
+                {Platform.OS === "android"
+                  ? ": " + moment(new Date(end)).format("MMMM Do YYYY, h:mm a")
+                  : null}
+              </Text>
+              {renderEndDateTimePicker()}
             </View>
             <View
               style={{
@@ -526,39 +813,83 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             </View>
           </View>
           <View style={{ marginBottom: 40 }}>
-            <View style={{ width: '100%', paddingBottom: 15, backgroundColor: 'white' }}>
-              <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                {PreferredLanguageText('channel')}
+            <View
+              style={{
+                width: "100%",
+                paddingBottom: 15,
+                backgroundColor: "white"
+              }}
+            >
+              <Text style={{ fontSize: 12, color: "#a2a2aa" }}>
+                {PreferredLanguageText("channel")}
                 {/* <Ionicons
                                                 name='school-outline' size={20} color={'#a2a2aa'} /> */}
               </Text>
             </View>
-            <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
-              <View style={{ width: '85%', backgroundColor: 'white', display: 'flex' }}>
-                <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
+            <View
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "row",
+                backgroundColor: "white"
+              }}
+            >
+              <View
+                style={{
+                  width: "85%",
+                  backgroundColor: "white",
+                  display: "flex"
+                }}
+              >
+                <ScrollView
+                  style={styles.colorBar}
+                  horizontal={true}
+                  showsHorizontalScrollIndicator={false}
+                >
                   <TouchableOpacity
-                    style={channelId === '' ? styles.allOutline : styles.allBlack}
+                    style={
+                      channelId === "" ? styles.allOutline : styles.allBlack
+                    }
                     onPress={() => {
-                      setChannelId('')
-                    }}>
-                    <Text style={{ lineHeight: 20, fontSize: 12, color: channelId === '' ? '#fff' : '#202025' }}>
-                      {PreferredLanguageText('myCues')}
+                      setChannelId("");
+                    }}
+                  >
+                    <Text
+                      style={{
+                        lineHeight: 20,
+                        fontSize: 12,
+                        color: channelId === "" ? "#fff" : "#202025"
+                      }}
+                    >
+                      {PreferredLanguageText("myCues")}
                     </Text>
                   </TouchableOpacity>
-                  {
-                    channels.map((channel) => {
-                      return <TouchableOpacity
+                  {channels.map(channel => {
+                    return (
+                      <TouchableOpacity
                         key={Math.random()}
-                        style={channelId === channel._id ? styles.allOutline : styles.allBlack}
+                        style={
+                          channelId === channel._id
+                            ? styles.allOutline
+                            : styles.allBlack
+                        }
                         onPress={() => {
-                          setChannelId(channel._id)
-                        }}>
-                        <Text style={{ lineHeight: 20, fontSize: 12, color: channelId === channel._id ? '#fff' : '#202025' }}>
+                          setChannelId(channel._id);
+                        }}
+                      >
+                        <Text
+                          style={{
+                            lineHeight: 20,
+                            fontSize: 12,
+                            color:
+                              channelId === channel._id ? "#fff" : "#202025"
+                          }}
+                        >
                           {channel.name}
                         </Text>
                       </TouchableOpacity>
-                    })
-                  }
+                    );
+                  })}
                 </ScrollView>
               </View>
             </View>
@@ -607,17 +938,17 @@ const styles: any = StyleSheet.create({
   },
   allBlack: {
     fontSize: 12,
-    color: '#202025',
+    color: "#202025",
     height: 22,
     paddingHorizontal: 10,
-    backgroundColor: 'white'
+    backgroundColor: "white"
   },
   allOutline: {
     fontSize: 12,
-    color: '#FFF',
+    color: "#FFF",
     height: 22,
     paddingHorizontal: 10,
     borderRadius: 10,
-    backgroundColor: '#202025'
+    backgroundColor: "#202025"
   }
 });

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { Keyboard, StyleSheet, Switch, TextInput, ScrollView, Animated, Dimensions } from 'react-native';
+import { Keyboard, StyleSheet, Switch, TextInput, ScrollView, Animated, Dimensions, Platform } from 'react-native';
 import { Text, View, TouchableOpacity } from '../components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
@@ -30,6 +30,7 @@ import MultiSelect from 'react-native-multiple-select';
 import { TimePicker } from 'react-native-simple-time-picker';
 import { PreferredLanguageText } from "../helpers/LanguageContext";
 import { Video } from 'expo-av';
+import moment from 'moment';
 
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -76,6 +77,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     })
     const [equation, setEquation] = useState('y = x + 1')
     const [showEquationEditor, setShowEquationEditor] = useState(false)
+
+    const [showDeadlineTimeAndroid, setShowDeadlineTimeAndroid] = useState(false);
+    const [showDeadlineDateAndroid, setShowDeadlineDateAndroid] = useState(false); 
+
+    const [showEndPlayAtTimeAndroid, setShowEndPlayAtTimeAndroid] = useState(false);
+    const [showEndPlayAtDateAndroid, setShowEndPlayAtDateAndroid] = useState(false); 
+
 
     // Alerts
 
@@ -581,6 +589,267 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setDuration({ hours, minutes, seconds });
     }, [])
 
+    const handleCursorPosition = (scrollY: any) => {
+        // Positioning scroll bar
+        RichText.current.scrollTo({y: scrollY - 60, animated: true});
+    }
+
+    const renderDeadlineDateTimePicker = () => {
+        return (<View style={{ backgroundColor: '#fff' }}>
+        {Platform.OS === "ios" ? <DateTimePicker
+            style={styles.timePicker}
+            value={deadline}
+            mode={'date'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                const currentDate: any = selectedDate;
+                setDeadline(currentDate)
+            }}
+            minimumDate={new Date()}
+        /> : null}
+        {Platform.OS === "android" && showDeadlineDateAndroid ? <DateTimePicker
+            style={styles.timePicker}
+            value={deadline}
+            mode={'date'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                if (!selectedDate) return;
+                const currentDate: any = selectedDate;
+                setShowDeadlineDateAndroid(false);
+                setDeadline(currentDate)
+            }}
+            minimumDate={new Date()}
+        /> : null}
+
+        {Platform.OS === "android" ? <View style={{
+            width: '100%',
+            flexDirection: 'row',
+            marginTop: 12,
+            backgroundColor: '#fff',
+            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+        }}>
+
+            <TouchableOpacity
+                style={{
+                    backgroundColor: 'white',
+                    overflow: 'hidden',
+                    height: 35,
+                    borderRadius: 15,
+                    marginBottom: 10,
+                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                }}
+                onPress={() => {
+                setShowDeadlineDateAndroid(true)
+                setShowDeadlineTimeAndroid(false)
+            }   }
+            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Date
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'white',
+                                    overflow: 'hidden',
+                                    height: 35,
+                                    borderRadius: 15,
+                                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                                }}
+                                onPress={() => {
+                                    setShowDeadlineDateAndroid(false)
+                                    setShowDeadlineTimeAndroid(true)
+                                }}
+                            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Time
+                                </Text>
+                            </TouchableOpacity>
+                            </View> : null}
+
+        <View style={{ height: 10, backgroundColor: 'white' }} />
+        {Platform.OS === "ios" ? <DateTimePicker
+            style={styles.timePicker}
+            value={deadline}
+            mode={'time'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                const currentDate: any = selectedDate;
+                setDeadline(currentDate)
+            }}
+            minimumDate={new Date()}
+        /> : null}
+        {Platform.OS === "android" && showDeadlineTimeAndroid ? <DateTimePicker
+            style={styles.timePicker}
+            value={deadline}
+            mode={'time'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                if (!selectedDate) return;
+                const currentDate: any = selectedDate;
+                setShowDeadlineTimeAndroid(false);
+                setDeadline(currentDate)
+                
+            }}
+            minimumDate={new Date()}
+        /> : null}
+    </View>)
+    }
+
+    const renderEndPlayAtDateTimePicker = () => {
+        return <View style={{ backgroundColor: '#fff' }}>
+            {Platform.OS === 'ios' && <DateTimePicker
+                style={styles.timePicker}
+                value={endPlayAt}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    const currentDate: any = selectedDate;
+                    setEndPlayAt(currentDate)
+                }}
+                minimumDate={new Date()}
+            />}
+
+            {Platform.OS === "android" && showEndPlayAtDateAndroid ? <DateTimePicker
+                style={styles.timePicker}
+                value={endPlayAt}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowEndPlayAtDateAndroid(false)
+                    setEndPlayAt(currentDate)
+                    
+                }}
+                minimumDate={new Date()}
+                /> : null}
+
+        {Platform.OS === "android" ? <View style={{
+            width: '100%',
+            flexDirection: 'row',
+            marginTop: 12,
+            backgroundColor: '#fff',
+            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+        }}>
+
+            <TouchableOpacity
+                style={{
+                    backgroundColor: 'white',
+                    overflow: 'hidden',
+                    height: 35,
+                    borderRadius: 15,
+                    marginBottom: 10,
+                
+                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                }}
+                onPress={() => {
+                setShowEndPlayAtDateAndroid(true)
+                setShowEndPlayAtTimeAndroid(false)
+            }   }
+            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Date
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'white',
+                                    overflow: 'hidden',
+                                    height: 35,
+                                    borderRadius: 15,
+                                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                                }}
+                                onPress={() => {
+                                    setShowEndPlayAtDateAndroid(false)
+                                    setShowEndPlayAtTimeAndroid(true)
+                                }}
+                            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Time
+                                </Text>
+                            </TouchableOpacity>
+                            </View> : null}
+
+
+            <View style={{ height: 10, backgroundColor: 'white' }} />
+            {Platform.OS === 'ios' && <DateTimePicker
+                style={styles.timePicker}
+                value={endPlayAt}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setEndPlayAt(currentDate)
+                }}
+                minimumDate={new Date()}
+                />}
+                {Platform.OS === 'android' && showEndPlayAtTimeAndroid && <DateTimePicker
+                style={styles.timePicker}
+                value={endPlayAt}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowEndPlayAtTimeAndroid(false);
+                    setEndPlayAt(currentDate)
+                }}
+                minimumDate={new Date()}
+                />}
+        </View>
+    }
+
+
+
     const quizAlert = PreferredLanguageText('quizzesCanOnly')
     const width = Dimensions.get('window').width;
     return (
@@ -648,12 +917,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     paddingBottom: 4,
                     backgroundColor: 'white',
                 }} onTouchStart={() => Keyboard.dismiss()}>
-                    <View style={{ flexDirection: imported || isQuiz || showImportOptions ? 'row' : 'column', flex: 1 }}>
+                    <View 
+                    style={{ flexDirection: imported || isQuiz || showImportOptions ? 'row' : 'column', flex: 1 }}
+                    >
                         <RichToolbar
                             style={{
                                 flexWrap: 'wrap',
                                 backgroundColor: 'white',
-                                height: 28,
+                                // height: 28,
                                 overflow: 'visible'
                             }}
                             iconSize={12}
@@ -834,7 +1105,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         }
                                                         setTimer(!timer)
                                                     }}
-                                                    style={{ height: 20 }}
+                                                    style={{ height: 20, marginRight: 'auto' }}
                                                     trackColor={{
                                                         false: '#f4f4f6',
                                                         true: '#3B64F8'
@@ -932,6 +1203,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         allowsInlineMediaPlayback={true}
                                         allowsLinkPreview={true}
                                         allowsBackForwardNavigationGestures={true}
+                                        useContainer={true}
+                                        onCursorPosition={handleCursorPosition}
                                     />)
                         }
                     </View>
@@ -994,7 +1267,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     </View>
                                     {
                                         channelId !== '' ?
-                                            <View style={{ height: 350, flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
+                                            <View style={{  flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
                                                 <ScrollView style={{
                                                     width: '100%',
                                                     padding: 5,
@@ -1044,7 +1317,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 {
                                     channelId !== '' ?
                                         <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: 'white', }}>
-                                            <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
+                                            <View style={{ width: '100%', paddingTop: 60, paddingBottom: 15, backgroundColor: 'white' }}>
                                                 <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                                     {PreferredLanguageText('submissionRequired')}
                                                 </Text>
@@ -1074,11 +1347,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         <View style={{
                                                             width: '100%',
                                                             display: 'flex',
-                                                            flexDirection: 'row',
+                                                            flexDirection: Platform.OS === "android" ? 'column' : 'row',
                                                             backgroundColor: 'white',
                                                         }}>
                                                             <Text style={styles.text}>
+
                                                                 {PreferredLanguageText('deadline')}
+                                                                {Platform.OS === "android" ? ": " + moment(new Date(deadline)).format('MMMM Do YYYY, h:mm a') : null}
                                                             </Text>
                                                             {/* <Datetime
                                                                 value={deadline}
@@ -1087,31 +1362,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     setDeadline(date)
                                                                 }}
                                                             /> */}
-                                                            <View style={{ backgroundColor: '#fff' }}>
-                                                                <DateTimePicker
-                                                                    style={styles.timePicker}
-                                                                    value={deadline}
-                                                                    mode={'date'}
-                                                                    textColor={'#202025'}
-                                                                    onChange={(event, selectedDate) => {
-                                                                        const currentDate: any = selectedDate;
-                                                                        setDeadline(currentDate)
-                                                                    }}
-                                                                    minimumDate={new Date()}
-                                                                />
-                                                                <View style={{ height: 10, backgroundColor: 'white' }} />
-                                                                <DateTimePicker
-                                                                    style={styles.timePicker}
-                                                                    value={deadline}
-                                                                    mode={'time'}
-                                                                    textColor={'#202025'}
-                                                                    onChange={(event, selectedDate) => {
-                                                                        const currentDate: any = selectedDate;
-                                                                        setDeadline(currentDate)
-                                                                    }}
-                                                                    minimumDate={new Date()}
-                                                                />
-                                                            </View>
+                                                            {renderDeadlineDateTimePicker()}
                                                         </View>
                                                         : <View style={{ flex: 1, backgroundColor: '#fff' }} />
                                                 }
@@ -1135,7 +1386,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     <Switch
                                                         value={graded}
                                                         onValueChange={() => setGraded(!graded)}
-                                                        style={{ height: 20 }}
+                                                        style={{ height: 20, marginRight: 'auto' }}
                                                         trackColor={{
                                                             false: '#f4f4f6',
                                                             true: '#a2a2aa'
@@ -1296,7 +1547,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             setPlayChannelCueIndef(true)
                                             setNotify(!notify)
                                         }}
-                                        style={{ height: 20 }}
+                                        style={{ height: 20, marginRight: 'auto'}}
                                         trackColor={{
                                             false: '#f4f4f6',
                                             true: '#3B64F8'
@@ -1323,7 +1574,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 <Switch
                                                     value={!shuffle}
                                                     onValueChange={() => setShuffle(!shuffle)}
-                                                    style={{ height: 20 }}
+                                                    style={{ height: 20, marginRight: 'auto' }}
                                                     trackColor={{
                                                         false: '#f4f4f6',
                                                         true: '#a2a2aa'
@@ -1365,11 +1616,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     <View style={{
                                                         width: '100%',
                                                         display: 'flex',
-                                                        flexDirection: 'row',
+                                                        flexDirection: Platform.OS === "ios" ? "row" : "column",
                                                         backgroundColor: 'white'
                                                     }}>
                                                         <Text style={styles.text}>
                                                             {PreferredLanguageText('RemindOn')}
+                                                            {Platform.OS === "android" ? ": " + moment(new Date(endPlayAt)).format('MMMM Do YYYY, h:mm a') : null}
                                                         </Text>
                                                         {/* <Datetime
                                                             value={endPlayAt}
@@ -1378,31 +1630,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 setEndPlayAt(date)
                                                             }}
                                                         /> */}
-                                                        <View style={{ backgroundColor: '#fff' }}>
-                                                            <DateTimePicker
-                                                                style={styles.timePicker}
-                                                                value={endPlayAt}
-                                                                mode={'date'}
-                                                                textColor={'#202025'}
-                                                                onChange={(event, selectedDate) => {
-                                                                    const currentDate: any = selectedDate;
-                                                                    setEndPlayAt(currentDate)
-                                                                }}
-                                                                minimumDate={new Date()}
-                                                            />
-                                                            <View style={{ height: 10, backgroundColor: 'white' }} />
-                                                            <DateTimePicker
-                                                                style={styles.timePicker}
-                                                                value={endPlayAt}
-                                                                mode={'time'}
-                                                                textColor={'#202025'}
-                                                                onChange={(event, selectedDate) => {
-                                                                    const currentDate: any = selectedDate;
-                                                                    setEndPlayAt(currentDate)
-                                                                }}
-                                                                minimumDate={new Date()}
-                                                            />
-                                                        </View>
+                                                        {renderEndPlayAtDateTimePicker()}
                                                     </View>
                                             }
                                         </View>
@@ -1426,7 +1654,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 <Switch
                                                     value={playChannelCueIndef}
                                                     onValueChange={() => setPlayChannelCueIndef(!playChannelCueIndef)}
-                                                    style={{ height: 20 }}
+                                                    style={{ height: 20, marginRight: 'auto' }}
                                                     trackColor={{
                                                         false: '#f4f4f6',
                                                         true: '#a2a2aa'
@@ -1439,11 +1667,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     <View style={{
                                                         width: '100%',
                                                         display: 'flex',
-                                                        flexDirection: 'row',
+                                                        flexDirection: Platform.OS === "android" ? 'column' : 'row',
                                                         backgroundColor: 'white'
                                                     }}>
                                                         <Text style={styles.text}>
                                                             {PreferredLanguageText('remindTill')}
+                                                            {Platform.OS === "android" ? ": " + moment(new Date(endPlayAt)).format('MMMM Do YYYY, h:mm a') : null}
                                                         </Text>
                                                         {/* <Datetime
                                                             value={endPlayAt}
@@ -1452,31 +1681,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 setEndPlayAt(date)
                                                             }}
                                                         /> */}
-                                                        <View style={{ backgroundColor: '#fff' }}>
-                                                            <DateTimePicker
-                                                                style={styles.timePicker}
-                                                                value={endPlayAt}
-                                                                mode={'date'}
-                                                                textColor={'#202025'}
-                                                                onChange={(event, selectedDate) => {
-                                                                    const currentDate: any = selectedDate;
-                                                                    setEndPlayAt(currentDate)
-                                                                }}
-                                                                minimumDate={new Date()}
-                                                            />
-                                                            <View style={{ height: 10, backgroundColor: 'white' }} />
-                                                            <DateTimePicker
-                                                                style={styles.timePicker}
-                                                                value={endPlayAt}
-                                                                mode={'time'}
-                                                                textColor={'#202025'}
-                                                                onChange={(event, selectedDate) => {
-                                                                    const currentDate: any = selectedDate;
-                                                                    setEndPlayAt(currentDate)
-                                                                }}
-                                                                minimumDate={new Date()}
-                                                            />
-                                                        </View>
+                                                       {renderEndPlayAtDateTimePicker()}
                                                     </View>
                                             }
                                         </View>

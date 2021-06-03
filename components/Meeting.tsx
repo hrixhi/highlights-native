@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Animated, Dimensions, Switch, StyleSheet, Linking } from 'react-native';
+import { Animated, Dimensions, Switch, StyleSheet, Linking, Platform } from 'react-native';
 import { Text, TouchableOpacity, View } from './Themed';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { Jutsu } from 'react-jutsu'
@@ -27,6 +27,12 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [meetingOn, setMeetingOn] = useState(false)
     const [start, setStart] = useState(new Date())
     const [end, setEnd] = useState(new Date(start.getTime() + 1000 * 60 * 60))
+
+    const [showStartTimeAndroid, setShowStartTimeAndroid] = useState(false);
+    const [showStartDateAndroid, setShowStartDateAndroid] = useState(false);
+
+    const [showEndTimeAndroid, setShowEndTimeAndroid] = useState(false);
+    const [showEndDateAndroid, setShowEndDateAndroid] = useState(false);
 
     const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([])
     const [pastMeetings, setPastMeetings] = useState<any[]>([])
@@ -243,13 +249,263 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         toolbarButtons.push('mute-everyone', 'mute-video-everyone', 'stats', 'settings', 'livestreaming')
     }
 
+    const renderStartDateTimePicker = () => {
+        return (<View style={{ backgroundColor: 'white' }}>
+            {Platform.OS === "ios" ? <DateTimePicker
+                                style={styles.timePicker}
+                                value={start}
+                                mode={'date'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    const currentDate: any = selectedDate;
+                                    setStart(currentDate)
+                                }}
+                            /> : null}
+                            {Platform.OS === "android" && showStartDateAndroid ? <DateTimePicker
+                                style={styles.timePicker}
+                                value={start}
+                                mode={'date'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    if (!selectedDate) return;
+                                    const currentDate: any = selectedDate;
+                                    setShowStartDateAndroid(false)
+                                    setStart(currentDate)
+                                }}
+                            /> : null}
+                            {Platform.OS === "android" ? <View style={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                marginTop: 12,
+                                backgroundColor: '#fff',
+                                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            }}>
+
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'white',
+                                    overflow: 'hidden',
+                                    height: 35,
+                                    borderRadius: 15,
+                                    marginBottom: 10,
+                                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                                }}
+                                onPress={() => {
+                                    setShowStartDateAndroid(true)
+                                    setShowStartTimeAndroid(false)
+                                    setShowEndDateAndroid(false)
+                                    setShowEndTimeAndroid(false)
+                                }}
+                            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Date
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'white',
+                                    overflow: 'hidden',
+                                    height: 35,
+                                    borderRadius: 15,
+                                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                                }}
+                                onPress={() => {
+                                    setShowStartDateAndroid(false)
+                                    setShowStartTimeAndroid(true)
+                                    setShowEndDateAndroid(false)
+                                    setShowEndTimeAndroid(false)
+                                }}
+                            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Time
+                                </Text>
+                            </TouchableOpacity>
+                            </View> : null}
+                            <View style={{ height: 10, backgroundColor: 'white' }} />
+                            {Platform.OS === "ios" && <DateTimePicker
+                                style={styles.timePicker}
+                                value={start}
+                                mode={'time'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    if (!selectedDate) return;
+                                    const currentDate: any = selectedDate;
+                                    setStart(currentDate)
+                                }}
+                            />}
+                            {Platform.OS === "android" && showStartTimeAndroid && <DateTimePicker
+                                style={styles.timePicker}
+                                value={start}
+                                mode={'time'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    if (!selectedDate) return;
+                                    const currentDate: any = selectedDate;
+                                    setShowStartTimeAndroid(false)
+                                    setStart(currentDate)
+                                }}
+                            />}
+        </View>)
+    }
+
+    const renderEndDateTimePicker = () => {
+        return (<View style={{ backgroundColor: 'white' }}>
+            {Platform.OS === "ios" && <DateTimePicker
+                                style={styles.timePicker}
+                                value={end}
+                                mode={'date'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    if (!selectedDate) return;
+                                    const currentDate: any = selectedDate;
+                                    setEnd(currentDate)
+                                }}
+                            /> }
+                            {Platform.OS === "android" && showEndDateAndroid ? <DateTimePicker
+                                style={styles.timePicker}
+                                value={end}
+                                mode={'date'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    if (!selectedDate) return;
+                                    const currentDate: any = selectedDate;
+                                    setShowEndDateAndroid(false)
+                                    setEnd(currentDate)
+                                }}
+                            /> : null}
+                            {Platform.OS === "android" ? <View style={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                marginTop: 12,
+                                backgroundColor: '#fff',
+                                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            }}>
+
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'white',
+                                    overflow: 'hidden',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                    marginBottom: 10,
+                                    justifyContent: 'center', flexDirection: 'row',
+                                }}
+                                onPress={() => { 
+                                    setShowStartDateAndroid(false)
+                                    setShowStartTimeAndroid(false)
+                                    setShowEndDateAndroid(true)
+                                    setShowEndTimeAndroid(false)
+                                }}
+                            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Date
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'white',
+                                    overflow: 'hidden',
+                                    height: 35,
+                                    borderRadius: 15,
+                                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                                }}
+                                onPress={() => { 
+                                    setShowStartDateAndroid(false)
+                                    setShowStartTimeAndroid(false)
+                                    setShowEndDateAndroid(false)
+                                    setShowEndTimeAndroid(true)
+                                }}
+                            >
+                                <Text style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#202025',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}>
+                                    Set Time
+                                </Text>
+                            </TouchableOpacity>
+                            </View> : null}
+
+                            <View style={{ height: 10, backgroundColor: 'white' }} />
+                            {Platform.OS === "ios" && <DateTimePicker
+                                style={styles.timePicker}
+                                value={end}
+                                mode={'time'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    if (!selectedDate) return;
+                                    const currentDate: any = selectedDate;
+                                    setEnd(currentDate)
+                                }}
+                            />}
+                            {Platform.OS === "android" && showEndTimeAndroid && <DateTimePicker
+                                style={styles.timePicker}
+                                value={end}
+                                mode={'time'}
+                                textColor={'#202025'}
+                                onChange={(event, selectedDate) => {
+                                    if (!selectedDate) return;
+                                    const currentDate: any = selectedDate;
+                                    setShowEndTimeAndroid(false)
+                                    setEnd(currentDate)
+                                }}
+                            />}
+        </View>)
+    }
+
+
     const mainClassroomView = (<ScrollView style={{
         width: '100%',
-        height: windowHeight,
+        // height: windowHeight,
         backgroundColor: '#fff',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
-        padding: 20
+        padding: 20,
     }}>
         {/* <Animated.View style={{
             width: '100%',
@@ -273,28 +529,30 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         <View style={{ backgroundColor: 'white', flex: 1 }}>
             {
                 isOwner ?
-                    <View style={{ backgroundColor: '#fff' }}>
-                        <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white' }}>
+                    <View style={{ backgroundColor: '#fff',  display: 'flex', flexDirection: 'column', width: '100%'  }}>
+                        <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white',}}>
                             <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                 {PreferredLanguageText('initiateMeeting')}
                             </Text>
                         </View>
-                        <View style={{
+                        {/* <View style={{
                             backgroundColor: 'white',
                             height: 40,
-                            marginRight: 10
-                        }}>
+                            // marginRight: 10,
+                            width: '100%',
+                            display: 'flex'
+                        }}> */}
                             <Switch
                                 value={meetingOn}
                                 onValueChange={() => updateMeetingStatus()}
-                                style={{ height: 20 }}
+                                style={{ height: 30, marginTop: 10, marginRight: 'auto' }}
                                 trackColor={{
                                     false: '#f4f4f6',
                                     true: '#3B64F8'
                                 }}
                                 thumbColor='white'
                             />
-                        </View>
+                        {/* </View> */}
                     </View> : null
             }
             <TouchableOpacity
@@ -394,7 +652,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                         marginBottom: 40,
                         borderColor: '#f4f4f6', borderTopWidth: 1,
-                        paddingTop: 25
+                        paddingTop: 25,
+                        backgroundColor: "#fff"
                     }}>
                         <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%', backgroundColor: '#fff' }}>
                             <Text
@@ -405,52 +664,25 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         </View>
                         <View style={{
                             width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: 'row',
+                            flexDirection: Platform.OS === "ios" ? 'row' : 'column',
                             marginTop: 12,
-                            backgroundColor: '#fff',
+                            backgroundColor: 'white',
                             marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
                         }}>
                             <Text style={styles.text}>
-                                {PreferredLanguageText('start')}
+                                {PreferredLanguageText('start')} {Platform.OS === "android" ? ": " + moment(new Date(start)).format('MMMM Do YYYY, h:mm a') : null}
                             </Text>
-                            <DateTimePicker
-                                style={styles.timePicker}
-                                value={start}
-                                mode={'date'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    const currentDate: any = selectedDate;
-                                    setStart(currentDate)
-                                }}
-                            />
-                            <View style={{ height: 10, backgroundColor: 'white' }} />
-                            <DateTimePicker
-                                style={styles.timePicker}
-                                value={start}
-                                mode={'time'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    const currentDate: any = selectedDate;
-                                    setStart(currentDate)
-                                }}
-                            />
-                            {/* <Datetime
-                                    value={start}
-                                    onChange={(event: any) => {
-                                        const date = new Date(event)
-                                        setStart(date)
-                                    }}
-                                /> */}
+                            {renderStartDateTimePicker()}
                         </View>
                         <View style={{
                             width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: 'row',
+                            flexDirection: Platform.OS === "ios" ? 'row' : 'column',
                             paddingTop: 12,
                             backgroundColor: '#fff',
                             marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
                         }}>
                             <Text style={styles.text}>
-                                {PreferredLanguageText('end')}
+                                {PreferredLanguageText('end')} {Platform.OS === "android" ? ": " + moment(new Date(end)).format('MMMM Do YYYY, h:mm a') : null}
                             </Text>
                             <View style={{ width: 6, backgroundColor: '#fff' }} />
                             {/* <Datetime
@@ -460,27 +692,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         setEnd(date)
                                     }}
                                 /> */}
-                            <DateTimePicker
-                                style={styles.timePicker}
-                                value={end}
-                                mode={'date'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    const currentDate: any = selectedDate;
-                                    setEnd(currentDate)
-                                }}
-                            />
-                            <View style={{ height: 10, backgroundColor: 'white' }} />
-                            <DateTimePicker
-                                style={styles.timePicker}
-                                value={end}
-                                mode={'time'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    const currentDate: any = selectedDate;
-                                    setEnd(currentDate)
-                                }}
-                            />
+                            {renderEndDateTimePicker()}
                         </View>
                         <View style={{
                             backgroundColor: '#fff',
@@ -669,6 +881,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         borderTopRightRadius: 30,
         borderTopLeftRadius: 30,
+        paddingBottom: Platform.OS === "android" ? 50 : 0
     },
     text: {
         fontSize: 12,

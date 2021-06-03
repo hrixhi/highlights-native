@@ -13,7 +13,10 @@ import { validateEmail } from "../helpers/emailCheck";
 import Alert from "../components/Alert";
 import * as Updates from "expo-updates";
 import { TextInput } from "./CustomTextInput";
-import { PreferredLanguageText, LanguageSelect } from "../helpers/LanguageContext";
+import {
+  PreferredLanguageText,
+  LanguageSelect
+} from "../helpers/LanguageContext";
 
 const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
   props: any
@@ -46,13 +49,17 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
   const [currentDisplayName, setCurrentDisplayName] = useState("");
 
   // Alerts
-  const passwordUpdatedAlert = PreferredLanguageText('passwordUpdated');
-  const incorrectCurrentPasswordAlert = PreferredLanguageText('incorrectCurrentPassword');
-  const passwordDoesNotMatchAlert = PreferredLanguageText('passwordDoesNotMatch');
-  const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
-  const profileUpdatedAlert = PreferredLanguageText('profileUpdated');
-  const enterValidEmailError = PreferredLanguageText('enterValidEmail')
-  const passwordInvalidError = PreferredLanguageText('atleast8char')
+  const passwordUpdatedAlert = PreferredLanguageText("passwordUpdated");
+  const incorrectCurrentPasswordAlert = PreferredLanguageText(
+    "incorrectCurrentPassword"
+  );
+  const passwordDoesNotMatchAlert = PreferredLanguageText(
+    "passwordDoesNotMatch"
+  );
+  const somethingWentWrongAlert = PreferredLanguageText("somethingWentWrong");
+  const profileUpdatedAlert = PreferredLanguageText("profileUpdated");
+  const enterValidEmailError = PreferredLanguageText("enterValidEmail");
+  const passwordInvalidError = PreferredLanguageText("atleast8char");
 
   const handleSubmit = useCallback(async () => {
     const u = await AsyncStorage.getItem("user");
@@ -266,7 +273,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
 
   useEffect(() => {
     if (password && confirmPassword && password !== confirmPassword) {
-       setConfirmPasswordError(passwordDoesNotMatchAlert);
+      setConfirmPasswordError(passwordDoesNotMatchAlert);
       return;
     }
 
@@ -277,7 +284,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
     const validPasswrdRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 
     if (newPassword && !validPasswrdRegex.test(newPassword)) {
-      setNewPasswordValidError(passwordInvalidError)
+      setNewPasswordValidError(passwordInvalidError);
       return;
     }
 
@@ -303,7 +310,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
         <View style={{ width: "100%", backgroundColor: "white" }}>
           <View style={styles.colorBar}>
             <Text style={{ fontSize: 25, color: "#a2a2aa" }}>
-              {PreferredLanguageText('internetRequiried')}
+              {PreferredLanguageText("internetRequiried")}
             </Text>
           </View>
         </View>
@@ -327,7 +334,9 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
             paddingTop: 30
           }}
         >
-          {!loggedIn ? PreferredLanguageText('backUp') : PreferredLanguageText('profile')}
+          {!loggedIn
+            ? PreferredLanguageText("backUp")
+            : PreferredLanguageText("profile")}
         </Text>
         <Text
           style={{
@@ -338,7 +347,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
             textAlign: "center"
           }}
         >
-          {!loggedIn ? PreferredLanguageText('createAccount') : ""}
+          {!loggedIn ? PreferredLanguageText("createAccount") : ""}
         </Text>
         {showSavePassword ? (
           <View
@@ -350,7 +359,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
             }}
           >
             <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
-              {PreferredLanguageText('currentPassword')}
+              {PreferredLanguageText("currentPassword")}
             </Text>
 
             <TextInput
@@ -362,7 +371,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               placeholderTextColor={"#a2a2aa"}
             />
             <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
-              {PreferredLanguageText('newPassword')}
+              {PreferredLanguageText("newPassword")}
             </Text>
             <TextInput
               secureTextEntry={true}
@@ -371,12 +380,10 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               onChangeText={val => setNewPassword(val)}
               placeholderTextColor={"#a2a2aa"}
               errorText={newPasswordValidError}
-              footerMessage={
-                PreferredLanguageText('atleast8char')
-              }
+              footerMessage={PreferredLanguageText("atleast8char")}
             />
             <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
-              {PreferredLanguageText('confirmNewPassword')}
+              {PreferredLanguageText("confirmNewPassword")}
             </Text>
             <TextInput
               secureTextEntry={true}
@@ -397,7 +404,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
             }}
           >
             <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
-              {PreferredLanguageText('email')}
+              {PreferredLanguageText("email")}
             </Text>
             <TextInput
               secureTextEntry={false}
@@ -409,7 +416,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               required={true}
             />
             <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
-              {PreferredLanguageText('fullName')}
+              {PreferredLanguageText("fullName")}
             </Text>
             <TextInput
               secureTextEntry={false}
@@ -420,7 +427,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               required={true}
             />
             <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
-              {PreferredLanguageText('displayName')}
+              {PreferredLanguageText("displayName")}
             </Text>
             <TextInput
               secureTextEntry={false}
@@ -435,7 +442,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                 <Text
                   style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}
                 >
-                  {PreferredLanguageText('password')}
+                  {PreferredLanguageText("password")}
                 </Text>
                 <TextInput
                   value={password}
@@ -444,15 +451,13 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                   placeholderTextColor={"#a2a2aa"}
                   secureTextEntry={true}
                   required={true}
-                  footerMessage={
-                    PreferredLanguageText('atleast8char')
-                  }
+                  footerMessage={PreferredLanguageText("atleast8char")}
                   errorText={passwordValidError}
                 />
                 <Text
                   style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}
                 >
-                  {PreferredLanguageText('confirmPassword')}
+                  {PreferredLanguageText("confirmPassword")}
                 </Text>
                 <TextInput
                   value={confirmPassword}
@@ -474,8 +479,8 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
             justifyContent: "center",
             // display: 'flex',
             // height: 50,
-            marginTop: 90,
-            marginBottom:200
+            marginTop: 0,
+            marginBottom: 200
           }}
         >
           {loggedIn ? (
@@ -508,7 +513,9 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                   textTransform: "uppercase"
                 }}
               >
-                {showSavePassword ? PreferredLanguageText('back') : PreferredLanguageText('password')}
+                {showSavePassword
+                  ? PreferredLanguageText("back")
+                  : PreferredLanguageText("password")}
               </Text>
             </TouchableOpacity>
           ) : (
@@ -544,7 +551,11 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                 textTransform: "uppercase"
               }}
             >
-              {loggedIn ? (showSavePassword ? PreferredLanguageText('update') : PreferredLanguageText('save')) : PreferredLanguageText('signUp')}
+              {loggedIn
+                ? showSavePassword
+                  ? PreferredLanguageText("update")
+                  : PreferredLanguageText("save")
+                : PreferredLanguageText("signUp")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -580,15 +591,16 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                 height: 35,
                 width: 150,
                 borderRadius: 15,
-                textTransform: 'uppercase'
+                textTransform: "uppercase"
               }}
             >
-              {loggedIn ? PreferredLanguageText('logout') : PreferredLanguageText('login')}
+              {loggedIn
+                ? PreferredLanguageText("logout")
+                : PreferredLanguageText("login")}
             </Text>
           </TouchableOpacity>
           <LanguageSelect />
         </View>
-       
       </ScrollView>
     </View>
   );
