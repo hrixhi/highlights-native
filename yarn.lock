@@ -12413,6 +12413,11 @@ rmc-picker@~5.0.0:
     rmc-dialog "^1.1.1"
     rmc-feedback "^2.0.0"
 
+rn-prompt@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/rn-prompt/-/rn-prompt-1.0.4.tgz#dd113af35a520f24c2b14095a4bd2c5836d0921e"
+  integrity sha512-SVfhiPmg8hDVqWGTIXskAKNfWTrKIqDpDMQgizNKYQn8BC8lmRHHsZLJJXIsOJ6Xg5KPt3vKvSgSZtsawd/D8g==
+
 rsvp@^4.8.4:
   version "4.8.5"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-4.8.5.tgz#c8f155311d167f68f21e168df71ec5b083113734"

@@ -871,7 +871,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 30 }}>
                     {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                 </Text>
-                <View style={{ flexDirection: 'row' }}>
+                <View style={{ flexDirection: 'row', marginBottom: 20, }}>
                     <View style={{
                         backgroundColor: 'white', flex: 1,
                     }}>
@@ -881,7 +881,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 borderRadius: 10,
                                 backgroundColor: '#a2a2aa',
                                 width: 50,
-                                marginBottom: 20,
                             }}
                         >
                             <Text style={{
@@ -897,14 +896,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     <TouchableOpacity
                         onPress={() => setStarred(!starred)}
                         style={{
-                            backgroundColor: 'white',
+                            backgroundColor: 'white', 
+                            // width: '100%',
+                            paddingRight: 25, 
+                            marginTop: Platform.OS === "ios" ? -36 : -16,
+
                         }}>
                         <Text style={{
                             textAlign: 'right',
                             lineHeight: 30,
-                            marginTop: -36,
-                            paddingRight: 25,
-                            width: '100%'
                         }}>
                             <Ionicons name='bookmark' size={25} color={starred ? '#d91d56' : '#a2a2aa'} />
                         </Text>
@@ -916,9 +916,63 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     flexDirection: Dimensions.get('window').width < 768 ? 'column-reverse' : 'row',
                     paddingBottom: 4,
                     backgroundColor: 'white',
-                }} onTouchStart={() => Keyboard.dismiss()}>
+                }} 
+                onTouchStart={() => Keyboard.dismiss()}
+                >
+                    {Platform.OS === "ios" ? <View 
+                    style={{ flexDirection: (imported || isQuiz || showImportOptions) ? 'row' : 'column', flex: 1 }}
+                    >
+                        <RichToolbar
+                            style={{
+                                flexWrap: 'wrap',
+                                backgroundColor: 'white',
+                                // height: 28,
+                                overflow: 'visible'
+                            }}
+                            iconSize={12}
+                            editor={RichText}
+                            disabled={false}
+                            iconTint={"#a2a2aa"}
+                            selectedIconTint={"#a2a2aa"}
+                            disabledIconTint={"#a2a2aa"}
+                            actions={
+                                imported || isQuiz || showImportOptions ? ["back", "clear"] :
+                                    [
+                                        actions.setBold,
+                                        actions.setItalic,
+                                        actions.setUnderline,
+                                        actions.insertBulletsList,
+                                        actions.insertOrderedList,
+                                        actions.checkboxList,
+                                        actions.insertLink,
+                                        actions.insertImage,
+                                        "insertCamera",
+                                        actions.undo,
+                                        actions.redo,
+                                        "clear"
+                                    ]}
+                            iconMap={{
+                                ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
+                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />,
+                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={13} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                            }}
+                            onPressAddImage={galleryCallback}
+                            insertCamera={cameraCallback}
+                        />
+                        {
+                            imported || !showImportOptions ? null :
+                                <FileUpload
+                                    back={() => setShowImportOptions(false)}
+                                    onUpload={(u: any, t: any) => {
+                                        console.log(t)
+                                        const obj = { url: u, type: t, title }
+                                        setCue(JSON.stringify(obj))
+                                        setShowImportOptions(false)
+                                    }}
+                                />
+                        }
+                    </View> :
                     <View 
-                    style={{ flexDirection: imported || isQuiz || showImportOptions ? 'row' : 'column', flex: 1 }}
                     >
                         <RichToolbar
                             style={{
@@ -970,6 +1024,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 />
                         }
                     </View>
+                }
                     <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
                         {/* {
                             !isQuiz ?
@@ -1059,7 +1114,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         </View> : null
                 }
                 <ScrollView
-                    style={{ paddingBottom: 100, marginTop: 40 }}
+                    style={{ paddingBottom: 100, marginTop: Platform.OS === "ios" ? 40 : 0 }}
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={true}
                     scrollEventThrottle={1}
