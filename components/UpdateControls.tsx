@@ -1275,7 +1275,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             }}
           >
             {isQuiz ? null : (
-              <View style={{ flexDirection: "row", backgroundColor: "#fff" }}>
+              <View style={{ flexDirection: "row", backgroundColor: "#fff",  }}>
                 <TouchableOpacity
                   style={{
                     justifyContent: "center",
@@ -1336,16 +1336,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               onPress={() => setStarred(!starred)}
               style={{
                 backgroundColor: "white",
-                flex: 1
+                flex: 1,
+                marginTop: Platform.OS === "ios" ? -35 : -15,
+                paddingRight: 25,
               }}
             >
               <Text
                 style={{
                   textAlign: "right",
                   lineHeight: 30,
-                  marginTop: -35,
-                  paddingRight: 25,
-                  width: "100%"
+                  
                 }}
               >
                 <Ionicons
@@ -1357,7 +1357,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={{ flexDirection: "row" }}>
+          <View style={{ flexDirection: "row", marginBottom: 20, }}>
             <View style={{ backgroundColor: "white", flex: 1 }}>
               <Text
                 ellipsizeMode="tail"
@@ -1370,7 +1370,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   backgroundColor: "#a2a2aa",
                   lineHeight: 20,
                   width: 70,
-                  marginBottom: 20,
+                  
                   textAlign: "center"
                 }}
               >
@@ -1382,9 +1382,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               style={{
                 backgroundColor: "white",
                 flex: 1,
-                marginTop: -36,
+                marginTop: Platform.OS === "ios" ? -36 : -16,
                 paddingRight: 25,
-                // width: "100%"
               }}
             >
               <Text

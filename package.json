@@ -106,6 +106,7 @@
     "react-select": "^4.3.0",
     "reanimated-bottom-sheet": "^1.0.0-alpha.22",
     "rmc-date-picker": "^6.0.10",
+    "rn-prompt": "^1.0.4",
     "tex-to-svg": "^0.2.0",
     "unique-names-generator": "^4.3.1"
   },

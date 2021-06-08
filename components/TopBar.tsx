@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Image, ScrollView, Dimensions, Linking, Alert } from 'react-native';
+import { StyleSheet, Image, ScrollView, Dimensions, Linking, Alert, Platform } from 'react-native';
 import { View, Text, TouchableOpacity } from '../components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash'
@@ -8,6 +8,7 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import { doesChannelNameExist, getMeetingStatus, totalUnreadDiscussionThreads, totalUnreadMessages, updateChannel } from '../graphql/QueriesAndMutations';
 import useColorScheme from '../hooks/useColorScheme';
 import alert from './Alert';
+import Prompt from 'rn-prompt';
 
 const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -21,9 +22,16 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [unreadMessages, setUnreadMessages] = useState(0)
     const [meetingOn, setMeetingOn] = useState(false)
     const [isOwner, setIsOwner] = useState(false)
+    const [showResetNamePromptAndroid, setShowResetNamePromptAndroid] = useState(false);
+    const [showResetPasswordPromptAndroid, setShowResetPasswordPromptAndroid] = useState(false);
+    const [resetChannelName, setResetChannelName] = useState('');
 
     const editChannelInfo = useCallback(() => {
-        Alert.prompt('Update Name', undefined, (name) => {
+
+    
+        if (Platform.OS === "ios") { 
+            
+            Alert.prompt('Update Name', "", (name) => {
             if (!name || name === '') {
                 alert("Enter channel name.")
                 return;
@@ -62,6 +70,11 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 })
             })
         }, undefined, props.filterChoice)
+
+    } else {
+        setShowResetNamePromptAndroid(true)
+    }
+
     }, [props.filterChoice, props.loadData])
 
     useEffect(() => {
@@ -130,6 +143,79 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     return (
         <View style={styles.topbar} key={Math.random()}>
+
+
+            <Prompt
+                title="Update Name"
+                placeholder="Enter new channel name"
+                defaultValue=""
+                visible={showResetNamePromptAndroid}
+                onCancel={ () => {
+                    setShowResetNamePromptAndroid(false);
+                    setResetChannelName('');
+                }}
+                onSubmit={ (value: any) => {
+                    if (!value) {
+                        // Show prompt here
+                        alert("Enter channel name")
+                    } else {
+                        setResetChannelName(value);
+                        setShowResetNamePromptAndroid(false);
+                        setShowResetPasswordPromptAndroid(true);
+                    }
+                }
+                }
+            />
+
+            <Prompt
+                title="Update Password"
+                placeholder="Enter new channel password. Leave blank for public access."
+                defaultValue=""
+                visible={showResetPasswordPromptAndroid}
+                onCancel={() => {
+                    setShowResetNamePromptAndroid(false);
+                }}
+                onSubmit={ (password: any) => {
+                    
+                    const server = fetchAPI("")
+                    server.query({
+                        query: doesChannelNameExist,
+                        variables: {
+                            name: resetChannelName
+                        }
+                    }).then(res => {
+                        if (res.data && (res.data.channel.doesChannelNameExist !== true || resetChannelName.trim() === props.filterChoice.trim())) {
+                            server.mutate({
+                                mutation: updateChannel,
+                                variables: {
+                                    name: resetChannelName.trim(),
+                                    password,
+                                    channelId: props.channelId
+                                }
+                            }).then(res => {
+                                if (res.data && res.data.channel.update) {
+                                    props.loadData()
+                                    alert("Channel updated!")
+                                } else {
+                                    alert("Something went wrong.")
+                                }
+                            }).catch(err => {
+                                alert("Something went wrong.")
+                            })
+                        } else {
+                            alert("Channel name in use.")
+                        }
+                    }).catch(err => {
+                        alert("Something went wrong.")
+                    })
+
+                    setResetChannelName("");
+                    setShowResetPasswordPromptAndroid(false);
+                }
+                }
+            />
+
+
             <View style={{ width: '80%', height: Dimensions.get('window').height * 0.15 * 0.22, alignSelf: 'center' }} />
             <View style={{ width: '100%', height: Dimensions.get('window').height * 0.15 * 0.78 }}>
                 <View style={{

@@ -300,7 +300,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                         </View>
                                                     })
                                                 }
-                                                <View style={{ backgroundColor: 'white' }}>
+                                                <View style={{ backgroundColor: 'white', paddingBottom: 50 }}>
                                                     <NewMessage
                                                         cueId={props.cueId}
                                                         channelId={props.channelId}
