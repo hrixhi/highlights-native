@@ -207,9 +207,9 @@ export const submitGrade = gql`
   }
 `;
 export const sendDirectMessage = gql`
-  mutation($users: [String!]!, $message: String!, $channelId: String!) {
+  mutation($users: [String!]!, $message: String!, $channelId: String!, $userId: String!) {
     message {
-      create(users: $users, message: $message, channelId: $channelId)
+      create(users: $users, message: $message, channelId: $channelId, userId: $userId)
     }
   }
 `;

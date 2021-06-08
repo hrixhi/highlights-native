@@ -96,7 +96,8 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
             variables: {
                 users,
                 message: saveCue,
-                channelId: props.channelId
+                channelId: props.channelId,
+                userId: user._id
             }
         }).then(res => {
             if (res.data.message.create) {
