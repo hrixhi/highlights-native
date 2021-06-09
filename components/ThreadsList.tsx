@@ -329,7 +329,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                     props.cueId === null ?
                                                         <ScrollView
                                                             contentContainerStyle={{
-                                                                height: 20, width: '100%'
+                                                                height: 20, width: '100%',
+                                                                paddingTop: 15
                                                             }}
                                                             style={{}}
                                                             horizontal={true}

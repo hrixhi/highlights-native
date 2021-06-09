@@ -86,7 +86,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     })
                 }
             </ScrollView>
-            <View style={{ display: 'flex', flexDirection: 'row', height:  Platform.OS === "ios" ? '50%' : '30%' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', height: '60%' }}>
                 <View style={styles.icons}>
                     <TouchableOpacity
                         onPress={() => props.openChannels()}
@@ -130,12 +130,11 @@ export default BottomBar
 
 const styleObject: any = (colorScheme: any) => StyleSheet.create({
     bottombar: {
-        height: Platform.OS === "ios" ? '15%' : "10%",
+        height: Platform.OS === "ios" ? '15%' : "15%",
         width: '100%',
         display: 'flex',
         paddingHorizontal: 20,
-        paddingTop: 0, 
-        paddingBottom: Platform.OS === "ios" ? 20 : 0
+        paddingBottom: Platform.OS === "ios" ? 15 : 5
     },
     icons: {
         width: '33.33%',
@@ -154,9 +153,9 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
     },
     colorBar: {
         width: '98.5%',
-        height: Platform.OS === "ios" ? '50%' : '50%',
+        height: '40%',
         flexDirection: 'row',
-        paddingTop: 15
+        paddingTop: 10
     },
     iconContainer: {
         width: '20%',

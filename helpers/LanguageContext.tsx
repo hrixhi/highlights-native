@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 // import Select from 'react-select';
-import {  StyleSheet } from 'react-native';
-import { Text as DefaultText, View as DefaultView, TouchableOpacity } from "../components/Themed";
+import { StyleSheet } from 'react-native';
+import { Text, View as DefaultView } from "../components/Themed";
 import { Picker } from '@react-native-picker/picker';
 import useColorScheme from '../hooks/useColorScheme';
 
@@ -9,12 +9,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
 const languageOptions = [
-    {value: 'en', label : "English"} ,
-    {value: 'hin', label: "हिंदी" },
-    {value: 'guj', label: "ગુજરાતી"}
+    { value: 'en', label: "English" },
+    { value: 'hin', label: "हिंदी" },
+    { value: 'guj', label: "ગુજરાતી" }
 ]
 
-const EnglishBank: {[key: string]: string} = {
+const EnglishBank: { [key: string]: string } = {
     login: "Login", // Done
     continueLeftOff: "Continue where you left off.", // Done
     email: "Email", // Done
@@ -23,7 +23,7 @@ const EnglishBank: {[key: string]: string} = {
     forgotPassword: "Forgot Password", // Done
     skipForNow: "Skip for now",  // Done
     temporaryPassword: "We'll send you a temporary password.", // Done
-    back: "back", // Done
+    back: "Back", // Done
     reset: "Reset", // Done
     new: "New", // Done,
     newGroup: "New Group",
@@ -52,15 +52,15 @@ const EnglishBank: {[key: string]: string} = {
     viewShared: "View Shared", // Done
     viewSubmission: "View Submission",
     viewAttendance: "View Attendance",
-    inviteByEmail: "Add by Email", 
-    myNotes: "My notes", // Done
+    inviteByEmail: "Add by Email",
+    myNotes: "My Notes", // Done
     mySubmission: "My Submission", // Done
     status: "Status", // DOne
     noStatuses: "No statuses.",
     unableToLoadStatuses: "Unable to load statuses.",
     noStudents: "No students.",
     update: "Update", // Done
-    forward: "Forward", 
+    forward: "Forward",
     read: "Read", // Done
     notDelivered: "Not delivered", // Done
     delivered: "Delivered", // Done
@@ -206,7 +206,7 @@ const EnglishBank: {[key: string]: string} = {
     clickPlusAndSelect: 'Click + and select this channel to broadcast a cue.',
 }
 
-const HindiBank: {[key: string]: string} = {
+const HindiBank: { [key: string]: string } = {
     login: "लॉग इन करें",
     continueLeftOff: "जारी रखें जहां आपने छोड़ा था।",
     email: "ईमेल",
@@ -309,7 +309,7 @@ const HindiBank: {[key: string]: string} = {
     test: 'परीक्षा',
     discussion: 'विचार-विमर्श',
     send: 'भेजें',
-    reply: 'जवाब', 
+    reply: 'जवाब',
     add: '',
     addUsers: 'उपयोगकर्ताओं को जोड़ें',
     score: 'स्कोर',
@@ -397,7 +397,7 @@ const HindiBank: {[key: string]: string} = {
     clickPlusAndSelect: '+ क्लिक करें और संकेत बनाने के लिए इस चैनल का चयन करें।',
 }
 
-const GujaratiBank: {[key: string]: string} = {
+const GujaratiBank: { [key: string]: string } = {
     login: "લોગીન કરો",
     continueLeftOff: "તમે જ્યાંથી છોડ્યું હતું ત્યાં થી શરૂ કરો",
     email: "ઇમેઇલ",
@@ -467,7 +467,7 @@ const GujaratiBank: {[key: string]: string} = {
     initiateMeeting: 'મીટિંગની શરૂઆત કરો અને સહભાગીઓને મંજૂરી આપો',
     enterClassroom: 'વર્ગ ખંડ માં પ્રવેશ કરો',
     upcoming: 'આગામી',
-    start: 'શરૂઆત', 
+    start: 'શરૂઆત',
     end: 'અંત',
     noMeeting: 'કોઇ મીટિંગ નિર્ધારિત નથી',
     noAttendances: 'કોઈ હાજરી નહિ',
@@ -588,7 +588,7 @@ const GujaratiBank: {[key: string]: string} = {
     clickPlusAndSelect: 'Cue બનાવવા માટે + ક્લિક કરો અને આ ચેનલને પસંદ કરો.',
 }
 
-export const LanguageContext = React.createContext<{[label: string]: any}>({});
+export const LanguageContext = React.createContext<{ [label: string]: any }>({});
 
 export const LanguageProvider: React.FC<React.ReactNode> = ({ children }) => {
 
@@ -618,7 +618,7 @@ export const LanguageProvider: React.FC<React.ReactNode> = ({ children }) => {
     </LanguageContext.Provider>)
 }
 
-export function PreferredLanguageText(textKey: string) {   
+export function PreferredLanguageText(textKey: string) {
     const { language } = React.useContext(LanguageContext);
 
     switch (language) {
@@ -628,7 +628,7 @@ export function PreferredLanguageText(textKey: string) {
             return HindiBank[textKey] || "";
         case 'guj':
             return GujaratiBank[textKey] || "";
-        default: 
+        default:
             return "";
     }
 }
@@ -640,77 +640,73 @@ export function LanguageSelect() {
     const color = colorScheme === 'light' ? '#202025' : '#fff'
 
     return <LanguageContext.Consumer>
-      {context => {
+        {context => {
+            const { language } = context;
+            return (!showLanguageDropdown ?
+                <DefaultView style={{ width: '100%', flexDirection: 'row', justifyContent: 'center', backgroundColor: 'white' }}>
+                    <Ionicons name='language-outline' size={30} color={'202025'} style={{ marginRight: 5 }} onPress={() => setShowLanguageDropdown(true)} />
+                </DefaultView>
+                : (<DefaultView style={{
+                    backgroundColor: 'white',
+                    width: "100%",
+                    justifyContent: 'center'
+                }}>
+                    <Picker
+                        style={styles.picker}
+                        itemStyle={{
+                            fontSize: 17
+                        }}
+                        selectedValue={language}
+                        onValueChange={(lang: any) => {
+                            context.changeLanguage(lang)
+                            setShowLanguageDropdown(false)
+                        }
+                        }>
+                        {
+                            languageOptions.map((item: any, index: number) => {
+                                return <Picker.Item
+                                    color={language === item.value ? '#3B64F8' : "#202025"}
+                                    label={item.label}
+                                    value={item.value}
+                                    key={index}
+                                />
+                            })
+                        }
+                    </Picker>
+                </DefaultView>)
 
-          const { language } = context;
-          
-
-        //   const selectedLanguage = languageOptions.filter(lang => lang.value === language)[0];
-
-        return (!showLanguageDropdown ?
-             <Ionicons name='language-outline' size={30} color={'202025'} style={{ marginRight:5 }} onPress={() => setShowLanguageDropdown(true)}/> 
-             : (<DefaultView style={{
-            backgroundColor: 'white',
-            width: "100%"
-        }}>
-            <DefaultText style={styles.text}>
-                Language Preference
-            </DefaultText>
-            <Picker
-                style={styles.picker}
-                itemStyle={{
-                    fontSize: 17
-                }}
-                selectedValue={language}
-                onValueChange={(lang: any) =>
-                   { context.changeLanguage(lang)
-                    setShowLanguageDropdown(false)}
-                }>
-                {
-                    languageOptions.map((item: any, index: number) => {
-                        return <Picker.Item
-                            color={language === item.value ? '#3B64F8' : "#202025"}
-                            label={item.label}
-                            value={item.value}
-                            key={index}
-                        />
-                    })
-                }
-            </Picker>
-        </DefaultView>)
-
-        // return (<DefaultView 
-        //     // style={{ display: "flex", backgroundColor: 'white', alignItems: "center", }}
-        // >
-        //     {showLanguageDropdown ? <DefaultView style={styles.languageSelectContainer}>
-        //         <Picker
-        //             selectedValue={language}
-        //             style={{ height: 28,  borderRadius: 10,
-        //                 // border: "1px solid #A2A2AA",
-        //                 fontSize: 12,
-        //                 flex: 1
-        //              }}
-        //             onValueChange={(itemValue, itemIndex) => context.changeLanguage(itemValue)}
-        //         >
-        //             {
-        //                 languageOptions.map(lang => (<Picker.Item label={lang.label} value={lang.value} />))
-        //             }
-        //         </Picker>
-        //         <Ionicons
-        //             name='close-outline'
-        //             style={{ display: 'flex', alignItems: 'center', paddingLeft: 10}}
-        //             onPress={() => {
-        //                 setShowLanguageDropdown(false)
-        //             }}
-        //         />
-        //     </DefaultView>
-        //     : 
-        //     (
-        //         <Ionicons name='language-outline' size={30} color={color} style={{ marginRight:5 }} onPress={() => setShowLanguageDropdown(true)}/>
-        //     )}
-        // </DefaultView>
-        )
-      }}
+                // return (<DefaultView 
+                //     // style={{ display: "flex", backgroundColor: 'white', alignItems: "center", }}
+                // >
+                //     {showLanguageDropdown ? <DefaultView style={styles.languageSelectContainer}>
+                //         <Picker
+                //             selectedValue={language}
+                //             style={{ height: 28,  borderRadius: 10,
+                //                 // border: "1px solid #A2A2AA",
+                //                 fontSize: 12,
+                //                 flex: 1
+                //              }}
+                //             onValueChange={(itemValue, itemIndex) => context.changeLanguage(itemValue)}
+                //         >
+                //             {
+                //                 languageOptions.map(lang => (<Picker.Item label={lang.label} value={lang.value} />))
+                //             }
+                //         </Picker>
+                //         <Ionicons
+                //             name='close-outline'
+                //             style={{ display: 'flex', alignItems: 'center', paddingLeft: 10}}
+                //             onPress={() => {
+                //                 setShowLanguageDropdown(false)
+                //             }}
+                //         />
+                //     </DefaultView>
+                //     : 
+                //     (
+                //         <Ionicons name='language-outline' size={30} color={color} style={{ marginRight:5 }} onPress={() => setShowLanguageDropdown(true)}/>
+                //     )}
+                // </DefaultView>
+            )
+        }}
     </LanguageContext.Consumer>
 }
 
@@ -725,7 +721,7 @@ const styles = StyleSheet.create({
         // justifyContent: "center",
         // alignContent: 'center',
         // flexDirection: "row", 
-    },  
+    },
     picker: {
         display: 'flex',
         justifyContent: 'center',

@@ -112,9 +112,10 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     })
                 }
                 {
-                    filteredCues.length === 0 ? <Text style={{ fontSize: 25, color: '#a2a2aa', textAlign: 'center' }}>
-                        {PreferredLanguageText('noCuesCreated')}
-                    </Text> : null
+                    filteredCues.length === 0 ?
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                            {PreferredLanguageText('noCuesCreated')}
+                        </Text> : null
                 }
                 <View style={styles.marginSmall} />
             </ScrollView>

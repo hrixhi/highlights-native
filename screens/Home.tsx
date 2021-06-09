@@ -146,6 +146,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
     )()
   }, [])
+
   const storeMenu = useCallback(async () => {
     try {
       await AsyncStorage.setItem('sleepFrom', sleepFrom.toString())
@@ -173,7 +174,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             userId: parsedUser._id
           }
         })
-  
+
         if (res.data.cue.findByUserId) {
           // Here we load all new Cues
           // we update statuses for the cues that are already stored and add new cues to the list
@@ -236,29 +237,29 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       } catch (err) {
 
         Alert(unableToRefreshCuesAlert, checkConnectionAlert)
-          const custom: any = {}
-          setCues(allCues)
-          if (allCues['local']) {
-            allCues['local'].map((item: any) => {
-              if (item.customCategory !== "") {
-                if (!custom[item.customCategory]) {
-                  custom[item.customCategory] = 0
-                }
+        const custom: any = {}
+        setCues(allCues)
+        if (allCues['local']) {
+          allCues['local'].map((item: any) => {
+            if (item.customCategory !== "") {
+              if (!custom[item.customCategory]) {
+                custom[item.customCategory] = 0
               }
-            })
-            const customC: any[] = []
-            Object.keys(custom).map((item) => {
-              customC.push(item)
-            })
-            customC.sort()
-            setCustomCategories(customC)
-          }
-          Animated.timing(fadeAnimation, {
-            toValue: 1,
-            duration: 150,
-            useNativeDriver: true
-          }).start();
-          setReLoading(false)
+            }
+          })
+          const customC: any[] = []
+          Object.keys(custom).map((item) => {
+            customC.push(item)
+          })
+          customC.sort()
+          setCustomCategories(customC)
+        }
+        Animated.timing(fadeAnimation, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true
+        }).start();
+        setReLoading(false)
       }
     } else if (unparsedCues) {
       const custom: any = {}
@@ -607,7 +608,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         let experienceId = undefined;
         if (!Constants.manifest) {
           // Absence of the manifest means we're in bare workflow
-          experienceId = '@username/example';
+          experienceId = Math.random().toString();
         }
         const expoToken = await Notifications.getExpoPushTokenAsync({
           experienceId,
@@ -640,7 +641,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           let experienceId = undefined;
           if (!Constants.manifest) {
             // Absence of the manifest means we're in bare workflow
-            experienceId = '@username/example';
+            experienceId = user._id + Platform.OS;
           }
           const expoToken = await Notifications.getExpoPushTokenAsync({
             experienceId,
@@ -782,7 +783,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   // Move to profile page
   const handleLogin = useCallback(() => {
-
     const server = fetchAPI('')
     server.query({
       query: login,
@@ -791,6 +791,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         password
       }
     }).then(async (r: any) => {
+
+      const oldUser = await AsyncStorage.getItem("user")
+      if (oldUser) {
+        const oldUserObj = JSON.parse(oldUser)
+        server.mutate({
+          mutation: updateNotificationId,
+          variables: {
+            userId: oldUserObj._id,
+            notificationId: 'NOT_SET'
+          }
+        })
+      }
+
       if (r.data.user.login.user && !r.data.user.login.error) {
         const u = r.data.user.login.user
         if (u.__typename) {
@@ -821,6 +834,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }).then(async (res) => {
         const u = res.data.user.findById;
         if (u) {
+          // SAVE USER
           setRandomShuffleFrequency(u.randomShuffleFrequency)
           setSleepFrom(new Date(u.sleepFrom))
           setSleepTo(new Date(u.sleepTo))
@@ -829,6 +843,35 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           delete u.__typename
           const sU = JSON.stringify(u)
           await AsyncStorage.setItem('user', sU)
+          // UPDATE NOTIFICAITON
+          let experienceId = undefined;
+          if (!Constants.manifest) {
+            // Absence of the manifest means we're in bare workflow
+            experienceId = u._id + Platform.OS;
+          }
+          const expoToken = await Notifications.getExpoPushTokenAsync({
+            experienceId,
+          });
+          const notificationId = expoToken.data
+          // UPDATE NOTIFICATION IDS AFTER LOGGING IN
+          if (u.notificationId && !u.notificationId.includes(notificationId)) {
+            let experienceId = undefined;
+            if (!Constants.manifest) {
+              // Absence of the manifest means we're in bare workflow
+              experienceId = u._id + Platform.OS;
+            }
+            const expoToken = await Notifications.getExpoPushTokenAsync({
+              experienceId,
+            });
+            const notificationId = expoToken.data
+            server.mutate({
+              mutation: updateNotificationId,
+              variables: {
+                userId: user._id,
+                notificationId: u.notificationId === 'NOT_SET' ? notificationId : (u.notificationId + '-BREAK-' + notificationId)
+              }
+            })
+          }
         }
       }).catch(err => console.log(err))
       // Get user cues
@@ -1008,7 +1051,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
 
       setSaveDataInProgress(false)
-      
+
     }).catch(err => console.log(err))
   }, [cues, setCues])
 
@@ -1292,7 +1335,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             padding: 40,
             paddingTop: 0
           }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', paddingBottom: 50, backgroundColor: 'white' }}>
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              display: 'flex',
+              paddingTop: 50,
+              paddingBottom: 30,
+              backgroundColor: 'white'
+            }}>
               <Image
                 source={require('../components/default-images/cues-logo-black-exclamation-hidden.jpg')}
                 style={{
@@ -1353,7 +1403,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   display: 'flex',
                   flexDirection: 'column',
                   paddingBottom: 10,
-                  marginTop: 40,
+                  marginTop: 20,
                 }}>
                 <TouchableOpacity
                   disabled={isSubmitDisabled}
@@ -1568,7 +1618,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomWidth: 0,
     borderColor: '#f4f4f6',
-    height: Platform.OS === "ios" ? '70%' : '75%',
+    height: Platform.OS === "ios" ? '70%' : '70%',
     width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,
     justifyContent: "center",
   },

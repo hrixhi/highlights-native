@@ -25,7 +25,8 @@
       "usesIcloudStorage": true
     },
     "android": {
-      "versionCode": 3,
+      "useNextNotificationsApi": true,
+      "versionCode": 4,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",

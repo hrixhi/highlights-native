@@ -143,8 +143,6 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     return (
         <View style={styles.topbar} key={Math.random()}>
-
-
             <Prompt
                 title="Update Name"
                 placeholder="Enter new channel name"
@@ -390,7 +388,7 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         paddingHorizontal: 20,
         borderTopRightRadius: 30,
         borderTopLeftRadius: 30,
-        paddingTop: 25
+        paddingTop: 20
     },
     badge: {
         position: 'absolute',

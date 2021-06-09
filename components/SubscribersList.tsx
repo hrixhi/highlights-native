@@ -49,6 +49,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [title, setTitle] = useState('')
     const [loadedChatWithUser, setLoadedChatWithUser] = useState<any>({})
     const [isLoadedUserInactive, setIsLoadedUserInactive] = useState(false)
+    const [webviewKey, setWebviewKey] = useState(Math.random())
+    useEffect(() => {
+        setTimeout(() => {
+            setWebviewKey(Math.random())
+        }, 2000);
+    }, [imported])
 
     const categoriesLanguageMap: { [label: string]: string } = {
         All: 'all',
@@ -389,7 +395,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </View> : null
                             }
                             {
-                                isOwner && !props.cueId && !showAddUsers 
+                                isOwner && !props.cueId && !showAddUsers
                                     ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
                                         <TouchableOpacity
                                             style={{ backgroundColor: '#fff' }}
@@ -823,7 +829,16 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                 isLooping={false}
                                                             />
                                                         </View>
-                                                        : <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }} style={{ flex: 1 }} />
+                                                        :
+                                                        <View
+                                                            key={Math.random()}
+                                                            style={{ flex: 1 }}
+                                                        >
+                                                            <WebView
+                                                                source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
+                                                                key={webviewKey}
+                                                            />
+                                                        </View>
                                                 )
                                         }
                                     </ScrollView>
@@ -841,7 +856,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 }}>
                                     <ScrollView
                                         contentContainerStyle={{
-                                            height: 20, width: '100%'
+                                            height: 20, width: '100%',
+                                            paddingTop: 15
                                         }}
                                         style={{}}
                                         horizontal={true}
@@ -912,7 +928,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 borderRadius: 15,
                                 height: 35,
                                 width: 150,
-                               
+
                                 textTransform: 'uppercase'
                             }}>
                                 {PreferredLanguageText("addUsers")}
@@ -920,22 +936,22 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </TouchableOpacity>
 
                         <Text style={{
-                                textAlign: 'center',
-                                lineHeight: 35,
-                                color: '#202025',
-                                fontSize: 12,
-                                paddingHorizontal: 25,
-                                width: "100%",
-                                fontFamily: 'inter',
-                                borderRadius: 15,
-                                textTransform: 'uppercase'
-                            }}>
-                                {filteredSubscribers.length !== 0 ? PreferredLanguageText('existingUsers') : PreferredLanguageText('noExistingUsers')}
+                            textAlign: 'center',
+                            lineHeight: 35,
+                            color: '#202025',
+                            fontSize: 12,
+                            paddingHorizontal: 25,
+                            width: "100%",
+                            fontFamily: 'inter',
+                            borderRadius: 15,
+                            textTransform: 'uppercase'
+                        }}>
+                            {filteredSubscribers.length !== 0 ? PreferredLanguageText('existingUsers') : PreferredLanguageText('noExistingUsers')}
                         </Text>
-                        <View style={{ display: "flex", flexDirection: 'column', alignItems: 'center', backgroundColor: 'fff', }}> 
+                        <View style={{ display: "flex", flexDirection: 'column', alignItems: 'center', backgroundColor: 'fff', }}>
                             {
                                 filteredSubscribers.map((sub: any) => {
-                                    return (<View style={{ 
+                                    return (<View style={{
                                         backgroundColor: '#f4f4f6',
                                         width: '100%',
                                         padding: 10,

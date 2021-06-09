@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Dimensions, StyleSheet } from "react-native";
+import { Dimensions, Platform, StyleSheet } from "react-native";
 import { Text, View, TouchableOpacity } from "./Themed";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScrollView } from "react-native-gesture-handler";
 import { fetchAPI } from "../graphql/FetchAPI";
 import {
+  findUserById,
   signup,
+  updateNotificationId,
   updatePassword,
   updateUser
 } from "../graphql/QueriesAndMutations";
@@ -17,6 +19,8 @@ import {
   PreferredLanguageText,
   LanguageSelect
 } from "../helpers/LanguageContext";
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 
 const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
   props: any
@@ -170,7 +174,6 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
         setEmail(parsedUser.email);
         setDisplayName(parsedUser.displayName);
         setFullName(parsedUser.fullName);
-
         setCurrentDisplayName(parsedUser.displayName);
         setCurrentFullName(parsedUser.fullName);
       }
@@ -179,9 +182,68 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
   }, []);
 
   const logout = useCallback(async () => {
+
+    const u = await AsyncStorage.getItem("user");
+    if (u) {
+      const parsedUser = JSON.parse(u);
+      const server = fetchAPI('')
+      server.query({
+        query: findUserById,
+        variables: {
+          id: parsedUser._id
+        }
+      }).then(async r => {
+        if (r.data && r.data.user.findById) {
+          const user = r.data.user.findById;
+          const LoadedNotificationId = user.notificationId;
+          let experienceId = undefined;
+          if (!Constants.manifest) {
+            // Absence of the manifest means we're in bare workflow
+            experienceId = parsedUser._id + Platform.OS;
+          }
+          const expoToken = await Notifications.getExpoPushTokenAsync({
+            experienceId,
+          });
+          const notificationId = expoToken.data
+          if (LoadedNotificationId && LoadedNotificationId.includes(notificationId)) {
+            const notificationIds = LoadedNotificationId.split('-BREAK-')
+            const newNotifIds: any[] = []
+            notificationIds.map((notif: any) => {
+              if (notif !== notificationId) {
+                newNotifIds.push(notif)
+              }
+            })
+            server.mutate({
+              mutation: updateNotificationId,
+              variables: {
+                userId: parsedUser._id,
+                notificationId: newNotifIds.join('-BREAK-') === '' ? 'NOT_SET' : newNotifIds.join('-BREAK-')
+              }
+            }).then(async res => {
+              handleClean()
+            }).catch(err => {
+              console.log(err)
+              handleClean()
+            })
+          } else {
+            handleClean()
+          }
+        } else {
+          handleClean()
+        }
+      }).catch(err => {
+        handleClean()
+      })
+    } else {
+      handleClean()
+    }
+
+  }, []);
+
+  const handleClean = useCallback(async () => {
     await AsyncStorage.clear();
     await Updates.reloadAsync();
-  }, []);
+  }, [])
 
   useEffect(() => {
     getUser();

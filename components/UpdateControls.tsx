@@ -155,6 +155,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   );
 
   // Alerts
+  const [webviewKey, setWebviewKey] = useState(Math.random())
+  useEffect(() => {
+    setTimeout(() => {
+      setWebviewKey(Math.random())
+    }, 2000);
+  }, [imported, url, type])
 
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
@@ -233,7 +239,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             setChannels(res.data.channel.findByUserId);
           }
         })
-        .catch(err => {});
+        .catch(err => { });
       if (
         user._id.toString().trim() === props.cue.createdBy &&
         props.cue.channelId &&
@@ -528,7 +534,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
       if (value) {
         subCues = JSON.parse(value);
       }
-    } catch (e) {}
+    } catch (e) { }
     if (subCues[props.cueKey].length === 0) {
       return;
     }
@@ -642,7 +648,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
       if (value) {
         subCues = JSON.parse(value);
       }
-    } catch (e) {}
+    } catch (e) { }
     if (subCues[props.cueKey].length === 0) {
       return;
     }
@@ -813,7 +819,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               setMarkedAsRead(true);
             }
           })
-          .catch(err => {});
+          .catch(err => { });
       }
     }
   }, [props.cue, markedAsRead]);
@@ -963,7 +969,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               const currentDate: any = selectedDate;
               setShowDeadlineDateAndroid(false);
               setDeadline(currentDate);
-              
+
             }}
             minimumDate={new Date()}
           />
@@ -1074,7 +1080,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               const currentDate: any = selectedDate;
               setShowDeadlineTimeAndroid(false);
               setDeadline(currentDate);
-             
+
             }}
             minimumDate={new Date()}
           />
@@ -1275,7 +1281,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             }}
           >
             {isQuiz ? null : (
-              <View style={{ flexDirection: "row", backgroundColor: "#fff",  }}>
+              <View style={{ flexDirection: "row", backgroundColor: "#fff", }}>
                 <TouchableOpacity
                   style={{
                     justifyContent: "center",
@@ -1313,8 +1319,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               </View>
             )}
             {props.cue.graded &&
-            props.cue.score !== undefined &&
-            props.cue.score !== null ? (
+              props.cue.score !== undefined &&
+              props.cue.score !== null ? (
               <Text
                 style={{
                   fontSize: 12,
@@ -1345,7 +1351,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 style={{
                   textAlign: "right",
                   lineHeight: 30,
-                  
+
                 }}
               >
                 <Ionicons
@@ -1370,7 +1376,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   backgroundColor: "#a2a2aa",
                   lineHeight: 20,
                   width: 70,
-                  
+
                   textAlign: "center"
                 }}
               >
@@ -1444,19 +1450,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   submissionImported || showImportOptions
                     ? ["back", "clear"]
                     : [
-                        actions.setBold,
-                        actions.setItalic,
-                        actions.setUnderline,
-                        actions.insertBulletsList,
-                        actions.insertOrderedList,
-                        actions.checkboxList,
-                        actions.insertLink,
-                        actions.insertImage,
-                        "insertCamera",
-                        actions.undo,
-                        actions.redo,
-                        "clear"
-                      ]
+                      actions.setBold,
+                      actions.setItalic,
+                      actions.setUnderline,
+                      actions.insertBulletsList,
+                      actions.insertOrderedList,
+                      actions.checkboxList,
+                      actions.insertLink,
+                      actions.insertImage,
+                      "insertCamera",
+                      actions.undo,
+                      actions.redo,
+                      "clear"
+                    ]
                 }
                 iconMap={{
                   ["insertCamera"]: ({ tintColor }) => (
@@ -1488,9 +1494,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               />
             ) : null}
             {!showOriginal &&
-            props.cue.submission &&
-            !submissionImported &&
-            showImportOptions ? (
+              props.cue.submission &&
+              !submissionImported &&
+              showImportOptions ? (
               <FileUpload
                 back={() => setShowImportOptions(false)}
                 onUpload={(u: any, t: any) => {
@@ -1519,9 +1525,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                                 </Text> : null
                         } */}
             {!showOriginal &&
-            props.cue.submission &&
-            !submissionImported &&
-            !props.cue.graded ? (
+              props.cue.submission &&
+              !submissionImported &&
+              !props.cue.graded ? (
               <Text
                 style={{
                   color: "#a2a2aa",
@@ -1651,7 +1657,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               </View>
               {isQuiz ? (
                 isQuizTimed &&
-                (!props.cue.submittedAt || props.cue.submittedAt !== "") ? (
+                  (!props.cue.submittedAt || props.cue.submittedAt !== "") ? (
                   initiatedAt && initDuration !== 0 ? (
                     <View
                       style={{
@@ -1870,15 +1876,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               )
             ) : imported ? (
               type === "mp4" ||
-              type === "mp3" ||
-              type === "mov" ||
-              type === "mpeg" ||
-              type === "mp2" ||
-              type === "wav" ? (
+                type === "mp3" ||
+                type === "mov" ||
+                type === "mpeg" ||
+                type === "mp2" ||
+                type === "wav" ? (
                 <View style={{ backgroundColor: "#fff", height: 300 }}>
                   <Video
                     isMuted={false}
-                    // ref={RichText}
                     style={{
                       width: "100%",
                       height: 300
@@ -1893,13 +1898,18 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   />
                 </View>
               ) : (
-                <WebView
-                  source={{
-                    uri:
-                      "https://docs.google.com/gview?embedded=true&url=" + url
-                  }}
+                <View
+                  key={Math.random()}
                   style={{ flex: 1 }}
-                />
+                >
+                  <WebView
+                    source={{
+                      uri:
+                        "https://docs.google.com/gview?embedded=true&url=" + url
+                    }}
+                    key={webviewKey}
+                  />
+                </View>
               )
             ) : (
               <RichEditor
@@ -1946,11 +1956,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             )}
             {showOriginal ? null : submissionImported ? (
               submissionType === "mp4" ||
-              submissionType === "mp3" ||
-              submissionType === "mov" ||
-              submissionType === "mpeg" ||
-              submissionType === "mp2" ||
-              submissionType === "wav" ? (
+                submissionType === "mp3" ||
+                submissionType === "mov" ||
+                submissionType === "mpeg" ||
+                submissionType === "mp2" ||
+                submissionType === "wav" ? (
                 <View style={{ backgroundColor: "#fff", height: 300 }}>
                   <Video
                     // ref={RichText}
@@ -1969,14 +1979,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   />
                 </View>
               ) : (
-                <WebView
-                  source={{
-                    uri:
-                      "https://docs.google.com/gview?embedded=true&url=" +
-                      submissionUrl
-                  }}
+                <View
+                  key={Math.random()}
                   style={{ flex: 1 }}
-                />
+                >
+                  <WebView
+                    source={{
+                      uri:
+                        "https://docs.google.com/gview?embedded=true&url=" +
+                        submissionUrl
+                    }}
+                    key={webviewKey}
+                  />
+                </View>
               )
             ) : (
               <RichEditor
@@ -2090,7 +2105,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                         <View style={styles.colorBar}>
                           <TouchableOpacity
                             style={styles.allOutline}
-                            onPress={() => {}}
+                            onPress={() => { }}
                           >
                             <Text
                               style={{
@@ -2244,9 +2259,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                               {PreferredLanguageText("due")}
                               {Platform.OS === "android"
                                 ? ": " +
-                                  moment(new Date(deadline)).format(
-                                    "MMMM Do YYYY, h:mm a"
-                                  )
+                                moment(new Date(deadline)).format(
+                                  "MMMM Do YYYY, h:mm a"
+                                )
                                 : null}
                             </Text>
                             {isOwner ? (
@@ -2399,7 +2414,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                         <View style={styles.colorBar}>
                           <TouchableOpacity
                             style={styles.allGrayOutline}
-                            onPress={() => {}}
+                            onPress={() => { }}
                           >
                             <Text
                               style={{
@@ -2840,9 +2855,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                           {PreferredLanguageText("remindOn")}
                           {Platform.OS === "android"
                             ? ": " +
-                              moment(new Date(endPlayAt)).format(
-                                "MMMM Do YYYY, h:mm a"
-                              )
+                            moment(new Date(endPlayAt)).format(
+                              "MMMM Do YYYY, h:mm a"
+                            )
                             : null}
                         </Text>
                         {renderEndPlayAtDateTimePicker()}
@@ -2914,7 +2929,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                           width: "100%",
                           display: "flex",
                           flexDirection:
-                          Platform.OS === "android" ? "column" : "row",
+                            Platform.OS === "android" ? "column" : "row",
                           backgroundColor: "white"
                         }}
                       >
@@ -2922,9 +2937,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                           {PreferredLanguageText("remindTill")}
                           {Platform.OS === "android"
                             ? ": " +
-                              moment(new Date(endPlayAt)).format(
-                                "MMMM Do YYYY, h:mm a"
-                              )
+                            moment(new Date(endPlayAt)).format(
+                              "MMMM Do YYYY, h:mm a"
+                            )
                             : null}
                         </Text>
                         {renderEndPlayAtDateTimePicker()}
@@ -2956,8 +2971,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 }}
               >
                 {isOwner ||
-                !props.cue.channelId ||
-                props.cue.channelId === "" ? (
+                  !props.cue.channelId ||
+                  props.cue.channelId === "" ? (
                   <TouchableOpacity
                     onPress={() => handleDelete()}
                     style={{ backgroundColor: "white", borderRadius: 15 }}
@@ -2986,9 +3001,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   </TouchableOpacity>
                 ) : null}
                 {!isOwner &&
-                props.cue.channelId &&
-                props.cue.channelId !== "" &&
-                submission ? (
+                  props.cue.channelId &&
+                  props.cue.channelId !== "" &&
+                  submission ? (
                   <TouchableOpacity
                     disabled={
                       // if user has not signed up
@@ -3024,18 +3039,18 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                     >
                       {userSetupComplete
                         ? (props.cue.submittedAt &&
-                            props.cue.submittedAt !== "") ||
+                          props.cue.submittedAt !== "") ||
                           submitted
                           ? props.cue.graded
                             ? PreferredLanguageText("graded")
                             : isQuiz
-                            ? PreferredLanguageText("submitted")
-                            : currentDate < deadline
-                            ? PreferredLanguageText("resubmit")
-                            : PreferredLanguageText("submissionEnded")
+                              ? PreferredLanguageText("submitted")
+                              : currentDate < deadline
+                                ? PreferredLanguageText("resubmit")
+                                : PreferredLanguageText("submissionEnded")
                           : currentDate < deadline
-                          ? PreferredLanguageText("submit")
-                          : PreferredLanguageText("submissionEnded")
+                            ? PreferredLanguageText("submit")
+                            : PreferredLanguageText("submissionEnded")
                         : PreferredLanguageText("signupToSubmit")}
                     </Text>
                   </TouchableOpacity>
