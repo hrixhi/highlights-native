@@ -88,7 +88,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     useEffect(() => {
         setTimeout(() => {
             setWebviewKey(Math.random())
-        }, 2000);
+        }, 1500);
     }, [imported])
 
 
@@ -1223,7 +1223,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             </View>
                                             :
                                             <View
-                                                key={Math.random()}
+                                                // key={Math.random()}
                                                 style={{ flex: 1 }}
                                             >
                                                 <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}

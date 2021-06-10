@@ -159,8 +159,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   useEffect(() => {
     setTimeout(() => {
       setWebviewKey(Math.random())
-    }, 2000);
-  }, [imported, url, type])
+    }, 1500);
+  }, [showOriginal])
 
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
@@ -1899,7 +1899,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 </View>
               ) : (
                 <View
-                  key={Math.random()}
+                  // key={Math.random()}
                   style={{ flex: 1 }}
                 >
                   <WebView
@@ -1980,7 +1980,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 </View>
               ) : (
                 <View
-                  key={Math.random()}
+                  // key={Math.random()}
                   style={{ flex: 1 }}
                 >
                   <WebView

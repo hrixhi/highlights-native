@@ -53,7 +53,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     useEffect(() => {
         setTimeout(() => {
             setWebviewKey(Math.random())
-        }, 2000);
+        }, 1500);
     }, [imported])
 
     const categoriesLanguageMap: { [label: string]: string } = {
@@ -831,7 +831,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         </View>
                                                         :
                                                         <View
-                                                            key={Math.random()}
+                                                            // key={Math.random()}
                                                             style={{ flex: 1 }}
                                                         >
                                                             <WebView
