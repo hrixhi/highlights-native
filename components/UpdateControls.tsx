@@ -22,6 +22,7 @@ import {
   createCue,
   deleteCue,
   deleteForEveryone,
+  getChannelCategories,
   getChannels,
   getQuiz,
   getSharedWith,
@@ -66,7 +67,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   const [customCategory, setCustomCategory] = useState(
     props.cue.customCategory
   );
-  const [customCategories] = useState(props.customCategories);
+  const [customCategories, setCustomCategories] = useState(props.customCategories);
   const [addCustomCategory, setAddCustomCategory] = useState(false);
   const [markedAsRead, setMarkedAsRead] = useState(false);
   const [reloadEditorKey, setReloadEditorKey] = useState(Math.random());
@@ -227,6 +228,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
     if (uString) {
       const user = JSON.parse(uString);
       const server = fetchAPI("");
+
+      if (props.channelId) {
+        server.query({
+          query: getChannelCategories,
+          variables: {
+            channelId: props.channelId
+          }
+        }).then(res => {
+          if (res.data.channel && res.data.channel.getChannelCategories) {
+            setCustomCategories(res.data.channel.getChannelCategories)
+          }
+        }).catch(err => {
+        })
+      }
+
       server
         .query({
           query: getChannels,
@@ -275,7 +291,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
           .catch((err: any) => console.log(err));
       }
     }
-  }, [props.cue]);
+  }, [props.cue, props.channelId]);
 
   useEffect(() => {
     loadChannelsAndSharedWith();
@@ -791,6 +807,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
     submissionImported,
     submissionType,
     isQuiz,
+    submission,
+    deadline,
     solutions,
     initiatedAt,
     customCategory,
@@ -951,7 +969,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={deadline}
             mode={"date"}
             textColor={"#202025"}
-            onChange={(event, selectedDate) => {
+            onChange={(event: any, selectedDate: any) => {
               const currentDate: any = selectedDate;
               setDeadline(currentDate);
             }}
@@ -2401,7 +2419,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                       {PreferredLanguageText("category")}
                     </Text>
                   </View>
-                  {props.cue.channelId ? (
+                  {props.cue.channelId && !props.channelOwner ? (
                     <View
                       style={{
                         width: "100%",

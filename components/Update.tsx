@@ -215,6 +215,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     channelId={props.channelId}
                                     customCategories={props.customCategories}
                                     cue={props.cue}
+                                    channelOwner={channelOwner}
                                     cueIndex={props.cueIndex}
                                     cueKey={props.cueKey}
                                     createdBy={createdBy}
