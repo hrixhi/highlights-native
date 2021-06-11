@@ -1386,16 +1386,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <Text
                 ellipsizeMode="tail"
                 style={{
-                  overflow: "hidden",
-                  fontSize: 12,
-                  color: "#fff",
-                  paddingHorizontal: 10,
-                  borderRadius: 10,
-                  backgroundColor: "#a2a2aa",
-                  lineHeight: 20,
-                  width: 70,
-
-                  textAlign: "center"
+                  color: '#a2a2aa', fontSize: 17,
+                  paddingBottom: 20
                 }}
               >
                 {PreferredLanguageText("update")}

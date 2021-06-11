@@ -664,7 +664,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         borderRadius: 15,
                     }}>
                         Set Date
-                                </Text>
+                    </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={{
@@ -693,7 +693,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         borderRadius: 15,
                     }}>
                         Set Time
-                                </Text>
+                    </Text>
                 </TouchableOpacity>
             </View> : null}
 
@@ -792,7 +792,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         borderRadius: 15,
                     }}>
                         Set Date
-                                </Text>
+                    </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={{
@@ -821,7 +821,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         borderRadius: 15,
                     }}>
                         Set Time
-                                </Text>
+                    </Text>
                 </TouchableOpacity>
             </View> : null}
 
@@ -891,10 +891,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                         >
                             <Text style={{
-                                fontSize: 12,
-                                color: '#fff',
-                                lineHeight: 20,
-                                textAlign: 'center'
+                                color: '#a2a2aa', fontSize: 17,
+                                paddingBottom: 20
                             }}>
                                 {PreferredLanguageText('new')}
                             </Text>
@@ -1180,7 +1178,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         <View style={{ width: width < 768 ? '100%' : '35%', borderRightWidth: 0, borderColor: '#f4f4f6', backgroundColor: '#fff' }}>
                                             <Text>
                                                 duration picker...
-                                          </Text>
+                                            </Text>
                                             <TimePicker
                                                 hoursUnit={'h'}
                                                 minutesUnit={'m'}
