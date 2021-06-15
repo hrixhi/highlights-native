@@ -927,7 +927,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 flexWrap: 'wrap',
                                 backgroundColor: 'white',
                                 // height: 28,
-                                overflow: 'visible'
+                                overflow: 'visible',
                             }}
                             iconSize={12}
                             editor={RichText}
@@ -1189,7 +1189,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     }
                     <View style={{
                         width: '100%',
-                        minHeight: isQuiz ? 0 : 475,
+                        minHeight: isQuiz ? 0 : 500,
                         backgroundColor: 'white'
                     }}>
                         {
@@ -1201,33 +1201,22 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 : (imported ?
                                     (
                                         type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
-                                            <View style={{ backgroundColor: '#fff', height: 300 }}>
-                                                <Video
-                                                    ref={RichText}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: 300
-                                                    }}
-                                                    source={{
-                                                        uri: url,
-                                                    }}
-                                                    useNativeControls={true}
-                                                    resizeMode="contain"
-                                                    isLooping={false}
-                                                />
-                                            </View>
+                                            <ReactPlayer url={url} controls={true} onContextMenu={(e: any) => e.preventDefault()} config={{ file: { attributes: { controlsList: 'nodownload' } } }} />
                                             :
                                             <View
                                                 // key={Math.random()}
                                                 style={{ flex: 1 }}
                                             >
-                                                <WebView source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
+                                                <WebView
+                                                    source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
                                                     key={webviewKey}
                                                 />
                                             </View>
                                     )
                                     :
-                                    <RichEditor
+                                    null)
+                        }
+                        <RichEditor
                                         key={reloadEditorKey.toString()}
                                         containerStyle={{
                                             height,
@@ -1235,20 +1224,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             padding: 3,
                                             paddingTop: 5,
                                             paddingBottom: 10,
-                                            borderRadius: 8
+                                            borderRadius: 8,
+                                            display:(isQuiz || imported) ? "none" : "flex"
                                         }}
                                         ref={RichText}
                                         style={{
                                             width: '100%',
                                             backgroundColor: '#f4f4f6',
                                             borderRadius: 8,
-                                            minHeight: 475
+                                            minHeight: 475,
+                                            display:(isQuiz || imported) ? "none" : "flex"
                                         }}
                                         editorStyle={{
                                             backgroundColor: '#f4f4f6',
                                             placeholderColor: '#a2a2aa',
                                             color: '#202025',
-                                            contentCSSText: 'font-size: 13px;'
+                                            contentCSSText: 'font-size: 13px;',
+
                                         }}
                                         initialContentHTML={cue}
                                         onScroll={() => Keyboard.dismiss()}
@@ -1266,10 +1258,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         allowsInlineMediaPlayback={true}
                                         allowsLinkPreview={true}
                                         allowsBackForwardNavigationGestures={true}
-                                        useContainer={true}
-                                        onCursorPosition={handleCursorPosition}
-                                    />)
-                        }
+                                    />
+
                     </View>
                     <View style={{ flex: 1, display: 'flex', flexDirection: 'column', marginHorizontal: 10 }}>
                         {channels.length !== 0 ?
