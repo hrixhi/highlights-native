@@ -311,10 +311,10 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
             }
             {
                 props.users ? null :
-                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                    <View style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff' }}>
                         {
                             !cueId && !parentId ?
-                                <View style={{ width: '33.33%', backgroundColor: 'white' }}>
+                                <View style={{ width: '100%', backgroundColor: 'white' }}>
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
                                         <Text style={{ fontSize: 14, color: '#202025' }}>
                                             {PreferredLanguageText('category')}
@@ -328,7 +328,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         <TextInput
                                                             value={customCategory}
                                                             style={styles.allOutline}
-                                                            placeholder={'New Category'}
+                                                            placeholder={'Enter Category'}
                                                             onChangeText={val => {
                                                                 setCustomCategory(val)
                                                             }}
@@ -386,11 +386,11 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             parentId ? null :
                                 (
                                     parentId ? null :
-                                        <View style={{ width: '33.33%', backgroundColor: 'white' }}>
+                                        <View style={{ width: '100%', backgroundColor: 'white' }}>
                                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
                                                 <Text style={{ fontSize: 14, color: '#202025' }}>
-                                                {PreferredLanguageText('private')}
-                                        </Text>
+                                                    {PreferredLanguageText('private')}
+                                                </Text>
                                             </View>
                                             <Switch
                                                 value={isPrivate}
@@ -400,16 +400,17 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     true: '#a2a2aa'
                                                 }}
                                                 thumbColor='white'
-                                                style={{ height: 20 }}
+                                                style={{ marginRight: 'auto' }}
+                                                // style={{ height: 20 }}
                                             />
                                         </View>
                                 )
                         }
-                        <View style={{ width: '33.33%', backgroundColor: 'white' }}>
+                        <View style={{ width: '100%', backgroundColor: 'white' }}>
                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
                                 <Text style={{ fontSize: 14, color: '#202025' }}>
                                     {PreferredLanguageText('anonymous')}
-                    </Text>
+                                </Text>
                             </View>
                             <Switch
                                 value={anonymous}
@@ -419,7 +420,8 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     true: '#a2a2aa'
                                 }}
                                 thumbColor='white'
-                                style={{ height: 20 }}
+                                style={{ marginRight: 'auto' }}
+                                // style={{ height: 20 }}
                             />
                         </View>
                     </View>

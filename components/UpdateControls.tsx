@@ -1450,7 +1450,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   height: 28,
                   overflow: "visible"
                 }}
-                iconSize={12}
+                iconSize={18}
                 editor={RichText}
                 disabled={false}
                 iconTint={"#a2a2aa"}
@@ -1470,30 +1470,32 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                       actions.insertImage,
                       "insertCamera",
                       actions.undo,
+                      "clear",
                       actions.redo,
-                      "clear"
                     ]
                 }
                 iconMap={{
                   ["insertCamera"]: ({ tintColor }) => (
                     <Ionicons
                       name="camera-outline"
-                      size={15}
+                      size={18}
                       color={tintColor}
                     />
                   ),
                   ["clear"]: ({ tintColor }) => (
                     <Ionicons
                       name="trash-outline"
-                      size={13}
+                      size={18}
                       color={tintColor}
-                      onPress={() => clearAll()}
+                      onPress={() => {
+                        console.log("Clear button pressed");
+                        clearAll()}}
                     />
                   ),
                   ["back"]: ({ tintColor }) => (
                     <Ionicons
                       name="arrow-back"
-                      size={13}
+                      size={18}
                       color={tintColor}
                       onPress={() => setShowImportOptions(false)}
                     />
@@ -1808,7 +1810,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
           {submissionImported || imported ? (
             // This is because the toolbar wont have an editor to connect with if the file is imported
             <RichEditor
-              key={showOriginal.toString() + reloadEditorKey.toString()}
+              key={showOriginal.toString() + reloadEditorKey.toString() + Math.random()}
               disabled={true}
               containerStyle={{
                 display: "none"
@@ -1923,7 +1925,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               )
             ) : (
               <RichEditor
-                key={showOriginal.toString() + reloadEditorKey.toString()}
+                key={showOriginal.toString() + reloadEditorKey.toString() + Math.random()}
                 disabled={true}
                 containerStyle={{
                   height: height,
@@ -1944,7 +1946,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   backgroundColor: "#f4f4f6",
                   placeholderColor: "#a2a2aa",
                   color: "#202025",
-                  contentCSSText: "font-size: 13px;"
+                  contentCSSText: "font-size: 15px;"
                 }}
                 initialContentHTML={props.cue.original}
                 onScroll={() => Keyboard.dismiss()}
@@ -2005,7 +2007,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               )
             ) : (
               <RichEditor
-                key={showOriginal.toString() + reloadEditorKey.toString()}
+                key={showOriginal.toString() + reloadEditorKey.toString() + Math.random()}
                 containerStyle={{
                   height: height,
                   backgroundColor: "#f4f4f6",
@@ -2026,7 +2028,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   backgroundColor: "#f4f4f6",
                   placeholderColor: "#a2a2aa",
                   color: "#202025",
-                  contentCSSText: "font-size: 13px;"
+                  contentCSSText: "font-size: 15px;"
                 }}
                 initialContentHTML={cue}
                 onScroll={() => Keyboard.dismiss()}
@@ -2111,7 +2113,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                         backgroundColor: "white"
                       }}
                     >
-                      <View style={{ width: "85%", backgroundColor: "white" }}>
+                      <View style={{ width: "100%", backgroundColor: "white" }}>
                         <View style={styles.colorBar}>
                           <TouchableOpacity
                             style={styles.allOutline}
@@ -2456,7 +2458,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                             <TextInput
                               value={customCategory}
                               style={styles.allGrayOutline}
-                              placeholder={"New Category"}
+                              placeholder={"Enter Category"}
                               onChangeText={val => {
                                 setCustomCategory(val);
                               }}
@@ -2573,32 +2575,32 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   >
                     <View style={{ width: "100%", backgroundColor: "white" }}>
                       <ScrollView
-                        style={{ ...styles.colorBar, height: 20 }}
+                        style={{ ...styles.colorBar, height: 25 }}
                         horizontal={true}
                         showsHorizontalScrollIndicator={false}
                       >
                         {colorChoices.map((c: string, i: number) => {
                           return (
-                            <View
+                            <TouchableOpacity
                               style={
                                 color === i
                                   ? styles.colorContainerOutline
                                   : styles.colorContainer
                               }
                               key={Math.random()}
+                              onPress={() => {
+                                setColor(i);
+                              }}
                             >
-                              <TouchableOpacity
+                              <View
                                 style={{
-                                  width: 9,
-                                  height: 9,
-                                  borderRadius: 6,
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: 9,
                                   backgroundColor: colorChoices[i]
                                 }}
-                                onPress={() => {
-                                  setColor(i);
-                                }}
                               />
-                            </View>
+                            </TouchableOpacity>
                           );
                         })}
                       </ScrollView>
@@ -3104,25 +3106,25 @@ const styles: any = StyleSheet.create({
     lineHeight: 18
   },
   colorContainer: {
-    lineHeight: 20,
-    justifyContent: "center",
-    display: "flex",
-    flexDirection: "column",
-    marginLeft: 7,
-    paddingHorizontal: 4,
-    backgroundColor: "white"
+    // lineHeight: 20,
+    justifyContent: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    marginHorizontal: 7,
+    padding: 4,
+    backgroundColor: 'white'
   },
   colorContainerOutline: {
-    lineHeight: 20,
-    justifyContent: "center",
-    display: "flex",
-    flexDirection: "column",
-    marginLeft: 7,
-    paddingHorizontal: 4,
-    backgroundColor: "white",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#a2a2aa"
+      lineHeight: 20,
+      justifyContent: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      marginHorizontal: 7,
+      paddingHorizontal: 5,
+      backgroundColor: 'white',
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: '#a2a2aa'
   },
   input: {
     width: "100%",
