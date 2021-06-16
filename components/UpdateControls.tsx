@@ -540,6 +540,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   }, []);
 
   const handleUpdate = useCallback(async () => {
+    console.log("begin", new Date().toString())
     if (submissionImported && submissionTitle === "") {
       Alert(enterTitleAlert);
       return;
@@ -603,6 +604,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
     };
     const stringifiedCues = JSON.stringify(subCues);
     await AsyncStorage.setItem("cues", stringifiedCues);
+    console.log("end", new Date().toString())
     props.reloadCueListAfterUpdate();
   }, [
     cue,
@@ -1441,7 +1443,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             ) : (props.cue.submittedAt && props.cue.submittedAt !== "") ||
               submitted ? (
               <View style={{ height: 28, backgroundColor: "#fff" }} />
-            ) : RichText && RichText.current ? (
+            ) : (
               <RichToolbar
                 key={reloadEditorKey.toString() + showOriginal.toString()}
                 style={{
@@ -1450,7 +1452,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   height: 28,
                   overflow: "visible"
                 }}
-                iconSize={18}
+                iconSize={16}
                 editor={RichText}
                 disabled={false}
                 iconTint={"#a2a2aa"}
@@ -1478,14 +1480,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   ["insertCamera"]: ({ tintColor }) => (
                     <Ionicons
                       name="camera-outline"
-                      size={18}
+                      size={16}
                       color={tintColor}
                     />
                   ),
                   ["clear"]: ({ tintColor }) => (
                     <Ionicons
                       name="trash-outline"
-                      size={18}
+                      size={16}
                       color={tintColor}
                       onPress={() => {
                         console.log("Clear button pressed");
@@ -1495,7 +1497,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   ["back"]: ({ tintColor }) => (
                     <Ionicons
                       name="arrow-back"
-                      size={18}
+                      size={16}
                       color={tintColor}
                       onPress={() => setShowImportOptions(false)}
                     />
@@ -1504,7 +1506,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 onPressAddImage={galleryCallback}
                 insertCamera={cameraCallback}
               />
-            ) : null}
+            ) }
             {!showOriginal &&
               props.cue.submission &&
               !submissionImported &&
@@ -1519,7 +1521,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               />
             ) : null}
           </View>
-          <View style={{ flexDirection: "row", backgroundColor: "#fff" }}>
+          <View style={{ flexDirection: "row", backgroundColor: "#fff", marginTop: 10 }}>
             {/* {
                             !showOriginal && !submissionImported && !props.cue.graded ?
                                 <Text style={{
@@ -1543,10 +1545,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <Text
                 style={{
                   color: "#a2a2aa",
-                  fontSize: 11,
+                  fontSize: 13,
                   lineHeight: 30,
                   textAlign: "right",
-                  paddingRight: 10
+                  paddingRight: 10,
+                  textTransform: 'uppercase'
                 }}
                 onPress={() => {
                   setShowImportOptions(true);
@@ -1631,7 +1634,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
           style={{
             paddingBottom: 25,
             borderBottomColor: "#f4f4f6",
-            borderBottomWidth: 1
+            borderBottomWidth: 1,
           }}
           onScrollBeginDrag={Keyboard.dismiss}
           showsVerticalScrollIndicator={false}
@@ -1653,7 +1656,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             >
               <View
                 style={{
-                  width: "40%",
+                  width: "80%",
                   alignSelf: "flex-start",
                   backgroundColor: "#fff"
                 }}
@@ -1772,9 +1775,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             <View style={{ flexDirection: "row", backgroundColor: "white" }}>
               <View
                 style={{
-                  width: "40%",
+                  width: "100%",
                   alignSelf: "flex-start",
-                  marginLeft: "10%",
                   backgroundColor: "white"
                 }}
               >
@@ -1810,7 +1812,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
           {submissionImported || imported ? (
             // This is because the toolbar wont have an editor to connect with if the file is imported
             <RichEditor
-              key={showOriginal.toString() + reloadEditorKey.toString() + Math.random()}
+              key={showOriginal.toString() + reloadEditorKey.toString() }
               disabled={true}
               containerStyle={{
                 display: "none"
@@ -1925,7 +1927,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               )
             ) : (
               <RichEditor
-                key={showOriginal.toString() + reloadEditorKey.toString() + Math.random()}
+                key={showOriginal.toString() + reloadEditorKey.toString() }
                 disabled={true}
                 containerStyle={{
                   height: height,
@@ -2007,7 +2009,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               )
             ) : (
               <RichEditor
-                key={showOriginal.toString() + reloadEditorKey.toString() + Math.random()}
+                key={showOriginal.toString() + reloadEditorKey.toString() }
                 containerStyle={{
                   height: height,
                   backgroundColor: "#f4f4f6",
