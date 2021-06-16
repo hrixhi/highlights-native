@@ -12,7 +12,7 @@ import Constants from 'expo-constants';
 import Create from '../components/Create';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Update from '../components/Update';
-import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
+import { uniqueNamesGenerator, colors } from 'unique-names-generator'
 import { defaultCues, defaultRandomShuffleFrequency, defaultSleepInfo } from '../helpers/DefaultData'
 import Walkthrough from '../components/Walkthrough';
 import Channels from '../components/Channels';
@@ -600,11 +600,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       // LOAD USER OR CREATE A NEW ONE IF NOT FOUND
       if (!u) {
         const fullName = uniqueNamesGenerator({
-          dictionaries: [adjectives, colors, animals]
-        });
-        const displayName = uniqueNamesGenerator({
-          dictionaries: [adjectives, colors, animals]
-        });
+          dictionaries: [colors]
+        }) + Math.floor(Math.random() * (999 - 100 + 1) + 100).toString();
+        const displayName = fullName
         let experienceId = undefined;
         if (!Constants.manifest) {
           // Absence of the manifest means we're in bare workflow
