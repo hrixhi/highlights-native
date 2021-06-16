@@ -87,10 +87,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [webviewKey, setWebviewKey] = useState(Math.random())
     useEffect(() => {
         setTimeout(() => {
-            setWebviewKey(Math.random())
-        }, 1500);
+            if (Platform.OS === "android") {
+                setWebviewKey(Math.random())
+            }
+        }, 500);
     }, [imported])
-
 
     // Alerts
 
@@ -115,7 +116,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         RichText.current.insertHTML('<div><br/>' + SVGEquation + '<br/></div>');
         setShowEquationEditor(false)
         setEquation('')
-        // setReloadEditorKey(Math.random())
+        setReloadEditorKey(Math.random())
     }, [equation, RichText, RichText.current, cue])
 
     useEffect(() => {
@@ -914,22 +915,25 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     width: '100%',
                     display: 'flex',
                     flexDirection: Dimensions.get('window').width < 768 ? 'column-reverse' : 'row',
-                    paddingBottom: 4,
+                    paddingBottom: 10,
                     backgroundColor: 'white',
                 }}
                     onTouchStart={() => Keyboard.dismiss()}
                 >
                     {Platform.OS === "ios" ? <View
-                        style={{ flexDirection: (imported || isQuiz || showImportOptions) ? 'row' : 'column', flex: 1 }}
+                        style={{ flexDirection: (imported || isQuiz || showImportOptions) ? 'row' : 'column', flex: 1, }}
+                        key={webviewKey}
                     >
                         <RichToolbar
+                            key={reloadEditorKey.toString()}
                             style={{
+                                display: 'flex',
                                 flexWrap: 'wrap',
                                 backgroundColor: 'white',
                                 // height: 28,
-                                overflow: 'visible',
+                                overflow: 'scroll',
                             }}
-                            iconSize={12}
+                            iconSize={16}
                             editor={RichText}
                             disabled={false}
                             iconTint={"#a2a2aa"}
@@ -948,13 +952,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         actions.insertImage,
                                         "insertCamera",
                                         actions.undo,
+                                        "clear",
                                         actions.redo,
-                                        "clear"
                                     ]}
                             iconMap={{
-                                ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
-                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />,
-                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={13} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                                ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={16} color={tintColor} />,
+                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={16} color={tintColor} onPress={() => {
+                                    console.log("Clear button pressed")
+                                    clearAll()}} />,
+                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
                             }}
                             onPressAddImage={galleryCallback}
                             insertCamera={cameraCallback}
@@ -971,17 +977,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     }}
                                 />
                         }
-                    </View> :
+                        </View> :
                         <View
                         >
                             <RichToolbar
+                                key={reloadEditorKey.toString()}
                                 style={{
                                     flexWrap: 'wrap',
                                     backgroundColor: 'white',
                                     // height: 28,
                                     overflow: 'visible'
                                 }}
-                                iconSize={12}
+                                iconSize={18}
                                 editor={RichText}
                                 disabled={false}
                                 iconTint={"#a2a2aa"}
@@ -1000,13 +1007,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             actions.insertImage,
                                             "insertCamera",
                                             actions.undo,
+                                            "clear",
                                             actions.redo,
-                                            "clear"
+                                            
                                         ]}
                                 iconMap={{
-                                    ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={15} color={tintColor} />,
-                                    ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={13} color={tintColor} onPress={() => clearAll()} />,
-                                    ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={13} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                                    ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={18} color={tintColor} />,
+                                    ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={18} color={tintColor} onPress={() => clearAll()} />,
+                                    ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={18} color={tintColor} onPress={() => setShowImportOptions(false)} />
                                 }}
                                 onPressAddImage={galleryCallback}
                                 insertCamera={cameraCallback}
@@ -1046,7 +1054,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             isQuiz ? null :
                                 <Text style={{
                                     color: '#a2a2aa',
-                                    fontSize: 11,
+                                    fontSize: 13,
                                     lineHeight: 30,
                                     textAlign: 'right',
                                     paddingRight: 20,
@@ -1059,7 +1067,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }
                         <Text style={{
                             color: '#a2a2aa',
-                            fontSize: 11,
+                            fontSize: 13,
                             lineHeight: 30,
                             textAlign: 'right',
                             paddingRight: 10,
@@ -1209,7 +1217,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             >
                                                 <WebView
                                                     source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
-                                                    key={webviewKey}
+                                                    key={reloadEditorKey}
                                                 />
                                             </View>
                                     )
@@ -1239,7 +1247,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             backgroundColor: '#f4f4f6',
                                             placeholderColor: '#a2a2aa',
                                             color: '#202025',
-                                            contentCSSText: 'font-size: 13px;',
+                                            contentCSSText: 'font-size: 16px;',
 
                                         }}
                                         initialContentHTML={cue}
@@ -1273,7 +1281,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                     </View>
                                     <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
-                                        <View style={{ width: '85%', backgroundColor: 'white', display: 'flex', backgroundColor: 'white' }}>
+                                        <View style={{ width: '100%', backgroundColor: 'white', display: 'flex', backgroundColor: 'white' }}>
                                             <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
                                                 <TouchableOpacity
                                                     style={channelId === '' ? styles.allOutline : styles.allBlack}
@@ -1489,7 +1497,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         <TextInput
                                                             value={customCategory}
                                                             style={styles.allGrayOutline}
-                                                            placeholder={'New Category'}
+                                                            placeholder={'Enter Category'}
                                                             onChangeText={val => {
                                                                 setCustomCategory(val)
                                                             }}
@@ -1551,22 +1559,22 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 </View>
                                 <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
                                     <View style={{ width: '100%', backgroundColor: 'white' }}>
-                                        <ScrollView style={{ ...styles.colorBar, height: 20 }} horizontal={true} showsHorizontalScrollIndicator={false}>
+                                        <ScrollView style={{ ...styles.colorBar, height: 24 }} horizontal={true} showsHorizontalScrollIndicator={false}>
                                             {
                                                 colorChoices.map((c: string, i: number) => {
-                                                    return <View style={color === i ? styles.colorContainerOutline : styles.colorContainer} key={Math.random()}>
-                                                        <TouchableOpacity
+                                                    return <TouchableOpacity onPress={() => {
+                                                        setColor(i)
+                                                    }} style={color === i ? styles.colorContainerOutline : styles.colorContainer} key={Math.random()}>
+                                                        <View
                                                             style={{
-                                                                width: 9,
-                                                                height: 9,
-                                                                borderRadius: 6,
+                                                                width: 12,
+                                                                height: 12,
+                                                                borderRadius: 9,
                                                                 backgroundColor: colorChoices[i]
                                                             }}
-                                                            onPress={() => {
-                                                                setColor(i)
-                                                            }}
+                                                            
                                                         />
-                                                    </View>
+                                                    </TouchableOpacity>
                                                 })
                                             }
                                         </ScrollView>
@@ -1840,12 +1848,12 @@ const styles: any = StyleSheet.create({
         lineHeight: 18
     },
     colorContainer: {
-        lineHeight: 20,
+        // lineHeight: 20,
         justifyContent: 'center',
         display: 'flex',
         flexDirection: 'column',
-        marginLeft: 7,
-        paddingHorizontal: 4,
+        marginHorizontal: 7,
+        padding: 4,
         backgroundColor: 'white'
     },
     colorContainerOutline: {
@@ -1853,10 +1861,10 @@ const styles: any = StyleSheet.create({
         justifyContent: 'center',
         display: 'flex',
         flexDirection: 'column',
-        marginLeft: 7,
-        paddingHorizontal: 4,
+        marginHorizontal: 7,
+        paddingHorizontal: 5,
         backgroundColor: 'white',
-        borderRadius: 10,
+        borderRadius: 14,
         borderWidth: 1,
         borderColor: '#a2a2aa'
     },
