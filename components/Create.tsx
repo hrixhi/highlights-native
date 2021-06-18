@@ -159,14 +159,27 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 Alert(mustHaveOneOptionAlert)
                 error = true;
             }
+
+            // Create object and check if any options repeat:
+
+            const keys: any = {};
+
             problem.options.map((option: any) => {
                 if (option.option === '') {
                     Alert(fillMissingOptionsAlert)
                     error = true;
                 }
+
+                if (option.option in keys) {
+                    Alert("Option repeated in a question");
+                    error = true
+                }
+
                 if (option.isCorrect) {
                     optionFound = true
                 }
+
+                keys[option.option] = 1
             })
             if (!optionFound) {
                 Alert(eachOptionOneCorrectAlert)

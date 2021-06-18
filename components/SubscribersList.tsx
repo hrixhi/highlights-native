@@ -20,6 +20,7 @@ import WebView from 'react-native-webview';
 import MultiSelect from 'react-native-multiple-select';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { Video } from 'expo-av';
+import moment from "moment";
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -50,6 +51,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [loadedChatWithUser, setLoadedChatWithUser] = useState<any>({})
     const [isLoadedUserInactive, setIsLoadedUserInactive] = useState(false)
     const [webviewKey, setWebviewKey] = useState(Math.random())
+    const [isQuiz, setIsQuiz] = useState(false);
+    const [quizSolutions, setQuizSolutions] = useState<any>({});
+
     useEffect(() => {
         setTimeout(() => {
             setWebviewKey(Math.random())
@@ -122,15 +126,23 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             value: sub._id, label: sub.displayName
         }
     })
-    const group = selected
+    const group = selected.map(s => {
+        return s.value
+    })
 
     useEffect(() => {
+        console.log("useEffect")
         if (submission[0] === '{' && submission[submission.length - 1] === '}') {
             const obj = JSON.parse(submission)
-            setImported(true)
-            setUrl(obj.url)
-            setType(obj.type)
-            setTitle(obj.title)
+            if (obj.solutions) {
+                setIsQuiz(true)
+                setQuizSolutions(obj)
+            } else {
+                setImported(true)
+                setUrl(obj.url)
+                setType(obj.type)
+                setTitle(obj.title)
+            }
         } else {
             setImported(false)
             setUrl('')
@@ -340,6 +352,43 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         })
     }, [isLoadedUserInactive, loadedChatWithUser, props.channelId])
+
+    const renderQuizSubmissions = () => {
+
+        const { initiatedAt, solutions } = quizSolutions;
+
+        return (<View style={{ backgroundColor: 'white', width: '100%', marginLeft: '5%', display: 'flex', flexDirection: 'column' }}>
+            {initiatedAt ? <Text style={{ width: '100%', height: 15, paddingBottom: 25 }}>
+                Quiz initiated at { moment(new Date(initiatedAt)).format('MMMM Do YYYY, h:mm a')}
+            </Text> : 
+                null
+            }
+            <Text style={{ width: '100%', height: 15, marginTop: 20, paddingBottom: 25, fontWeight: 'bold' }}>
+                Selected Answers:
+            </Text>
+            <View style={{ marginTop: 20, display: 'flex', flexDirection: "column"}}>
+                {solutions.map((problem: any, index: number) => {
+
+                    const answers: any[] = problem.selected;
+
+                    const selectedAnswers = answers.filter(ans => ans.isSelected);
+
+                    let selectedAnswersString: any[] = []
+                    
+                    selectedAnswers.forEach((ans: any) => {
+                        selectedAnswersString.push(ans.options)
+                    })
+
+                    return (<Text style={{ width: '100%', height: 15, marginTop: 10, paddingBottom: 25 }}>
+                        Problem {index + 1} : {selectedAnswersString.join(", ")} 
+                    </Text>)
+                })}
+            </View>
+        </View>)
+
+    }
+
+    console.log(showSubmission)
 
     return (
         <View style={{
@@ -670,6 +719,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                     subscriber={subscriber}
                                                                     onPress={() => {
                                                                         if (props.cueId && props.cueId !== null) {
+                                                                            console.log("Printing submission")
+                                                                            console.log(subscriber.submission)
                                                                             if (subscriber.fullName === 'submitted' || subscriber.fullName === 'graded') {
                                                                                 setSubmission(subscriber.submission)
                                                                                 setShowSubmission(true)
@@ -693,7 +744,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     <ScrollView
                                         showsVerticalScrollIndicator={false}
                                         keyboardDismissMode={'on-drag'}
-                                        style={{ flex: 1, paddingTop: 12 }}>
+                                        // style={{ flex: 1, paddingTop: 12 }}
+                                        >
                                         <View style={{
                                             width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center'
                                         }}>
@@ -778,7 +830,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 </View> : null
                                         }
                                         {
-                                            !imported ?
+                                            isQuiz && Object.keys(quizSolutions).length > 0 ?
+                                            renderQuizSubmissions() : null
+                                        }
+                                        {
+                                            !imported && !isQuiz ?
                                                 <RichEditor
                                                     disabled={true}
                                                     key={Math.random()}
@@ -830,15 +886,14 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             />
                                                         </View>
                                                         :
-                                                        <View
-                                                            // key={Math.random()}
+                                                        (!isQuiz ? <View
                                                             style={{ flex: 1 }}
                                                         >
                                                             <WebView
                                                                 source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
                                                                 key={webviewKey}
                                                             />
-                                                        </View>
+                                                        </View> : null)
                                                 )
                                         }
                                     </ScrollView>

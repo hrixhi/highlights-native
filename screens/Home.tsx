@@ -236,7 +236,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
       } catch (err) {
 
-        Alert(unableToRefreshCuesAlert, checkConnectionAlert)
+        // Alert(unableToRefreshCuesAlert, checkConnectionAlert)
         const custom: any = {}
         setCues(allCues)
         if (allCues['local']) {
