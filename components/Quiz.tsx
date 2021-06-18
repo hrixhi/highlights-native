@@ -158,7 +158,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             editable={false}
                                                             value={option.option}
                                                             style={{
-                                                                width: '50%',
+                                                                width: '100%',
                                                                 fontSize: 15,
                                                                 padding: 15,
                                                                 paddingTop: 12,
@@ -187,7 +187,7 @@ export default Quiz;
 
 const styles = StyleSheet.create({
     input: {
-        width: '50%',
+        width: '100%',
         borderBottomColor: '#f4f4f6',
         borderBottomWidth: 1,
         fontSize: 15,

@@ -1651,7 +1651,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             >
               <View
                 style={{
-                  width: "40%",
                   alignSelf: "flex-start",
                   backgroundColor: "#fff"
                 }}
