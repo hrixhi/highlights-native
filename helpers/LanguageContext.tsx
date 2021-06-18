@@ -138,7 +138,7 @@ const EnglishBank: { [key: string]: string } = {
     // Alerts
     savedLocally: 'Your changes will be saved locally but not in the cloud.',
     quizzesCanOnly: 'Quizzes can only be shared with channels created by you. Select a channel from the options below to share the quiz with and then try again.',
-    newCategory: 'New Category',
+    newCategory: 'Enter Category',
     gradersRemarks: "Grader's Remarks",
     startQuiz: 'start quiz',
     optional: 'Optional',

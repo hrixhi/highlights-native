@@ -36,7 +36,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 alert("Enter channel name.")
                 return;
             }
-            Alert.prompt('Update Password', 'Leave blank for for public access.', (password) => {
+            Alert.prompt('Update Password', 'Leave blank for public access.', (password) => {
                 const server = fetchAPI("")
                 server.query({
                     query: doesChannelNameExist,
