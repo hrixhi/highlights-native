@@ -540,7 +540,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   }, []);
 
   const handleUpdate = useCallback(async () => {
-    console.log("begin", new Date().toString())
     if (submissionImported && submissionTitle === "") {
       Alert(enterTitleAlert);
       return;
@@ -604,7 +603,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
     };
     const stringifiedCues = JSON.stringify(subCues);
     await AsyncStorage.setItem("cues", stringifiedCues);
-    console.log("end", new Date().toString())
     props.reloadCueListAfterUpdate();
   }, [
     cue,
