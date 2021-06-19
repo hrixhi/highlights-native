@@ -1,7 +1,3 @@
-
-import { PreferredLanguageText } from "./LanguageContext";
-
-
 export const htmlStringParser = (htmlString: string) => {
     const parsedString = htmlString.replace(/<[^>]+>/g, '\n').split('&nbsp;').join(' ');
     const lines = parsedString.split('\n')
@@ -14,10 +10,10 @@ export const htmlStringParser = (htmlString: string) => {
             const obj = JSON.parse(filteredLines[0])
             title = obj.title ? obj.title : 'file'
         } else {
-            title = filteredLines.length > 0 ? filteredLines[0] : PreferredLanguageText('noContent')
+            title = filteredLines.length > 0 ? filteredLines[0] : 'No Content'
         }
     } else {
-        title = PreferredLanguageText('noContent')
+        title = 'No Content'
     }
     return {
         title,

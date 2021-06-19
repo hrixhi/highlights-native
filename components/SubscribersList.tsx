@@ -357,16 +357,16 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         const { initiatedAt, solutions } = quizSolutions;
 
-        return (<View style={{ backgroundColor: 'white', width: '100%', marginLeft: '5%', display: 'flex', flexDirection: 'column' }}>
-            {initiatedAt ? <Text style={{ width: '100%', height: 15, paddingBottom: 25 }}>
+        return (<View style={{ backgroundColor: 'white', width: '100%', marginLeft: '5%',  display: 'flex', flexDirection: 'column' }}>
+            {initiatedAt ? <Text style={{ width: '100%', height: 15, paddingBottom: 25, color: 'black' }}>
                 Quiz initiated at { moment(new Date(initiatedAt)).format('MMMM Do YYYY, h:mm a')}
             </Text> : 
                 null
             }
-            <Text style={{ width: '100%', height: 15, marginTop: 20, paddingBottom: 25, fontWeight: 'bold' }}>
+            <Text style={{ width: '100%', height: 15, color: 'black', marginTop: 20, paddingBottom: 25, fontWeight: 'bold' }}>
                 Selected Answers:
             </Text>
-            <View style={{ marginTop: 20, display: 'flex', flexDirection: "column"}}>
+            <View style={{ backgroundColor: 'white', marginVertical: 20, display: 'flex', flexDirection: "column"}}>
                 {solutions.map((problem: any, index: number) => {
 
                     const answers: any[] = problem.selected;
@@ -379,7 +379,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         selectedAnswersString.push(ans.options)
                     })
 
-                    return (<Text style={{ width: '100%', height: 15, marginTop: 10, paddingBottom: 25 }}>
+                    return (<Text style={{ width: '100%', height: 15, marginTop: 10, paddingBottom: 25, color: 'black' }}>
                         Problem {index + 1} : {selectedAnswersString.join(", ")} 
                     </Text>)
                 })}
@@ -387,8 +387,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         </View>)
 
     }
-
-    console.log(showSubmission)
 
     return (
         <View style={{
@@ -432,19 +430,19 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Ionicons name='chevron-back-outline' size={23} color={'#202025'} />
                             </Text>
                         </TouchableOpacity>
-                        <View style={{ flexDirection: 'column', backgroundColor: '#fff', height: 50, alignItems: 'center' }}>
+                        <View style={{ flexDirection: 'column', backgroundColor: '#fff', height: !props.cueId && !showAddUsers && !showNewGroup ? 70 : 50, alignItems: 'center' }}>
                             {
                                 loadedChatWithUser !== {} ?
                                     <View style={{ paddingHorizontal: 20, backgroundColor: '#fff' }}>
                                         <Text style={{ color: '#202025', marginBottom: 10 }}>
                                             {loadedChatWithUser.displayName}
-                                            {showNewGroup ? '' : ', '}
+                                            {showNewGroup || showSubmission ? '' : ', '}
                                             {loadedChatWithUser.fullName} {loadedChatWithUser.email ? ("(" + loadedChatWithUser.email + ")") : ''}
                                         </Text>
                                     </View> : null
                             }
                             {
-                                isOwner && !props.cueId && !showAddUsers
+                                isOwner && !props.cueId && !showAddUsers && !showNewGroup
                                     ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
                                         <TouchableOpacity
                                             style={{ backgroundColor: '#fff' }}
@@ -719,13 +717,13 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                     subscriber={subscriber}
                                                                     onPress={() => {
                                                                         if (props.cueId && props.cueId !== null) {
-                                                                            console.log("Printing submission")
-                                                                            console.log(subscriber.submission)
+                                                                            console.log("Printing subscriber")
+                                                                            console.log(subscriber)
                                                                             if (subscriber.fullName === 'submitted' || subscriber.fullName === 'graded') {
                                                                                 setSubmission(subscriber.submission)
                                                                                 setShowSubmission(true)
                                                                                 setStatus(subscriber.fullName)
-                                                                                setScore(subscriber.score)
+                                                                                setScore(`${subscriber.score}`)
                                                                                 setComment(subscriber.comment)
                                                                                 setUserId(subscriber.userId)
                                                                             }
@@ -745,9 +743,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         showsVerticalScrollIndicator={false}
                                         keyboardDismissMode={'on-drag'}
                                         // style={{ flex: 1, paddingTop: 12 }}
+                                        style={{ backgroundColor: 'white' }}
                                         >
                                         <View style={{
-                                            width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center'
+                                            width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center',
+                                            backgroundColor: 'white'
                                         }}>
                                             <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
                                                 {PreferredLanguageText('score')}
@@ -817,8 +817,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             {PreferredLanguageText('viewSubmission')}
                                         </Text>
                                         {
-                                            imported ?
-                                                <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%' }}>
+                                            imported  ?
+                                                <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%',}}>
                                                     <TextInput
                                                         editable={false}
                                                         value={title}
@@ -910,13 +910,19 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     flexDirection: 'column'
                                 }}>
                                     <ScrollView
-                                        contentContainerStyle={{
-                                            height: 20, width: '100%',
-                                            paddingTop: 15
+                                        // contentContainerStyle={{
+                                        //     // height: 20, 
+                                        //     width: '100%',
+                                        //     paddingTop: 15,
+                                        //     paddingHorizontal: 10
+                                        // }}
+                                        style={{
+                                            width: '98.5%',
+                                            height: '40%',
+                                            flexDirection: 'row',
+                                            paddingTop: 10
                                         }}
-                                        style={{}}
-                                        horizontal={true}
-                                        showsHorizontalScrollIndicator={false}
+                                        horizontal={true} showsHorizontalScrollIndicator={false}
                                     >
                                         {
                                             unparsedSubs.length === 0 ? null : categories.map((category: string) => {
@@ -927,7 +933,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     <Text
                                                         style={{
                                                             color: '#a2a2aa',
-                                                            lineHeight: 20
+                                                            // lineHeight: 20
                                                         }}>
                                                         {PreferredLanguageText(categoriesLanguageMap[category])}
                                                     </Text>

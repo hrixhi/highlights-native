@@ -2583,7 +2583,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                           return (
                             <TouchableOpacity
                               style={
-                                color === i
+                                color == i
                                   ? styles.colorContainerOutline
                                   : styles.colorContainer
                               }
