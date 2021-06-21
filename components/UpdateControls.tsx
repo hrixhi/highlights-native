@@ -161,7 +161,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
     setTimeout(() => {
       setWebviewKey(Math.random())
     }, 1500);
-  }, [showOriginal])
+  }, [showOriginal, submissionUrl])
 
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
@@ -371,7 +371,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
         setSubmissionImported(true);
         setSubmissionUrl(obj.url);
         setSubmissionType(obj.type);
-        setSubmissionTitle(obj.title);
+        setSubmissionTitle("My Submission");
       } else {
         setSubmissionImported(false);
         setSubmissionUrl("");
@@ -541,8 +541,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
 
   const handleUpdate = useCallback(async () => {
     if (submissionImported && submissionTitle === "") {
-      Alert(enterTitleAlert);
-      return;
+      Alert("Your submission import has no title");
     }
     let subCues: any = {};
     try {
@@ -564,7 +563,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
       const obj = {
         type: submissionType,
         url: submissionUrl,
-        title: submissionTitle
+        title: submissionTitle || "My Submission"
       };
       saveCue = JSON.stringify(obj);
     } else {
@@ -1784,6 +1783,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   placeholder={"Title"}
                   onChangeText={val => setSubmissionTitle(val)}
                   placeholderTextColor={"#a2a2aa"}
+                  editable={false}
                 />
               </View>
               {props.cue.submittedAt && props.cue.submittedAt !== "" ? (
