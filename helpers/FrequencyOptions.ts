@@ -1,5 +1,8 @@
 export const timedFrequencyOptions = [
     {
+        label: "Minute", value: "1-m"
+    },
+    {
         label: "Hour", value: "1-H"
     },
     {
@@ -56,6 +59,9 @@ export const timedFrequencyOptions = [
 ]
 
 export const shuffleFrequencyOptions = [
+    {
+        label: "Minute", value: "1-m"
+    },
     {
         label: "Hour", value: "1-H"
     },

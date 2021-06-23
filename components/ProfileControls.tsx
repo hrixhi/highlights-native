@@ -243,6 +243,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
   const handleClean = useCallback(async () => {
     await AsyncStorage.clear();
     await Updates.reloadAsync();
+    await Notifications.cancelAllScheduledNotificationsAsync();
   }, [])
 
   useEffect(() => {

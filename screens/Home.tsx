@@ -226,6 +226,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           }
           const stringCues = JSON.stringify(allCues)
           await AsyncStorage.setItem("cues", stringCues)
+          await notificationScheduler(allCues)
           Animated.timing(fadeAnimation, {
             toValue: 1,
             duration: 150,
@@ -280,6 +281,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         customC.sort()
         setCustomCategories(customC)
       }
+      await notificationScheduler(allCues)
       Animated.timing(fadeAnimation, {
         toValue: 1,
         duration: 150,
@@ -383,9 +385,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     );
   }, [channelId, filterChoice])
 
-  const notificationScheduler = useCallback(async () => {
+  const notificationScheduler = useCallback(async (c) => {
 
     try {
+
+      if (c === undefined || c === null) {
+        return
+      }
 
       // Clean out all already scheduled notifications
       await Notifications.cancelAllScheduledNotificationsAsync()
@@ -426,7 +432,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           }
         },
         handleError: (err) => console.log(err),
-        handleSuccess: (res) => loadData()
+        handleSuccess: (res) => {
+          // loadData()
+        }
       })
 
       // for when user taps on a notification   
@@ -452,9 +460,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       // b += (to.getMinutes() / 60)
 
       const cuesArray: any[] = []
-      if (cues !== {}) {
-        Object.keys(cues).map((key) => {
-          cues[key].map((cue: any, index: number) => {
+      if (c !== {}) {
+        Object.keys(c).map((key) => {
+          c[key].map((cue: any, index: number) => {
             cuesArray.push({
               ...cue,
               key,
@@ -507,7 +515,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 // upto 50 valid notifications can be considered
                 break;
               }
-              const { title, subtitle } = htmlStringParser(item.cue)
+              const { title, subtitle } = htmlStringParser(item.channelId && item.channelId !== '' ? item.original : item.cue)
               notificationRequests.push({
                 content: {
                   title,
@@ -546,7 +554,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         if (i === (iterateUpTo - 1)) {
           lastTriggerDate = new Date(sortedRequests[i].trigger)
           lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 1)
-          await Notifications.scheduleNotificationAsync({
+          const n = await Notifications.scheduleNotificationAsync({
             content: {
               title: 'Continue receiving notifications?',
               subtitle: 'Open Cues! It\'s been a while...',
@@ -741,6 +749,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         customC.sort()
         setCues(allCues)
         setCustomCategories(customC)
+        await notificationScheduler(allCues)
         // START ANIMATION
         Animated.timing(fadeAnimation, {
           toValue: 1,
@@ -771,8 +780,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       if (!sC) {
         setReLoading(false)
       }
-
-      await notificationScheduler()
 
     } catch (e) {
       console.log(e)
@@ -907,6 +914,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           setCustomCategories(customC)
           const stringCues = JSON.stringify(allCues)
           await AsyncStorage.setItem('cues', stringCues)
+          await notificationScheduler(allCues)
         }
       }).catch(err => console.log(err))
       // Get subscription information
@@ -1042,7 +1050,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         await AsyncStorage.setItem('cues', updatedCues)
         // })();
         if (newIds.length !== 0) {
-          // setCues(updatedCuesObj)
           updateCuesHelper(updatedCuesObj)
           // setReopenUpdateWindow(Math.random())
         }
@@ -1051,11 +1058,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       setSaveDataInProgress(false)
 
     }).catch(err => console.log(err))
-  }, [cues, setCues])
+  }, [cues])
 
-  const updateCuesHelper = useCallback((obj: any) => {
+  const updateCuesHelper = useCallback(async (obj: any) => {
     setCues(obj)
-  }, [setCues, cues])
+    await notificationScheduler(obj)
+  }, [cues])
 
   useEffect(() => {
     // Called when component is loaded
@@ -1109,6 +1117,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         customC.sort()
         setCustomCategories(customC)
       }
+      await notificationScheduler(allCues)
       Animated.timing(fadeAnimation, {
         toValue: 1,
         duration: 150,
