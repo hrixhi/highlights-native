@@ -67,6 +67,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   // Login Validation
   const [emailValidError, setEmailValidError] = useState("");
 
+    // UPDATE CUE DATA
+    const [updateCueData, setUpdateCueData] = useState<any>({})
+    const [updatedCueCount, setUpdatedCueCount] = useState(0);
+
   const enterValidEmailError = PreferredLanguageText('enterValidEmail')
   const alreadyUnsubscribedAlert = PreferredLanguageText('alreadyUnsubscribed')
   const checkConnectionAlert = PreferredLanguageText('checkConnection')
@@ -80,6 +84,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   const leaveChannelAlert = PreferredLanguageText('leaveChannel')
   const areYouSureUnsubscribeAlert = PreferredLanguageText('areYouSureUnsubscribe')
   const keepContentAndUnsubscribeAlert = PreferredLanguageText('keepContentAndUnsubscribe')
+
+  const enterTitleAlert = PreferredLanguageText("enterTitle");
 
   const onDimensionsChange = useCallback(({ w, s }: any) => {
     // window.location.reload()
@@ -558,6 +564,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
 
     } catch (e) {
+      console.log("Printing error from notification schedular")
       console.log(e)
     }
 
@@ -1146,19 +1153,190 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     })
   }, [email])
 
-  const closeModal = useCallback(() => {
-    setCueId('')
-    setModalType('')
-    setCreatedBy('')
-    setChannelFilterChoice('All')
-    if (modalType === 'Create' || modalType === 'Update') {
-      fadeAnimation.setValue(0)
-      if (modalType === 'Update' && filterChoice === 'All-Channels') {
-        setChannelId('')
-      }
+
+  const handleCueUpdate = async () => {
+
+    if (!updateCueData) return;
+
+    const unmodified = cues ? cues[updateModalKey][updateModalIndex] : {};
+
+    if (!unmodified) return;
+
+    const score = unmodified.score ? unmodified.score : 0
+    
+    const {
+        cue,
+        customCategory,
+        shuffle,
+        frequency,
+        starred,
+        color,
+        playChannelCueIndef,
+        notify,
+        submissionImported,
+        submission,
+        deadline,
+        gradeWeight,
+        submitted,
+        submissionTitle,
+        submissionType,
+        submissionUrl,
+        isQuiz,
+        endPlayAt,
+        solutions,
+        initiatedAt
+    } = updateCueData;
+
+    if (submissionImported && submissionTitle === "") {
+        Alert(enterTitleAlert);
+        return;
     }
-    loadData(true)
-  }, [sheetRef, fadeAnimation, modalType, filterChoice])
+
+    let subCues: any = {};
+        try {
+            const value = await AsyncStorage.getItem("cues");
+            if (value) {
+                subCues = JSON.parse(value);
+            }
+        } catch (e) {}
+        if (subCues[updateModalKey].length === 0) {
+            return;
+        }
+        let saveCue = "";
+        if (isQuiz) {
+            saveCue = JSON.stringify({
+                solutions,
+                initiatedAt
+            });
+        } else if (submissionImported) {
+            const obj = {
+                type: submissionType,
+                url: submissionUrl,
+                title: submissionTitle
+            };
+            saveCue = JSON.stringify(obj);
+        } else {
+            saveCue = cue;
+        }
+        const submittedNow = new Date();
+        subCues[updateModalKey][updateModalIndex] = {
+            _id: unmodified._id,
+            cue: saveCue,
+            date: unmodified.date,
+            color,
+            shuffle,
+            frequency,
+            starred,
+            customCategory,
+            // Channel controls
+            channelId: unmodified.channelId,
+            createdBy: unmodified.createdBy,
+            endPlayAt:
+                notify && (shuffle || !playChannelCueIndef)
+                    ? endPlayAt.toISOString()
+                    : "",
+            channelName: unmodified.channelName,
+            original: unmodified.original,
+            status: "read",
+            graded: unmodified.graded,
+            gradeWeight,
+            submission,
+            unreadThreads: unmodified.unreadThreads,
+            score,
+            comment: unmodified.comment,
+            submittedAt: submitted
+                ? submittedNow.toISOString()
+                : unmodified.submittedAt,
+            deadline: submission ? deadline.toISOString() : ""
+        };
+        const stringifiedCues = JSON.stringify(subCues);
+        await AsyncStorage.setItem("cues", stringifiedCues);
+        reloadCueListAfterUpdate();
+
+  }
+
+  const closeModal = useCallback(() => {
+
+    // Update Cue locally
+    if (modalType === 'Update') {
+
+        if (updatedCueCount < 2) {
+            setUpdatedCueCount(0)
+            setUpdateCueData({})
+            setCueId('')
+            setModalType('')
+            setCreatedBy('')
+            setChannelFilterChoice('All')
+           
+            fadeAnimation.setValue(0)
+            if (filterChoice === 'All-Channels') {
+                setChannelId('')
+            }
+            return;
+        }
+
+        Alert(
+            "Do you want to save your changes?",
+            "",
+            [
+                
+                {
+                    text: "Yes", onPress: () => {
+
+                        handleCueUpdate().then(() => {
+                            setUpdatedCueCount(0);
+                            setUpdateCueData({})
+                            setCueId('')
+                            setModalType('')
+                            setCreatedBy('')
+                            setChannelFilterChoice('All')
+                            
+                            fadeAnimation.setValue(0)
+                            if (filterChoice === 'All-Channels') {
+                                setChannelId('')
+                            }
+                            loadData(true)
+                        })
+
+                      
+                    }
+                    
+                },
+                {
+                    text: "No", style: "cancel", onPress: () => { 
+                        setUpdatedCueCount(0);
+                        setUpdateCueData({})
+                        setCueId('')
+                        setModalType('')
+                        setCreatedBy('')
+                        setChannelFilterChoice('All')
+                        
+                        fadeAnimation.setValue(0)
+                        if (filterChoice === 'All-Channels') {
+                            setChannelId('')
+                        }
+
+                     }
+                },
+            ]
+        )
+     
+    } else {
+        setCueId('')
+        setModalType('')
+        setCreatedBy('')
+        setChannelFilterChoice('All')
+        if (modalType === 'Create' || modalType === 'Update') {
+          fadeAnimation.setValue(0)
+          if (modalType === 'Update' && filterChoice === 'All-Channels') {
+            setChannelId('')
+          }
+        }
+        loadData(true)
+    }
+  
+    
+  }, [sheetRef, fadeAnimation, modalType, filterChoice, updateCueData])
 
   const modalContent = modalType === 'Menu' ? <Menu
     sleepFrom={sleepFrom}
@@ -1200,6 +1378,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         channelCreatedBy={channelCreatedBy}
         reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
         reopenUpdateWindow={reopenUpdateWindow}
+        updateCueData={(update: any) => {
+            setUpdatedCueCount(updatedCueCount + 1); 
+            setUpdateCueData(update);
+        }}
       />
         :
         (modalType === 'Walkthrough' ? <Walkthrough
