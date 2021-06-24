@@ -206,8 +206,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                         display: "flex",
                         flexDirection: "column",
                         backgroundColor: "white",
-                        borderTopLeftRadius: 30,
-                        borderTopRightRadius: 30
+                        borderTopLeftRadius: 0,
+                        borderTopRightRadius: 0
                     }}
                 >
                     <ActivityIndicator color={"#a2a2aa"} />

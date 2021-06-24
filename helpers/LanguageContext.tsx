@@ -95,7 +95,7 @@ const EnglishBank: { [key: string]: string } = {
     noPastMeetings: 'No past meetings.',
     attendedBy: 'Attended By',
     past: 'Past', // Done
-    options: 'Options', // Done
+    options: 'Details', // Done
     option: 'Option', // Done
     comments: 'Comments', // Done
     noComments: 'No comments.', // Done
@@ -654,7 +654,7 @@ export function LanguageSelect() {
                     <Picker
                         style={styles.picker}
                         itemStyle={{
-                            fontSize: 17
+                            fontSize: 16
                         }}
                         selectedValue={language}
                         onValueChange={(lang: any) => {

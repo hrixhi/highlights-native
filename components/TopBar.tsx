@@ -386,8 +386,8 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         flexDirection: 'column',
         display: 'flex',
         paddingHorizontal: 20,
-        borderTopRightRadius: 30,
-        borderTopLeftRadius: 30,
+        borderTopRightRadius: 0,
+        borderTopLeftRadius: 0,
         paddingTop: 20
     },
     badge: {

@@ -606,8 +606,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         width: "100%",
         height: windowHeight,
         backgroundColor: "white",
-        borderTopRightRadius: 30,
-        borderTopLeftRadius: 30
+        borderTopRightRadius: 0,
+        borderTopLeftRadius: 0
       }}
     >
       <Text
@@ -633,7 +633,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           ellipsizeMode="tail"
           style={{
             color: "#a2a2aa",
-            fontSize: 17,
+            fontSize: 16,
             flex: 1,
             lineHeight: 25,
             paddingLeft: 10
@@ -646,7 +646,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           ellipsizeMode="tail"
           style={{
             color: "black",
-            fontSize: 17,
+            fontSize: 16,
             flex: 1,
             lineHeight: 25,
             // paddingHorizontal: 0,
@@ -701,8 +701,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             width: "100%",
             height: "100%",
             paddingHorizontal: 20,
-            borderTopRightRadius: 30,
-            borderTopLeftRadius: 30
+            borderTopRightRadius: 0,
+            borderTopLeftRadius: 0
           }}
         >
           <View
@@ -930,7 +930,7 @@ const styles: any = StyleSheet.create({
   },
   timePicker: {
     width: 125,
-    fontSize: 17,
+    fontSize: 16,
     height: 45,
     color: "#202025",
     borderRadius: 10,

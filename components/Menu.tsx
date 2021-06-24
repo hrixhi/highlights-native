@@ -21,8 +21,8 @@ const Menu: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     return (
         <View style={{
             width: '100%', height: '100%', backgroundColor: 'white',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
             paddingTop: 200
         }}>
             <Animated.View style={{

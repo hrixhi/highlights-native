@@ -1329,8 +1329,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
         width: "100%",
         // height: Dimensions.get('window').height - 85,
         backgroundColor: "white",
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         paddingHorizontal: 20
         // overflow: 'hidden'
       }}
@@ -1340,8 +1340,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
           width: "100%",
           backgroundColor: "white",
           opacity: 1,
-          borderTopLeftRadius: 30,
-          borderTopRightRadius: 30
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0
           // height: '100%'
         }}
       >
@@ -1471,7 +1471,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 ellipsizeMode="tail"
                 style={{
                   color: "#a2a2aa",
-                  fontSize: 17,
+                  fontSize: 16,
                   paddingBottom: 20
                 }}
               >
@@ -1772,8 +1772,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             <View
               style={{
                 flexDirection: "row",
-                marginRight: "10%",
-                marginLeft: "10%",
+                marginRight: 0,
+                marginLeft: 0,
                 backgroundColor: "#fff"
               }}
             >
@@ -2260,14 +2260,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             <Text
               style={{
                 color: "#a2a2aa",
-                fontSize: 17,
+                fontSize: 14,
                 paddingRight: 10
               }}
             >
               {PreferredLanguageText("options")}
             </Text>
             <Ionicons
-              size={17}
+              size={14}
               name={
                 showOptions
                   ? "caret-down-circle-outline"
@@ -3321,7 +3321,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                         <Picker
                           style={styles.picker}
                           itemStyle={{
-                            fontSize: 17
+                            fontSize: 16
                           }}
                           selectedValue={frequency}
                           onValueChange={(
@@ -3663,7 +3663,7 @@ export default UpdateControls;
 const styles: any = StyleSheet.create({
   timePicker: {
     width: 125,
-    fontSize: 17,
+    fontSize: 16,
     height: 45,
     color: "#202025",
     borderRadius: 10,

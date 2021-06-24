@@ -503,8 +503,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         width: '100%',
         // height: windowHeight,
         backgroundColor: '#fff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         padding: 20,
     }}>
         {/* <Animated.View style={{
@@ -512,8 +512,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             backgroundColor: 'white',
             padding: 20,
             opacity: modalAnimation,
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
             alignSelf: 'center'
         }}> */}
         <Text style={{ width: '100%', textAlign: 'center', paddingTop: 5 }}>
@@ -522,7 +522,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
             <Text
                 ellipsizeMode="tail"
-                style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
+                style={{ color: '#a2a2aa', fontSize: 16, flex: 1, lineHeight: 25 }}>
                 {PreferredLanguageText('classroom')}
             </Text>
         </View>
@@ -641,7 +641,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 !isOwner ? <View style={{ borderColor: '#f4f4f6', borderTopWidth: 1, backgroundColor: '#fff' }}>
                     <Text
                         ellipsizeMode="tail"
-                        style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, marginVertical: 25 }}>
+                        style={{ color: '#a2a2aa', fontSize: 16, lineHeight: 25, marginVertical: 25 }}>
                         {PreferredLanguageText('upcoming')}
                     </Text>
                 </View> : null
@@ -658,7 +658,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%', backgroundColor: '#fff' }}>
                             <Text
                                 ellipsizeMode="tail"
-                                style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
+                                style={{ color: '#a2a2aa', fontSize: 16, lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
                                 {PreferredLanguageText('upcoming')}
                             </Text>
                         </View>
@@ -774,7 +774,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         }}>
                                         <Text style={{
                                             width: '100%',
-                                            fontSize: 17,
+                                            fontSize: 16,
                                             color: '#a2a2aa'
                                         }}>
                                             <Ionicons name='chevron-back-outline' size={17} color={'#202025'} style={{ marginRight: 10 }} /> Attended By
@@ -782,7 +782,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     </TouchableOpacity>
                                     : <Text
                                         ellipsizeMode="tail"
-                                        style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, marginVertical: 25 }}>
+                                        style={{ color: '#a2a2aa', fontSize: 16, lineHeight: 25, marginVertical: 25 }}>
                                         {PreferredLanguageText('past')}
                                     </Text>}
                         </View>
@@ -879,8 +879,8 @@ const styles = StyleSheet.create({
         width: Dimensions.get('window').width < 1024 ? '100%' : '60%',
         paddingHorizontal: Dimensions.get('window').width < 1024 ? 20 : 0,
         alignSelf: 'center',
-        borderTopRightRadius: 30,
-        borderTopLeftRadius: 30,
+        borderTopRightRadius: 0,
+        borderTopLeftRadius: 0,
         paddingBottom: Platform.OS === "android" ? 50 : 0
     },
     text: {
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
     },
     timePicker: {
         width: 125,
-        fontSize: 17,
+        fontSize: 16,
         height: 45,
         color: '#202025',
         borderRadius: 10,

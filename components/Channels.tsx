@@ -20,8 +20,8 @@ const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any)
         <View style={{
             width: '100%',
             backgroundColor: 'white',
-            borderTopRightRadius: 30,
-            borderTopLeftRadius: 30,
+            borderTopRightRadius: 0,
+            borderTopLeftRadius: 0,
             height: Dimensions.get('window').width < 1024 ? (Dimensions.get('window').height - 85) : Dimensions.get('window').height,
         }}
             onTouchMove={() => Keyboard.dismiss()}

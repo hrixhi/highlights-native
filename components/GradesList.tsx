@@ -18,8 +18,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             width: '100%',
             height: '100%',
             paddingHorizontal: 20,
-            borderTopRightRadius: 30,
-            borderTopLeftRadius: 30
+            borderTopRightRadius: 0,
+            borderTopLeftRadius: 0
         }}>
             <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25 }}>
                 {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
@@ -27,7 +27,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
                 <Text
                     ellipsizeMode="tail"
-                    style={{ color: '#a2a2aa', fontSize: 17, flex: 1, lineHeight: 25 }}>
+                    style={{ color: '#a2a2aa', fontSize: 16, flex: 1, lineHeight: 25 }}>
                     {PreferredLanguageText('grades')}
                 </Text>
             </View>

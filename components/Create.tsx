@@ -882,8 +882,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             width: '100%',
             height: Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height,
             backgroundColor: 'white',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
             paddingHorizontal: 15,
             overflow: 'hidden'
         }}>
@@ -906,7 +906,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                         >
                             <Text style={{
-                                color: '#a2a2aa', fontSize: 17,
+                                color: '#a2a2aa', fontSize: 16,
                                 paddingBottom: 20,
                             }}>
                                 {PreferredLanguageText('new')}
@@ -1674,7 +1674,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         <Picker
                                                             style={styles.picker}
                                                             itemStyle={{
-                                                                fontSize: 17
+                                                                fontSize: 16
                                                             }}
                                                             selectedValue={frequency}
                                                             onValueChange={(itemValue: any) =>
@@ -1840,7 +1840,7 @@ export default Create
 const styles: any = StyleSheet.create({
     timePicker: {
         width: 125,
-        fontSize: 17,
+        fontSize: 16,
         height: 45,
         color: '#202025',
         borderRadius: 10,
