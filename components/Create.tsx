@@ -29,9 +29,8 @@ import { WebView } from 'react-native-webview';
 import MultiSelect from 'react-native-multiple-select';
 import { TimePicker } from 'react-native-simple-time-picker';
 import { PreferredLanguageText } from "../helpers/LanguageContext";
-import { Video } from 'expo-av';
+// import { Video } from 'expo-av';
 import moment from 'moment';
-
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -51,7 +50,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [playChannelCueIndef, setPlayChannelCueIndef] = useState(true)
     const colorChoices: any[] = ['#d91d56', '#ED7D22', '#F8D41F', '#B8D41F', '#53BE6D'].reverse()
     const [modalAnimation] = useState(new Animated.Value(0))
-    const now = new Date()
+    // const now = new Date()
     const [reloadEditorKey, setReloadEditorKey] = useState(Math.random())
     let RichText: any = useRef()
     const [height, setHeight] = useState(100)
@@ -67,7 +66,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [showImportOptions, setShowImportOptions] = useState(false)
     const [selected, setSelected] = useState<any[]>([])
     const [subscribers, setSubscribers] = useState<any[]>([])
-    const [expandMenu, setExpandMenu] = useState(false)
+    // const [expandMenu, setExpandMenu] = useState(false)
     // options to create Quiz
     const [isQuiz, setIsQuiz] = useState(false)
     const [problems, setProblems] = useState<any[]>([])
@@ -87,10 +86,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [webviewKey, setWebviewKey] = useState(Math.random())
     useEffect(() => {
         setTimeout(() => {
-            if (Platform.OS === "android") {
-                setWebviewKey(Math.random())
-            }
-        }, 500);
+            // if (Platform.OS === "android") {
+            setWebviewKey(Math.random())
+            // }
+        }, 3000);
     }, [imported])
 
     // Alerts
@@ -615,10 +614,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setDuration({ hours, minutes, seconds });
     }, [])
 
-    const handleCursorPosition = (scrollY: any) => {
-        // Positioning scroll bar
-        RichText.current.scrollTo({ y: scrollY - 60, animated: true });
-    }
+    // const handleCursorPosition = (scrollY: any) => {
+    //     // Positioning scroll bar
+    //     RichText.current.scrollTo({ y: scrollY - 60, animated: true });
+    // }
 
     const renderDeadlineDateTimePicker = () => {
         return (<View style={{ backgroundColor: '#fff' }}>
@@ -977,7 +976,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={16} color={tintColor} />,
                                 ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={16} color={tintColor} onPress={() => {
                                     console.log("Clear button pressed")
-                                    clearAll()}} />,
+                                    clearAll()
+                                }} />,
                                 ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
                             }}
                             onPressAddImage={galleryCallback}
@@ -995,7 +995,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     }}
                                 />
                         }
-                        </View> :
+                    </View> :
                         <View
                         >
                             <RichToolbar
@@ -1027,7 +1027,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             actions.undo,
                                             "clear",
                                             actions.redo,
-                                            
+
                                         ]}
                                 iconMap={{
                                     ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={18} color={tintColor} />,
@@ -1243,48 +1243,48 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     null)
                         }
                         <RichEditor
-                                        key={reloadEditorKey.toString()}
-                                        containerStyle={{
-                                            height,
-                                            backgroundColor: '#f4f4f6',
-                                            padding: 3,
-                                            paddingTop: 5,
-                                            paddingBottom: 10,
-                                            borderRadius: 8,
-                                            display:(isQuiz || imported) ? "none" : "flex"
-                                        }}
-                                        ref={RichText}
-                                        style={{
-                                            width: '100%',
-                                            backgroundColor: '#f4f4f6',
-                                            borderRadius: 8,
-                                            minHeight: 475,
-                                            display:(isQuiz || imported) ? "none" : "flex"
-                                        }}
-                                        editorStyle={{
-                                            backgroundColor: '#f4f4f6',
-                                            placeholderColor: '#a2a2aa',
-                                            color: '#202025',
-                                            contentCSSText: 'font-size: 16px;',
+                            key={reloadEditorKey.toString()}
+                            containerStyle={{
+                                height,
+                                backgroundColor: '#f4f4f6',
+                                padding: 3,
+                                paddingTop: 5,
+                                paddingBottom: 10,
+                                borderRadius: 8,
+                                display: (isQuiz || imported) ? "none" : "flex"
+                            }}
+                            ref={RichText}
+                            style={{
+                                width: '100%',
+                                backgroundColor: '#f4f4f6',
+                                borderRadius: 8,
+                                minHeight: 475,
+                                display: (isQuiz || imported) ? "none" : "flex"
+                            }}
+                            editorStyle={{
+                                backgroundColor: '#f4f4f6',
+                                placeholderColor: '#a2a2aa',
+                                color: '#202025',
+                                contentCSSText: 'font-size: 16px;',
 
-                                        }}
-                                        initialContentHTML={cue}
-                                        onScroll={() => Keyboard.dismiss()}
-                                        placeholder={PreferredLanguageText('title')}
-                                        onChange={(text) => {
-                                            const modifedText = text.split('&amp;').join('&')
-                                            setCue(modifedText)
-                                        }}
-                                        onHeightChange={handleHeightChange}
-                                        onBlur={() => Keyboard.dismiss()}
-                                        allowFileAccess={true}
-                                        allowFileAccessFromFileURLs={true}
-                                        allowUniversalAccessFromFileURLs={true}
-                                        allowsFullscreenVideo={true}
-                                        allowsInlineMediaPlayback={true}
-                                        allowsLinkPreview={true}
-                                        allowsBackForwardNavigationGestures={true}
-                                    />
+                            }}
+                            initialContentHTML={cue}
+                            onScroll={() => Keyboard.dismiss()}
+                            placeholder={PreferredLanguageText('title')}
+                            onChange={(text) => {
+                                const modifedText = text.split('&amp;').join('&')
+                                setCue(modifedText)
+                            }}
+                            onHeightChange={handleHeightChange}
+                            onBlur={() => Keyboard.dismiss()}
+                            allowFileAccess={true}
+                            allowFileAccessFromFileURLs={true}
+                            allowUniversalAccessFromFileURLs={true}
+                            allowsFullscreenVideo={true}
+                            allowsInlineMediaPlayback={true}
+                            allowsLinkPreview={true}
+                            allowsBackForwardNavigationGestures={true}
+                        />
 
                     </View>
                     <View style={{ flex: 1, display: 'flex', flexDirection: 'column', marginHorizontal: 10 }}>
@@ -1590,7 +1590,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 borderRadius: 9,
                                                                 backgroundColor: colorChoices[i]
                                                             }}
-                                                            
+
                                                         />
                                                     </TouchableOpacity>
                                                 })
