@@ -164,7 +164,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   // Alerts
   const [webviewKey, setWebviewKey] = useState(Math.random());
   useEffect(() => {
-    setTimeout(async () => {
+    setTimeout(() => {
       setWebviewKey(Math.random());
     }, 3500);
   }, [showOriginal, submissionImported]);
@@ -1453,12 +1453,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <Text
                 style={{
                   textAlign: "right",
-                  lineHeight: 30
+                  lineHeight: 34,
+                  marginTop: 20
                 }}
               >
                 <Ionicons
                   name="bookmark"
-                  size={25}
+                  size={34}
                   color={starred ? "#d91d56" : "#a2a2aa"}
                 />
               </Text>
@@ -1490,12 +1491,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <Text
                 style={{
                   textAlign: "right",
-                  lineHeight: 30
+                  lineHeight: 34,
+                  marginTop: 20
                 }}
               >
                 <Ionicons
                   name="bookmark"
-                  size={25}
+                  size={34}
                   color={starred ? "#d91d56" : "#a2a2aa"}
                 />
               </Text>
@@ -1655,7 +1657,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <Text
                 style={{
                   color: "#a2a2aa",
-                  fontSize: 13,
+                  fontSize: 12,
                   lineHeight: 30,
                   textAlign: "right",
                   paddingRight: 10,
@@ -2113,14 +2115,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   padding: 3,
                   paddingTop: 5,
                   paddingBottom: 10,
-                  borderRadius: 8
+                  borderRadius: 15
                 }}
                 ref={RichText}
                 style={{
                   width: "100%",
                   backgroundColor: "#f4f4f6",
                   minHeight: 475,
-                  borderRadius: 8
+                  borderRadius: 15
                 }}
                 editorStyle={{
                   backgroundColor: "#f4f4f6",
@@ -2204,7 +2206,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   padding: 3,
                   paddingTop: 5,
                   paddingBottom: 10,
-                  borderRadius: 8
+                  borderRadius: 15
                 }}
                 disabled={
                   props.cue.submittedAt &&
@@ -2215,7 +2217,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   width: "100%",
                   backgroundColor: "#f4f4f6",
                   minHeight: 475,
-                  borderRadius: 8
+                  borderRadius: 15
                 }}
                 editorStyle={{
                   backgroundColor: "#f4f4f6",
@@ -2253,7 +2255,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "#fff",
               borderTopColor: "#f4f4f6",
               borderTopWidth: 1,
-              paddingTop: 40,
+              marginTop: 20,
+              paddingTop: 20,
               paddingBottom: 20
             }}
           >
@@ -2315,9 +2318,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                           color: "#a2a2aa"
                         }}
                       >
-                        {PreferredLanguageText(
+                        {/* {PreferredLanguageText(
                           "channel"
-                        )}
+                        )} */}
+                        Shared with
                         {/* <Ionicons
                                                         name='school-outline' size={20} color={'#a2a2aa'} /> */}
                       </Text>
@@ -2814,7 +2818,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                     >
                       <View
                         style={{
-                          width: "85%",
+                          width: "90%",
                           backgroundColor: "white"
                         }}
                       >
@@ -2915,7 +2919,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                       </View>
                       <View
                         style={{
-                          width: "15%",
+                          width: "10%",
                           backgroundColor: "white"
                         }}
                       >
@@ -3031,9 +3035,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                                     height: 12,
                                     borderRadius: 9,
                                     backgroundColor:
-                                      colorChoices[
-                                      i
-                                      ]
+                                      colorChoices[i]
                                   }}
                                 />
                               </TouchableOpacity>
@@ -3081,7 +3083,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                     >
                       <View
                         style={{
-                          width: "85%",
+                          width: "90%",
                           backgroundColor: "white"
                         }}
                       >
@@ -3139,7 +3141,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                       </View>
                       <View
                         style={{
-                          width: "15%",
+                          width: "10%",
                           backgroundColor: "white"
                         }}
                       >
@@ -3208,11 +3210,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                       color: "#a2a2aa"
                     }}
                   >
-                    <Ionicons
-                      name="notifications-outline"
-                      size={20}
-                      color={"#a2a2aa"}
-                    />
+                    Reminder
                   </Text>
                 </View>
                 <View
@@ -3269,11 +3267,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                         color: "#a2a2aa"
                       }}
                     >
-                      <Ionicons
-                        name="repeat-outline"
-                        size={20}
-                        color={"#a2a2aa"}
-                      />
+                      Recurring
                     </Text>
                   </View>
                   <View
@@ -3427,11 +3421,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                         color: "#a2a2aa"
                       }}
                     >
-                      <Ionicons
-                        name="infinite-outline"
-                        size={20}
-                        color={"#a2a2aa"}
-                      />
+                      Indefinite
                     </Text>
                   </View>
                   <View

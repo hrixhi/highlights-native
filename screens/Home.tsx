@@ -1700,8 +1700,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         height: Dimensions.get('window').height,
         flexDirection: 'column',
         backgroundColor: '#fff',
-        borderRightColor: '#f4f4f6',
-        borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 2
+        borderRightColor: '#dddddd',
+        borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 1
       }}>
         <TopBar
           key={JSON.stringify(channelFilterChoice) + JSON.stringify(filteredCues) + JSON.stringify(modalType) + JSON.stringify(filterChoice)}
@@ -1752,6 +1752,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           setChannelId={(id: string) => setChannelId(id)}
           setChannelCreatedBy={(id: any) => setChannelCreatedBy(id)}
           setChannelFilterChoice={(choice: string) => setChannelFilterChoice(choice)}
+          openWalkthrough={() => openModal('Walkthrough')}
+          openCalendar={() => openModal('Calendar')}
         />
       </View >
       {
@@ -1785,9 +1787,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
               Dimensions.get('window').width < 1024 ?
                 <TouchableOpacity
                   onPress={() => closeModal()}
-                  style={{ height: 45, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#a2a2aa', width: '100%' }}>
+                  style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#dddddd', width: '100%' }}>
                   <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#a2a2aa' }}>
-                    <Ionicons name='chevron-back-outline' size={15} /> {PreferredLanguageText('back')}
+                    <Ionicons name='chevron-back-outline' size={15} />{PreferredLanguageText('back')}
                   </Text>
                 </TouchableOpacity> :
                 <View style={{ backgroundColor: '#fff', height: 0 }} />
@@ -1809,7 +1811,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomWidth: 0,
     borderColor: '#f4f4f6',
-    height: Platform.OS === "ios" ? '70%' : '70%',
+    height: '67%',
     width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,
     justifyContent: "center",
   },

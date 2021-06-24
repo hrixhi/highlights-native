@@ -48,6 +48,17 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             {props.cue.customCategory}
                         </Text>
                         {
+                            props.cue.submission ? <Text style={styleObject.date}>
+                                <Ionicons name='share-outline' size={9} color={props.cue.submittedAt && props.cue.submittedAt !== '' ? ('#3B64F8') : (colorScheme === 'light' ? '#a2a2aa' : '#333333')} style={{ marginRight: 10 }} />
+                            </Text> : null
+                        }
+                        {
+                            props.cue.frequency !== '0' ?
+                                <Text style={styleObject.date}>
+                                    <Ionicons name='notifications-outline' size={9} color={colorScheme === 'light' ? '#a2a2aa' : '#333333'} />
+                                </Text> : null
+                        }
+                        {
                             props.cue.graded ? <Text style={{
                                 fontSize: 9,
                                 color: '#3B64F8',
@@ -71,7 +82,7 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 </Text>
                                 : null
                         }
-                        <View style={{
+                        {/* <View style={{
                             ...styleObject.date,
                             display: 'flex',
                             flexDirection: 'row',
@@ -94,7 +105,7 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         <Ionicons name='notifications-outline' size={11} color={colorScheme === 'light' ? '#a2a2aa' : '#333333'} />
                                     </Text> : null
                             }
-                        </View>
+                        </View> */}
                     </View>
                     <Text
                         ellipsizeMode={'tail'}
@@ -121,21 +132,21 @@ export default React.memo(Card, (prev, next) => {
 const styles: any = (colorScheme: any, channelId: any) => StyleSheet.create({
     swiper: {
         height: '100%',
-        borderRadius: 20,
+        borderRadius: 15,
         overflow: 'hidden',
         maxWidth: 400
     },
     card: {
         maxWidth: 400,
         height: '100%',
-        borderRadius: 20,
+        borderRadius: 15,
         padding: 13,
         backgroundColor: colorScheme === 'light' ? '#f4f4f6' : '#a2a2aa',
     },
     flipCard: {
         height: '100%',
         width: '100%',
-        borderRadius: 20,
+        borderRadius: 15,
         padding: 13,
         color: '#f4f4f6',
         backgroundColor: colorScheme === 'light' ? '#202025' : 'white'
@@ -173,11 +184,12 @@ const styles: any = (colorScheme: any, channelId: any) => StyleSheet.create({
     date: {
         fontSize: 9,
         color: colorScheme === 'light' ? '#a2a2aa' : '#333333',
-        marginLeft: 10
+        marginLeft: 10,
+        lineHeight: 10
     },
     title: {
         fontFamily: 'inter',
-        fontSize: 14,
+        fontSize: 13,
         // ,
         height: '44%',
         width: '100%',
@@ -188,7 +200,7 @@ const styles: any = (colorScheme: any, channelId: any) => StyleSheet.create({
         color: colorScheme === 'light' ? '#fff' : '#202025',
         backgroundColor: colorScheme === 'light' ? '#202025' : '#fff',
         fontFamily: 'inter',
-        fontSize: 14,
+        fontSize: 13,
         // ,
         height: '44%',
         width: '100%',

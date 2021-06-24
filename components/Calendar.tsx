@@ -563,7 +563,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           marginBottom: 10,
           marginRight: 10,
           padding: 10,
-          borderRadius: 20
+          borderRadius: 15
         }}
         onPress={() => {
           if (item.dateId !== "channel") {
@@ -636,7 +636,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             fontSize: 16,
             flex: 1,
             lineHeight: 25,
-            paddingLeft: 10
+            paddingLeft: 20
             // paddingHorizontal: 20
           }}
         >
@@ -721,7 +721,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             >
               <TextInput
                 value={title}
-                placeholder={PreferredLanguageText("event")}
+                placeholder={PreferredLanguageText("new") + ' ' + PreferredLanguageText("event")}
                 onChangeText={val => setTitle(val)}
                 placeholderTextColor={"#a2a2aa"}
                 required={true}
@@ -821,7 +821,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               }}
             >
               <Text style={{ fontSize: 12, color: "#a2a2aa" }}>
-                {PreferredLanguageText("channel")}
+                Share with
                 {/* <Ionicons
                                                 name='school-outline' size={20} color={'#a2a2aa'} /> */}
               </Text>

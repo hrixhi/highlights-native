@@ -252,249 +252,249 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const renderStartDateTimePicker = () => {
         return (<View style={{ backgroundColor: 'white' }}>
             {Platform.OS === "ios" ? <DateTimePicker
-                                style={styles.timePicker}
-                                value={start}
-                                mode={'date'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    const currentDate: any = selectedDate;
-                                    setStart(currentDate)
-                                }}
-                            /> : null}
-                            {Platform.OS === "android" && showStartDateAndroid ? <DateTimePicker
-                                style={styles.timePicker}
-                                value={start}
-                                mode={'date'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    if (!selectedDate) return;
-                                    const currentDate: any = selectedDate;
-                                    setShowStartDateAndroid(false)
-                                    setStart(currentDate)
-                                }}
-                            /> : null}
-                            {Platform.OS === "android" ? <View style={{
-                                width: '100%',
-                                flexDirection: 'row',
-                                marginTop: 12,
-                                backgroundColor: '#fff',
-                                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-                            }}>
+                style={styles.timePicker}
+                value={start}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    const currentDate: any = selectedDate;
+                    setStart(currentDate)
+                }}
+            /> : null}
+            {Platform.OS === "android" && showStartDateAndroid ? <DateTimePicker
+                style={styles.timePicker}
+                value={start}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowStartDateAndroid(false)
+                    setStart(currentDate)
+                }}
+            /> : null}
+            {Platform.OS === "android" ? <View style={{
+                width: '100%',
+                flexDirection: 'row',
+                marginTop: 12,
+                backgroundColor: '#fff',
+                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+            }}>
 
-                            <TouchableOpacity
-                                style={{
-                                    backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    borderRadius: 15,
-                                    marginBottom: 10,
-                                    width: 150, justifyContent: 'center', flexDirection: 'row',
-                                }}
-                                onPress={() => {
-                                    setShowStartDateAndroid(true)
-                                    setShowStartTimeAndroid(false)
-                                    setShowEndDateAndroid(false)
-                                    setShowEndTimeAndroid(false)
-                                }}
-                            >
-                                <Text style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#202025',
-                                    overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
-                                }}>
-                                    Set Date
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={{
-                                    backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    borderRadius: 15,
-                                    width: 150, justifyContent: 'center', flexDirection: 'row',
-                                }}
-                                onPress={() => {
-                                    setShowStartDateAndroid(false)
-                                    setShowStartTimeAndroid(true)
-                                    setShowEndDateAndroid(false)
-                                    setShowEndTimeAndroid(false)
-                                }}
-                            >
-                                <Text style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#202025',
-                                    overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
-                                }}>
-                                    Set Time
-                                </Text>
-                            </TouchableOpacity>
-                            </View> : null}
-                            <View style={{ height: 10, backgroundColor: 'white' }} />
-                            {Platform.OS === "ios" && <DateTimePicker
-                                style={styles.timePicker}
-                                value={start}
-                                mode={'time'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    if (!selectedDate) return;
-                                    const currentDate: any = selectedDate;
-                                    setStart(currentDate)
-                                }}
-                            />}
-                            {Platform.OS === "android" && showStartTimeAndroid && <DateTimePicker
-                                style={styles.timePicker}
-                                value={start}
-                                mode={'time'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    if (!selectedDate) return;
-                                    const currentDate: any = selectedDate;
-                                    setShowStartTimeAndroid(false)
-                                    setStart(currentDate)
-                                }}
-                            />}
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        height: 35,
+                        borderRadius: 15,
+                        marginBottom: 10,
+                        width: 150, justifyContent: 'center', flexDirection: 'row',
+                    }}
+                    onPress={() => {
+                        setShowStartDateAndroid(true)
+                        setShowStartTimeAndroid(false)
+                        setShowEndDateAndroid(false)
+                        setShowEndTimeAndroid(false)
+                    }}
+                >
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 35,
+                        color: '#202025',
+                        overflow: 'hidden',
+                        fontSize: 10,
+                        // backgroundColor: '#f4f4f6',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        width: 150,
+                        borderRadius: 15,
+                    }}>
+                        Set Date
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        height: 35,
+                        borderRadius: 15,
+                        width: 150, justifyContent: 'center', flexDirection: 'row',
+                    }}
+                    onPress={() => {
+                        setShowStartDateAndroid(false)
+                        setShowStartTimeAndroid(true)
+                        setShowEndDateAndroid(false)
+                        setShowEndTimeAndroid(false)
+                    }}
+                >
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 35,
+                        color: '#202025',
+                        overflow: 'hidden',
+                        fontSize: 10,
+                        // backgroundColor: '#f4f4f6',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        width: 150,
+                        borderRadius: 15,
+                    }}>
+                        Set Time
+                    </Text>
+                </TouchableOpacity>
+            </View> : null}
+            <View style={{ height: 10, backgroundColor: 'white' }} />
+            {Platform.OS === "ios" && <DateTimePicker
+                style={styles.timePicker}
+                value={start}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setStart(currentDate)
+                }}
+            />}
+            {Platform.OS === "android" && showStartTimeAndroid && <DateTimePicker
+                style={styles.timePicker}
+                value={start}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowStartTimeAndroid(false)
+                    setStart(currentDate)
+                }}
+            />}
         </View>)
     }
 
     const renderEndDateTimePicker = () => {
         return (<View style={{ backgroundColor: 'white' }}>
             {Platform.OS === "ios" && <DateTimePicker
-                                style={styles.timePicker}
-                                value={end}
-                                mode={'date'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    if (!selectedDate) return;
-                                    const currentDate: any = selectedDate;
-                                    setEnd(currentDate)
-                                }}
-                            /> }
-                            {Platform.OS === "android" && showEndDateAndroid ? <DateTimePicker
-                                style={styles.timePicker}
-                                value={end}
-                                mode={'date'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    if (!selectedDate) return;
-                                    const currentDate: any = selectedDate;
-                                    setShowEndDateAndroid(false)
-                                    setEnd(currentDate)
-                                }}
-                            /> : null}
-                            {Platform.OS === "android" ? <View style={{
-                                width: '100%',
-                                flexDirection: 'row',
-                                marginTop: 12,
-                                backgroundColor: '#fff',
-                                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-                            }}>
+                style={styles.timePicker}
+                value={end}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setEnd(currentDate)
+                }}
+            />}
+            {Platform.OS === "android" && showEndDateAndroid ? <DateTimePicker
+                style={styles.timePicker}
+                value={end}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowEndDateAndroid(false)
+                    setEnd(currentDate)
+                }}
+            /> : null}
+            {Platform.OS === "android" ? <View style={{
+                width: '100%',
+                flexDirection: 'row',
+                marginTop: 12,
+                backgroundColor: '#fff',
+                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+            }}>
 
-                            <TouchableOpacity
-                                style={{
-                                    backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
-                                    marginBottom: 10,
-                                    justifyContent: 'center', flexDirection: 'row',
-                                }}
-                                onPress={() => { 
-                                    setShowStartDateAndroid(false)
-                                    setShowStartTimeAndroid(false)
-                                    setShowEndDateAndroid(true)
-                                    setShowEndTimeAndroid(false)
-                                }}
-                            >
-                                <Text style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#202025',
-                                    overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
-                                }}>
-                                    Set Date
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={{
-                                    backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    borderRadius: 15,
-                                    width: 150, justifyContent: 'center', flexDirection: 'row',
-                                }}
-                                onPress={() => { 
-                                    setShowStartDateAndroid(false)
-                                    setShowStartTimeAndroid(false)
-                                    setShowEndDateAndroid(false)
-                                    setShowEndTimeAndroid(true)
-                                }}
-                            >
-                                <Text style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#202025',
-                                    overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
-                                }}>
-                                    Set Time
-                                </Text>
-                            </TouchableOpacity>
-                            </View> : null}
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        height: 35,
+                        width: 150,
+                        borderRadius: 15,
+                        marginBottom: 10,
+                        justifyContent: 'center', flexDirection: 'row',
+                    }}
+                    onPress={() => {
+                        setShowStartDateAndroid(false)
+                        setShowStartTimeAndroid(false)
+                        setShowEndDateAndroid(true)
+                        setShowEndTimeAndroid(false)
+                    }}
+                >
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 35,
+                        color: '#202025',
+                        overflow: 'hidden',
+                        fontSize: 10,
+                        // backgroundColor: '#f4f4f6',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        width: 150,
+                        borderRadius: 15,
+                    }}>
+                        Set Date
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        height: 35,
+                        borderRadius: 15,
+                        width: 150, justifyContent: 'center', flexDirection: 'row',
+                    }}
+                    onPress={() => {
+                        setShowStartDateAndroid(false)
+                        setShowStartTimeAndroid(false)
+                        setShowEndDateAndroid(false)
+                        setShowEndTimeAndroid(true)
+                    }}
+                >
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 35,
+                        color: '#202025',
+                        overflow: 'hidden',
+                        fontSize: 10,
+                        // backgroundColor: '#f4f4f6',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        width: 150,
+                        borderRadius: 15,
+                    }}>
+                        Set Time
+                    </Text>
+                </TouchableOpacity>
+            </View> : null}
 
-                            <View style={{ height: 10, backgroundColor: 'white' }} />
-                            {Platform.OS === "ios" && <DateTimePicker
-                                style={styles.timePicker}
-                                value={end}
-                                mode={'time'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    if (!selectedDate) return;
-                                    const currentDate: any = selectedDate;
-                                    setEnd(currentDate)
-                                }}
-                            />}
-                            {Platform.OS === "android" && showEndTimeAndroid && <DateTimePicker
-                                style={styles.timePicker}
-                                value={end}
-                                mode={'time'}
-                                textColor={'#202025'}
-                                onChange={(event, selectedDate) => {
-                                    if (!selectedDate) return;
-                                    const currentDate: any = selectedDate;
-                                    setShowEndTimeAndroid(false)
-                                    setEnd(currentDate)
-                                }}
-                            />}
+            <View style={{ height: 10, backgroundColor: 'white' }} />
+            {Platform.OS === "ios" && <DateTimePicker
+                style={styles.timePicker}
+                value={end}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setEnd(currentDate)
+                }}
+            />}
+            {Platform.OS === "android" && showEndTimeAndroid && <DateTimePicker
+                style={styles.timePicker}
+                value={end}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowEndTimeAndroid(false)
+                    setEnd(currentDate)
+                }}
+            />}
         </View>)
     }
 
@@ -526,11 +526,11 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 {PreferredLanguageText('classroom')}
             </Text>
         </View>
-        <View style={{ backgroundColor: 'white', flex: 1 }}>
+        <View style={{ backgroundColor: 'white', flex: 1, marginBottom: 50 }}>
             {
                 isOwner ?
-                    <View style={{ backgroundColor: '#fff',  display: 'flex', flexDirection: 'column', width: '100%'  }}>
-                        <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white',}}>
+                    <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column', width: '100%' }}>
+                        <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white', }}>
                             <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                 {PreferredLanguageText('initiateMeeting')}
                             </Text>
@@ -542,18 +542,24 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             width: '100%',
                             display: 'flex'
                         }}> */}
-                            <Switch
-                                value={meetingOn}
-                                onValueChange={() => updateMeetingStatus()}
-                                style={{ height: 30, marginTop: 10, marginRight: 'auto' }}
-                                trackColor={{
-                                    false: '#f4f4f6',
-                                    true: '#3B64F8'
-                                }}
-                                thumbColor='white'
-                            />
+                        <Switch
+                            value={meetingOn}
+                            onValueChange={() => updateMeetingStatus()}
+                            style={{ height: 30, marginTop: 10, marginRight: 'auto' }}
+                            trackColor={{
+                                false: '#f4f4f6',
+                                true: '#3B64F8'
+                            }}
+                            thumbColor='white'
+                        />
                         {/* </View> */}
                     </View> : null
+            }
+            {
+                isOwner ?
+                    <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10 }}>
+                        Turn on to begin session. Restart switch if you are unable to join the classroom.
+                    </Text> : null
             }
             <TouchableOpacity
                 onPress={async () => {
@@ -586,9 +592,9 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     backgroundColor: 'white',
                     overflow: 'hidden',
                     height: 35,
-                    marginTop: 15,
                     width: '100%', justifyContent: 'center', flexDirection: 'row',
-                    marginBottom: 20
+                    marginBottom: 20,
+                    marginTop: 30
                 }}>
                 <Text style={{
                     overflow: 'hidden',
@@ -607,7 +613,9 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     {PreferredLanguageText('enterClassroom')}
                 </Text>
             </TouchableOpacity>
-
+            <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 10 }}>
+                Enabled only when classroom in session.
+            </Text>
             <TouchableOpacity
                 onPress={async () => {
                     setViewChannelAttendance(true)
@@ -616,9 +624,9 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     backgroundColor: 'white',
                     overflow: 'hidden',
                     height: 35,
-                    marginTop: 15,
+                    marginTop: 30,
                     width: '100%', justifyContent: 'center', flexDirection: 'row',
-                    marginBottom: 100
+                    marginBottom: 30
                 }}>
                 <Text style={{
                     overflow: 'hidden',
@@ -630,13 +638,16 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     paddingHorizontal: 25,
                     fontFamily: 'inter',
                     height: 35,
-                    width: 200,
+                    // width: 200,
                     borderRadius: 15,
                     textTransform: 'uppercase'
                 }}>
                     {PreferredLanguageText('viewAttendance')}
                 </Text>
             </TouchableOpacity>
+            <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 20 }}>
+                Attendances will only be captured for scheduled lectures.
+            </Text>
             {
                 !isOwner ? <View style={{ borderColor: '#f4f4f6', borderTopWidth: 1, backgroundColor: '#fff' }}>
                     <Text
@@ -727,7 +738,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     borderRadius: 15,
                                 }}>
                                     ADD
-                                    </Text>
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View> : null
@@ -778,7 +789,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                             color: '#a2a2aa'
                                         }}>
                                             <Ionicons name='chevron-back-outline' size={17} color={'#202025'} style={{ marginRight: 10 }} /> Attended By
-                                            </Text>
+                                        </Text>
                                     </TouchableOpacity>
                                     : <Text
                                         ellipsizeMode="tail"

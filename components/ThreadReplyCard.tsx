@@ -91,7 +91,7 @@ export default React.memo(ThreadReplyCard, (prev, next) => {
 const styles: any = () => StyleSheet.create({
     card: {
         width: '100%',
-        borderRadius: 20,
+        borderRadius: 15,
         padding: 13,
         paddingBottom: 20,
         backgroundColor: '#f4f4f6'

@@ -103,7 +103,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
             if (res.data.message.create) {
                 props.back()
             } else {
-                 Alert(unableToPostAlert, checkConnectionAlert)
+                Alert(unableToPostAlert, checkConnectionAlert)
             }
         }).catch(err => {
             Alert(somethingWentWrongAlert, checkConnectionAlert)
@@ -265,6 +265,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     : <View style={{
                         width: '100%',
                         minHeight: 100,
+                        maxWidth: 400,
                         backgroundColor: 'white',
                         paddingBottom: 5
                     }}>
@@ -272,7 +273,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             disabled={false}
                             containerStyle={{
                                 backgroundColor: '#f4f4f6',
-                                borderRadius: 8,
+                                borderRadius: 15,
                                 padding: 3,
                                 paddingTop: 5,
                                 paddingBottom: 10,
@@ -282,7 +283,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             style={{
                                 width: '100%',
                                 backgroundColor: '#f4f4f6',
-                                borderRadius: 8,
+                                borderRadius: 15,
                                 minHeight: 100
                             }}
                             editorStyle={{
@@ -318,7 +319,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
                                         <Text style={{ fontSize: 14, color: '#202025' }}>
                                             {PreferredLanguageText('category')}
-                                </Text>
+                                        </Text>
                                     </View>
                                     <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
                                         <View style={{ width: '85%', backgroundColor: 'white' }}>
@@ -343,7 +344,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             }}>
                                                             <Text style={{ color: '#a2a2aa', lineHeight: 20 }}>
                                                                 {PreferredLanguageText('none')}
-                                                    </Text>
+                                                            </Text>
                                                         </TouchableOpacity>
                                                         {
                                                             categories.map((category) => {
@@ -401,7 +402,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 }}
                                                 thumbColor='white'
                                                 style={{ marginRight: 'auto' }}
-                                                // style={{ height: 20 }}
+                                            // style={{ height: 20 }}
                                             />
                                         </View>
                                 )
@@ -421,7 +422,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 }}
                                 thumbColor='white'
                                 style={{ marginRight: 'auto' }}
-                                // style={{ height: 20 }}
+                            // style={{ height: 20 }}
                             />
                         </View>
                     </View>
@@ -430,12 +431,14 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 <View
                     style={{
                         flex: 1,
+                        maxWidth: 400,
                         backgroundColor: 'white',
                         justifyContent: 'center',
                         display: 'flex',
                         flexDirection: 'row',
-                        height: 50,
+                        height: 60,
                         paddingTop: 10,
+                        marginBottom: 20
                     }}>
                     <TouchableOpacity
                         onPress={() => {
@@ -491,7 +494,8 @@ const styles: any = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         paddingBottom: 4,
-        backgroundColor: 'white'
+        backgroundColor: 'white',
+        maxWidth: 400,
     },
     colorBar: {
         width: '100%',

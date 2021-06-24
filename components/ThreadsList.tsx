@@ -399,8 +399,8 @@ const styleObject = () => {
         },
         col: {
             width: '100%',
-            height: 100,
-            paddingBottom: 20,
+            height: 80,
+            marginBottom: 10,
             backgroundColor: 'white'
         },
         colorBar: {

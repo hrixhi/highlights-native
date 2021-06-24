@@ -73,14 +73,14 @@ const styles: any = (status: any) => StyleSheet.create({
     swiper: {
         height: '100%',
         width: '100%',
-        borderRadius: 20,
+        borderRadius: 15,
         overflow: 'hidden',
         backgroundColor: 'white'
     },
     card: {
         height: '100%',
         width: '100%',
-        borderRadius: 20,
+        borderRadius: 15,
         padding: 13,
         backgroundColor: '#f4f4f6',
     },
@@ -92,20 +92,20 @@ const styles: any = (status: any) => StyleSheet.create({
     },
     titleArrow: {
         fontFamily: 'inter',
-        fontSize: 14,
+        fontSize: 13,
         paddingTop: 5,
         color: '#202025',
         marginLeft: 10
     },
     title: {
         fontFamily: 'inter',
-        fontSize: 14,
+        fontSize: 13,
         width: '100%',
         paddingTop: 5,
         color: '#202025'
     },
     description: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#a2a2aa',
     }
 });

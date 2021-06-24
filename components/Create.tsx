@@ -85,7 +85,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const [webviewKey, setWebviewKey] = useState(Math.random())
     useEffect(() => {
-        setTimeout(async () => {
+        setTimeout(() => {
             // if (Platform.OS === "android") {
             setWebviewKey(Math.random())
             // }
@@ -922,9 +922,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }}>
                         <Text style={{
                             textAlign: 'right',
-                            lineHeight: 30,
+                            lineHeight: 34,
                         }}>
-                            <Ionicons name='bookmark' size={25} color={starred ? '#d91d56' : '#a2a2aa'} />
+                            <Ionicons name='bookmark' size={34} color={starred ? '#d91d56' : '#a2a2aa'} />
                         </Text>
                     </View>
                 </View>
@@ -1072,7 +1072,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             isQuiz ? null :
                                 <Text style={{
                                     color: '#a2a2aa',
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     lineHeight: 30,
                                     textAlign: 'right',
                                     paddingRight: 20,
@@ -1085,7 +1085,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }
                         <Text style={{
                             color: '#a2a2aa',
-                            fontSize: 13,
+                            fontSize: 12,
                             lineHeight: 30,
                             textAlign: 'right',
                             paddingRight: 10,
@@ -1250,14 +1250,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 padding: 3,
                                 paddingTop: 5,
                                 paddingBottom: 10,
-                                borderRadius: 8,
+                                borderRadius: 15,
                                 display: (isQuiz || imported) ? "none" : "flex"
                             }}
                             ref={RichText}
                             style={{
                                 width: '100%',
                                 backgroundColor: '#f4f4f6',
-                                borderRadius: 8,
+                                borderRadius: 15,
                                 minHeight: 475,
                                 display: (isQuiz || imported) ? "none" : "flex"
                             }}
@@ -1293,7 +1293,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6', backgroundColor: 'white' }}>
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                         <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                                            {PreferredLanguageText('channel')}
+                                            {/* {PreferredLanguageText('channel')} */}
+                                            Share With
                                             {/* <Ionicons
                                                 name='school-outline' size={20} color={'#a2a2aa'} /> */}
                                         </Text>
@@ -1603,8 +1604,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <View style={{ width: '100%', paddingTop: 15, flexDirection: width < 768 ? 'column' : 'row', backgroundColor: '#fff' }}>
                             <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
                                 <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
-                                    <Text style={{ fontSize: 15, color: '#a2a2aa' }}>
-                                        <Ionicons name='notifications-outline' size={20} color={'#a2a2aa'} />
+                                    <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                                        Reminder
                                     </Text>
                                 </View>
                                 <View style={{
@@ -1640,8 +1641,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
                                         <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                             <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                                                <Ionicons
-                                                    name='repeat-outline' size={20} color={'#a2a2aa'} />
+                                                Recurring
                                             </Text>
                                         </View>
                                         <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
@@ -1720,8 +1720,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: '#fff' }}>
                                         <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                             <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                                                <Ionicons
-                                                    name='infinite-outline' size={20} color={'#a2a2aa'} />
+                                                Indefinite
                                             </Text>
                                         </View>
                                         <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>

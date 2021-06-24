@@ -79,7 +79,8 @@ export default React.memo(MessageCard, (prev, next) => {
 const styles: any = () => StyleSheet.create({
     card: {
         width: '100%',
-        borderRadius: 20,
+        maxWidth: 400,
+        borderRadius: 15,
         padding: 13,
         paddingBottom: 20,
         backgroundColor: '#f4f4f6'
@@ -89,6 +90,7 @@ const styles: any = () => StyleSheet.create({
         flexDirection: 'column',
         flex: 1,
         backgroundColor: '#f4f4f6',
+        fontWeight: 'bold'
     },
     dateContainer: {
         fontSize: 10,

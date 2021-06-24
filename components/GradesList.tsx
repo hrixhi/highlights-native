@@ -63,7 +63,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     cues.map((cue: any, col: number) => {
                                         const { title } = htmlStringParser(cue.cue)
                                         return <View style={styles.col} key={col.toString()}>
-                                            <Text style={{ textAlign: 'center', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
+                                            <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025', fontFamily: 'inter' }}>
                                                 {title}
                                             </Text>
                                             <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
@@ -75,7 +75,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 {
                                     cues.length === 0 ? null :
                                         <View style={styles.col} key={'total'}>
-                                            <Text style={{ textAlign: 'center', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
+                                            <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025', fontFamily: 'inter' }}>
                                                 {PreferredLanguageText('total')}
                                                     </Text>
                                             <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
@@ -109,7 +109,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
                                             return <View style={styles.row} key={row}>
                                                 <View style={styles.col} >
-                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
+                                                    <Text style={{ textAlign: 'left', fontSize: 12, color: '#202025', fontFamily: 'inter' }}>
                                                         {score.fullName}
                                                     </Text>
                                                     <Text style={{ textAlign: 'left', fontSize: 12, color: '#202025' }}>

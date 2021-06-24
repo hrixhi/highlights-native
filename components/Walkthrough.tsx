@@ -52,28 +52,22 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     borderTopRightRadius: 0,
                     alignSelf: 'center'
                 }}>
-                
+
                 <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 20 }}>
                     {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                 </Text>
-                <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 50 }}>
+                <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 50, paddingLeft: 20 }}>
                     <Text
-                        style={{
-                            paddingTop: 25,
-                            flex: 1,
-                            textAlign: 'center',
-                            fontSize: 25,
-                            color: "#202025",
-                            fontFamily: "inter",
-                        }}
-                        ellipsizeMode="tail">
+                        style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, fontWeight: 'bold' }}
+                    >
                         Walkthrough
                     </Text>
                 </View>
                 <View
                     style={{
-                        paddingHorizontal: Dimensions.get('window').width < 768 ? 0 : 100,
+                        // paddingHorizontal: 15,
                         width: '100%',
+                        maxWidth: 400,
                         height: 50,
                         backgroundColor: 'white',
                         flexDirection: 'row'
@@ -113,8 +107,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 textAlign: 'left',
                                 paddingTop: 7
                             }}>
-                                Instructor
-                        </Text>
+                                For Instructor
+                            </Text>
                         </View>
                     </View>
                 </View>

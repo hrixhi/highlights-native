@@ -55,7 +55,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [quizSolutions, setQuizSolutions] = useState<any>({});
 
     useEffect(() => {
-        setTimeout(async () => {
+        setTimeout(() => {
             setWebviewKey(Math.random())
         }, 3500);
     }, [imported])
@@ -357,16 +357,16 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         const { initiatedAt, solutions } = quizSolutions;
 
-        return (<View style={{ backgroundColor: 'white', width: '100%', marginLeft: '5%',  display: 'flex', flexDirection: 'column' }}>
+        return (<View style={{ backgroundColor: 'white', width: '100%', marginLeft: '5%', display: 'flex', flexDirection: 'column' }}>
             {initiatedAt ? <Text style={{ width: '100%', height: 15, paddingBottom: 25, color: 'black' }}>
-                Quiz initiated at { moment(new Date(initiatedAt)).format('MMMM Do YYYY, h:mm a')}
-            </Text> : 
+                Quiz initiated at {moment(new Date(initiatedAt)).format('MMMM Do YYYY, h:mm a')}
+            </Text> :
                 null
             }
             <Text style={{ width: '100%', height: 15, color: 'black', marginTop: 20, paddingBottom: 25, fontWeight: 'bold' }}>
                 Selected Answers:
             </Text>
-            <View style={{ backgroundColor: 'white', marginVertical: 20, display: 'flex', flexDirection: "column"}}>
+            <View style={{ backgroundColor: 'white', marginVertical: 20, display: 'flex', flexDirection: "column" }}>
                 {solutions.map((problem: any, index: number) => {
 
                     const answers: any[] = problem.selected;
@@ -374,13 +374,13 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     const selectedAnswers = answers.filter(ans => ans.isSelected);
 
                     let selectedAnswersString: any[] = []
-                    
+
                     selectedAnswers.forEach((ans: any) => {
                         selectedAnswersString.push(ans.options)
                     })
 
                     return (<Text style={{ width: '100%', height: 15, marginTop: 10, paddingBottom: 25, color: 'black' }}>
-                        Problem {index + 1} : {selectedAnswersString.join(", ")} 
+                        Problem {index + 1} : {selectedAnswersString.join(", ")}
                     </Text>)
                 })}
             </View>
@@ -432,7 +432,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'column', backgroundColor: '#fff', height: !props.cueId && !showAddUsers && !showNewGroup ? 70 : 50, alignItems: 'center' }}>
                             {
-                                loadedChatWithUser !== {} ?
+                                loadedChatWithUser && loadedChatWithUser !== {} && !showNewGroup && !showAddUsers ?
                                     <View style={{ paddingHorizontal: 20, backgroundColor: '#fff' }}>
                                         <Text style={{ color: '#202025', marginBottom: 10 }}>
                                             {loadedChatWithUser.displayName}
@@ -744,7 +744,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         keyboardDismissMode={'on-drag'}
                                         // style={{ flex: 1, paddingTop: 12 }}
                                         style={{ backgroundColor: 'white' }}
-                                        >
+                                    >
                                         <View style={{
                                             width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center',
                                             backgroundColor: 'white'
@@ -817,8 +817,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             {PreferredLanguageText('viewSubmission')}
                                         </Text>
                                         {
-                                            imported  ?
-                                                <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%',}}>
+                                            imported ?
+                                                <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%', }}>
                                                     <TextInput
                                                         editable={false}
                                                         value={title}
@@ -831,7 +831,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         }
                                         {
                                             isQuiz && Object.keys(quizSolutions).length > 0 ?
-                                            renderQuizSubmissions() : null
+                                                renderQuizSubmissions() : null
                                         }
                                         {
                                             !imported && !isQuiz ?
@@ -843,13 +843,13 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         padding: 3,
                                                         paddingTop: 5,
                                                         paddingBottom: 10,
-                                                        borderRadius: 8,
+                                                        borderRadius: 15,
                                                     }}
                                                     ref={RichText}
                                                     style={{
                                                         width: '100%',
                                                         backgroundColor: '#f4f4f6',
-                                                        borderRadius: 8,
+                                                        borderRadius: 15,
                                                         minHeight: 450
                                                     }}
                                                     editorStyle={{
@@ -933,7 +933,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     <Text
                                                         style={{
                                                             color: '#a2a2aa',
-                                                            // lineHeight: 20
+                                                            lineHeight: 20
                                                         }}>
                                                         {PreferredLanguageText(categoriesLanguageMap[category])}
                                                     </Text>
@@ -1062,7 +1062,7 @@ const styleObject = () => {
         col: {
             width: '100%',
             height: 80,
-            marginBottom: 20,
+            marginBottom: 10,
             // flex: 1,
             backgroundColor: 'white'
         },

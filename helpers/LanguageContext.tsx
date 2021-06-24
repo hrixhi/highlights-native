@@ -36,9 +36,9 @@ const EnglishBank: { [key: string]: string } = {
     myCues: 'My Cues', // Done
     category: "Category", // Done
     priority: "Priority", // Done
-    remindEvery: "Remind every", // Done
-    remindOn: "Remind on", // Done
-    remindTill: "Remind Till", // Done
+    remindEvery: "Once every ", // Done
+    remindOn: "", // Done
+    remindTill: "Ends at ", // Done
     save: "Save", // Done
     share: "Share", // Done
     channel: "Channel", // Done
@@ -76,14 +76,14 @@ const EnglishBank: { [key: string]: string } = {
     atleast8char: 'At least 8 characters, 1 uppercase letter, 1 number & 1 symbol', // Done
     confirmNewPassword: "Confirm New Password", // Done
     logout: "Logout", // Done
-    enrolmentPassword: "Enrollment password",
-    backUp: 'Back up', // Done
+    enrolmentPassword: "Enrolment password",
+    backUp: 'Sign Up', // Done
     createAccount: 'Create an account to save your work to the cloud.', // Done
-    signUp: 'Sign up', // Done
-    classroom: 'Classroom',
-    initiateMeeting: 'Initiate meeting & allow participants',
+    signUp: 'Sign Up', // Done
+    classroom: 'Lectures',
+    initiateMeeting: 'Active',
     enterClassroom: 'Enter Classroom', // Done
-    upcoming: 'Upcoming', // DOne
+    upcoming: 'Schedule', // DOne
     start: 'Start', // Done
     end: 'End', // Done
     noMeeting: 'No meetings scheduled', // Done
@@ -110,7 +110,7 @@ const EnglishBank: { [key: string]: string } = {
     signupToSubmit: 'Signup to submit', // Done
     private: 'Private', // Done
     post: 'Post', // Done
-    anonymous: 'anonymous', // Done
+    anonymous: 'Anonymous', // Done
     grades: 'Grades', // Done
     noGraded: 'No graded assignments.',
     total: 'Total', // Done

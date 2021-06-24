@@ -14,7 +14,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const styles: any = styleObject(colorScheme)
     const [loggedIn, setLoggedIn] = useState(false)
     const [userLoaded, setUserLoaded] = useState(false)
-    const color = colorScheme === 'light' ? '#202025' : '#fff'
+    const color = '#a2a2a2'
 
     const getUser = useCallback(async () => {
         const u = await AsyncStorage.getItem('user')
@@ -33,67 +33,90 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     return (
         <View style={styles.bottombar}>
-            <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
-                <TouchableOpacity
-                    style={choice === 'All' ? styles.subOutline : styles.sub}
-                    onPress={() => {
-                        props.handleFilterChange('All')
-                        props.setChannelFilterChoice('All')
-                        props.setChannelId('')
-                    }}>
-                    <Text
-                        style={{
-                            color: colorScheme === 'light' ? (
-                                choice === 'All' ? 'white' : '#202025'
-                            ) : (
-                                choice === 'All' ? '#202025' : 'white'
-                            ),
-                            lineHeight: 22,
-                            fontSize: 14
-                        }}
-                    >
-                        {PreferredLanguageText('myCues')}
-                    </Text>
-                </TouchableOpacity>
-                {
-                    props.subscriptions.map((subscription: any) => {
-                        return <TouchableOpacity
-                            key={Math.random()}
-                            style={choice === subscription.channelName ? styles.subOutline : styles.sub}
+            <View style={styles.colorBar}>
+                <View style={{ flexDirection: 'row', width: '100%' }}>
+                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{ paddingLeft: 15 }}>
+                        <TouchableOpacity
+                            style={choice === 'All' ? styles.subOutline : styles.sub}
                             onPress={() => {
-                                if (subscription.inactive) {
-                                    Alert("Subscription inactivated by channel creator!", "Contact channel creator to gain access.")
-                                    return;
-                                }
+                                props.handleFilterChange('All')
                                 props.setChannelFilterChoice('All')
-                                props.handleFilterChange(subscription.channelName)
-                                props.setChannelId(subscription.channelId)
-                                props.setChannelCreatedBy(subscription.channelCreatedBy)
+                                props.setChannelId('')
                             }}>
-                            <Text style={{
-                                color: colorScheme === 'light' ? (
-                                    choice === subscription.channelName ? 'white' : '#202025'
-                                ) : (
-                                    choice === subscription.channelName ? '#202025' : 'white'
-                                ),
-                                lineHeight: 22,
-                                fontFamily: 'overpass',
-                                fontSize: 13
-                            }}>
-                                {subscription.channelName}
+                            <Text
+                                style={{
+                                    color: colorScheme === 'light' ? (
+                                        choice === 'All' ? 'white' : '#202025'
+                                    ) : (
+                                        choice === 'All' ? '#202025' : 'white'
+                                    ),
+                                    lineHeight: 22,
+                                    fontSize: 14
+                                }}
+                            >
+                                {PreferredLanguageText('myCues')}
                             </Text>
                         </TouchableOpacity>
-                    })
-                }
-            </ScrollView>
-            <View style={{ display: 'flex', flexDirection: 'row', height: '60%' }}>
+                        {
+                            props.subscriptions.map((subscription: any) => {
+                                return <TouchableOpacity
+                                    key={Math.random()}
+                                    style={choice === subscription.channelName ? styles.subOutline : styles.sub}
+                                    onPress={() => {
+                                        if (subscription.inactive) {
+                                            Alert("Subscription inactivated by channel creator!", "Contact channel creator to gain access.")
+                                            return;
+                                        }
+                                        props.setChannelFilterChoice('All')
+                                        props.handleFilterChange(subscription.channelName)
+                                        props.setChannelId(subscription.channelId)
+                                        props.setChannelCreatedBy(subscription.channelCreatedBy)
+                                    }}>
+                                    <Text style={{
+                                        color: colorScheme === 'light' ? (
+                                            choice === subscription.channelName ? 'white' : '#202025'
+                                        ) : (
+                                            choice === subscription.channelName ? '#202025' : 'white'
+                                        ),
+                                        lineHeight: 22,
+                                        fontFamily: 'overpass',
+                                        fontSize: 13
+                                    }}>
+                                        {subscription.channelName}
+                                    </Text>
+                                </TouchableOpacity>
+                            })
+                        }
+                    </ScrollView>
+                </View>
+                <Text style={{ fontSize: 8, color: '#a2a2aa', paddingTop: 7, paddingLeft: 30 }}>
+                    My Channels
+                </Text>
+            </View>
+            <View style={{ display: 'flex', flexDirection: 'row', height: '40%', paddingTop: 7, paddingHorizontal: 5 }}>
                 <View style={styles.icons}>
                     <TouchableOpacity
                         onPress={() => props.openChannels()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 30 }}>
-                            <Ionicons name='book-outline' size={21} color={color} />
+                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
+                            <Ionicons name='radio-outline' size={21} color={color} />
+                        </Text>
+                        <Text style={{ fontSize: 9, color: '#a2a2a2', textAlign: 'center' }}>
+                            Channels
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.icons}>
+                    <TouchableOpacity
+                        onPress={() => props.openCalendar()}
+                        style={styles.center}
+                    >
+                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
+                            <Ionicons name='calendar-outline' size={21} color={color} />
+                        </Text>
+                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                            Planner
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -102,8 +125,8 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onPress={() => props.openCreate()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 30 }}>
-                            <Ionicons name='add-circle' size={30} color={color} />
+                        <Text style={{ textAlign: 'center', lineHeight: 35, marginTop: 0 }}>
+                            <Ionicons name='add-circle' size={35} color={colorScheme === 'light' ? '#202025' : '#fff'} />
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -112,13 +135,28 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onPress={() => props.openProfile()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 30 }}>
+                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
                             <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={21} color={color} />
                         </Text>
-                        {
-                            !loggedIn && userLoaded ?
-                                <View style={styles.badge} /> : null
-                        }
+                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                            {
+                                !loggedIn && userLoaded ?
+                                    'Sign Up' : 'Profile'
+                            }
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.icons}>
+                    <TouchableOpacity
+                        onPress={() => props.openWalkthrough()}
+                        style={styles.center}
+                    >
+                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
+                            <Ionicons name='help-circle-outline' size={21} color={color} />
+                        </Text>
+                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                            Help
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -130,18 +168,21 @@ export default BottomBar
 
 const styleObject: any = (colorScheme: any) => StyleSheet.create({
     bottombar: {
-        height: Platform.OS === "ios" ? '15%' : "15%",
+        height: "18%",
         width: '100%',
         display: 'flex',
-        paddingHorizontal: 20,
-        paddingBottom: Platform.OS === "ios" ? 15 : 5
+        // paddingHorizontal: 20,
+        paddingBottom: 10,
+        borderTopWidth: 1,
+        borderColor: colorScheme !== 'light' ? '#a2a2aa' : '#dddddd'
     },
     icons: {
-        width: '33.33%',
+        width: '20%',
         display: 'flex',
         justifyContent: 'center',
         flexDirection: 'column',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        textAlign: 'center'
     },
     defaultFont: {
         fontFamily: 'system font'
@@ -149,13 +190,14 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
     center: {
         width: '100%',
         justifyContent: 'center',
-        display: 'flex'
+        display: 'flex',
+        textAlign: 'center'
     },
     colorBar: {
         width: '98.5%',
-        height: '40%',
-        flexDirection: 'row',
-        paddingTop: 10
+        height: '47%',
+        // flexDirection: 'row',
+        paddingTop: 15
     },
     iconContainer: {
         width: '20%',

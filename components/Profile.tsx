@@ -31,7 +31,7 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 backgroundColor: 'white',
                 alignSelf: 'center'
             }}>
-                <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 20 }}>
+                <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 40 }}>
                     {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                 </Text>
                 <ProfileControls

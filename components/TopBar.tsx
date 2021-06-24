@@ -28,52 +28,52 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const editChannelInfo = useCallback(() => {
 
-    
-        if (Platform.OS === "ios") { 
-            
-            Alert.prompt('Update Name', "", (name) => {
-            if (!name || name === '') {
-                alert("Enter channel name.")
-                return;
-            }
-            Alert.prompt('Update Password', 'Leave blank for public access.', (password) => {
-                const server = fetchAPI("")
-                server.query({
-                    query: doesChannelNameExist,
-                    variables: {
-                        name
-                    }
-                }).then(res => {
-                    if (res.data && (res.data.channel.doesChannelNameExist !== true || name.trim() === props.filterChoice.trim())) {
-                        server.mutate({
-                            mutation: updateChannel,
-                            variables: {
-                                name: name.trim(),
-                                password,
-                                channelId: props.channelId
-                            }
-                        }).then(res => {
-                            if (res.data && res.data.channel.update) {
-                                props.loadData()
-                                alert("Channel updated!")
-                            } else {
-                                alert("Something went wrong.")
-                            }
-                        }).catch(err => {
-                            alert("Something went wrong.")
-                        })
-                    } else {
-                        alert("Channel name in use.")
-                    }
-                }).catch(err => {
-                    alert("Something went wrong.")
-                })
-            })
-        }, undefined, props.filterChoice)
 
-    } else {
-        setShowResetNamePromptAndroid(true)
-    }
+        if (Platform.OS === "ios") {
+
+            Alert.prompt('Update Name', "", (name) => {
+                if (!name || name === '') {
+                    alert("Enter channel name.")
+                    return;
+                }
+                Alert.prompt('Update Password', 'Leave blank for public access.', (password) => {
+                    const server = fetchAPI("")
+                    server.query({
+                        query: doesChannelNameExist,
+                        variables: {
+                            name
+                        }
+                    }).then(res => {
+                        if (res.data && (res.data.channel.doesChannelNameExist !== true || name.trim() === props.filterChoice.trim())) {
+                            server.mutate({
+                                mutation: updateChannel,
+                                variables: {
+                                    name: name.trim(),
+                                    password,
+                                    channelId: props.channelId
+                                }
+                            }).then(res => {
+                                if (res.data && res.data.channel.update) {
+                                    props.loadData()
+                                    alert("Channel updated!")
+                                } else {
+                                    alert("Something went wrong.")
+                                }
+                            }).catch(err => {
+                                alert("Something went wrong.")
+                            })
+                        } else {
+                            alert("Channel name in use.")
+                        }
+                    }).catch(err => {
+                        alert("Something went wrong.")
+                    })
+                })
+            }, undefined, props.filterChoice)
+
+        } else {
+            setShowResetNamePromptAndroid(true)
+        }
 
     }, [props.filterChoice, props.loadData])
 
@@ -148,11 +148,11 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 placeholder="Enter new channel name"
                 defaultValue=""
                 visible={showResetNamePromptAndroid}
-                onCancel={ () => {
+                onCancel={() => {
                     setShowResetNamePromptAndroid(false);
                     setResetChannelName('');
                 }}
-                onSubmit={ (value: any) => {
+                onSubmit={(value: any) => {
                     if (!value) {
                         // Show prompt here
                         alert("Enter channel name")
@@ -173,8 +173,8 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 onCancel={() => {
                     setShowResetNamePromptAndroid(false);
                 }}
-                onSubmit={ (password: any) => {
-                    
+                onSubmit={(password: any) => {
+
                     const server = fetchAPI("")
                     server.query({
                         query: doesChannelNameExist,
@@ -212,17 +212,16 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 }
                 }
             />
-
-
-            <View style={{ width: '80%', height: Dimensions.get('window').height * 0.15 * 0.22, alignSelf: 'center' }} />
-            <View style={{ width: '100%', height: Dimensions.get('window').height * 0.15 * 0.78 }}>
+            <View style={{ width: '80%', height: Dimensions.get('window').height * 0.17 * 0.15, alignSelf: 'center' }} />
+            <View style={{ width: '100%', height: Dimensions.get('window').height * 0.83 * 0.15 }}>
                 <View style={{
                     flexDirection: 'row',
-                    display: 'flex'
+                    display: 'flex',
+                    paddingLeft: 20
                 }}>
                     <TouchableOpacity
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
-                        style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025' }}>
+                        style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025', paddingTop: 6 }}>
                         <Image
                             source={colorScheme === 'light' ?
                                 (
@@ -249,7 +248,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }}>
                         {
                             props.channelId !== '' ?
-                                <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
+                                <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', paddingTop: 4 }}>
                                     <TouchableOpacity
                                         style={{ marginRight: 15 }}
                                         onPress={() => props.openMeeting()}>
@@ -260,6 +259,9 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             meetingOn ?
                                                 <View style={styles.badge} /> : null
                                         }
+                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                            Lectures
+                                        </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{ marginRight: 15 }}
@@ -271,6 +273,9 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             unreadMessages !== 0 ?
                                                 <View style={styles.badge} /> : null
                                         }
+                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                            Inbox
+                                        </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{ marginRight: 15 }}
@@ -282,12 +287,8 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             unreadDiscussionThreads !== 0 ?
                                                 <View style={styles.badge} /> : null
                                         }
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={{ marginRight: 15 }}
-                                        onPress={() => props.openCalendar()}>
-                                        <Text style={styles.channelText}>
-                                            <Ionicons name='calendar-outline' size={20} color={'#a2a2aa'} />
+                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                            Discussion
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -296,52 +297,51 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         <Text style={styles.channelText}>
                                             <Ionicons name='stats-chart-outline' size={19} color={'#a2a2aa'} />
                                         </Text>
+                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                            Grades
+                                        </Text>
                                     </TouchableOpacity>
                                     {
                                         isOwner ?
                                             <TouchableOpacity
-                                                style={{ marginRight: 15 }}
+                                                style={{ marginRight: 20 }}
                                                 onPress={() => editChannelInfo()}>
                                                 <Text style={styles.channelText}>
-                                                    <Ionicons name='hammer-outline' size={19} color={'#a2a2aa'} />
+                                                    <Ionicons name='settings-outline' size={19} color={'#a2a2aa'} />
+                                                </Text>
+                                                <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                                    Settings
                                                 </Text>
                                             </TouchableOpacity> : null
                                     }
-                                    <TouchableOpacity
-                                        onPress={() => props.openWalkthrough()}
-                                        style={{ marginRight: 5 }}
-                                    >
-                                        <Text style={styles.channelText}>
-                                            <Ionicons name='help-circle-outline' size={21} color={'#a2a2aa'} />
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View> :
-                                <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
-                                    <TouchableOpacity
-                                        style={{ marginRight: 15 }}
-                                        onPress={() => props.openCalendar()}>
-                                        <Text style={styles.channelText}>
-                                            <Ionicons name='calendar-outline' size={20} color={'#a2a2aa'} />
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => props.openWalkthrough()}
-                                        style={{ marginRight: 5 }}
-                                    >
-                                        <Text style={styles.channelText}>
-                                            <Ionicons name='help-circle-outline' size={21} color={'#a2a2aa'} />
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
+                                </View> : <View style={{ height: 35 }} />
+                            // <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
+                            //     <TouchableOpacity
+                            //         style={{ marginRight: 15 }}
+                            //         onPress={() => props.openCalendar()}>
+                            //         <Text style={styles.channelText}>
+                            //             <Ionicons name='calendar-outline' size={20} color={'#a2a2aa'} />
+                            //         </Text>
+                            //     </TouchableOpacity>
+                            //     <TouchableOpacity
+                            //         onPress={() => props.openWalkthrough()}
+                            //         style={{ marginRight: 5 }}
+                            //     >
+                            //         <Text style={styles.channelText}>
+                            //             <Ionicons name='help-circle-outline' size={21} color={'#a2a2aa'} />
+                            //         </Text>
+                            //     </TouchableOpacity>
+                            // </View>
                         }
                     </View>
                 </View>
                 <View
                     key={JSON.stringify(cues) + JSON.stringify(filterChoice)}
-                    style={{ width: '100%', height: '55%', paddingTop: 10 }}>
+                    style={{ width: '100%', height: '55%', paddingTop: 15 }}>
                     <ScrollView style={{
                         width: '98.5%',
-                        paddingTop: 5
+                        paddingTop: 5,
+                        paddingLeft: 20
                     }} horizontal={true}
                         showsHorizontalScrollIndicator={false}
                     >
@@ -352,7 +352,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{ color: '#a2a2aa', lineHeight: 20 }}
                             >
                                 All
-                                            </Text>
+                            </Text>
                         </TouchableOpacity>
                         {
                             channelCategories.map((category: string) => {
@@ -385,7 +385,7 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         width: '100%',
         flexDirection: 'column',
         display: 'flex',
-        paddingHorizontal: 20,
+        // paddingHorizontal: 20,
         borderTopRightRadius: 0,
         borderTopLeftRadius: 0,
         paddingTop: 20
@@ -395,8 +395,8 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         alignSelf: 'flex-end',
         width: 7,
         height: 7,
-        marginRight: -2,
-        marginTop: -2,
+        marginRight: 4,
+        marginTop: 2,
         borderRadius: 15,
         backgroundColor: '#d91d56',
         textAlign: 'center',
@@ -427,6 +427,7 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
     },
     channelText: {
         // paddingTop: 1
-        lineHeight: 21
+        lineHeight: 21,
+        textAlign: 'center'
     }
 });

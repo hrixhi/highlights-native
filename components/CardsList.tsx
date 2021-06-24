@@ -58,7 +58,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
             height: ((Dimensions.get('window').height) * 0.7) - 2,
             width: '100%',
             paddingTop: 5,
-            paddingHorizontal: 20,
+            paddingHorizontal: 18,
         }}>
             {/* <Animated.View style={{
                 opacity: props.fadeAnimation,
@@ -68,6 +68,9 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 showsVerticalScrollIndicator={false}
                 alwaysBounceVertical={true}
                 horizontal={false}
+                contentContainerStyle={{
+                    paddingBottom: 15
+                }}
             >
                 <RefreshControl
                     enabled={true}
@@ -77,7 +80,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <View style={styles.marginSmall} />
                 {
                     filteredCues.map((cue: any, index: number) => {
-                        return <View style={{ height: 100, paddingBottom: 12 }} key={index}>
+                        return <View style={{ height: 80, marginBottom: 10, maxWidth: 400 }} key={index}>
                             <Card
                                 fadeAnimation={props.fadeAnimation}
                                 updateModal={() => props.openUpdate(
@@ -134,7 +137,7 @@ const styleObject = (channelId: any) => {
     return StyleSheet.create({
         screen: {
             height: '100%',
-            width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : Dimensions.get('window').width * 0.3 - 40
+            width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : Dimensions.get('window').width * 0.3 - 36
         },
         marginSmall: {
             height: 10
