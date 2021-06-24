@@ -55,9 +55,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [quizSolutions, setQuizSolutions] = useState<any>({});
 
     useEffect(() => {
-        setTimeout(() => {
+        setTimeout(async () => {
             setWebviewKey(Math.random())
-        }, 3000);
+        }, 3500);
     }, [imported])
 
     const categoriesLanguageMap: { [label: string]: string } = {

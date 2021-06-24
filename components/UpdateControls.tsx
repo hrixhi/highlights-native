@@ -164,9 +164,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   // Alerts
   const [webviewKey, setWebviewKey] = useState(Math.random());
   useEffect(() => {
-    setTimeout(() => {
+    setTimeout(async () => {
       setWebviewKey(Math.random());
-    }, 3000);
+    }, 3500);
   }, [showOriginal, submissionImported]);
 
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
@@ -1779,7 +1779,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             >
               <View
                 style={{
-                  width: "80%",
+                  width: "70%",
                   alignSelf: "flex-start",
                   backgroundColor: "#fff"
                 }}
@@ -1863,9 +1863,17 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                     marginLeft: 25,
                     marginTop: 20,
                     alignSelf: "flex-start",
-                    backgroundColor: "#fff"
+                    backgroundColor: "#fff",
+                    flexDirection: 'row'
                   }}
                 >
+                  <Ionicons
+                    style={{ marginRight: 25 }}
+                    name="reload-outline"
+                    color="#a2a2aa"
+                    size={20}
+                    onPress={() => setWebviewKey(Math.random())}
+                  />
                   {/* <a download={true} href={url} style={{ textDecoration: 'none' }}> */}
                   <Ionicons
                     name="cloud-download-outline"

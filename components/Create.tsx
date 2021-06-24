@@ -85,11 +85,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const [webviewKey, setWebviewKey] = useState(Math.random())
     useEffect(() => {
-        setTimeout(() => {
+        setTimeout(async () => {
             // if (Platform.OS === "android") {
             setWebviewKey(Math.random())
             // }
-        }, 3000);
+        }, 3500);
     }, [imported])
 
     // Alerts
