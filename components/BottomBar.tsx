@@ -89,7 +89,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }
                     </ScrollView>
                 </View>
-                <Text style={{ fontSize: 8, color: '#a2a2aa', paddingTop: 7, paddingLeft: 30 }}>
+                <Text style={{ fontSize: 9, color: '#a2a2aa', paddingTop: 7, paddingLeft: 30 }}>
                     My Channels
                 </Text>
             </View>
