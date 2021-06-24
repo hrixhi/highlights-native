@@ -155,8 +155,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 error = true;
             }
             let optionFound = false
-            if (problem.options.length === 0) {
-                Alert(mustHaveOneOptionAlert)
+            // if (problem.options.length === 0) {
+            //     Alert(mustHaveOneOptionAlert)
+            //     error = true;
+            // }
+
+            if (problem.options.length < 2) {
+                Alert("Problem must have at least 2 options")
                 error = true;
             }
 
