@@ -80,7 +80,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <View style={styles.marginSmall} />
                 {
                     filteredCues.map((cue: any, index: number) => {
-                        return <View style={{ height: 80, marginBottom: 10, maxWidth: 400 }} key={index}>
+                        return <View style={{ height: 80, marginBottom: 12, maxWidth: 500 }} key={index}>
                             <Card
                                 fadeAnimation={props.fadeAnimation}
                                 updateModal={() => props.openUpdate(
@@ -94,7 +94,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 cue={filteredCues[index]}
                                 channelId={props.channelId}
                             />
-                            {
+                            {/* {
                                 cue.status && (cue.status !== 'read' && cue.status !== 'submitted')
                                     ? <View style={styles.blueBadge}>
                                         <Text style={{ color: 'white', lineHeight: 20, fontSize: 10, textAlign: 'center' }}>
@@ -110,7 +110,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             {cue.unreadThreads}
                                         </Text>
                                     </View> : null
-                            }
+                            } */}
                         </View>
                     })
                 }

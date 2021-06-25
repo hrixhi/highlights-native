@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react'
 import { Text, TouchableOpacity, View } from './Themed'
 import axios from 'axios'
-import { Ionicons } from '@expo/vector-icons'
+// import { Ionicons } from '@expo/vector-icons'
 import { Dimensions } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker';
+import Alert from './Alert'
 
 
 // const mime = require('mime-types')
@@ -23,6 +24,11 @@ const FileUpload: React.FC<any> = (props: any) => {
         let { name, size, uri } = result;
         let nameParts = name.split('.');
         let type = nameParts[nameParts.length - 1];
+        if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
+            Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.')
+            setUploading(false)
+            return
+        }
         const file = {
             name: name,
             size: size,

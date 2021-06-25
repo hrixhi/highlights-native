@@ -1543,18 +1543,18 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 resizeMode={'contain'}
               />
             </View>
-            <Text style={{ fontSize: 22, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 400, textAlign: 'center' }}>
+            <Text style={{ fontSize: 22, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 500, textAlign: 'center' }}>
               {
                 showForgotPassword ? '' : PreferredLanguageText('login')
               }
             </Text>
-            <Text style={{ fontSize: 18, color: '#a2a2aa', fontFamily: 'overpass', paddingBottom: 25, maxWidth: 400, textAlign: 'center' }}>
+            <Text style={{ fontSize: 18, color: '#a2a2aa', fontFamily: 'overpass', paddingBottom: 25, maxWidth: 500, textAlign: 'center' }}>
               {
                 showForgotPassword ? PreferredLanguageText('temporaryPassword') : PreferredLanguageText('continueLeftOff')
               }
             </Text>
             <View style={{
-              maxWidth: 400,
+              maxWidth: 500,
               backgroundColor: 'white',
               justifyContent: 'center',
               paddingTop: 25

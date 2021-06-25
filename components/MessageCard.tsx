@@ -45,7 +45,8 @@ const MessageCard: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         }
                     </Text>
                     <Text style={{
-                        fontSize: 10,
+                        fontSize: 11,
+                        fontWeight: 'bold',
                         color: '#a2a2aa',
                         marginRight: 5,
                         flex: 1,
@@ -79,7 +80,7 @@ export default React.memo(MessageCard, (prev, next) => {
 const styles: any = () => StyleSheet.create({
     card: {
         width: '100%',
-        maxWidth: 400,
+        maxWidth: 500,
         borderRadius: 15,
         padding: 13,
         paddingBottom: 20,

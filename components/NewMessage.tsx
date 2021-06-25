@@ -265,7 +265,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     : <View style={{
                         width: '100%',
                         minHeight: 100,
-                        maxWidth: 400,
+                        maxWidth: 500,
                         backgroundColor: 'white',
                         paddingBottom: 5
                     }}>
@@ -317,7 +317,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             !cueId && !parentId ?
                                 <View style={{ width: '100%', backgroundColor: 'white' }}>
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                        <Text style={{ fontSize: 14, color: '#202025' }}>
+                                        <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                             {PreferredLanguageText('category')}
                                         </Text>
                                     </View>
@@ -389,7 +389,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     parentId ? null :
                                         <View style={{ width: '100%', backgroundColor: 'white' }}>
                                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                                <Text style={{ fontSize: 14, color: '#202025' }}>
+                                                <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                                     {PreferredLanguageText('private')}
                                                 </Text>
                                             </View>
@@ -409,7 +409,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         }
                         <View style={{ width: '100%', backgroundColor: 'white' }}>
                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                <Text style={{ fontSize: 14, color: '#202025' }}>
+                                <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                                     {PreferredLanguageText('anonymous')}
                                 </Text>
                             </View>
@@ -431,7 +431,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 <View
                     style={{
                         flex: 1,
-                        maxWidth: 400,
+                        maxWidth: 500,
                         backgroundColor: 'white',
                         justifyContent: 'center',
                         display: 'flex',
@@ -495,7 +495,7 @@ const styles: any = StyleSheet.create({
         flexDirection: 'row',
         paddingBottom: 4,
         backgroundColor: 'white',
-        maxWidth: 400,
+        maxWidth: 500,
     },
     colorBar: {
         width: '100%',
@@ -538,14 +538,14 @@ const styles: any = StyleSheet.create({
         marginBottom: 20
     },
     all: {
-        fontSize: 15,
+        fontSize: 12,
         color: '#a2a2aa',
         height: 20,
         paddingHorizontal: 10,
         backgroundColor: 'white'
     },
     allOutline: {
-        fontSize: 15,
+        fontSize: 12,
         color: '#a2a2aa',
         height: 22,
         paddingHorizontal: 10,

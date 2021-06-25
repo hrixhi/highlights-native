@@ -27,7 +27,7 @@ const EnglishBank: { [key: string]: string } = {
     reset: "Reset", // Done
     new: "New", // Done,
     newGroup: "New Group",
-    noGroups: "No groups.",
+    noGroups: "No group chats.",
     formula: "Formula", // Done
     hide: "Hide", // Done
     import: "import", // Done
@@ -86,7 +86,7 @@ const EnglishBank: { [key: string]: string } = {
     upcoming: 'Schedule', // DOne
     start: 'Start', // Done
     end: 'End', // Done
-    noMeeting: 'No meetings scheduled', // Done
+    noMeeting: 'No meetings scheduled.', // Done
     noAttendances: 'No attendances', // Done
     attendance: 'Attendance',
     noMessages: 'No messages.',

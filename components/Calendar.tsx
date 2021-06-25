@@ -70,7 +70,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             setChannels(res.data.channel.findByUserId);
           }
         })
-        .catch(err => {});
+        .catch(err => { });
     }
   }, []);
 
@@ -219,7 +219,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
   const renderStartDateTimePicker = () => {
     return (
-      <View style={{ backgroundColor: "#fff"}}>
+      <View style={{ backgroundColor: "#fff" }}>
         {Platform.OS === "ios" ? (
           <DateTimePicker
             style={styles.timePicker}
@@ -363,7 +363,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
   const renderEndDateTimePicker = () => {
     return (
-      <View style={{ backgroundColor: "#fff"}}>
+      <View style={{ backgroundColor: "#fff" }}>
         {Platform.OS === "ios" && (
           <DateTimePicker
             style={styles.timePicker}
@@ -560,7 +560,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           height: 80,
           backgroundColor: "white",
           marginTop: 10,
-          marginBottom: 10,
+          marginBottom: 12,
           marginRight: 10,
           padding: 10,
           borderRadius: 15
@@ -570,16 +570,16 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onDateClick(
               displayTitle,
               moment(new Date(item.start)).format("MMMM Do YYYY, h:mm a") +
-                " to " +
-                moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a"),
+              " to " +
+              moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a"),
               item.dateId
             );
           } else {
             Alert(
               displayTitle,
               moment(new Date(item.start)).format("MMMM Do YYYY, h:mm a") +
-                " to " +
-                moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a")
+              " to " +
+              moment(new Date(item.end)).format("MMMM Do YYYY, h:mm a")
             );
           }
         }}
@@ -740,7 +740,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 {PreferredLanguageText("start")}{" "}
                 {Platform.OS === "android"
                   ? ": " +
-                    moment(new Date(start)).format("MMMM Do YYYY, h:mm a")
+                  moment(new Date(start)).format("MMMM Do YYYY, h:mm a")
                   : null}
               </Text>
               {renderStartDateTimePicker()}
@@ -769,130 +769,133 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               </Text>
               {renderEndDateTimePicker()}
             </View>
-            <View
-              style={{
-                width: Dimensions.get("window").width < 768 ? "100%" : "10%",
-                flexDirection: "row",
-                backgroundColor: "#fff",
-                display: "flex",
-                justifyContent: "center"
-              }}
-            >
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "white",
-                  overflow: "hidden",
-                  height: 35,
-                  marginTop: 15,
-                  borderRadius: 15,
-                  width: "100%",
-                  justifyContent: "center",
-                  flexDirection: "row"
-                }}
-                onPress={() => handleCreate()}
-                disabled={isSubmitDisabled}
-              >
-                <Text
+          </View>
+          {
+            channels.length > 0 ?
+              <View style={{ marginBottom: 40 }}>
+                <View
                   style={{
-                    textAlign: "center",
-                    lineHeight: 35,
-                    color: "#202025",
-                    overflow: "hidden",
-                    fontSize: 12,
-                    backgroundColor: "#f4f4f6",
-                    paddingHorizontal: 25,
-                    fontFamily: "inter",
-                    height: 35,
-                    width: 150,
-                    borderRadius: 15
+                    width: "100%",
+                    paddingBottom: 15,
+                    backgroundColor: "white"
                   }}
                 >
-                  ADD
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={{ marginBottom: 40 }}>
-            <View
-              style={{
-                width: "100%",
-                paddingBottom: 15,
-                backgroundColor: "white"
-              }}
-            >
-              <Text style={{ fontSize: 12, color: "#a2a2aa" }}>
-                Share with
-                {/* <Ionicons
+                  <Text style={{ fontSize: 12, color: "#a2a2aa" }}>
+                    Share with
+                    {/* <Ionicons
                                                 name='school-outline' size={20} color={'#a2a2aa'} /> */}
-              </Text>
-            </View>
-            <View
-              style={{
-                width: "100%",
-                display: "flex",
-                flexDirection: "row",
-                backgroundColor: "white"
-              }}
-            >
-              <View
-                style={{
-                  width: "85%",
-                  backgroundColor: "white",
-                  display: "flex"
-                }}
-              >
-                <ScrollView
-                  style={styles.colorBar}
-                  horizontal={true}
-                  showsHorizontalScrollIndicator={false}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "row",
+                    backgroundColor: "white"
+                  }}
                 >
-                  <TouchableOpacity
-                    style={
-                      channelId === "" ? styles.allOutline : styles.allBlack
-                    }
-                    onPress={() => {
-                      setChannelId("");
+                  <View
+                    style={{
+                      width: "85%",
+                      backgroundColor: "white",
+                      display: "flex"
                     }}
                   >
-                    <Text
-                      style={{
-                        lineHeight: 20,
-                        fontSize: 12,
-                        color: channelId === "" ? "#fff" : "#202025"
-                      }}
+                    <ScrollView
+                      style={styles.colorBar}
+                      horizontal={true}
+                      showsHorizontalScrollIndicator={false}
                     >
-                      {PreferredLanguageText("myCues")}
-                    </Text>
-                  </TouchableOpacity>
-                  {channels.map(channel => {
-                    return (
                       <TouchableOpacity
-                        key={Math.random()}
                         style={
-                          channelId === channel._id
-                            ? styles.allOutline
-                            : styles.allBlack
+                          channelId === "" ? styles.allOutline : styles.allBlack
                         }
                         onPress={() => {
-                          setChannelId(channel._id);
+                          setChannelId("");
                         }}
                       >
                         <Text
                           style={{
                             lineHeight: 20,
                             fontSize: 12,
-                            color:
-                              channelId === channel._id ? "#fff" : "#202025"
+                            color: channelId === "" ? "#fff" : "#202025"
                           }}
                         >
-                          {channel.name}
+                          {PreferredLanguageText("myCues")}
                         </Text>
                       </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            </View>
+                      {channels.map(channel => {
+                        return (
+                          <TouchableOpacity
+                            key={Math.random()}
+                            style={
+                              channelId === channel._id
+                                ? styles.allOutline
+                                : styles.allBlack
+                            }
+                            onPress={() => {
+                              setChannelId(channel._id);
+                            }}
+                          >
+                            <Text
+                              style={{
+                                lineHeight: 20,
+                                fontSize: 12,
+                                color:
+                                  channelId === channel._id ? "#fff" : "#202025"
+                              }}
+                            >
+                              {channel.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                </View>
+              </View> : null
+          }
+          <View
+            style={{
+              width: Dimensions.get("window").width < 768 ? "100%" : "30%",
+              flexDirection: "row",
+              backgroundColor: "#fff",
+              display: "flex",
+              justifyContent: "center"
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                backgroundColor: "white",
+                overflow: "hidden",
+                height: 35,
+                marginTop: 15,
+                borderRadius: 15,
+                width: "100%",
+                justifyContent: "center",
+                flexDirection: "row"
+              }}
+              onPress={() => handleCreate()}
+              disabled={isSubmitDisabled}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  lineHeight: 35,
+                  color: "#202025",
+                  overflow: "hidden",
+                  fontSize: 12,
+                  backgroundColor: "#f4f4f6",
+                  paddingHorizontal: 25,
+                  fontFamily: "inter",
+                  height: 35,
+                  width: 150,
+                  borderRadius: 15
+                }}
+              >
+                ADD
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}

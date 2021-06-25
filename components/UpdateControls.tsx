@@ -1781,7 +1781,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             >
               <View
                 style={{
-                  width: "70%",
+                  width: "65%",
                   alignSelf: "flex-start",
                   backgroundColor: "#fff"
                 }}
@@ -1869,20 +1869,37 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                     flexDirection: 'row'
                   }}
                 >
-                  <Ionicons
-                    style={{ marginRight: 25 }}
-                    name="reload-outline"
-                    color="#a2a2aa"
-                    size={20}
-                    onPress={() => setWebviewKey(Math.random())}
-                  />
-                  {/* <a download={true} href={url} style={{ textDecoration: 'none' }}> */}
-                  <Ionicons
-                    name="cloud-download-outline"
-                    color="#a2a2aa"
-                    size={20}
+                  <TouchableOpacity
+                    style={{ backgroundColor: 'white', marginRight: 20 }}
                     onPress={() => download(true)}
-                  />
+                  >
+                    <Ionicons
+                      style={{ alignSelf: 'center' }}
+                      name="reload-outline"
+                      color="#a2a2aa"
+                      size={20}
+                      onPress={() => setWebviewKey(Math.random())}
+                    />
+                    <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                      Reload
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* <a download={true} href={url} style={{ textDecoration: 'none' }}> */}
+                  <TouchableOpacity
+                    style={{ backgroundColor: 'white' }}
+                    onPress={() => download(true)}
+                  >
+                    <Ionicons
+                      name="cloud-download-outline"
+                      color="#a2a2aa"
+                      size={20}
+                      style={{ alignSelf: 'center' }}
+                    />
+                    <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                      Download
+                    </Text>
+                  </TouchableOpacity>
                   {/* </a> */}
                 </View>
               )}
@@ -1955,12 +1972,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   }}
                 >
                   {/* <a download={true} href={submissionUrl} style={{ textDecoration: 'none' }}> */}
-                  <Ionicons
-                    name="cloud-download-outline"
-                    color="#a2a2aa"
-                    size={20}
-                    onPress={() => download(false)}
-                  />
+                  <TouchableOpacity
+                    style={{ backgroundColor: 'white' }}
+                    onPress={() => download(true)}
+                  >
+                    <Ionicons
+                      name="cloud-download-outline"
+                      color="#a2a2aa"
+                      size={20}
+                      style={{ alignSelf: 'center' }}
+                    />
+                    <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                      Download
+                    </Text>
+                  </TouchableOpacity>
                   {/* </a> */}
                 </View>
               ) : null}
@@ -2298,152 +2323,152 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                       width < 768 ? "column" : "row"
                   }}
                 >
-                  <View
-                    style={{
-                      width:
-                        width < 768 ? "100%" : "33.33%"
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: "100%",
-                        paddingTop: 40,
-                        paddingBottom: 15,
-                        backgroundColor: "white"
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: "#a2a2aa"
-                        }}
-                      >
-                        {/* {PreferredLanguageText(
-                          "channel"
-                        )} */}
-                        Shared with
-                        {/* <Ionicons
-                                                        name='school-outline' size={20} color={'#a2a2aa'} /> */}
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "row",
-                        backgroundColor: "white"
-                      }}
-                    >
+                  {
+                    props.cue.channelId && props.cue.channelId !== '' && isOwner ?
                       <View
                         style={{
-                          width: "100%",
-                          backgroundColor: "white"
+                          width:
+                            width < 768 ? "100%" : "33.33%"
                         }}
                       >
-                        <View style={styles.colorBar}>
-                          <TouchableOpacity
-                            style={
-                              styles.allOutline
-                            }
-                            onPress={() => { }}
-                          >
-                            <Text
-                              style={{
-                                color: "#fff",
-                                lineHeight: 20,
-                                fontSize: 12
-                              }}
-                            >
-                              {
-                                props.cue
-                                  .channelName
-                              }
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </View>
-                    {props.cue.channelId !== "" &&
-                      isOwner ? (
-                      <View
-                        style={{
-                          // height: 350,
-                          flexDirection: "column",
-                          paddingTop: 25,
-                          overflow: "scroll",
-                          backgroundColor: "white"
-                        }}
-                      >
-                        <ScrollView
+                        <View
                           style={{
                             width: "100%",
-                            padding: 5,
-                            backgroundColor: "#fff"
+                            paddingTop: 40,
+                            paddingBottom: 15,
+                            backgroundColor: "white"
                           }}
                         >
-                          <MultiSelect
-                            hideTags={false}
-                            items={subscribers}
-                            uniqueKey="value"
-                            ref={RichText}
-                            styleTextDropdown={{
-                              fontFamily:
-                                "overpass"
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: "#a2a2aa"
                             }}
-                            styleDropdownMenuSubsection={{
-                              height: 50
+                          >
+                            {/* {PreferredLanguageText(
+                          "channel"
+                        )} */}
+                            Shared with
+                            {/* <Ionicons
+                                                        name='school-outline' size={20} color={'#a2a2aa'} /> */}
+                          </Text>
+                        </View>
+                        {/* <View
+                          style={{
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "row",
+                            backgroundColor: "white"
+                          }}
+                        >
+                          {/* <View
+                            style={{
+                              width: "100%",
+                              backgroundColor: "white"
                             }}
-                            styleSelectorContainer={{
-                              height: 250
+                          >
+                            <View style={styles.colorBar}>
+                              <TouchableOpacity
+                                style={
+                                  styles.allOutline
+                                }
+                                onPress={() => { }}
+                              >
+                                <Text
+                                  style={{
+                                    color: "#fff",
+                                    lineHeight: 20,
+                                    fontSize: 12
+                                  }}
+                                >
+                                  {
+                                    props.cue
+                                      .channelName
+                                  }
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View> 
+                      </View> */}
+                        < View
+                          style={{
+                            // height: 350,
+                            flexDirection: "column",
+                            paddingTop: 25,
+                            overflow: "scroll",
+                            backgroundColor: "white"
+                          }}
+                        >
+                          <ScrollView
+                            style={{
+                              width: "100%",
+                              padding: 5,
+                              backgroundColor: "#fff"
                             }}
-                            styleItemsContainer={{
-                              height: 150
-                            }}
-                            styleListContainer={{
-                              height: 250,
-                              backgroundColor:
-                                "#fff"
-                            }}
-                            onSelectedItemsChange={(
-                              sel: any
-                            ) => {
-                              if (
-                                sel.length >
-                                selected.length
-                              ) {
-                                onAddNew(
-                                  sel[
-                                  selected
-                                    .length
-                                  ]
-                                );
-                              } else {
-                                Alert(
-                                  "Cannot un-share!"
-                                );
+                          >
+                            <MultiSelect
+                              hideTags={false}
+                              items={subscribers}
+                              uniqueKey="value"
+                              ref={RichText}
+                              styleTextDropdown={{
+                                fontFamily:
+                                  "overpass"
+                              }}
+                              styleDropdownMenuSubsection={{
+                                height: 50
+                              }}
+                              styleSelectorContainer={{
+                                height: 250
+                              }}
+                              styleItemsContainer={{
+                                height: 150
+                              }}
+                              styleListContainer={{
+                                height: 250,
+                                backgroundColor:
+                                  "#fff"
+                              }}
+                              onSelectedItemsChange={(
+                                sel: any
+                              ) => {
+                                if (
+                                  sel.length >
+                                  selected.length
+                                ) {
+                                  onAddNew(
+                                    sel[
+                                    selected
+                                      .length
+                                    ]
+                                  );
+                                } else {
+                                  Alert(
+                                    "Cannot un-share!"
+                                  );
+                                }
+                              }}
+                              selectedItems={selected}
+                              selectText="Share with"
+                              searchInputPlaceholderText="Search..."
+                              altFontFamily="overpass"
+                              tagRemoveIconColor="#a2a2aa"
+                              tagBorderColor="#a2a2aa"
+                              tagTextColor="#a2a2aa"
+                              selectedItemTextColor="#202025"
+                              selectedItemIconColor="#202025"
+                              itemTextColor="#202025"
+                              displayKey="label"
+                              textColor="#202025"
+                              submitButtonColor={
+                                "#202025"
                               }
-                            }}
-                            selectedItems={selected}
-                            selectText="Share with"
-                            searchInputPlaceholderText="Search..."
-                            altFontFamily="overpass"
-                            tagRemoveIconColor="#a2a2aa"
-                            tagBorderColor="#a2a2aa"
-                            tagTextColor="#a2a2aa"
-                            selectedItemTextColor="#202025"
-                            selectedItemIconColor="#202025"
-                            itemTextColor="#202025"
-                            displayKey="label"
-                            textColor="#202025"
-                            submitButtonColor={
-                              "#202025"
-                            }
-                            submitButtonText="Done"
-                          />
-                        </ScrollView>
-                      </View>
-                    ) : null}
-                  </View>
+                              submitButtonText="Done"
+                            />
+                          </ScrollView>
+                        </View>
+                      </View> : null
+                  }
                   {props.cue.channelId !== "" ? (
                     <View
                       style={{
@@ -3070,7 +3095,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                           color: "#a2a2aa"
                         }}
                       >
-                        {PreferredLanguageText("share")}
+                        {/* {PreferredLanguageText("share")} */}
+                        Forward
                       </Text>
                     </View>
                     <View
@@ -3643,8 +3669,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             </View>
           </Collapsible>
         </ScrollView>
-      </Animated.View>
-    </View>
+      </Animated.View >
+    </View >
   );
 };
 

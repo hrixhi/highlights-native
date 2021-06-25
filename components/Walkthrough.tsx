@@ -46,7 +46,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     width: '100%',
                     height: '100%',
                     backgroundColor: 'white',
-                    padding: 15,
+                    padding: 18,
                     opacity: modalAnimation,
                     borderTopLeftRadius: 0,
                     borderTopRightRadius: 0,
@@ -67,7 +67,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     style={{
                         // paddingHorizontal: 15,
                         width: '100%',
-                        maxWidth: 400,
+                        maxWidth: 500,
                         height: 50,
                         backgroundColor: 'white',
                         flexDirection: 'row'

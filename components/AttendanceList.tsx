@@ -145,6 +145,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 export default AttendanceList
 
 const styles = StyleSheet.create({
-    row: { height: 80, borderRadius: 15, marginBottom: 20, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
+    row: { height: 80, borderRadius: 15, marginBottom: 12, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
     col: { width: 100, justifyContent: 'center', display: 'flex', flexDirection: 'column', backgroundColor: '#f4f4f6', padding: 5 }
 })

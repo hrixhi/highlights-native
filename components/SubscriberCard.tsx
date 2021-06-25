@@ -35,6 +35,7 @@ const SubscriberCard: React.FunctionComponent<{ [label: string]: any }> = (props
                                         <Text style={{
                                             width: 20,
                                             height: 20,
+                                            overflow: 'hidden',
                                             borderRadius: 10,
                                             backgroundColor: '#d91d56',
                                             textAlign: 'center',
@@ -100,7 +101,8 @@ const styles: any = (status: any) => StyleSheet.create({
     title: {
         fontFamily: 'inter',
         fontSize: 13,
-        width: '100%',
+        // width: '100%',
+        flex: 1,
         paddingTop: 5,
         color: '#202025'
     },

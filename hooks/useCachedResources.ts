@@ -15,7 +15,7 @@ export default function useCachedResources() {
         // Load fonts
         await Font.loadAsync({
           ...Ionicons.font,
-          'inter': require('../assets/fonts/atlas-grotesk-black.ttf'),
+          'inter': require('../assets/fonts/atlas-grotesk-bold.ttf'),
           'overpass': require('../assets/fonts/atlas-grotesk-regular.ttf')
         });
       } catch (e) {

@@ -271,7 +271,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                         {
                                             unreadMessages !== 0 ?
-                                                <View style={styles.badge} /> : null
+                                                <View style={styles.badge2} /> : null
                                         }
                                         <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
                                             Inbox
@@ -285,7 +285,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                         {
                                             unreadDiscussionThreads !== 0 ?
-                                                <View style={styles.badge} /> : null
+                                                <View style={styles.badge3} /> : null
                                         }
                                         <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
                                             Discussion
@@ -396,6 +396,30 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         width: 7,
         height: 7,
         marginRight: 4,
+        marginTop: 2,
+        borderRadius: 15,
+        backgroundColor: '#d91d56',
+        textAlign: 'center',
+        zIndex: 50
+    },
+    badge2: {
+        position: 'absolute',
+        // alignSelf: 'flex-end',
+        width: 7,
+        height: 7,
+        marginLeft: 23,
+        marginTop: 2,
+        borderRadius: 15,
+        backgroundColor: '#d91d56',
+        textAlign: 'center',
+        zIndex: 50
+    },
+    badge3: {
+        position: 'absolute',
+        // alignSelf: 'flex-end',
+        width: 7,
+        height: 7,
+        marginLeft: 32,
         marginTop: 2,
         borderRadius: 15,
         backgroundColor: '#d91d56',

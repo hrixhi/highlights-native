@@ -319,7 +319,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         showThreadCues ? null :
                                             <View style={{
                                                 width: '100%',
-                                                height: 60,
+                                                height: 80,
                                                 backgroundColor: 'white',
                                                 display: 'flex',
                                                 justifyContent: 'center',
@@ -400,7 +400,7 @@ const styleObject = () => {
         col: {
             width: '100%',
             height: 80,
-            marginBottom: 10,
+            marginBottom: 12,
             backgroundColor: 'white'
         },
         colorBar: {

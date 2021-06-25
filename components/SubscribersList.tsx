@@ -432,7 +432,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'column', backgroundColor: '#fff', height: !props.cueId && !showAddUsers && !showNewGroup ? 70 : 50, alignItems: 'center' }}>
                             {
-                                loadedChatWithUser && loadedChatWithUser !== {} && !showNewGroup && !showAddUsers ?
+                                loadedChatWithUser && loadedChatWithUser !== {} && !showNewGroup && !showAddUsers && users.length < 3 ?
                                     <View style={{ paddingHorizontal: 20, backgroundColor: '#fff' }}>
                                         <Text style={{ color: '#202025', marginBottom: 10 }}>
                                             {loadedChatWithUser.displayName}
@@ -442,7 +442,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </View> : null
                             }
                             {
-                                isOwner && !props.cueId && !showAddUsers && !showNewGroup
+                                isOwner && !props.cueId && !showAddUsers && !showNewGroup && users.length < 3
                                     ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
                                         <TouchableOpacity
                                             style={{ backgroundColor: '#fff' }}
@@ -487,12 +487,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             props.cueId ?
                                 <Text
                                     ellipsizeMode="tail"
-                                    style={{ color: '#a2a2aa', fontSize: 16, flex: 1, lineHeight: 25 }}>
+                                    style={{ color: '#a2a2aa', fontSize: 16, fontWeight: 'bold', flex: 1, lineHeight: 25 }}>
                                     {PreferredLanguageText('status')}
                                 </Text> :
                                 <Text
                                     ellipsizeMode="tail"
-                                    style={{ color: '#a2a2aa', fontSize: 16, flex: 1, lineHeight: 25 }}>
+                                    style={{ color: '#a2a2aa', fontSize: 16, fontWeight: 'bold', flex: 1, lineHeight: 25 }}>
                                     {PreferredLanguageText('inbox')}
                                 </Text>
                         }
@@ -944,7 +944,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 </View>
                         }
                     </View>) :
-                    <View style={{ backgroundColor: '#fff', alignSelf: 'center', width: 400, maxWidth: '100%' }}>
+                    <ScrollView style={{
+                        backgroundColor: '#fff',
+                        marginBottom: 100,
+                        alignSelf: 'center', width: 500, maxWidth: '100%'
+                    }}>
                         <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
                             {PreferredLanguageText('inviteByEmail')}
                         </Text>
@@ -971,9 +975,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 backgroundColor: 'white',
                                 overflow: 'hidden',
+                                alignSelf: 'center',
                                 height: 35,
                                 marginTop: 15,
-                                width: '100%',
+                                width: 150,
                                 justifyContent: 'center', flexDirection: 'row',
                                 marginBottom: 50,
                                 borderRadius: 15,
@@ -1029,7 +1034,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 })
                             }
                         </View>
-                    </View>
+                    </ScrollView>
             }
         </View >
     );
@@ -1062,7 +1067,7 @@ const styleObject = () => {
         col: {
             width: '100%',
             height: 80,
-            marginBottom: 10,
+            marginBottom: 12,
             // flex: 1,
             backgroundColor: 'white'
         },

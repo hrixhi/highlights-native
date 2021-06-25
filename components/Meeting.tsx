@@ -522,7 +522,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
             <Text
                 ellipsizeMode="tail"
-                style={{ color: '#a2a2aa', fontSize: 16, flex: 1, lineHeight: 25 }}>
+                style={{ color: '#a2a2aa', fontSize: 16, fontWeight: 'bold', flex: 1, lineHeight: 25 }}>
                 {PreferredLanguageText('classroom')}
             </Text>
         </View>
@@ -531,7 +531,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 isOwner ?
                     <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column', width: '100%' }}>
                         <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white', }}>
-                            <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                            <Text style={{ fontSize: 15, color: '#a2a2aa' }}>
                                 {PreferredLanguageText('initiateMeeting')}
                             </Text>
                         </View>
@@ -652,7 +652,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 !isOwner ? <View style={{ borderColor: '#f4f4f6', borderTopWidth: 1, backgroundColor: '#fff' }}>
                     <Text
                         ellipsizeMode="tail"
-                        style={{ color: '#a2a2aa', fontSize: 16, lineHeight: 25, marginVertical: 25 }}>
+                        style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginVertical: 25 }}>
                         {PreferredLanguageText('upcoming')}
                     </Text>
                 </View> : null
@@ -669,7 +669,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%', backgroundColor: '#fff' }}>
                             <Text
                                 ellipsizeMode="tail"
-                                style={{ color: '#a2a2aa', fontSize: 16, lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
+                                style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
                                 {PreferredLanguageText('upcoming')}
                             </Text>
                         </View>
@@ -793,7 +793,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     </TouchableOpacity>
                                     : <Text
                                         ellipsizeMode="tail"
-                                        style={{ color: '#a2a2aa', fontSize: 16, lineHeight: 25, marginVertical: 25 }}>
+                                        style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginVertical: 25 }}>
                                         {PreferredLanguageText('past')}
                                     </Text>}
                         </View>
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
     col: {
         width: '100%',
         height: 80,
-        marginBottom: 20,
+        marginBottom: 12,
         // flex: 1,
         backgroundColor: 'white'
     },

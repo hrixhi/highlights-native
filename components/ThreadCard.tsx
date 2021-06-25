@@ -82,7 +82,8 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </Text> : null
                         }
                         <Text style={{
-                            fontSize: 10,
+                            fontSize: 11,
+                            fontWeight: 'bold',
                             color,
                             marginRight: 5,
                             flex: 1,
@@ -152,6 +153,7 @@ const styles: any = () => StyleSheet.create({
     swiper: {
         height: 80,
         width: '100%',
+        maxWidth: 500,
         borderRadius: 15,
         overflow: 'hidden',
         backgroundColor: 'white'
