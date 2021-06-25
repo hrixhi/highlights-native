@@ -215,9 +215,11 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             <View style={{ width: '80%', height: Dimensions.get('window').height * 0.17 * 0.15, alignSelf: 'center' }} />
             <View style={{ width: '100%', height: Dimensions.get('window').height * 0.83 * 0.15 }}>
                 <View style={{
+                    height: '45%',
                     flexDirection: 'row',
                     display: 'flex',
-                    paddingLeft: 20
+                    paddingLeft: 20,
+                    paddingTop: 3
                 }}>
                     <TouchableOpacity
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
@@ -236,7 +238,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }
                             style={{
                                 width: Dimensions.get('window').height * 0.13 * 0.53456,
-                                height: Dimensions.get('window').height * 0.13 * 0.2
+                                height: Dimensions.get('window').height * 0.15 * 0.2
                             }}
                             resizeMode={'contain'}
                         />
@@ -314,7 +316,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 </Text>
                                             </TouchableOpacity> : null
                                     }
-                                </View> : <View style={{ height: 35 }} />
+                                </View> : <View style={{ height: 34 }} />
                             // <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
                             //     <TouchableOpacity
                             //         style={{ marginRight: 15 }}
@@ -337,7 +339,13 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 </View>
                 <View
                     key={JSON.stringify(cues) + JSON.stringify(filterChoice)}
-                    style={{ width: '100%', height: '55%', paddingTop: 12 }}>
+                    style={{
+                        width: '100%',
+                        height: '55%',
+                        flexDirection: 'column',
+                        paddingTop: 5
+                    }}>
+                    <View style={{ flex: 1 }} />
                     <ScrollView style={{
                         width: '98.5%',
                         // paddingTop: 2,
@@ -381,7 +389,7 @@ export default React.memo(TopBar, (prev, next) => {
 
 const styleObject: any = (channelId: any) => StyleSheet.create({
     topbar: {
-        height: '16%',
+        height: '18%',
         width: '100%',
         flexDirection: 'column',
         display: 'flex',

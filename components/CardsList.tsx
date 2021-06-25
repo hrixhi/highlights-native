@@ -55,7 +55,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     return (
         <View style={{
-            height: ((Dimensions.get('window').height) * 0.7) - 2,
+            height: ((Dimensions.get('window').height) * 0.64),
             width: '100%',
             paddingTop: 0,
             paddingHorizontal: 18,
