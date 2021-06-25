@@ -340,7 +340,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     style={{ width: '100%', height: '55%', paddingTop: 12 }}>
                     <ScrollView style={{
                         width: '98.5%',
-                        paddingTop: 2,
+                        // paddingTop: 2,
                         paddingLeft: 20
                     }} horizontal={true}
                         showsHorizontalScrollIndicator={false}
@@ -388,7 +388,7 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         // paddingHorizontal: 20,
         borderTopRightRadius: 0,
         borderTopLeftRadius: 0,
-        paddingTop: 13
+        paddingTop: 14
     },
     badge: {
         position: 'absolute',

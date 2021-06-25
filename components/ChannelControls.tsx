@@ -10,6 +10,7 @@ import { uniqueNamesGenerator, colors } from 'unique-names-generator'
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -277,7 +278,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     return (
         <View style={styles.screen} key={1}>
-            <View style={{ width: '100%', backgroundColor: 'white' }}>
+            <ScrollView style={{ width: '100%', backgroundColor: 'white' }}>
                 <Text
                     style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, fontWeight: 'bold' }}
                 >
@@ -389,6 +390,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         justifyContent: 'center',
                         // display: 'flex',
                         flexDirection: 'row',
+                        marginBottom: 50,
                         // height: 50,
                         // marginTop: 75
                     }}>
@@ -421,7 +423,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </TouchableOpacity>
                     }
                 </View>
-            </View>
+            </ScrollView>
         </View>
     );
 }
@@ -434,7 +436,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         width: '100%',
         height: Dimensions.get('window').height - 85,
-        backgroundColor: 'white',
+        backgroundColor: 'white'
     },
     outline: {
         borderRadius: 10,
@@ -451,7 +453,7 @@ const styles = StyleSheet.create({
     allOutline: {
         fontSize: 15,
         color: '#a2a2aa',
-        height: 22,
+        height: 25,
         paddingHorizontal: 10,
         backgroundColor: 'white',
         borderRadius: 10,
