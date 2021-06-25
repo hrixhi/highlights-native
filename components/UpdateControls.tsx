@@ -2764,234 +2764,239 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                     width < 768 ? "column" : "row"
                 }}
               >
-                <View
-                  style={{
-                    width: width < 768 ? "100%" : "33.33%",
-                    borderRightWidth: 0,
-                    borderColor: "#f4f4f6"
-                  }}
-                >
-                  <View
-                    style={{
-                      width: "100%",
-                      paddingTop: 40,
-                      paddingBottom: 15,
-                      backgroundColor: "white"
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        color: "#a2a2aa"
-                      }}
-                    >
-                      {PreferredLanguageText("category")}
-                    </Text>
-                  </View>
-                  {props.cue.channelId &&
-                    !props.channelOwner ? (
+                {
+                  (props.cue.channelId && props.cue.channelId !== '' && isOwner) || (!props.cue.channelId || props.cue.channelId === '') ?
                     <View
                       style={{
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "row",
-                        backgroundColor: "white"
+                        width: width < 768 ? "100%" : "33.33%",
+                        borderRightWidth: 0,
+                        borderColor: "#f4f4f6"
                       }}
                     >
                       <View
                         style={{
-                          width: "85%",
+                          width: "100%",
+                          paddingTop: 40,
+                          paddingBottom: 15,
                           backgroundColor: "white"
                         }}
                       >
-                        <View style={styles.colorBar}>
-                          <TouchableOpacity
-                            style={
-                              styles.allGrayOutline
-                            }
-                            onPress={() => { }}
-                          >
-                            <Text
-                              style={{
-                                color:
-                                  "#a2a2aa",
-                                lineHeight: 20,
-                                fontSize: 12
-                              }}
-                            >
-                              {props.cue
-                                .customCategory ===
-                                ""
-                                ? PreferredLanguageText(
-                                  "none"
-                                )
-                                : props.cue
-                                  .customCategory}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#a2a2aa"
+                          }}
+                        >
+                          {PreferredLanguageText("category")}
+                        </Text>
                       </View>
-                    </View>
-                  ) : (
-                    <View
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "row",
-                        backgroundColor: "white"
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: "90%",
-                          backgroundColor: "white"
-                        }}
-                      >
-                        {addCustomCategory ? (
+                      {props.cue.channelId &&
+                        !props.channelOwner ? (
+                        <View
+                          style={{
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "row",
+                            backgroundColor: "white"
+                          }}
+                        >
                           <View
-                            style={styles.colorBar}
+                            style={{
+                              width: "85%",
+                              backgroundColor: "white"
+                            }}
                           >
-                            <TextInput
-                              value={
-                                customCategory
-                              }
-                              style={
-                                styles.allGrayOutline
-                              }
-                              placeholder={
-                                "Enter Category"
-                              }
-                              onChangeText={val => {
-                                setCustomCategory(
-                                  val
-                                );
-                              }}
-                              placeholderTextColor={
-                                "#a2a2aa"
-                              }
-                            />
+                            <View style={styles.colorBar}>
+                              <TouchableOpacity
+                                style={
+                                  styles.allGrayOutline
+                                }
+                                onPress={() => { }}
+                              >
+                                <Text
+                                  style={{
+                                    color:
+                                      "#a2a2aa",
+                                    lineHeight: 20,
+                                    fontSize: 12
+                                  }}
+                                >
+                                  {props.cue
+                                    .customCategory ===
+                                    ""
+                                    ? PreferredLanguageText(
+                                      "none"
+                                    )
+                                    : props.cue
+                                      .customCategory}
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
                           </View>
-                        ) : (
-                          <ScrollView
-                            style={styles.colorBar}
-                            horizontal={true}
-                            showsHorizontalScrollIndicator={
-                              false
-                            }
+                        </View>
+                      ) : (
+                        <View
+                          style={{
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "row",
+                            backgroundColor: "white"
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: "90%",
+                              backgroundColor: "white"
+                            }}
+                          >
+                            {addCustomCategory ? (
+                              <View
+                                style={styles.colorBar}
+                              >
+                                <TextInput
+                                  value={
+                                    customCategory
+                                  }
+                                  style={
+                                    styles.allGrayOutline
+                                  }
+                                  placeholder={
+                                    "Enter Category"
+                                  }
+                                  onChangeText={val => {
+                                    setCustomCategory(
+                                      val
+                                    );
+                                  }}
+                                  placeholderTextColor={
+                                    "#a2a2aa"
+                                  }
+                                />
+                              </View>
+                            ) : (
+                              <ScrollView
+                                style={styles.colorBar}
+                                horizontal={true}
+                                showsHorizontalScrollIndicator={
+                                  false
+                                }
+                              >
+                                <TouchableOpacity
+                                  style={
+                                    customCategory ===
+                                      ""
+                                      ? styles.allGrayOutline
+                                      : styles.all
+                                  }
+                                  onPress={() => {
+                                    setCustomCategory(
+                                      ""
+                                    );
+                                  }}
+                                >
+                                  <Text
+                                    style={{
+                                      color:
+                                        "#a2a2aa",
+                                      lineHeight: 20,
+                                      fontSize: 12
+                                    }}
+                                  >
+                                    {PreferredLanguageText(
+                                      "none"
+                                    )}
+                                  </Text>
+                                </TouchableOpacity>
+                                {customCategories.map(
+                                  (
+                                    category: string
+                                  ) => {
+                                    return (
+                                      <TouchableOpacity
+                                        key={Math.random()}
+                                        style={
+                                          customCategory ===
+                                            category
+                                            ? styles.allGrayOutline
+                                            : styles.all
+                                        }
+                                        onPress={() => {
+                                          setCustomCategory(
+                                            category
+                                          );
+                                        }}
+                                      >
+                                        <Text
+                                          style={{
+                                            color:
+                                              "#a2a2aa",
+                                            lineHeight: 20,
+                                            fontSize: 12
+                                          }}
+                                        >
+                                          {
+                                            category
+                                          }
+                                        </Text>
+                                      </TouchableOpacity>
+                                    );
+                                  }
+                                )}
+                              </ScrollView>
+                            )}
+                          </View>
+                          <View
+                            style={{
+                              width: "10%",
+                              backgroundColor: "white"
+                            }}
                           >
                             <TouchableOpacity
-                              style={
-                                customCategory ===
-                                  ""
-                                  ? styles.allGrayOutline
-                                  : styles.all
-                              }
                               onPress={() => {
-                                setCustomCategory(
-                                  ""
-                                );
+                                if (addCustomCategory) {
+                                  setCustomCategory(
+                                    ""
+                                  );
+                                  setAddCustomCategory(
+                                    false
+                                  );
+                                } else {
+                                  setCustomCategory(
+                                    ""
+                                  );
+                                  setAddCustomCategory(
+                                    true
+                                  );
+                                }
+                              }}
+                              style={{
+                                backgroundColor: "white"
                               }}
                             >
                               <Text
                                 style={{
-                                  color:
-                                    "#a2a2aa",
-                                  lineHeight: 20
+                                  textAlign: "right",
+                                  lineHeight: 20,
+                                  width: "100%"
                                 }}
                               >
-                                {PreferredLanguageText(
-                                  "none"
-                                )}
+                                <Ionicons
+                                  name={
+                                    addCustomCategory
+                                      ? "close"
+                                      : "add"
+                                  }
+                                  size={20}
+                                  color={"#a2a2aa"}
+                                />
                               </Text>
                             </TouchableOpacity>
-                            {customCategories.map(
-                              (
-                                category: string
-                              ) => {
-                                return (
-                                  <TouchableOpacity
-                                    key={Math.random()}
-                                    style={
-                                      customCategory ===
-                                        category
-                                        ? styles.allGrayOutline
-                                        : styles.all
-                                    }
-                                    onPress={() => {
-                                      setCustomCategory(
-                                        category
-                                      );
-                                    }}
-                                  >
-                                    <Text
-                                      style={{
-                                        color:
-                                          "#a2a2aa",
-                                        lineHeight: 20,
-                                        fontSize: 12
-                                      }}
-                                    >
-                                      {
-                                        category
-                                      }
-                                    </Text>
-                                  </TouchableOpacity>
-                                );
-                              }
-                            )}
-                          </ScrollView>
-                        )}
-                      </View>
-                      <View
-                        style={{
-                          width: "10%",
-                          backgroundColor: "white"
-                        }}
-                      >
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (addCustomCategory) {
-                              setCustomCategory(
-                                ""
-                              );
-                              setAddCustomCategory(
-                                false
-                              );
-                            } else {
-                              setCustomCategory(
-                                ""
-                              );
-                              setAddCustomCategory(
-                                true
-                              );
-                            }
-                          }}
-                          style={{
-                            backgroundColor: "white"
-                          }}
-                        >
-                          <Text
-                            style={{
-                              textAlign: "right",
-                              lineHeight: 20,
-                              width: "100%"
-                            }}
-                          >
-                            <Ionicons
-                              name={
-                                addCustomCategory
-                                  ? "close"
-                                  : "add"
-                              }
-                              size={20}
-                              color={"#a2a2aa"}
-                            />
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
+                          </View>
+                        </View>
+                      )}
                     </View>
-                  )}
-                </View>
+                    : null
+                }
                 <View
                   style={{
                     width: width < 768 ? "100%" : "33.33%",
@@ -3852,6 +3857,7 @@ const styles: any = StyleSheet.create({
   outline: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#a2a2aa"
+    borderColor: "#a2a2aa",
+    fontSize: 12
   }
 });

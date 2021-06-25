@@ -1811,7 +1811,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomWidth: 0,
     borderColor: '#f4f4f6',
-    height: '67%',
+    height: '66%',
     width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,
     justifyContent: "center",
   },

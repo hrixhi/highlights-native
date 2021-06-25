@@ -57,7 +57,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
         <View style={{
             height: ((Dimensions.get('window').height) * 0.7) - 2,
             width: '100%',
-            paddingTop: 5,
+            paddingTop: 0,
             paddingHorizontal: 18,
         }}>
             {/* <Animated.View style={{
@@ -69,7 +69,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 alwaysBounceVertical={true}
                 horizontal={false}
                 contentContainerStyle={{
-                    paddingBottom: 15
+                    paddingBottom: 25
                 }}
             >
                 <RefreshControl

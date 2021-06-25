@@ -221,7 +221,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 }}>
                     <TouchableOpacity
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
-                        style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025', paddingTop: 6 }}>
+                        style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025', paddingTop: 9 }}>
                         <Image
                             source={colorScheme === 'light' ?
                                 (
@@ -381,14 +381,14 @@ export default React.memo(TopBar, (prev, next) => {
 
 const styleObject: any = (channelId: any) => StyleSheet.create({
     topbar: {
-        height: '15%',
+        height: '16%',
         width: '100%',
         flexDirection: 'column',
         display: 'flex',
         // paddingHorizontal: 20,
         borderTopRightRadius: 0,
         borderTopLeftRadius: 0,
-        paddingTop: 14
+        paddingTop: 18
     },
     badge: {
         position: 'absolute',

@@ -55,7 +55,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 20 }}>
                     {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                 </Text>
-                <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 50, paddingLeft: 20 }}>
+                <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 50, paddingLeft: 0 }}>
                     <Text
                         style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, fontWeight: 'bold' }}
                     >

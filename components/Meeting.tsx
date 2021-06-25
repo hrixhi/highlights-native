@@ -27,7 +27,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [meetingOn, setMeetingOn] = useState(false)
     const [start, setStart] = useState(new Date())
     const [end, setEnd] = useState(new Date(start.getTime() + 1000 * 60 * 60))
-
+    const [showAddEvent, setShowAddEvent] = useState(false)
     const [showStartTimeAndroid, setShowStartTimeAndroid] = useState(false);
     const [showStartDateAndroid, setShowStartDateAndroid] = useState(false);
 
@@ -530,7 +530,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             {
                 isOwner ?
                     <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column', width: '100%' }}>
-                        <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white', }}>
+                        <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white', flex: 1, justifyContent: 'center', flexDirection: 'row' }}>
                             <Text style={{ fontSize: 15, color: '#a2a2aa' }}>
                                 {PreferredLanguageText('initiateMeeting')}
                             </Text>
@@ -542,23 +542,25 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             width: '100%',
                             display: 'flex'
                         }}> */}
-                        <Switch
-                            value={meetingOn}
-                            onValueChange={() => updateMeetingStatus()}
-                            style={{ height: 30, marginTop: 10, marginRight: 'auto' }}
-                            trackColor={{
-                                false: '#f4f4f6',
-                                true: '#3B64F8'
-                            }}
-                            thumbColor='white'
-                        />
+                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', backgroundColor: 'white' }}>
+                            <Switch
+                                value={meetingOn}
+                                onValueChange={() => updateMeetingStatus()}
+                                style={{ height: 30, marginTop: 10 }}
+                                trackColor={{
+                                    false: '#f4f4f6',
+                                    true: '#3B64F8'
+                                }}
+                                thumbColor='white'
+                            />
+                        </View>
                         {/* </View> */}
                     </View> : null
             }
             {
                 isOwner ?
                     <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10 }}>
-                        Turn on to begin session. Restart switch if you are unable to join the classroom.
+                        Turn on to begin session.{'\n'}Restart switch if you are unable to join the classroom.
                     </Text> : null
             }
             <TouchableOpacity
@@ -666,81 +668,103 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         paddingTop: 25,
                         backgroundColor: "#fff"
                     }}>
-                        <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '30%', backgroundColor: '#fff' }}>
-                            <Text
-                                ellipsizeMode="tail"
-                                style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
-                                {PreferredLanguageText('upcoming')}
+                        <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
+                            <View style={{ flex: 1, backgroundColor: '#fff' }}>
+                                <Text
+                                    ellipsizeMode="tail"
+                                    style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
+                                    {PreferredLanguageText('upcoming')}
+                                </Text>
+                            </View>
+                            <Text style={{
+                                color: '#a2a2aa',
+                                fontSize: 11,
+                                lineHeight: 30,
+                                paddingTop: 8,
+                                textAlign: 'right',
+                                // paddingRight: 20,
+                                textTransform: 'uppercase'
+                            }}
+                                onPress={() => setShowAddEvent(!showAddEvent)}
+                            >
+                                {
+                                    showAddEvent ? PreferredLanguageText('hide') : PreferredLanguageText('add')
+                                }
                             </Text>
                         </View>
-                        <View style={{
-                            width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: Platform.OS === "ios" ? 'row' : 'column',
-                            marginTop: 12,
-                            backgroundColor: 'white',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-                        }}>
-                            <Text style={styles.text}>
-                                {PreferredLanguageText('start')} {Platform.OS === "android" ? ": " + moment(new Date(start)).format('MMMM Do YYYY, h:mm a') : null}
-                            </Text>
-                            {renderStartDateTimePicker()}
-                        </View>
-                        <View style={{
-                            width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: Platform.OS === "ios" ? 'row' : 'column',
-                            paddingTop: 12,
-                            backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-                        }}>
-                            <Text style={styles.text}>
-                                {PreferredLanguageText('end')} {Platform.OS === "android" ? ": " + moment(new Date(end)).format('MMMM Do YYYY, h:mm a') : null}
-                            </Text>
-                            <View style={{ width: 6, backgroundColor: '#fff' }} />
-                            {/* <Datetime
+                        {
+                            showAddEvent ?
+                                <View style={{ backgroundColor: 'white' }}>
+                                    <View style={{
+                                        width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                                        flexDirection: Platform.OS === "ios" ? 'row' : 'column',
+                                        marginTop: 12,
+                                        backgroundColor: 'white',
+                                        marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                                    }}>
+                                        <Text style={styles.text}>
+                                            {PreferredLanguageText('start')} {Platform.OS === "android" ? ": " + moment(new Date(start)).format('MMMM Do YYYY, h:mm a') : null}
+                                        </Text>
+                                        {renderStartDateTimePicker()}
+                                    </View>
+                                    <View style={{
+                                        width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                                        flexDirection: Platform.OS === "ios" ? 'row' : 'column',
+                                        paddingTop: 12,
+                                        backgroundColor: '#fff',
+                                        marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                                    }}>
+                                        <Text style={styles.text}>
+                                            {PreferredLanguageText('end')} {Platform.OS === "android" ? ": " + moment(new Date(end)).format('MMMM Do YYYY, h:mm a') : null}
+                                        </Text>
+                                        <View style={{ width: 6, backgroundColor: '#fff' }} />
+                                        {/* <Datetime
                                     value={end}
                                     onChange={(event: any) => {
                                         const date = new Date(event)
                                         setEnd(date)
                                     }}
                                 /> */}
-                            {renderEndDateTimePicker()}
-                        </View>
-                        <View style={{
-                            backgroundColor: '#fff',
-                            width: Dimensions.get('window').width < 768 ? '100%' : '10%',
-                            flexDirection: 'row',
-                            display: 'flex',
-                            justifyContent: 'center'
-                        }}>
-                            <TouchableOpacity
-                                style={{
-                                    backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    marginTop: 15,
-                                    borderRadius: 15,
-                                    width: '100%', justifyContent: 'center', flexDirection: 'row',
-                                }}
-                                onPress={() => handleCreate()}
-                                disabled={isSubmitDisabled}
-                            >
-                                <Text style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#202025',
-                                    overflow: 'hidden',
-                                    fontSize: 12,
-                                    backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
-                                }}>
-                                    ADD
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                                        {renderEndDateTimePicker()}
+                                    </View>
+                                    <View style={{
+                                        backgroundColor: '#fff',
+                                        width: Dimensions.get('window').width < 768 ? '100%' : '10%',
+                                        flexDirection: 'row',
+                                        display: 'flex',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <TouchableOpacity
+                                            style={{
+                                                backgroundColor: 'white',
+                                                overflow: 'hidden',
+                                                height: 35,
+                                                marginTop: 15,
+                                                borderRadius: 15,
+                                                width: '100%', justifyContent: 'center', flexDirection: 'row',
+                                            }}
+                                            onPress={() => handleCreate()}
+                                            disabled={isSubmitDisabled}
+                                        >
+                                            <Text style={{
+                                                textAlign: 'center',
+                                                lineHeight: 35,
+                                                color: '#202025',
+                                                overflow: 'hidden',
+                                                fontSize: 12,
+                                                backgroundColor: '#f4f4f6',
+                                                paddingHorizontal: 25,
+                                                fontFamily: 'inter',
+                                                height: 35,
+                                                width: 150,
+                                                borderRadius: 15,
+                                            }}>
+                                                ADD
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View> : null
+                        }
                     </View> : null
             }
             {
@@ -762,12 +786,13 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 }}
                                 onPress={() => { }}
                                 status={!props.cueId ? false : true}
+                                disabled={true}
                             />
                         </View>
                     })
 
             }
-            {
+            {/* {
                 isOwner ?
                     <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25, backgroundColor: '#fff' }}>
                         <View style={{ paddingVertical: 15, backgroundColor: '#fff' }}>
@@ -853,7 +878,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
 
                         }
                     </View> : null
-            }
+            } */}
         </View>
         {/* </Animated.View> */}
     </ScrollView >)

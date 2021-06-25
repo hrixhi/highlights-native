@@ -15,6 +15,7 @@ const SubscriberCard: React.FunctionComponent<{ [label: string]: any }> = (props
             style={styleObject.swiper}
         >
             <TouchableOpacity
+                disabled={props.disabled}
                 onPress={() => props.onPress()}
                 key={'textPage'}
                 style={styleObject.card}>

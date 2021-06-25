@@ -642,20 +642,36 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         >
           {PreferredLanguageText("planner")}
         </Text>
-        <Text
+        {/* <Text
           ellipsizeMode="tail"
           style={{
-            color: "black",
-            fontSize: 16,
+            color: "#a2a2aa",
+            fontSize: 13,
+            marginLeft: -15,
             flex: 1,
             lineHeight: 25,
             // paddingHorizontal: 0,
-            marginTop: 10
+            marginTop: 3
           }}
         >
           {currentMonth}
+        </Text> */}
+        <Text style={{
+          color: '#a2a2aa',
+          fontSize: 11,
+          lineHeight: 30,
+          paddingTop: 0,
+          textAlign: 'right',
+          paddingRight: 20,
+          textTransform: 'uppercase'
+        }}
+          onPress={() => setShowAddEvent(!showAddEvent)}
+        >
+          {
+            showAddEvent ? PreferredLanguageText('hide') : PreferredLanguageText('add')
+          }
         </Text>
-        {!showAddEvent ? (
+        {/* {!showAddEvent ? (
           <Ionicons
             name="add-outline"
             size={25}
@@ -671,7 +687,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={{ paddingRight: 10 }}
             onPress={() => setShowAddEvent(false)}
           />
-        )}
+        )} */}
       </View>
 
       {!showAddEvent ? (
@@ -725,6 +741,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 onChangeText={val => setTitle(val)}
                 placeholderTextColor={"#a2a2aa"}
                 required={true}
+                style={styles.input}
               />
             </View>
             <View

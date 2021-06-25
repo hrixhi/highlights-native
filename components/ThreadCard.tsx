@@ -40,13 +40,13 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
         if (u) {
             const unparsedUser = JSON.parse(u)
             if (props.channelCreatedBy.toString().trim() === props.thread.userId.toString().trim()) {
-                setColor('#0079f3')
+                setColor('#3B64F8')
             } else if (unparsedUser._id.toString().trim() === props.thread.userId.toString().trim()) {
-                setColor('#333333')
+                setColor('#a2a2aa')
             }
         }
         setLoading(false)
-    }, [props.thread, props.channelOwner])
+    }, [props.thread, props.channelCreatedBy])
 
     useEffect(() => {
         loadColor()

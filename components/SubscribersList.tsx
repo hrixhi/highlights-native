@@ -79,6 +79,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const userSubscriptionInactivatedAlert = PreferredLanguageText('userSubscriptionInactivated')
     const userRemovedAlert = PreferredLanguageText('userRemoved');
     const alreadyUnsubscribedAlert = PreferredLanguageText('alreadyUnsubscribed')
+    const [user, setUser] = useState<any>({})
+
 
     if (props.cue && props.cue.submission) {
         categories.push('Submitted')
@@ -178,6 +180,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 const u = await AsyncStorage.getItem('user')
                 if (u) {
                     const user = JSON.parse(u)
+                    setUser(user)
                     if (user._id && props.channelCreatedBy && user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
                         setIsOwner(true)
                     }
@@ -577,6 +580,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 messages.map((message) => {
                                                     return <View style={{ width: '100%', paddingBottom: 15, backgroundColor: 'white' }} key={Math.random()}>
                                                         <MessageCard
+                                                            user={user}
                                                             message={message} />
                                                     </View>
                                                 })

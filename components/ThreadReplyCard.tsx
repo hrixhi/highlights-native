@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, StyleSheet } from 'react-native';
 import { Text, TouchableOpacity, View } from './Themed';
 import _ from 'lodash'
 import { Ionicons } from '@expo/vector-icons';
 import HTMLView from 'react-native-htmlview';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ThreadReplyCard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -12,6 +13,7 @@ const ThreadReplyCard: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [url, setUrl] = useState('')
     const [title, setTitle] = useState('')
     const [type, setType] = useState('')
+    const [color, setColor] = useState('#a2a2aa');
 
 
     useEffect(() => {
@@ -29,6 +31,23 @@ const ThreadReplyCard: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
     }, [props.thread.message])
 
+    const loadColor = useCallback(async () => {
+        const u = await AsyncStorage.getItem('user')
+        if (u) {
+            const unparsedUser = JSON.parse(u)
+            if (props.channelCreatedBy.toString().trim() === props.thread.userId.toString().trim()) {
+                setColor('#3B64F8')
+            } else if (unparsedUser._id.toString().trim() === props.thread.userId.toString().trim()) {
+                setColor('#a2a2aa')
+            }
+        }
+    }, [props.thread, props.channelCreatedBy])
+
+    useEffect(() => {
+        loadColor()
+    }, [])
+
+
     return (
         <View
             key={'textPage'}
@@ -45,7 +64,7 @@ const ThreadReplyCard: React.FunctionComponent<{ [label: string]: any }> = (prop
                     <Text style={{
                         fontSize: 11,
                         fontWeight: 'bold',
-                        color: '#a2a2aa',
+                        color,
                         marginRight: 5,
                         flex: 1,
                         textAlign: 'right'

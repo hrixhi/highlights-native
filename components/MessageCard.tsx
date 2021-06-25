@@ -47,7 +47,7 @@ const MessageCard: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <Text style={{
                         fontSize: 11,
                         fontWeight: 'bold',
-                        color: '#a2a2aa',
+                        color: props.user.displayName === props.message.displayName ? '#333333' : '#a2a2aa',
                         marginRight: 5,
                         flex: 1,
                         textAlign: 'right'
