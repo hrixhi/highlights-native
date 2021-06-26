@@ -357,6 +357,13 @@ mutation($channelId: String!, $password: String, $name: String!) {
   }
 }
 `
+export const editPersonalMeeting = gql`
+mutation($channelId: String!, $meetingOn: Boolean!, $users: [String!]!) {
+  channel {
+    editPersonalMeeting(channelId: $channelId, meetingOn: $meetingOn, users: $users)
+  }
+}
+`
 /**
  * ALL
  * QUERIES
@@ -769,6 +776,20 @@ export const doesChannelNameExist = gql`
 query($name: String!) {
   channel {
     doesChannelNameExist(name: $name)
+  }
+}
+`
+export const getPersonalMeetingLink = gql`
+query($userId: String!, $users: [String!]!) {
+  channel {
+    getPersonalMeetingLink(users: $users, userId: $userId)
+  }
+}
+`
+export const getPersonalMeetingLinkStatus = gql`
+query($users: [String!]!) {
+  channel {
+    getPersonalMeetingLinkStatus(users: $users)
   }
 }
 `
