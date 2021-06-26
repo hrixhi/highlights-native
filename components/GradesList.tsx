@@ -68,10 +68,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             </Text>
                                             <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
                                                 {cue.gradeWeight}%
-                                                    </Text>
+                                            </Text>
                                         </View>
                                     })
                                 }
+
                                 {
                                     cues.length === 0 ? null :
                                         <View style={styles.col} key={'total'}>

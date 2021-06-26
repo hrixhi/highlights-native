@@ -60,7 +60,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     {index + 1}.
                             </Text>
                             </View>
-                            <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: 'white', }}>
                                 <View style={{ backgroundColor: '#fff', width: '50%' }}>
                                     {
                                         problem.question && problem.question.includes("image:") ?
@@ -121,30 +121,36 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
-                                <TextInput
-                                    value={problem.points}
-                                    // style={styles.input}
-                                    placeholder={PreferredLanguageText('enterPoints')}
-                                    onChangeText={val => {
-                                        const newProbs = [...problems];
-                                        newProbs[index].points = val;
-                                        setProblems(newProbs)
-                                        props.setProblems(newProbs)
-                                    }}
-                                    placeholderTextColor={'#a2a2aa'}
-                                />
+                                <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'row', width: '50%', maxWidth: '50%', paddingLeft: 10, }}>
+                                    <TextInput
+                                        value={problem.points}
+                                        // style={{ width: '100%' }}
+                                        // style={styles.input}
+                                        placeholder={PreferredLanguageText('enterPoints')}
+                                        onChangeText={val => {
+                                            const newProbs = [...problems];
+                                            newProbs[index].points = val;
+                                            setProblems(newProbs)
+                                            props.setProblems(newProbs)
+                                        }}
+                                        placeholderTextColor={'#a2a2aa'}
+                                    />
+                                     <Ionicons
+                                        name='close-outline'
+                                        onPress={() => {
+                                            const updatedProblems = [...problems]
+                                            updatedProblems.splice(index, 1);
+                                            setProblems(updatedProblems)
+                                            props.setProblems(updatedProblems)
+                                        }}
+                                    />
+                                </View>
+                                
+                                
                             </View>
-                            <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff' }}>
-                                <Ionicons
-                                    name='close-outline'
-                                    onPress={() => {
-                                        const updatedProblems = [...problems]
-                                        updatedProblems.splice(index, 1);
-                                        setProblems(updatedProblems)
-                                        props.setProblems(updatedProblems)
-                                    }}
-                                />
-                            </View>
+                            {/* <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff' }}>
+                               
+                            </View> */}
                         </View>
                         {
                             problem.options.map((option: any, i: any) => {

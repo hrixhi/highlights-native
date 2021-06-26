@@ -133,7 +133,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     })
 
     useEffect(() => {
-        console.log("useEffect")
         if (submission[0] === '{' && submission[submission.length - 1] === '}') {
             const obj = JSON.parse(submission)
             if (obj.solutions) {
@@ -302,58 +301,86 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     }, [])
 
     const handleDelete = useCallback(() => {
-        const server = fetchAPI('')
-        server.mutate({
-            mutation: unsubscribe,
-            variables: {
-                userId: loadedChatWithUser._id,
-                channelId: props.channelId,
-                keepContent: false
-            }
-        }).then(async res => {
-            if (res.data.subscription && res.data.subscription.unsubscribe) {
-                Alert(userRemovedAlert)
-                props.reload()
-                setShowChat(false)
-                setIsLoadedUserInactive(false)
-                setLoadedChatWithUser({})
-            } else {
-                Alert(alreadyUnsubscribedAlert)
-            }
-        }).catch(err => {
-            Alert(somethingWentWrongAlert, checkConnectionAlert)
-        })
+        Alert("Remove user from channel?", "",
+            [
+                {
+                    text: "Cancel", style: "cancel", onPress: () => { return; }
+                },
+                {
+                    text: "Okay", onPress: async () => {
+                        const server = fetchAPI('')
+                        server.mutate({
+                            mutation: unsubscribe,
+                            variables: {
+                                userId: loadedChatWithUser._id,
+                                channelId: props.channelId,
+                                keepContent: false
+                            }
+                        }).then(async res => {
+                            if (res.data.subscription && res.data.subscription.unsubscribe) {
+                                Alert(userRemovedAlert)
+                                props.reload()
+                                setShowChat(false)
+                                setIsLoadedUserInactive(false)
+                                setLoadedChatWithUser({})
+                            } else {
+                                Alert(alreadyUnsubscribedAlert)
+                            }
+                        }).catch(err => {
+                            Alert(somethingWentWrongAlert, checkConnectionAlert)
+                        })
+                    }
+                }
+            ]
+        )
     }, [loadedChatWithUser, props.channelId, props.reload])
 
     const handleSubStatusChange = useCallback(() => {
-        const server = fetchAPI('')
-        server.mutate({
-            mutation: isLoadedUserInactive ? makeSubActive : makeSubInactive,
-            variables: {
-                userId: loadedChatWithUser._id,
-                channelId: props.channelId
-            }
-        }).then(res => {
-            if (isLoadedUserInactive) {
-                // changed to active
-                if (res.data && res.data.subscription.makeActive) {
-                    Alert(userSubscriptionActivatedAlert)
-                    props.reload()
-                    setShowChat(false)
-                    setIsLoadedUserInactive(false)
-                    setLoadedChatWithUser({})
+
+        
+        const alertMessage = isLoadedUserInactive ? "Make user active?" : "Make user inactive?"
+
+        Alert(alertMessage, "", 
+            [
+                {
+                    text: "Cancel", style: "cancel", onPress: () => { return; }
+                },
+                {
+                    text: "Okay", onPress: async () => {
+                        const server = fetchAPI('')
+                        server.mutate({
+                            mutation: isLoadedUserInactive ? makeSubActive : makeSubInactive,
+                            variables: {
+                                userId: loadedChatWithUser._id,
+                                channelId: props.channelId
+                            }
+                        }).then(res => {
+                            if (isLoadedUserInactive) {
+                                // changed to active
+                                if (res.data && res.data.subscription.makeActive) {
+                                    Alert(userSubscriptionActivatedAlert)
+                                    props.reload()
+                                    setShowChat(false)
+                                    setIsLoadedUserInactive(false)
+                                    setLoadedChatWithUser({})
+                                }
+                            } else {
+                                // changed to inactive
+                                if (res.data && res.data.subscription.makeInactive) {
+                                    Alert(userSubscriptionInactivatedAlert)
+                                    props.reload()
+                                    setShowChat(false)
+                                    setIsLoadedUserInactive(false)
+                                    setLoadedChatWithUser({})
+                                }
+                            }
+                        })
+                    }
                 }
-            } else {
-                // changed to inactive
-                if (res.data && res.data.subscription.makeInactive) {
-                    Alert(userSubscriptionInactivatedAlert)
-                    props.reload()
-                    setShowChat(false)
-                    setIsLoadedUserInactive(false)
-                    setLoadedChatWithUser({})
-                }
-            }
-        })
+            ]
+        )
+
+
     }, [isLoadedUserInactive, loadedChatWithUser, props.channelId])
 
     const renderQuizSubmissions = () => {
@@ -721,8 +748,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                     subscriber={subscriber}
                                                                     onPress={() => {
                                                                         if (props.cueId && props.cueId !== null) {
-                                                                            console.log("Printing subscriber")
-                                                                            console.log(subscriber)
                                                                             if (subscriber.fullName === 'submitted' || subscriber.fullName === 'graded') {
                                                                                 setSubmission(subscriber.submission)
                                                                                 setShowSubmission(true)

@@ -34,6 +34,7 @@ import moment from 'moment';
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
+    const current = new Date()
     const [cue, setCue] = useState('')
     const [shuffle, setShuffle] = useState(false)
     const [starred, setStarred] = useState(false)
@@ -46,7 +47,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [addCustomCategory, setAddCustomCategory] = useState(false)
     const [channels, setChannels] = useState<any[]>([])
     const [channelId, setChannelId] = useState<any>('')
-    const [endPlayAt, setEndPlayAt] = useState(new Date())
+    const [endPlayAt, setEndPlayAt] = useState(new Date(current.getTime() + 1000 * 60 * 60))
     const [playChannelCueIndef, setPlayChannelCueIndef] = useState(true)
     const colorChoices: any[] = ['#d91d56', '#ED7D22', '#F8D41F', '#B8D41F', '#53BE6D'].reverse()
     const [modalAnimation] = useState(new Animated.Value(0))
@@ -56,7 +57,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [height, setHeight] = useState(100)
     const [init, setInit] = useState(false)
     const [submission, setSubmission] = useState(false)
-    const [deadline, setDeadline] = useState(new Date())
+    const [deadline, setDeadline] = useState(new Date(current.getTime() + 1000 * 60 * 60))
     const [gradeWeight, setGradeWeight] = useState<any>(0)
     const [graded, setGraded] = useState(false)
     const [imported, setImported] = useState(false)
@@ -76,6 +77,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     })
     const [equation, setEquation] = useState('y = x + 1')
     const [showEquationEditor, setShowEquationEditor] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [showDeadlineTimeAndroid, setShowDeadlineTimeAndroid] = useState(false);
     const [showDeadlineDateAndroid, setShowDeadlineDateAndroid] = useState(false);
@@ -413,13 +415,19 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const handleCreate = useCallback(async (quizId?: string) => {
 
+        setIsSubmitting(true)
+
+        if (isSubmitting) return;
+        
         if (!quizId && (cue === null || cue.toString().trim() === '')) {
             Alert(enterContentAlert)
+            setIsSubmitting(false)
             return
         }
 
         if ((imported || isQuiz) && title === '') {
             Alert(enterTitleAlert)
+            setIsSubmitting(false)
             return
         }
 
@@ -480,6 +488,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             const stringifiedCues = JSON.stringify(subCues)
             await AsyncStorage.setItem('cues', stringifiedCues)
             storeDraft('cueDraft', '')
+            setIsSubmitting(false)
             props.closeModal()
         } else {
             // CHANNEL CUE
@@ -530,15 +539,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             useNativeDriver: true
                         }).start(() => {
                             storeDraft('cueDraft', '')
+                            setIsSubmitting(false)
                             props.closeModal()
                         })
                     }
                 })
                 .catch(err => {
                     Alert(somethingWentWrongAlert, checkConnectionAlert)
+                    setIsSubmitting(false)
                 })
         }
 
+        setIsSubmitting(false)
     }, [cue, modalAnimation, customCategory, props.saveDataInCloud, isQuiz, timer, duration,
         gradeWeight, deadline, submission, imported, selected, subscribers,
         shuffle, frequency, starred, color, notify, title, type, url,
@@ -975,7 +987,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             iconMap={{
                                 ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={16} color={tintColor} />,
                                 ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={16} color={tintColor} onPress={() => {
-                                    console.log("Clear button pressed")
                                     clearAll()
                                 }} />,
                                 ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
@@ -1805,7 +1816,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             height: 35,
                                             textTransform: 'uppercase'
                                         }}>
-                                            {PreferredLanguageText('save')}
+                                            {isSubmitting ? PreferredLanguageText('sharing') : PreferredLanguageText('save')}
                                             {/* TO  <Ionicons name='home-outline' size={14} /> */}
                                         </Text> :
                                         <Text style={{
@@ -1821,7 +1832,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             height: 35,
                                             textTransform: 'uppercase'
                                         }}>
-                                            {PreferredLanguageText('share')}
+                                            {isSubmitting ? PreferredLanguageText('sharing') : PreferredLanguageText('share')}
                                         </Text>
                                 }
                             </TouchableOpacity>

@@ -606,7 +606,6 @@ export const LanguageProvider: React.FC<React.ReactNode> = ({ children }) => {
         retrieveSavedLang()
     }, [])
 
-    console.log(language);
     return (<LanguageContext.Provider value={{
         language,
         changeLanguage: async (lang: string) => {

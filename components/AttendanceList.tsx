@@ -66,10 +66,29 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             showsHorizontalScrollIndicator={false}
                             horizontal={true}
                             contentContainerStyle={{
-                                height: '100%'
+                                backgroundColor: 'white',
+                                flexDirection: 'column'
                             }}
                             nestedScrollEnabled={true}
                         >
+
+                            <View style={styles.row} key={"-"}>
+                                <View style={styles.col} key={'0,0'} />
+                                    {
+                                        pastMeetings.map((meeting: any, col: number) => {
+                                            const { title, start } = meeting
+                                            return <View style={styles.col} key={col.toString()}>
+                                                <Text style={{ textAlign: 'center', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
+                                                    {title}
+                                                </Text>
+                                                <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
+                                                    {moment(new Date(start)).format('MMMM Do YYYY, h:mm a')}
+                                                </Text>
+                                            </View>
+                                        })
+                                    }
+                                </View>
+
                             <ScrollView
                                 showsVerticalScrollIndicator={false}
                                 horizontal={false}
@@ -82,23 +101,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{
                                     backgroundColor: 'white',
                                 }}>
-                                    <View style={styles.row} key={"-"}>
-                                        <View style={styles.col} key={'0,0'} />
-                                        {
-                                            pastMeetings.map((meeting: any, col: number) => {
-                                                const { title, start } = meeting
-                                                return <View style={styles.col} key={col.toString()}>
-                                                    <Text style={{ textAlign: 'center', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
-                                                        {title}
-                                                    </Text>
-                                                    <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
-                                                        {moment(new Date(start)).format('MMMM Do YYYY, h:mm a')}
-                                                    </Text>
-                                                </View>
-                                            })
-                                        }
-
-                                    </View>
                                     {
                                         channelAttendances.map((channelAttendance: any, row: number) => {
 

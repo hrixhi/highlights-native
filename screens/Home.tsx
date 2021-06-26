@@ -572,7 +572,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
 
     } catch (e) {
-      console.log("Printing error from notification schedular")
       console.log(e)
     }
 
@@ -1232,7 +1231,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const submittedNow = new Date();
     subCues[updateModalKey][updateModalIndex] = {
       _id: unmodified._id,
-      cue: saveCue,
+      cue: unmodified.submittedAt ? unmodified.cue : saveCue,
       date: unmodified.date,
       color,
       shuffle,
