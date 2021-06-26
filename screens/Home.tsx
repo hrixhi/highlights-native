@@ -1265,12 +1265,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }
 
-  const closeModal = useCallback(() => {
+  const closeModal = useCallback((func: string) => {
 
     // Update Cue locally
     if (modalType === 'Update') {
 
-      if (updatedCueCount < 2) {
+      if (updatedCueCount < 2 || func === "delete") {
         setUpdatedCueCount(0)
         setUpdateCueData({})
         setCueId('')
