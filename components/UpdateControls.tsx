@@ -725,7 +725,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               subCues[props.cueKey] = updatedCues
               const stringifiedCues = JSON.stringify(subCues)
               await AsyncStorage.setItem('cues', stringifiedCues)
-              props.closeModal()
+              props.closeModal("delete")
           }
       }
   ])
@@ -802,7 +802,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                                       text: "Cancel", style: "cancel"
                                   },
                                   {
-                                      text: "Okay", onPress: () => window.location.reload()
+                                      text: "Okay", onPress: async () => {
+                                        await Updates.reloadAsync();
+                                        setHandlingSubmit(false);
+                                      }
                                   }
                               ]
                           );
@@ -881,10 +884,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
     submissionTitle,
     submissionImported,
     submissionType,
-    isQuiz,
+    // isQuiz,
     submission,
     deadline,
-    solutions,
+    // solutions,
     initiatedAt,
     customCategory,
     props.cueKey,
@@ -1542,7 +1545,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <View
                 style={{ height: 28, backgroundColor: "#fff" }}
               />
-            ) : (props.cue.graded || currentDate > deadline) ? (
+            ) : (props.cue.graded && submission)|| (currentDate > deadline && submission) ? (
               <View
                 style={{ height: 28, backgroundColor: "#fff" }}
               />
@@ -1660,7 +1663,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                                 </Text> : null
                         } */}
             {!showOriginal &&
-              props.cue.submission &&
+              (props.cue.submission && currentDate < deadline) &&
               !submissionImported &&
               !props.cue.graded ? (
               <Text
@@ -2244,7 +2247,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   borderRadius: 15
                 }}
                 disabled={
-                  props.cue.graded || currentDate > deadline
+                  (props.cue.graded && submission)|| (currentDate > deadline && submission)
                 }
                 ref={RichText}
                 style={{
