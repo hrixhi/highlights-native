@@ -59,7 +59,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     useEffect(() => {
         setTimeout(() => {
             setWebviewKey(Math.random())
-        }, 3500);
+        }, 200);
     }, [imported])
 
     const categoriesLanguageMap: { [label: string]: string } = {

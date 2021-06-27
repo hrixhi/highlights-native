@@ -89,7 +89,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (
 
   const windowHeight =
     Dimensions.get("window").width < 1024
-      ? Dimensions.get("window").height - 85
+      ? Dimensions.get("window").height - 60
       : Dimensions.get("window").height;
   return (
     <ScrollView
@@ -111,7 +111,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (
         style={{
           opacity: modalAnimation,
           width: "100%",
-          height: windowHeight,
+          height: windowHeight - 40,
           backgroundColor: "white",
           borderTopRightRadius: 0,
           borderTopLeftRadius: 0
