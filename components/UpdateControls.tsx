@@ -587,10 +587,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   }, []);
 
   const handleUpdate = useCallback(async () => {
-    if (submissionImported && submissionTitle === "") {
-      Alert(enterTitleAlert);
-      return;
-    }
+    
     let subCues: any = {};
     try {
       const value = await AsyncStorage.getItem("cues");
@@ -737,6 +734,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   }, [props.cueIndex, props.closeModal, props.cueKey, props.cue, isOwner]);
 
   const handleSubmit = useCallback(async () => {
+    if (!isQuiz && submissionImported && submissionTitle === "") {
+      Alert(enterTitleAlert);
+      return;
+    }
     Alert("Submit?", "", [
       {
           text: "Cancel", style: "cancel", onPress: () => { return; }
@@ -802,9 +803,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                               submissionCompleteAlert,
                               (new Date()).toString(),
                               [
-                                  {
-                                      text: "Cancel", style: "cancel"
-                                  },
                                   {
                                       text: "Okay", onPress: async () => {
                                         await Updates.reloadAsync();
@@ -1605,9 +1603,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                       size={16}
                       color={tintColor}
                       onPress={() => {
-                        console.log(
-                          "Clear button pressed"
-                        );
                         clearAll();
                       }}
                     />
