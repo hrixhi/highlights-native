@@ -530,7 +530,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'column', backgroundColor: '#fff' }}>
                             {
-                                loadedChatWithUser && loadedChatWithUser !== {} && !showNewGroup && !showAddUsers && users.length < 3 ?
+                                loadedChatWithUser && loadedChatWithUser !== {} && !showNewGroup && !showAddUsers && !showSubmission && users.length < 3 ?
                                     <View style={{ paddingHorizontal: 20, backgroundColor: '#fff' }}>
                                         <Text
                                             numberOfLines={1}
@@ -543,7 +543,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </View> : null
                             }
                             {
-                                isOwner && !props.cueId && !showAddUsers && !showNewGroup && users.length < 3
+                                isOwner && !props.cueId && !showAddUsers && !showNewGroup && !showSubmission && users.length < 3
                                     ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
                                         <TouchableOpacity
                                             style={{ backgroundColor: '#fff' }}
@@ -660,11 +660,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
                         {
                             props.cueId ?
-                                <Text
-                                    ellipsizeMode="tail"
-                                    style={{ color: '#a2a2aa', fontSize: 16, fontWeight: 'bold', flex: 1, lineHeight: 25 }}>
-                                    {PreferredLanguageText('status')}
-                                </Text> :
+                                null :
                                 <Text
                                     ellipsizeMode="tail"
                                     style={{ color: '#a2a2aa', fontSize: 16, fontWeight: 'bold', flex: 1, lineHeight: 25 }}>

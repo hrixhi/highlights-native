@@ -418,7 +418,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setIsSubmitting(true)
 
         if (isSubmitting) return;
-        
+
         if (!quizId && (cue === null || cue.toString().trim() === '')) {
             Alert(enterContentAlert)
             setIsSubmitting(false)
@@ -918,8 +918,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                         >
                             <Text style={{
-                                color: '#a2a2aa', fontSize: 16,
+                                color: '#202025',
+                                fontSize: 11,
                                 paddingBottom: 20,
+                                textTransform: 'uppercase',
+                                paddingLeft: 10,
+                                paddingTop: 5
                             }}>
                                 {PreferredLanguageText('new')}
                             </Text>
