@@ -583,13 +583,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
 
   const fileUpload = useCallback(async () => {
     const file = await DocumentPicker.getDocumentAsync();
+    console.log(file);
   }, []);
 
   const handleUpdate = useCallback(async () => {
-    if (submissionImported && submissionTitle === "") {
-      Alert(enterTitleAlert);
-      return;
-    }
+    
     let subCues: any = {};
     try {
       const value = await AsyncStorage.getItem("cues");
@@ -681,147 +679,146 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
   const handleDelete = useCallback(async () => {
     Alert("Delete cue?", "", [
       {
-        text: "Cancel", style: "cancel", onPress: () => { return; }
+          text: "Cancel", style: "cancel", onPress: () => { return; }
       },
       {
-        text: "Okay", onPress: async () => {
-          const server = fetchAPI('')
-          if (props.cue.channelId && isOwner) {
-            server.mutate({
-              mutation: deleteForEveryone,
-              variables: {
-                cueId: props.cue._id
+          text: "Okay", onPress: async () => {
+              const server = fetchAPI('')
+              if (props.cue.channelId && isOwner) {
+                  server.mutate({
+                      mutation: deleteForEveryone,
+                      variables: {
+                          cueId: props.cue._id
+                      }
+                  }).then(res => {
+                      if (res.data.cue.deleteForEveryone) {
+                          Alert(cueDeletedAlert);
+                      }
+                  })
               }
-            }).then(res => {
-              if (res.data.cue.deleteForEveryone) {
-                Alert(cueDeletedAlert);
+      
+              if (!props.cue.channelId) {
+                  server.mutate({
+                      mutation: deleteCue,
+                      variables: {
+                          cueId: props.cue._id
+                      }
+                  })
               }
-            })
-          }
-
-          if (!props.cue.channelId) {
-            server.mutate({
-              mutation: deleteCue,
-              variables: {
-                cueId: props.cue._id
+      
+              let subCues: any = {}
+              try {
+                  const value = await AsyncStorage.getItem('cues')
+                  if (value) {
+                      subCues = JSON.parse(value)
+                  }
+              } catch (e) {
               }
-            })
+              if (subCues[props.cueKey].length === 0) {
+                  return
+              }
+              const updatedCues: any[] = []
+              subCues[props.cueKey].map((i: any, j: any) => {
+                  if (j !== props.cueIndex) {
+                      updatedCues.push({ ...i })
+                  }
+              })
+              subCues[props.cueKey] = updatedCues
+              const stringifiedCues = JSON.stringify(subCues)
+              await AsyncStorage.setItem('cues', stringifiedCues)
+              props.closeModal("delete")
           }
-
-          let subCues: any = {}
-          try {
-            const value = await AsyncStorage.getItem('cues')
-            if (value) {
-              subCues = JSON.parse(value)
-            }
-          } catch (e) {
-          }
-          if (subCues[props.cueKey].length === 0) {
-            return
-          }
-          const updatedCues: any[] = []
-          subCues[props.cueKey].map((i: any, j: any) => {
-            if (j !== props.cueIndex) {
-              updatedCues.push({ ...i })
-            }
-          })
-          subCues[props.cueKey] = updatedCues
-          const stringifiedCues = JSON.stringify(subCues)
-          await AsyncStorage.setItem('cues', stringifiedCues)
-          props.closeModal("delete")
-        }
       }
-    ])
+  ])
 
   }, [props.cueIndex, props.closeModal, props.cueKey, props.cue, isOwner]);
 
   const handleSubmit = useCallback(async () => {
+    if (!isQuiz && submissionImported && submissionTitle === "") {
+      Alert(enterTitleAlert);
+      return;
+    }
     Alert("Submit?", "", [
       {
-        text: "Cancel", style: "cancel", onPress: () => { return; }
+          text: "Cancel", style: "cancel", onPress: () => { return; }
       },
       {
-        text: "Okay", onPress: async () => {
-          const u: any = await AsyncStorage.getItem('user')
-          let now = new Date()
-          // one minute of extra time to submit 
-          // one minute of extra time to submit 
-          // one minute of extra time to submit 
-          now.setMinutes(now.getMinutes() - 1)
-          if (isQuiz) {
-            if (now >= deadline) {
-              Alert(submissionFailedAlert, ifYouStartTimedQuizAlert)
-              return;
-            }
-            // over here check that all options have been selected
-            // TO DO
-          } else {
-            if (now >= deadline) {
-              Alert(submissionFailedAlert, deadlineHasPassedAlert)
-              return;
-            }
-          }
-          if (u) {
-            const parsedUser = JSON.parse(u)
-            if (!parsedUser.email || parsedUser.email === '') {
-              // cannot submit
-              return
-            }
-            let saveCue = ''
-            if (isQuiz) {
-              saveCue = JSON.stringify({
-                solutions,
-                initiatedAt
-              })
-            } else if (submissionImported) {
-              const obj = {
-                type: submissionType,
-                url: submissionUrl,
-                title: submissionTitle
+          text: "Okay", onPress: async () => {
+              const u: any = await AsyncStorage.getItem('user')
+              let now = new Date()
+              // one minute of extra time to submit 
+              now.setMinutes(now.getMinutes() - 1)
+              if (isQuiz) {
+                  if (now >= deadline) {
+                      Alert(submissionFailedAlert, ifYouStartTimedQuizAlert)
+                      return;
+                  }
+                  // over here check that all options have been selected
+                  // TO DO
+              } else {
+                  if (now >= deadline) {
+                      Alert(submissionFailedAlert, deadlineHasPassedAlert)
+                      return;
+                  }
               }
-              saveCue = JSON.stringify(obj)
-            } else {
-              if (cue === '') {
-                // submission cannot be empty
-                return;
-              }
-              saveCue = cue
-            }
-
-            const server = fetchAPI('')
-            server.mutate({
-              mutation: submit,
-              variables: {
-                cue: saveCue,
-                cueId: props.cue._id,
-                userId: parsedUser._id,
-                quizId: isQuiz ? quizId : null
-              }
-            }).then(res => {
-              if (res.data.cue.submitModification) {
-                Alert(
-                  submissionCompleteAlert,
-                  (new Date()).toString(),
-                  [
-                    {
-                      text: "Cancel", style: "cancel"
-                    },
-                    {
-                      text: "Okay", onPress: async () => {
-                        await Updates.reloadAsync();
-                        setHandlingSubmit(false);
+              if (u) {
+                  const parsedUser = JSON.parse(u)
+                  if (!parsedUser.email || parsedUser.email === '') {
+                      // cannot submit
+                      return
+                  }
+                  let saveCue = ''
+                  if (isQuiz) {
+                      saveCue = JSON.stringify({
+                          solutions,
+                          initiatedAt
+                      })
+                  } else if (submissionImported) {
+                      const obj = {
+                          type: submissionType,
+                          url: submissionUrl,
+                          title: submissionTitle
                       }
-                    }
-                  ]
-                );
+                      saveCue = JSON.stringify(obj)
+                  } else {
+                      if (cue === '') {
+                          // submission cannot be empty
+                          return;
+                      }
+                      saveCue = cue
+                  }
+
+                  const server = fetchAPI('')
+                  server.mutate({
+                      mutation: submit,
+                      variables: {
+                          cue: saveCue,
+                          cueId: props.cue._id,
+                          userId: parsedUser._id,
+                          quizId: isQuiz ? quizId : null
+                      }
+                  }).then(res => {
+                      if (res.data.cue.submitModification) {
+                          Alert(
+                              submissionCompleteAlert,
+                              (new Date()).toString(),
+                              [
+                                  {
+                                      text: "Okay", onPress: async () => {
+                                        await Updates.reloadAsync();
+                                        setHandlingSubmit(false);
+                                      }
+                                  }
+                              ]
+                          );
+                      }
+                  }).catch(err => {
+                      Alert(somethingWentWrongAlert, tryAgainLaterAlert)
+                  })
               }
-            }).catch(err => {
-              Alert(somethingWentWrongAlert, tryAgainLaterAlert)
-            })
           }
-        }
       }
-    ])
+  ])
   }, [
     props.cue,
     cue,
@@ -1065,7 +1062,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={deadline}
             mode={"date"}
             textColor={"#202025"}
-            onChange={(event: any, selectedDate: any) => {
+            onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
               setShowDeadlineDateAndroid(false);
@@ -1163,7 +1160,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={deadline}
             mode={"time"}
             textColor={"#202025"}
-            onChange={(event: any, selectedDate: any) => {
+            onChange={(event, selectedDate) => {
               const currentDate: any = selectedDate;
               setDeadline(currentDate);
             }}
@@ -1176,7 +1173,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={deadline}
             mode={"time"}
             textColor={"#202025"}
-            onChange={(event: any, selectedDate: any) => {
+            onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
               setShowDeadlineTimeAndroid(false);
@@ -1198,7 +1195,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={endPlayAt}
             mode={"date"}
             textColor={"#202025"}
-            onChange={(event: any, selectedDate: any) => {
+            onChange={(event, selectedDate) => {
               const currentDate: any = selectedDate;
               setEndPlayAt(currentDate);
             }}
@@ -1212,7 +1209,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={endPlayAt}
             mode={"date"}
             textColor={"#202025"}
-            onChange={(event: any, selectedDate: any) => {
+            onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
               setShowEndPlayAtDateAndroid(false);
@@ -1310,7 +1307,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={endPlayAt}
             mode={"time"}
             textColor={"#202025"}
-            onChange={(event: any, selectedDate: any) => {
+            onChange={(event, selectedDate) => {
               const currentDate: any = selectedDate;
               setEndPlayAt(currentDate);
             }}
@@ -1323,7 +1320,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             value={endPlayAt}
             mode={"time"}
             textColor={"#202025"}
-            onChange={(event: any, selectedDate: any) => {
+            onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
               setShowEndPlayAtTimeAndroid(false);
@@ -1383,64 +1380,64 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "#fff"
             }}
           >
-
-            <View
-              style={{
-                flexDirection: "row",
-                backgroundColor: "#fff"
-              }}
-            >
-              <TouchableOpacity
+            
+              <View
                 style={{
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  backgroundColor: '#fff'
+                  flexDirection: "row",
+                  backgroundColor: "#fff"
                 }}
-                onPress={() => {
-                  props.setShowOriginal(true)
-                }}>
-                <Text style={props.showOriginal ? styles.allGrayFill : styles.all}>
-                  {PreferredLanguageText('viewShared')}
-                </Text>
-              </TouchableOpacity>
-              {
-                (isOwner && submission) || isQuiz ? null :
-                  <TouchableOpacity
-                    style={{
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                      backgroundColor: '#fff'
-                    }}
-                    onPress={() => {
-                      props.setShowOriginal(false)
-                    }}>
-                    <Text style={!props.showOriginal && !props.viewStatus ? styles.allGrayFill : styles.all}>
-                      {
-                        submission ? PreferredLanguageText('mySubmission') : PreferredLanguageText('myNotes')
-                      }
-                    </Text>
-                  </TouchableOpacity>
-              }
-              {/* Add Status button here */}
-              {
-                !isOwner ? null :
-                  <TouchableOpacity
-                    style={{
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                      backgroundColor: '#fff'
-                    }}
-                    onPress={() => {
-                      props.setShowOriginal(false)
-                      setIsQuiz(false)
-                      props.changeViewStatus()
-                    }}>
-                    <Text style={props.viewStatus ? styles.allGrayFill : styles.all}>
-                      Status
-                    </Text>
-                  </TouchableOpacity>
-              }
-            </View>
+              >
+                <TouchableOpacity
+                                            style={{
+                                                justifyContent: 'center',
+                                                flexDirection: 'column',
+                                                backgroundColor: '#fff'
+                                            }}
+                                            onPress={() => {
+                                                props.setShowOriginal(true)
+                                            }}>
+                                            <Text style={props.showOriginal ? styles.allGrayFill : styles.all}>
+                                                {PreferredLanguageText('viewShared')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                        {
+                                            (isOwner && submission) || isQuiz ? null :
+                                                <TouchableOpacity
+                                                    style={{
+                                                        justifyContent: 'center',
+                                                        flexDirection: 'column',
+                                                        backgroundColor: '#fff'
+                                                    }}
+                                                    onPress={() => {
+                                                        props.setShowOriginal(false)
+                                                    }}>
+                                                    <Text style={!props.showOriginal && !props.viewStatus ? styles.allGrayFill : styles.all}>
+                                                        {
+                                                            submission ? PreferredLanguageText('mySubmission') : PreferredLanguageText('myNotes')
+                                                        }
+                                                    </Text>
+                                                </TouchableOpacity>
+                                        }
+                                        {/* Add Status button here */}
+                                        {
+                                            !isOwner ? null :
+                                            <TouchableOpacity
+                                                style={{
+                                                    justifyContent: 'center',
+                                                    flexDirection: 'column',
+                                                    backgroundColor: '#fff'
+                                                }}
+                                                onPress={() => {
+                                                    props.setShowOriginal(false)
+                                                    setIsQuiz(false)
+                                                    props.changeViewStatus()
+                                                }}>
+                                                <Text style={props.viewStatus ? styles.allGrayFill : styles.all}>
+                                                    Status
+                                                </Text>
+                                            </TouchableOpacity>
+                                        }
+              </View>
 
             {props.cue.graded &&
               props.cue.score !== undefined &&
@@ -1492,12 +1489,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <Text
                 ellipsizeMode="tail"
                 style={{
-                  fontSize: 11,
-                  color: '#202025',
-                  paddingBottom: 20,
-                  textTransform: 'uppercase',
-                  paddingLeft: 10,
-                  paddingTop: 0
+                  color: "#a2a2aa",
+                  fontSize: 16,
+                  paddingBottom: 20
                 }}
               >
                 {PreferredLanguageText("update")}
@@ -1555,82 +1549,78 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <View
                 style={{ height: 28, backgroundColor: "#fff" }}
               />
-            ) : (props.cue.graded && submission) || (currentDate > deadline && submission) ? (
+            ) : (props.cue.graded && submission)|| (currentDate > deadline && submission) ? (
               <View
                 style={{ height: 28, backgroundColor: "#fff" }}
               />
             ) : (
-              RichText && RichText.current !== undefined && RichText.current !== null && !RichText.current.props.selectText ?
-                <RichToolbar
-                  key={
-                    reloadEditorKey.toString()
-                    // + props.showOriginal.toString()
-                  }
-                  style={{
-                    flexWrap: "wrap",
-                    backgroundColor: "white",
-                    height: 28,
-                    overflow: "visible"
-                  }}
-                  iconSize={16}
-                  editor={RichText}
-                  disabled={false}
-                  iconTint={"#a2a2aa"}
-                  selectedIconTint={"#a2a2aa"}
-                  disabledIconTint={"#a2a2aa"}
-                  actions={
-                    submissionImported || showImportOptions
-                      ? ["back", "clear"]
-                      : [
-                        actions.setBold,
-                        actions.setItalic,
-                        actions.setUnderline,
-                        actions.insertBulletsList,
-                        actions.insertOrderedList,
-                        actions.checkboxList,
-                        actions.insertLink,
-                        actions.insertImage,
-                        "insertCamera",
-                        actions.undo,
-                        "clear",
-                        actions.redo
-                      ]
-                  }
-                  iconMap={{
-                    ["insertCamera"]: ({ tintColor }) => (
-                      <Ionicons
-                        name="camera-outline"
-                        size={16}
-                        color={tintColor}
-                      />
-                    ),
-                    ["clear"]: ({ tintColor }) => (
-                      <Ionicons
-                        name="trash-outline"
-                        size={16}
-                        color={tintColor}
-                        onPress={() => {
-                          console.log(
-                            "Clear button pressed"
-                          );
-                          clearAll();
-                        }}
-                      />
-                    ),
-                    ["back"]: ({ tintColor }) => (
-                      <Ionicons
-                        name="arrow-back"
-                        size={16}
-                        color={tintColor}
-                        onPress={() =>
-                          setShowImportOptions(false)
-                        }
-                      />
-                    )
-                  }}
-                  onPressAddImage={galleryCallback}
-                  insertCamera={cameraCallback}
-                /> : null
+              <RichToolbar
+                key={
+                  reloadEditorKey.toString() +
+                  props.showOriginal.toString()
+                }
+                style={{
+                  flexWrap: "wrap",
+                  backgroundColor: "white",
+                  height: 28,
+                  overflow: "visible"
+                }}
+                iconSize={16}
+                editor={RichText}
+                disabled={false}
+                iconTint={"#a2a2aa"}
+                selectedIconTint={"#a2a2aa"}
+                disabledIconTint={"#a2a2aa"}
+                actions={
+                  submissionImported || showImportOptions
+                    ? ["back", "clear"]
+                    : [
+                      actions.setBold,
+                      actions.setItalic,
+                      actions.setUnderline,
+                      actions.insertBulletsList,
+                      actions.insertOrderedList,
+                      actions.checkboxList,
+                      actions.insertLink,
+                      actions.insertImage,
+                      "insertCamera",
+                      actions.undo,
+                      "clear",
+                      actions.redo
+                    ]
+                }
+                iconMap={{
+                  ["insertCamera"]: ({ tintColor }) => (
+                    <Ionicons
+                      name="camera-outline"
+                      size={16}
+                      color={tintColor}
+                    />
+                  ),
+                  ["clear"]: ({ tintColor }) => (
+                    <Ionicons
+                      name="trash-outline"
+                      size={16}
+                      color={tintColor}
+                      onPress={() => {
+                        clearAll();
+                      }}
+                    />
+                  ),
+                  ["back"]: ({ tintColor }) => (
+                    <Ionicons
+                      name="arrow-back"
+                      size={16}
+                      color={tintColor}
+                      onPress={() =>
+                        setShowImportOptions(false)
+                      }
+                    />
+                  )
+                }}
+                onPressAddImage={galleryCallback}
+                insertCamera={cameraCallback}
+              />
             )}
             {!props.showOriginal &&
               props.cue.submission &&
@@ -1882,8 +1872,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   type === "mov" ||
                   type === "mpeg" ||
                   type === "mp2" ||
-                  type === "wav")) ||
-                props.cue.graded ? null : (
+                  type === "wav")) || 
+                  props.cue.graded ? null : (
                 <View
                   style={{
                     marginLeft: 25,
@@ -2258,7 +2248,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   borderRadius: 15
                 }}
                 disabled={
-                  (props.cue.graded && submission) || (currentDate > deadline && submission)
+                  (props.cue.graded && submission)|| (currentDate > deadline && submission)
                 }
                 ref={RichText}
                 style={{
@@ -2347,7 +2337,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                   }}
                 >
                   {
-                    props.cue.channelId && props.cue.channelId !== '' && isOwner && props.showOriginal ?
+                    props.cue.channelId && props.cue.channelId !== '' && isOwner ?
                       <View
                         style={{
                           width:
