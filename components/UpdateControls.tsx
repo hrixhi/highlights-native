@@ -167,7 +167,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
     setTimeout(() => {
       setWebviewKey(Math.random());
     }, 3500);
-  }, [showOriginal, submissionImported]);
+  }, [props.showOriginal, submissionImported]);
+
+  // useEffect(() => {
+  //   setReloadEditorKey(Math.random());
+  // }, [props.showOriginal, props.viewSubmission])
 
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
@@ -1378,7 +1382,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "#fff"
             }}
           >
-            {isQuiz ? null : (
+            
               <View
                 style={{
                   flexDirection: "row",
@@ -1386,55 +1390,57 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 }}
               >
                 <TouchableOpacity
-                  style={{
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    backgroundColor: "#fff"
-                  }}
-                  onPress={() => {
-                    setShowOriginal(true);
-                  }}
-                >
-                  <Text
-                    style={
-                      showOriginal
-                        ? styles.allGrayFill
-                        : styles.all
-                    }
-                  >
-                    {PreferredLanguageText("viewShared")}
-                  </Text>
-                </TouchableOpacity>
-                {isOwner && submission ? null : (
-                  <TouchableOpacity
-                    style={{
-                      justifyContent: "center",
-                      flexDirection: "column",
-                      backgroundColor: "#fff"
-                    }}
-                    onPress={() => {
-                      setShowOriginal(false);
-                    }}
-                  >
-                    <Text
-                      style={
-                        !showOriginal
-                          ? styles.allGrayFill
-                          : styles.all
-                      }
-                    >
-                      {submission
-                        ? PreferredLanguageText(
-                          "mySubmission"
-                        )
-                        : PreferredLanguageText(
-                          "myNotes"
-                        )}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                                            style={{
+                                                justifyContent: 'center',
+                                                flexDirection: 'column',
+                                                backgroundColor: '#fff'
+                                            }}
+                                            onPress={() => {
+                                                props.setShowOriginal(true)
+                                            }}>
+                                            <Text style={props.showOriginal ? styles.allGrayFill : styles.all}>
+                                                {PreferredLanguageText('viewShared')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                        {
+                                            (isOwner && submission) || isQuiz ? null :
+                                                <TouchableOpacity
+                                                    style={{
+                                                        justifyContent: 'center',
+                                                        flexDirection: 'column',
+                                                        backgroundColor: '#fff'
+                                                    }}
+                                                    onPress={() => {
+                                                        props.setShowOriginal(false)
+                                                    }}>
+                                                    <Text style={!props.showOriginal && !props.viewStatus ? styles.allGrayFill : styles.all}>
+                                                        {
+                                                            submission ? PreferredLanguageText('mySubmission') : PreferredLanguageText('myNotes')
+                                                        }
+                                                    </Text>
+                                                </TouchableOpacity>
+                                        }
+                                        {/* Add Status button here */}
+                                        {
+                                            !isOwner ? null :
+                                            <TouchableOpacity
+                                                style={{
+                                                    justifyContent: 'center',
+                                                    flexDirection: 'column',
+                                                    backgroundColor: '#fff'
+                                                }}
+                                                onPress={() => {
+                                                    props.setShowOriginal(false)
+                                                    setIsQuiz(false)
+                                                    props.changeViewStatus()
+                                                }}>
+                                                <Text style={props.viewStatus ? styles.allGrayFill : styles.all}>
+                                                    Status
+                                                </Text>
+                                            </TouchableOpacity>
+                                        }
               </View>
-            )}
+
             {props.cue.graded &&
               props.cue.score !== undefined &&
               props.cue.score !== null ? (
@@ -1541,7 +1547,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "#fff"
             }}
           >
-            {showOriginal ? (
+            {props.showOriginal ? (
               <View
                 style={{ height: 28, backgroundColor: "#fff" }}
               />
@@ -1553,7 +1559,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               <RichToolbar
                 key={
                   reloadEditorKey.toString() +
-                  showOriginal.toString()
+                  props.showOriginal.toString()
                 }
                 style={{
                   flexWrap: "wrap",
@@ -1621,7 +1627,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 insertCamera={cameraCallback}
               />
             )}
-            {!showOriginal &&
+            {!props.showOriginal &&
               props.cue.submission &&
               !submissionImported &&
               showImportOptions ? (
@@ -1647,7 +1653,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             }}
           >
             {/* {
-                            !showOriginal && !submissionImported && !props.cue.graded ?
+                            !props.showOriginal && !submissionImported && !props.cue.graded ?
                                 <Text style={{
                                     color: '#a2a2aa',
                                     fontSize: 11,
@@ -1662,7 +1668,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                                     }
                                 </Text> : null
                         } */}
-            {!showOriginal &&
+            {!props.showOriginal &&
               (props.cue.submission && currentDate < deadline) &&
               !submissionImported &&
               !props.cue.graded ? (
@@ -1782,7 +1788,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
           onScroll={() => Keyboard.dismiss()}
           nestedScrollEnabled={true}
         >
-          {showOriginal && (imported || isQuiz) ? (
+          {props.showOriginal && (imported || isQuiz) ? (
             <View
               style={{
                 flexDirection: "row",
@@ -1918,7 +1924,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               )}
             </View>
           ) : null}
-          {!showOriginal && props.cue.graded && props.cue.comment ? (
+          {!props.showOriginal && props.cue.graded && props.cue.comment ? (
             <View>
               <Text
                 style={{
@@ -1950,7 +1956,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               />
             </View>
           ) : null}
-          {!showOriginal && submissionImported && !isQuiz ? (
+          {!props.showOriginal && submissionImported && !isQuiz ? (
             <View
               style={{
                 flexDirection: "row",
@@ -2008,7 +2014,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             // This is because the toolbar wont have an editor to connect with if the file is imported
             <RichEditor
               key={
-                showOriginal.toString() +
+                props.showOriginal.toString() +
                 reloadEditorKey.toString()
               }
               disabled={true}
@@ -2028,7 +2034,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "white"
             }}
           >
-            {!showOriginal ? null : isQuiz ? (
+            {!props.showOriginal ? null : isQuiz ? (
               isQuizTimed && !isOwner ? (
                 initiatedAt ? (
                   <Quiz
@@ -2143,7 +2149,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             ) : (
               <RichEditor
                 key={
-                  showOriginal.toString() +
+                  props.showOriginal.toString() +
                   reloadEditorKey.toString()
                 }
                 disabled={true}
@@ -2188,7 +2194,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
                 allowsBackForwardNavigationGestures={true}
               />
             )}
-            {showOriginal ? null : submissionImported ? (
+            {props.showOriginal ? null : submissionImported ? (
               submissionType === "mp4" ||
                 submissionType === "mp3" ||
                 submissionType === "mov" ||
@@ -2235,7 +2241,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (
             ) : (
               <RichEditor
                 key={
-                  showOriginal.toString() +
+                  props.showOriginal.toString() +
                   reloadEditorKey.toString()
                 }
                 containerStyle={{

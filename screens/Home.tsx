@@ -322,7 +322,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 if (res.data.subscription && res.data.subscription.unsubscribe) {
                   setChannelId('')
                   setFilterChoice('All')
-                  closeModal()
+                  closeModal("")
                   loadData()
                 } else {
                   Alert(alreadyUnsubscribedAlert)
@@ -376,7 +376,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   }
                   setChannelId('')
                   setFilterChoice('All')
-                  closeModal()
+                  closeModal("")
                   loadData()
                 } else {
                   Alert(alreadyUnsubscribedAlert)
@@ -1347,6 +1347,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
 
   }, [sheetRef, fadeAnimation, modalType, filterChoice, updateCueData])
+  
+  console.log("Cue update count", updatedCueCount)
 
   const modalContent = modalType === 'Menu' ? <Menu
     sleepFrom={sleepFrom}
@@ -1369,7 +1371,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       key={JSON.stringify(customCategories)}
       customCategories={customCategories}
       closeModal={() => {
-        closeModal()
+        closeModal("")
         setPageNumber(0)
       }}
     />
@@ -1380,7 +1382,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         cue={cues[updateModalKey][updateModalIndex]}
         cueIndex={updateModalIndex}
         cueKey={updateModalKey}
-        closeModal={() => closeModal()}
+        closeModal={() => closeModal("")}
         cueId={cueId}
         createdBy={createdBy}
         channelId={channelId}
@@ -1389,33 +1391,35 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
         reopenUpdateWindow={reopenUpdateWindow}
         updateCueData={(update: any) => {
+          console.log("Update", update)
           setUpdatedCueCount(updatedCueCount + 1);
           setUpdateCueData(update);
         }}
+        resetCueUpdateCount={() => setUpdatedCueCount(0)}
       />
         :
         (modalType === 'Walkthrough' ? <Walkthrough
         />
           : (
             modalType === 'Channels' ? <Channels
-              closeModal={() => closeModal()}
+              closeModal={() => closeModal("")}
             /> : (
               modalType === 'Discussion' ? <Discussion
-                closeModal={() => closeModal()}
+                closeModal={() => closeModal("")}
                 channelId={channelId}
                 filterChoice={filterChoice}
                 channelCreatedBy={channelCreatedBy}
               />
                 : (
                   modalType === 'Subscribers' ? <Subscribers
-                    closeModal={() => closeModal()}
+                    closeModal={() => closeModal("")}
                     channelId={channelId}
                     channelCreatedBy={channelCreatedBy}
                     filterChoice={filterChoice}
                   /> :
                     (
                       modalType === 'Profile' ? <Profile
-                        closeModal={() => closeModal()}
+                        closeModal={() => closeModal("")}
                         saveDataInCloud={async () => await saveDataInCloud()}
                         reOpenProfile={() => {
                           setModalType('')
@@ -1428,7 +1432,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                       /> :
                         (
                           modalType === 'Grades' ? <Grades
-                            closeModal={() => closeModal()}
+                            closeModal={() => closeModal("")}
                             channelId={channelId}
                             channelCreatedBy={channelCreatedBy}
                             filterChoice={filterChoice}
@@ -1785,7 +1789,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             {
               Dimensions.get('window').width < 1024 ?
                 <TouchableOpacity
-                  onPress={() => closeModal()}
+                  onPress={() => closeModal("")}
                   style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#dddddd', width: '100%' }}>
                   <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#a2a2aa' }}>
                     <Ionicons name='chevron-back-outline' size={15} />{PreferredLanguageText('back')}
