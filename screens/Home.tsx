@@ -1265,12 +1265,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }
 
-  const closeModal = useCallback((func: string) => {
+  const closeModal = useCallback((val: string) => {
 
     // Update Cue locally
     if (modalType === 'Update') {
 
-      if (updatedCueCount < 2 || func === "delete") {
+      if (updatedCueCount < 2 || val === "delete") {
         setUpdatedCueCount(0)
         setUpdateCueData({})
         setCueId('')
@@ -1281,6 +1281,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         fadeAnimation.setValue(0)
         if (filterChoice === 'All-Channels') {
           setChannelId('')
+        }
+        if (val === "delete") {
+          loadData(true)
         }
         return;
       }
@@ -1348,8 +1351,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }, [sheetRef, fadeAnimation, modalType, filterChoice, updateCueData])
   
-  console.log("Cue update count", updatedCueCount)
-
   const modalContent = modalType === 'Menu' ? <Menu
     sleepFrom={sleepFrom}
     sleepTo={sleepTo}
@@ -1382,7 +1383,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         cue={cues[updateModalKey][updateModalIndex]}
         cueIndex={updateModalIndex}
         cueKey={updateModalKey}
-        closeModal={() => closeModal("")}
+        closeModal={(val: string) => closeModal(val) }
         cueId={cueId}
         createdBy={createdBy}
         channelId={channelId}
@@ -1391,7 +1392,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
         reopenUpdateWindow={reopenUpdateWindow}
         updateCueData={(update: any) => {
-          console.log("Update", update)
           setUpdatedCueCount(updatedCueCount + 1);
           setUpdateCueData(update);
         }}

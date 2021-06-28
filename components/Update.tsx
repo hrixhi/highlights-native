@@ -295,12 +295,12 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             cueIndex={props.cueIndex}
                             cueKey={props.cueKey}
                             createdBy={createdBy}
-                            closeModal={() => {
+                            closeModal={(val: string) => {
                                 Animated.timing(modalAnimation, {
                                     toValue: 0,
                                     duration: 150,
                                     useNativeDriver: true
-                                }).start(() => props.closeModal());
+                                }).start(() => props.closeModal(val));
                             }}
                             reloadCueListAfterUpdate={() =>
                                 props.reloadCueListAfterUpdate()
