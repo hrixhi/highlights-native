@@ -35,7 +35,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
         <View style={styles.bottombar}>
             <View style={styles.colorBar}>
                 <View style={{ flexDirection: 'row', width: '100%' }}>
-                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{ paddingLeft: 15 }}>
+                    <ScrollView
+                        horizontal={true}
+                        contentContainerStyle={{ paddingRight: 15 }}
+                        showsHorizontalScrollIndicator={false} style={{ paddingLeft: 15 }}>
                         <TouchableOpacity
                             style={choice === 'All' ? styles.subOutline : styles.sub}
                             onPress={() => {
@@ -89,7 +92,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }
                     </ScrollView>
                 </View>
-                <Text style={{ fontSize: 9, color: '#a2a2aa', paddingTop: 7, paddingLeft: 30 }}>
+                <Text style={{ fontSize: 9, color: '#a2a2aa', paddingTop: 7, paddingLeft: 25 }}>
                     My Channels
                 </Text>
             </View>

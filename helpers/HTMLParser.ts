@@ -1,4 +1,10 @@
 export const htmlStringParser = (htmlString: string) => {
+    if (!htmlString) {
+        return {
+            title: 'No content',
+            subtitle: ''
+        }
+    }
     const parsedString = htmlString.replace(/<[^>]+>/g, '\n').split('&nbsp;').join(' ');
     const lines = parsedString.split('\n')
     const filteredLines = lines.filter(i => {

@@ -35,7 +35,11 @@ const Subscribers: React.FunctionComponent<{ [label: string]: any }> = (props: a
             }).then((res: any) => {
                 if (res.data.user && res.data.user.findByChannelId) {
                     const tempSubs = res.data.user.findByChannelId.filter((s: any) => {
-                        return s._id !== user._id
+                        if (props.channelCreatedBy === user._id) {
+                            return s._id !== user._id
+                        } else {
+                            return s._id === props.channelCreatedBy
+                        }
                     })
                     setSubscribers(tempSubs)
                 }

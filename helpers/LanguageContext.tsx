@@ -100,14 +100,14 @@ const EnglishBank: { [key: string]: string } = {
     comments: 'Comments', // Done
     noComments: 'No comments.', // Done
     noPosts: 'No posts.', // Done
-    delete: 'Delete', // Done
-    deleteForEveryone: 'Delete For Everyone', // Done
-    submit: 'Submit', // Done
+    delete: 'DELETE', // Done
+    deleteForEveryone: 'DELETE FOR ALL', // Done
+    submit: 'SUBMIT', // Done
     submitted: 'Submitted', // Done
-    submissionEnded: 'Submissions ended', // Done
-    ended: 'ended', // Done
-    resubmit: 'Resubmit', // Done
-    signupToSubmit: 'Signup to submit', // Done
+    submissionEnded: 'SUBMISSION ENDED', // Done
+    ended: 'ENDED', // Done
+    resubmit: 'RESUBMIT', // Done
+    signupToSubmit: 'SIGN UP TO SUBMIT', // Done
     private: 'Private', // Done
     post: 'Post', // Done
     anonymous: 'Anonymous', // Done

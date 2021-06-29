@@ -59,7 +59,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     useEffect(() => {
         setTimeout(() => {
             setWebviewKey(Math.random())
-        }, 200);
+        }, 400);
     }, [imported])
 
     const categoriesLanguageMap: { [label: string]: string } = {
@@ -582,39 +582,41 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }
                             {
                                 showChat ? <View style={{ flexDirection: 'column', backgroundColor: 'white', height: 200 }}>
-                                    <View style={{
-                                        marginBottom: 25,
-                                        backgroundColor: 'white'
-                                    }}>
-                                        <View>
+                                    {
+                                        isOwner ?
                                             <View style={{
-                                                backgroundColor: 'white',
-                                                height: 52,
-                                                paddingTop: 20,
-                                                flexDirection: 'row'
+                                                backgroundColor: 'white'
                                             }}>
-                                                <Switch
-                                                    value={meetingOn}
-                                                    onValueChange={() => updateMeetingStatus()}
-                                                    style={{ height: 40, marginRight: 20 }}
-                                                    trackColor={{
-                                                        false: '#f4f4f6',
-                                                        true: '#3B64F8'
-                                                    }}
-                                                    activeThumbColor='white'
-                                                />
-                                                <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 3 }}>
-                                                    <Text style={{ fontSize: 15, color: '#a2a2aa', }}>
-                                                        Meeting
+                                                <View>
+                                                    <View style={{
+                                                        backgroundColor: 'white',
+                                                        height: 52,
+                                                        paddingTop: 20,
+                                                        flexDirection: 'row'
+                                                    }}>
+                                                        <Switch
+                                                            value={meetingOn}
+                                                            onValueChange={() => updateMeetingStatus()}
+                                                            style={{ height: 40, marginRight: 20 }}
+                                                            trackColor={{
+                                                                false: '#f4f4f6',
+                                                                true: '#3B64F8'
+                                                            }}
+                                                            activeThumbColor='white'
+                                                        />
+                                                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 3 }}>
+                                                            <Text style={{ fontSize: 15, color: '#a2a2aa', }}>
+                                                                Meeting
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                    <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10, backgroundColor: 'white' }}>
+                                                        Turn on to begin private meeting. {'\n'}Restart switch if you are unable to join the call.
                                                     </Text>
                                                 </View>
-                                            </View>
-                                            <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10, backgroundColor: 'white' }}>
-                                                Turn on to begin private meeting. {'\n'}Restart switch if you are unable to join the call.
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    <View style={{ backgroundColor: 'white' }}>
+                                            </View> : null
+                                    }
+                                    <View style={{ backgroundColor: 'white', marginTop: 25, }}>
                                         <TouchableOpacity
                                             onPress={() => {
                                                 if (meetingOn) {
@@ -668,7 +670,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 </Text>
                         }
                         {
-                            !props.cueId ?
+                            isOwner && !props.cueId ?
                                 <TouchableOpacity
                                     key={Math.random()}
                                     style={{
@@ -1103,7 +1105,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     <Text
                                                         style={{
                                                             color: '#a2a2aa',
-                                                            lineHeight: 20
+                                                            lineHeight: 20,
+                                                            fontSize: 12
                                                         }}>
                                                         {PreferredLanguageText(categoriesLanguageMap[category])}
                                                     </Text>

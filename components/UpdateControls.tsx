@@ -44,10 +44,10 @@ import Collapsible from "react-native-collapsible";
 import { WebView } from "react-native-webview";
 import * as DocumentPicker from "expo-document-picker";
 import * as Updates from "expo-updates";
-import MultiSelect from "react-native-multiple-select";
 import { PreferredLanguageText } from "../helpers/LanguageContext";
 import { Video } from "expo-av";
 import moment from "moment";
+import MultiSelectComponent from "./MultiSelect";
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
   const [cue, setCue] = useState(props.cue.cue);
@@ -107,6 +107,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [selected, setSelected] = useState<any[]>([]);
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const [expandMenu, setExpandMenu] = useState(false);
+  const [original, setOriginal] = useState(props.cue.original)
   // quiz options
   const [isQuiz, setIsQuiz] = useState(false);
   const [problems, setProblems] = useState<any[]>([]);
@@ -132,7 +133,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   useEffect(() => {
     setTimeout(() => {
       setWebviewKey(Math.random());
-    }, 200);
+    }, 400);
   }, [props.showOriginal, submissionImported]);
 
   // useEffect(() => {
@@ -211,7 +212,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               setCustomCategories(res.data.channel.getChannelCategories);
             }
           })
-          .catch(err => {});
+          .catch(err => { });
       }
 
       server
@@ -226,7 +227,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             setChannels(res.data.channel.findByUserId);
           }
         })
-        .catch(err => {});
+        .catch(err => { });
       if (user._id.toString().trim() === props.cue.createdBy && props.cue.channelId && props.cue.channelId !== "") {
         // owner
         server
@@ -266,12 +267,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
   useEffect(() => {
     if (props.cue.channelId && props.cue.channelId !== "") {
-      const data1 = props.cue.original;
+      const data1 = original;
       const data2 = cue;
       if (data1 && data1[0] && data1[0] === "{" && data1[data1.length - 1] === "}") {
         const obj = JSON.parse(data1);
         if (obj.quizId) {
           if (isQuiz) {
+            return;
+          }
+          if (!loading) {
             return;
           }
           setShowOptions(true);
@@ -309,7 +313,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           setImported(true);
           setUrl(obj.url);
           setType(obj.type);
-          setTitle(obj.title);
+          if (loading) {
+            setTitle(obj.title);
+          }
         }
       } else {
         setImported(false);
@@ -346,7 +352,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     }
     setLoading(false);
     setKey(Math.random());
-  }, [props.cue, cue, isQuiz]);
+  }, [props.cue, cue, isQuiz, original, loading]);
 
   const handleHeightChange = useCallback((h: any) => {
     setHeight(h);
@@ -500,7 +506,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       if (value) {
         subCues = JSON.parse(value);
       }
-    } catch (e) {}
+    } catch (e) { }
     if (subCues[props.cueKey].length === 0) {
       return;
     }
@@ -620,7 +626,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             if (value) {
               subCues = JSON.parse(value);
             }
-          } catch (e) {}
+          } catch (e) { }
           if (subCues[props.cueKey].length === 0) {
             return;
           }
@@ -783,7 +789,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       customCategory,
       endPlayAt,
       playChannelCueIndef,
-      notify
+      notify,
+      title, url, imported, type, original
     });
   }, [
     cue,
@@ -806,7 +813,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     props.cueKey,
     endPlayAt,
     playChannelCueIndef,
-    notify
+    notify,
+    imported, url, type, title, original
   ]);
 
   const updateStatusAsRead = useCallback(async () => {
@@ -828,7 +836,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               setMarkedAsRead(true);
             }
           })
-          .catch(err => {});
+          .catch(err => { });
       }
     }
   }, [props.cue, markedAsRead]);
@@ -842,16 +850,24 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       {
         text: "Clear",
         onPress: () => {
-          setSubmissionImported(false);
-          setCue("");
-          setSubmissionUrl("");
-          setSubmissionType("");
-          setSubmissionTitle("");
+          if (props.showOriginal) {
+            setImported(false)
+            setOriginal('')
+            setUrl('')
+            setType('')
+            setTitle('')
+          } else {
+            setSubmissionImported(false)
+            setCue('')
+            setSubmissionUrl('')
+            setSubmissionType('')
+            setSubmissionTitle('')
+          }
           setReloadEditorKey(Math.random());
         }
       }
     ]);
-  }, []);
+  }, [props.showOriginal]);
 
   const shareCue = useCallback(async () => {
     let saveCue = "";
@@ -865,12 +881,25 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     } else {
       saveCue = cue;
     }
+
+    let tempOriginal = ''
+    if (imported) {
+      const obj = {
+        type,
+        url,
+        title
+      }
+      tempOriginal = JSON.stringify(obj)
+    } else {
+      tempOriginal = original
+    }
+
     const server = fetchAPI("");
     server
       .mutate({
         mutation: createCue,
         variables: {
-          cue: props.cue.channelId ? props.cue.original : saveCue,
+          cue: props.cue.channelId ? tempOriginal : saveCue,
           starred,
           color: color.toString(),
           channelId: shareWithChannelId,
@@ -897,6 +926,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     submissionTitle,
     submissionType,
     submissionUrl,
+    title, url, imported, original, type,
     cue,
     starred,
     color,
@@ -1230,14 +1260,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   };
 
   const renderRichToolbar = () => {
-    return props.showOriginal ? (
+    return (props.cue.channelId && props.cue.channelId !== '' && !isOwner && props.showOriginal) ? (
       <View style={{ height: 28, backgroundColor: "#fff" }} />
-    ) : (props.cue.graded && submission) || (currentDate > deadline && submission) ? (
+    ) : ((props.cue.graded && submission) || (currentDate > deadline && submission)) && !props.showOriginal ? (
       <View style={{ height: 28, backgroundColor: "#fff" }} />
     ) : RichText &&
       RichText.current !== undefined &&
       RichText.current !== null &&
-      !RichText.current.props.selectText ? (
+      !showImportOptions ? (
       <RichToolbar
         key={
           reloadEditorKey.toString()
@@ -1256,22 +1286,22 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         selectedIconTint={"#a2a2aa"}
         disabledIconTint={"#a2a2aa"}
         actions={
-          submissionImported || showImportOptions
-            ? ["back", "clear"]
+          (!props.showOriginal && submissionImported) || (imported && props.showOriginal)
+            ? ["clear"]
             : [
-                actions.setBold,
-                actions.setItalic,
-                actions.setUnderline,
-                actions.insertBulletsList,
-                actions.insertOrderedList,
-                actions.checkboxList,
-                actions.insertLink,
-                actions.insertImage,
-                "insertCamera",
-                actions.undo,
-                "clear",
-                actions.redo
-              ]
+              actions.setBold,
+              actions.setItalic,
+              actions.setUnderline,
+              actions.insertBulletsList,
+              actions.insertOrderedList,
+              actions.checkboxList,
+              actions.insertLink,
+              actions.insertImage,
+              "insertCamera",
+              actions.undo,
+              "clear",
+              actions.redo
+            ]
         }
         iconMap={{
           ["insertCamera"]: ({ tintColor }) => <Ionicons name="camera-outline" size={16} color={tintColor} />,
@@ -1434,7 +1464,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         ) : null
       ) : null
     ) : (imported &&
-        (type === "mp4" || type === "mp3" || type === "mov" || type === "mpeg" || type === "mp2" || type === "wav")) ||
+      (type === "mp4" || type === "mp3" || type === "mov" || type === "mpeg" || type === "mp2" || type === "wav")) ||
       props.cue.graded ? null : (
       <View
         style={{
@@ -1615,11 +1645,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       )}
       {props.showOriginal ? null : submissionImported ? (
         submissionType === "mp4" ||
-        submissionType === "mp3" ||
-        submissionType === "mov" ||
-        submissionType === "mpeg" ||
-        submissionType === "mp2" ||
-        submissionType === "wav" ? (
+          submissionType === "mp3" ||
+          submissionType === "mov" ||
+          submissionType === "mpeg" ||
+          submissionType === "mp2" ||
+          submissionType === "wav" ? (
           <View
             style={{
               backgroundColor: "#fff",
@@ -1662,7 +1692,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const renderRichEditorOriginalCue = () => (
     <RichEditor
       key={props.showOriginal.toString() + reloadEditorKey.toString()}
-      disabled={true}
+      disabled={!isOwner}
       containerStyle={{
         height: height,
         backgroundColor: "#f4f4f6",
@@ -1684,12 +1714,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         color: "#202025",
         contentCSSText: "font-size: 15px;"
       }}
-      initialContentHTML={props.cue.original}
+      initialContentHTML={original}
       onScroll={() => Keyboard.dismiss()}
       placeholder={"Title"}
       onChange={text => {
         const modifedText = text.split("&amp;").join("&");
-        setCue(modifedText);
+        setOriginal(modifedText);
       }}
       onHeightChange={handleHeightChange}
       onBlur={() => Keyboard.dismiss()}
@@ -1730,7 +1760,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       }}
       initialContentHTML={cue}
       onScroll={() => Keyboard.dismiss()}
-      placeholder={"Title"}
+      placeholder={props.cue.channelId && props.cue.channelId !== '' ? (submission ? "Submission" : "Notes") : "Title"}
       onChange={text => {
         const modifedText = text.split("&amp;").join("&");
         setCue(modifedText);
@@ -1748,7 +1778,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   );
 
   const renderShareWithOptions = () => {
-    return props.cue.channelId && props.cue.channelId !== "" && isOwner && props.showOriginal ? (
+    return props.cue.channelId && props.cue.channelId !== "" && isOwner ? (
       <View
         style={{
           width: width < 768 ? "100%" : "33.33%"
@@ -1782,48 +1812,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               padding: 5,
               backgroundColor: "#fff"
             }}>
-            <MultiSelect
-              hideTags={false}
-              items={subscribers}
-              uniqueKey="value"
-              ref={RichText}
-              styleTextDropdown={{
-                fontFamily: "overpass"
+            <MultiSelectComponent
+              selected={selected}
+              onAddNew={(e: any) => {
+                onAddNew(e)
               }}
-              styleDropdownMenuSubsection={{
-                height: 50
-              }}
-              styleSelectorContainer={{
-                height: 250
-              }}
-              styleItemsContainer={{
-                height: 150
-              }}
-              styleListContainer={{
-                height: 250,
-                backgroundColor: "#fff"
-              }}
-              onSelectedItemsChange={(sel: any) => {
-                if (sel.length > selected.length) {
-                  onAddNew(sel[selected.length]);
-                } else {
-                  Alert("Cannot un-share!");
-                }
-              }}
-              selectedItems={selected}
-              selectText="Share with"
-              searchInputPlaceholderText="Search..."
-              altFontFamily="overpass"
-              tagRemoveIconColor="#a2a2aa"
-              tagBorderColor="#a2a2aa"
-              tagTextColor="#a2a2aa"
-              selectedItemTextColor="#202025"
-              selectedItemIconColor="#202025"
-              itemTextColor="#202025"
-              displayKey="label"
-              textColor="#202025"
-              submitButtonColor={"#202025"}
-              submitButtonText="Done"
+              subscribers={subscribers}
             />
           </ScrollView>
         </View>
@@ -2078,7 +2072,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 backgroundColor: "white"
               }}>
               <View style={styles.colorBar}>
-                <TouchableOpacity style={styles.allGrayOutline} onPress={() => {}}>
+                <TouchableOpacity style={styles.allGrayOutline} onPress={() => { }}>
                   <Text
                     style={{
                       color: "#a2a2aa",
@@ -2647,20 +2641,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 paddingHorizontal: 25,
                 fontFamily: "inter",
                 overflow: "hidden",
-                height: 35
+                height: 35,
+                textTransform: 'uppercase'
               }}>
               {userSetupComplete
                 ? (props.cue.submittedAt && props.cue.submittedAt !== "") || submitted
                   ? props.cue.graded
                     ? PreferredLanguageText("graded")
                     : isQuiz
-                    ? PreferredLanguageText("submitted")
-                    : currentDate < deadline
-                    ? PreferredLanguageText("resubmit")
-                    : PreferredLanguageText("submissionEnded")
+                      ? PreferredLanguageText("submitted")
+                      : currentDate < deadline
+                        ? PreferredLanguageText("resubmit")
+                        : PreferredLanguageText("submissionEnded")
                   : currentDate < deadline
-                  ? PreferredLanguageText("submit")
-                  : PreferredLanguageText("submissionEnded")
+                    ? PreferredLanguageText("submit")
+                    : PreferredLanguageText("submissionEnded")
                 : PreferredLanguageText("signupToSubmit")}
             </Text>
           </TouchableOpacity>
@@ -2800,16 +2795,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               backgroundColor: "#fff"
             }}>
             {renderRichToolbar()}
-            {!props.showOriginal && props.cue.submission && !submissionImported && showImportOptions ? (
+            {(!props.showOriginal && props.cue.submission && !submissionImported && showImportOptions)
+              || (props.showOriginal && showImportOptions && isOwner) ? (
               <FileUpload
                 back={() => setShowImportOptions(false)}
                 onUpload={(u: any, t: any) => {
                   const obj = {
                     url: u,
                     type: t,
-                    title: submissionTitle
+                    title: props.showOriginal ? title : submissionTitle
                   };
-                  setCue(JSON.stringify(obj));
+                  if (props.showOriginal) {
+                    setOriginal(JSON.stringify(obj))
+                  } else {
+                    setCue(JSON.stringify(obj))
+                  }
                   setShowImportOptions(false);
                 }}
               />
@@ -2822,10 +2822,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               marginTop: 10
             }}>
             {!props.showOriginal &&
-            props.cue.submission &&
-            currentDate < deadline &&
-            !submissionImported &&
-            !props.cue.graded ? (
+              props.cue.submission &&
+              currentDate < deadline &&
+              !submissionImported &&
+              !showImportOptions &&
+              !props.cue.graded ? (
               <Text
                 style={{
                   color: "#a2a2aa",
@@ -2841,7 +2842,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 }}>
                 {PreferredLanguageText("import")} {Dimensions.get("window").width < 768 ? "" : "|  "}
               </Text>
-            ) : null}
+            ) : (
+              props.showOriginal && isOwner && !imported && !showImportOptions ?
+                (
+                  <Text style={{
+                    color: '#a2a2aa',
+                    fontSize: 11,
+                    lineHeight: 30,
+                    textAlign: 'right',
+                    paddingRight: 10,
+                    textTransform: 'uppercase'
+                  }}
+                    onPress={() => setShowImportOptions(true)}
+                  >
+                    {PreferredLanguageText('import')}     {Dimensions.get('window').width < 768 ? '' : '   '}
+                  </Text>
+                ) : null
+            )}
             <Text
               style={{
                 color: "#a2a2aa",
@@ -2885,7 +2902,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   backgroundColor: "#fff"
                 }}>
                 <TextInput
-                  editable={false}
+                  editable={isOwner}
                   value={title}
                   style={styles.input}
                   placeholder={"Title"}

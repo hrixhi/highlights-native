@@ -1,13 +1,10 @@
 import React, { useCallback, useState } from 'react'
 import { Text, TouchableOpacity, View } from './Themed'
 import axios from 'axios'
-// import { Ionicons } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons'
 import { Dimensions } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker';
 import Alert from './Alert'
-
-
-// const mime = require('mime-types')
 
 const FileUpload: React.FC<any> = (props: any) => {
 
@@ -69,43 +66,31 @@ const FileUpload: React.FC<any> = (props: any) => {
             uploading ? <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
                 Importing...
             </Text> :
-                <TouchableOpacity
-                    onPress={() => onClick()}
-                    style={{ backgroundColor: 'white', borderRadius: 15, }}>
-                    <Text style={{
-                        textAlign: 'center',
-                        lineHeight: 25,
-                        color: '#202025',
-                        fontSize: 12,
-                        backgroundColor: '#f4f4f6',
-                        borderRadius: 10,
-                        paddingHorizontal: 25,
-                        fontFamily: 'inter',
-                        overflow: 'hidden',
-                        height: 25
-                    }}>
-                        CHOOSE FILE
-                    </Text>
-                </TouchableOpacity>
-            // <div style={{
-            //     display: 'flex', flexDirection: 'row'
-            // }}>
-            //     <Ionicons name="arrow-back" color="#a2a2aa" size={17} style={{ marginRight: 10 }} onPress={() => props.back()} />
-            //     <input
-            //         type="file"
-            //         name="import"
-            //         title="Import"
-            //         onChange={onChange}
-            //         style={{
-            //             backgroundColor: '#fff',
-            //             fontFamily: 'overpass',
-            //             fontSize: 12,
-            //             color: '#a2a2aa',
-            //             marginRight: 10,
-            //             width: 170
-            //         }}
-            //     />
-            // </div>
+                <View style={{ flexDirection: 'row', width: 220, backgroundColor: 'white' }}>
+                    <Ionicons
+                        name="arrow-back"
+                        color="#a2a2aa"
+                        size={17} style={{ marginRight: 20 }}
+                        onPress={() => props.back()} />
+                    <TouchableOpacity
+                        onPress={() => onClick()}
+                        style={{ backgroundColor: 'white', borderRadius: 15, }}>
+                        <Text style={{
+                            textAlign: 'center',
+                            lineHeight: 25,
+                            color: '#202025',
+                            fontSize: 12,
+                            backgroundColor: '#f4f4f6',
+                            borderRadius: 10,
+                            paddingHorizontal: 25,
+                            fontFamily: 'inter',
+                            overflow: 'hidden',
+                            height: 25
+                        }}>
+                            CHOOSE FILE
+                        </Text>
+                    </TouchableOpacity>
+                </View>
         }
     </View >
 }

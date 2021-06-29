@@ -987,7 +987,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           delete cueInput.comment;
           delete cueInput.unreadThreads;
           // delete cueInput.createdBy;
-          delete cueInput.original;
+          // delete cueInput.original;
           delete cueInput.status;
           delete cueInput.channelName;
           delete cueInput.__typename
@@ -1163,8 +1163,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     })
   }, [email])
 
-
-  const handleCueUpdate = async () => {
+  const handleCueUpdate = useCallback(async () => {
 
     if (!updateCueData) return;
 
@@ -1191,6 +1190,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       submissionTitle,
       submissionType,
       submissionUrl,
+      imported,
+      type,
+      title,
+      url,
+      original,
       isQuiz,
       endPlayAt,
       solutions,
@@ -1228,6 +1232,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     } else {
       saveCue = cue;
     }
+
+    let tempOriginal = ''
+    if (imported) {
+      const obj = {
+        type,
+        url,
+        title
+      }
+      tempOriginal = JSON.stringify(obj)
+    } else {
+      tempOriginal = original
+    }
+
     const submittedNow = new Date();
     subCues[updateModalKey][updateModalIndex] = {
       _id: unmodified._id,
@@ -1246,7 +1263,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           ? endPlayAt.toISOString()
           : "",
       channelName: unmodified.channelName,
-      original: unmodified.original,
+      original: tempOriginal,
       status: "read",
       graded: unmodified.graded,
       gradeWeight,
@@ -1263,7 +1280,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     await AsyncStorage.setItem("cues", stringifiedCues);
     reloadCueListAfterUpdate();
 
-  }
+  }, [updateCueData])
 
   const closeModal = useCallback((val: string) => {
 
@@ -1350,7 +1367,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
 
   }, [sheetRef, fadeAnimation, modalType, filterChoice, updateCueData])
-  
+
   const modalContent = modalType === 'Menu' ? <Menu
     sleepFrom={sleepFrom}
     sleepTo={sleepTo}
@@ -1383,7 +1400,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         cue={cues[updateModalKey][updateModalIndex]}
         cueIndex={updateModalIndex}
         cueKey={updateModalKey}
-        closeModal={(val: string) => closeModal(val) }
+        closeModal={(val: string) => closeModal(val)}
         cueId={cueId}
         createdBy={createdBy}
         channelId={channelId}

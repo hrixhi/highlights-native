@@ -205,7 +205,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         color: '#a2a2aa', fontSize: 14, paddingRight: 10
                                     }}>
                                         {PreferredLanguageText('comments')}
-                                </Text>
+                                    </Text>
                                     <Ionicons size={14} name={showComments ? 'caret-down-circle-outline' : 'caret-forward-circle-outline'} color='#a2a2aa' />
                                 </TouchableOpacity>
                         }
@@ -345,10 +345,11 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                             style={{
                                                                                 color: '#a2a2aa',
                                                                                 lineHeight: 20,
+                                                                                fontSize: 12
                                                                             }}
                                                                         >
                                                                             {PreferredLanguageText('all')}
-                                                                    </Text>
+                                                                        </Text>
                                                                     </TouchableOpacity>
                                                             }
                                                             {
@@ -360,7 +361,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                         <Text
                                                                             style={{
                                                                                 color: '#a2a2aa',
-                                                                                lineHeight: 20
+                                                                                lineHeight: 20,
+                                                                                fontSize: 12
                                                                             }}>
                                                                             {category}
                                                                         </Text>
