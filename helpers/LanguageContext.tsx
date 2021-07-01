@@ -135,6 +135,8 @@ const EnglishBank: { [key: string]: string } = {
     noContent: 'No Content',
     existingUsers: 'Existing Users',
     noExistingUsers: 'No Existing Users',
+    sharing: 'Sharing...',
+    meeting: "Lecture",
     // Alerts
     savedLocally: 'Your changes will be saved locally but not in the cloud.',
     quizzesCanOnly: 'Quizzes can only be shared with channels created by you. Select a channel from the options below to share the quiz with and then try again.',
@@ -327,6 +329,9 @@ const HindiBank: { [key: string]: string } = {
     noContent: 'कोई सामग्री नहीं है',
     existingUsers: 'मौजूदा उपयोगकर्ता',
     noExistingUsers: 'कोई मौजूदा उपयोगकर्ता नहीं',
+    sharing: 'Sharing...',
+    meeting: "Meeting",
+    
 
     savedLocally: 'आपके परिवर्तन स्थानीय रूप से सहेजे जाएंगे लेकिन क्लाउड में नहीं।',
     quizzesCanOnly: 'क्विज़ को केवल आपके द्वारा बनाए गए चैनलों के साथ साझा किया जा सकता है। क्विज़ को साझा करने के लिए नीचे दिए विकल्पों में से एक चैनल चुनें और फिर पुनः प्रयास करें।',
@@ -518,6 +523,8 @@ const GujaratiBank: { [key: string]: string } = {
     noContent: 'કોઈ સામગ્રી નથી',
     existingUsers: 'હાલના વપરાશકર્તાઓ',
     noExistingUsers: 'કોઈ વર્તમાન વપરાશકર્તાઓ નથી',
+    sharing: 'Sharing...',
+    meeting: "Meeting",
 
     savedLocally: 'તમારા ફેરફારો ઇન્ટરને નહીં પરંતુ સ્થાનિક રૂપે સાચવવામાં આવશે.',
     quizzesCanOnly: 'ક્વિઝ ફક્ત તમારા દ્વારા બનાવેલ ચેનલો સાથે જ શેર કરી શકાય છે. ક્વિઝને શેર કરવા માટે નીચેના વિકલ્પોમાંથી ચેનલ પસંદ કરો અને પછી ફરીથી પ્રયાસ કરો.',

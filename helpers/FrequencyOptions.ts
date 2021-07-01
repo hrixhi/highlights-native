@@ -105,3 +105,27 @@ export const shuffleFrequencyOptions = [
         label: "Never", value: "0"
     }
 ]
+
+
+export const eventFrequencyOptions = [
+    {
+        label: "Week",
+        value: "1-W"
+    },
+    {
+        label: "2 Weeks",
+        value: "2-W"
+    },
+    {
+        label: "Month",
+        value: "1-M"
+    },
+    {
+        label: "2 Months",
+        value: "2-M"
+    },
+    {
+        label: "3 Months",
+        value: "3-M"
+    }
+];
