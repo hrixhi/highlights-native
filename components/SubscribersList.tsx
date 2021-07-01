@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, ScrollView, TextInput, Dimensions, Button, Switch, Linking } from 'react-native';
+import { StyleSheet, TextInput, Dimensions, Button, Switch, Linking, KeyboardAvoidingView, Platform } from 'react-native';
 import { View, Text, TouchableOpacity } from './Themed';
+import { ScrollView } from "react-native-gesture-handler";
 import _ from 'lodash'
 import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
@@ -11,7 +12,8 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import { editPersonalMeeting, findUserById, getMessages, getPersonalMeetingLink, getPersonalMeetingLinkStatus, inviteByEmail, isSubInactive, makeSubActive, makeSubInactive, markMessagesAsRead, submitGrade, unsubscribe } from '../graphql/QueriesAndMutations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Alert from './Alert';
-import NewMessage from './NewMessage';
+import NewMessage from "./NewMessage";
+import NewMessageNative from './NewMessageNative';
 import MessageCard from './MessageCard';
 import { validateEmail } from '../helpers/emailCheck';
 // import Select from 'react-select'
@@ -21,6 +23,9 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { Video } from 'expo-av';
 import moment from "moment";
 import Webview from './Webview';
+
+import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
+
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -55,6 +60,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [quizSolutions, setQuizSolutions] = useState<any>({});
     const [meetingOn, setMeetingOn] = useState(false)
     const [meetingLink, setMeetingLink] = useState('')
+    const [showMeetingOptions, setShowMeetingOptions] = useState(false);
+    const scrollRef = useRef();
+
+    // Test
+    const [height, setHeight] = useState(42)
+
 
     // useEffect(() => {
     //     setTimeout(() => {
@@ -581,9 +592,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     : null
                             }
                             {
-                                showChat ? <View style={{ flexDirection: 'column', backgroundColor: 'white', height: 200 }}>
+                                showChat ? <View style={{ flexDirection: 'column', backgroundColor: 'white'}}>
                                     {
                                         isOwner ?
+                                           (
+                                            showMeetingOptions
+                                            ?
                                             <View style={{
                                                 backgroundColor: 'white'
                                             }}>
@@ -594,65 +608,133 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         paddingTop: 20,
                                                         flexDirection: 'row'
                                                     }}>
-                                                        <Switch
-                                                            value={meetingOn}
-                                                            onValueChange={() => updateMeetingStatus()}
-                                                            style={{ height: 40, marginRight: 20 }}
-                                                            trackColor={{
-                                                                false: '#f4f4f6',
-                                                                true: '#3B64F8'
-                                                            }}
-                                                            activeThumbColor='white'
-                                                        />
-                                                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 3 }}>
-                                                            <Text style={{ fontSize: 15, color: '#a2a2aa', }}>
-                                                                Meeting
-                                                            </Text>
+                                                        <View style={{ width: '80%', backgroundColor: 'white', flexDirection: 'row', }}>
+                                                            <Switch
+                                                                value={meetingOn}
+                                                                onValueChange={() => updateMeetingStatus()}
+                                                                style={{ height: 40, marginRight: 20, }}
+                                                                trackColor={{
+                                                                    false: '#f4f4f6',
+                                                                    true: '#3B64F8'
+                                                                }}
+                                                                activeThumbColor='white'
+                                                            />
+                                                            <View style={{ backgroundColor: 'white', paddingTop: 3,  }}>
+                                                                <Text style={{ fontSize: 15, color: '#a2a2aa', }}>
+                                                                    Meeting
+                                                                </Text>
+                                                            </View>
                                                         </View>
+                                                        
+                                                        <Text style={{
+                                                            width: '20%',
+                                                            color: '#a2a2aa',
+                                                            fontSize: 11,
+                                                            lineHeight: 30,
+                                                            paddingTop: 0,
+                                                            textAlign: 'right',
+                                                            paddingRight: 20,
+                                                            textTransform: 'uppercase'
+                                                            }}
+                                                            onPress={() => {
+                                                                setShowMeetingOptions(!showMeetingOptions)
+                                                                }}
+                                                            >
+                                                            HIDE
+                                                        </Text>
                                                     </View>
                                                     <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10, backgroundColor: 'white' }}>
                                                         Turn on to begin private meeting. {'\n'}Restart switch if you are unable to join the call.
                                                     </Text>
                                                 </View>
-                                            </View> : null
+                                            </View>
+                                            
+                                            :
+                                            null
+                                            ) : null
                                     }
-                                    <View style={{ backgroundColor: 'white', marginTop: 25, }}>
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                if (meetingOn) {
-                                                    Linking.openURL(meetingLink);
-                                                } else {
-                                                    showError()
-                                                }
-                                            }}
-                                            style={{
-                                                backgroundColor: 'white',
-                                                overflow: 'hidden',
-                                                height: 35,
-                                                // marginTop: 15,
-                                                marginBottom: 20
-                                            }}>
-                                            <Text style={{
-                                                textAlign: 'center',
-                                                lineHeight: 35,
-                                                color: meetingOn ? '#fff' : '#202025',
-                                                fontSize: 12,
-                                                backgroundColor: meetingOn ? '#3B64F8' : '#f4f4f6',
-                                                paddingHorizontal: 25,
-                                                fontFamily: 'inter',
-                                                height: 35,
-                                                width: 175,
-                                                borderRadius: 15,
-                                                overflow: 'hidden',
-                                                textTransform: 'uppercase'
-                                            }}>
-                                                Join Meeting
+                                    {showMeetingOptions ? <View style={{ backgroundColor: 'white', marginTop: 25, }}>
+                                        <View style={{ backgroundColor: 'white', width: '100%', flexDirection: 'column' }}>
+                                            {!isOwner ?
+                                                <Text style={{
+                                                    width: '100%',
+                                                    color: '#a2a2aa',
+                                                    fontSize: 11,
+                                                    lineHeight: 30,
+                                                    paddingTop: 0,
+                                                    textAlign: 'right',
+                                                    paddingRight: 20,
+                                                    textTransform: 'uppercase'
+                                                    }}
+                                                    onPress={() => {
+                                                        setShowMeetingOptions(!showMeetingOptions)
+                                                        }}
+                                                    >
+                                                    HIDE
+                                                </Text>
+                                                :
+                                                null
+                                            }
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    if (meetingOn) {
+                                                        Linking.openURL(meetingLink);
+                                                    } else {
+                                                        showError()
+                                                    }
+                                                }}
+                                                style={{
+                                                    backgroundColor: 'white',
+                                                    overflow: 'hidden',
+                                                    height: 35,
+                                                    // marginTop: 15,
+
+                                                    marginBottom: 20
+                                                }}>
+                                                <Text style={{
+                                                    textAlign: 'center',
+                                                    lineHeight: 35,
+                                                    color: meetingOn ? '#fff' : '#202025',
+                                                    fontSize: 12,
+                                                    backgroundColor: meetingOn ? '#3B64F8' : '#f4f4f6',
+                                                    paddingHorizontal: 25,
+                                                    fontFamily: 'inter',
+                                                    height: 35,
+                                                    width: 175,
+                                                    borderRadius: 15,
+                                                    overflow: 'hidden',
+                                                    textTransform: 'uppercase'
+                                                }}>
+                                                    Join Meeting
+                                                </Text>
+                                            </TouchableOpacity>
+                                            <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 10, backgroundColor: 'white' }}>
+                                                Enabled only when meeting in session.
                                             </Text>
-                                        </TouchableOpacity>
-                                        <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 10, backgroundColor: 'white' }}>
-                                            Enabled only when meeting in session.
-                                        </Text>
-                                    </View>
+                                        </View>
+                                        
+                                    </View> : null}
+                                    {
+                                        !showMeetingOptions ? 
+                                        <View style={{ backgroundColor: 'white'}}>
+                                                <Text style={{
+                                                color: '#a2a2aa',
+                                                fontSize: 11,
+                                                lineHeight: 30,
+                                                paddingTop: 10,
+                                                paddingRight: 10,
+                                                textAlign: 'right',
+                                                textTransform: 'uppercase'
+                                                }}
+                                                onPress={() => {
+                                                    setShowMeetingOptions(!showMeetingOptions)
+                                                    }}
+                                                >
+                                                    OPTIONS
+                                                </Text>
+                                            </View> :
+                                            null
+                                    }
                                 </View>
                                     : null
                             }
@@ -735,10 +817,18 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             !showSubmission ?
                                 (
                                     showChat ?
+                                    <KeyboardAvoidingView style={{ flex: 1 }}  
+                                        behavior="height" 
+                                        // contentContainerStyle={{ flex: 1}}
+                                        // keyboardVerticalOffset={ Platform.OS === "ios" ? (!showMeetingOptions ? 150 : 500) : (-60) }
+                                        keyboardVerticalOffset={Platform.OS === "ios" ? (!showMeetingOptions ? 150 : (isOwner ? 450 : 350)) : -60}
+                                    >
                                         <ScrollView
+                                            ref={scrollRef}
+                                            onContentSizeChange={() => scrollRef && scrollRef.current && scrollRef.current.scrollToEnd({ animated: false })}
                                             showsVerticalScrollIndicator={false}
                                             keyboardDismissMode={'on-drag'}
-                                            style={{ flex: 1, paddingTop: 12 }}>
+                                            style={{ flex: 1, paddingTop: 12, height: 200, }}>
                                             {
                                                 messages.length === 0 ?
                                                     <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingVertical: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
@@ -755,8 +845,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     </View>
                                                 })
                                             }
-                                            <View style={{ backgroundColor: 'white' }}>
-                                                <NewMessage
+                                            {/* Empty space to scrooll to end */}
+                                            <View style={{ height: 20, backgroundColor: 'white' }} />
+                                            
+                                        </ScrollView>
+                                                <NewMessageNative
+
                                                     cueId={props.cueId}
                                                     channelId={props.channelId}
                                                     parentId={null}
@@ -769,8 +863,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     }}
                                                     placeholder={`${PreferredLanguageText('message')}...`}
                                                 />
-                                            </View>
-                                        </ScrollView>
+                                                {/* <AutoGrowingTextInput style={{ width: '100%', backgroundColor: 'gray', height: 50, padding: 10 }} /> */}
+
+                                        </KeyboardAvoidingView>
+                                        
                                         :
                                         (
                                             showNewGroup ?
