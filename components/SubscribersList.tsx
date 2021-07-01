@@ -16,11 +16,11 @@ import MessageCard from './MessageCard';
 import { validateEmail } from '../helpers/emailCheck';
 // import Select from 'react-select'
 // import FileViewer from 'react-file-viewer';
-import WebView from 'react-native-webview';
 import MultiSelect from 'react-native-multiple-select';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { Video } from 'expo-av';
 import moment from "moment";
+import Webview from './Webview';
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -55,17 +55,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [quizSolutions, setQuizSolutions] = useState<any>({});
     const [meetingOn, setMeetingOn] = useState(false)
     const [meetingLink, setMeetingLink] = useState('')
-
-    const [intervalKey, setIntervalKey] = useState(0)
-    useEffect(() => {
-        // if (imported) {
-        const id = setInterval(() => {
-            setWebviewKey(Math.random());
-        }, 3000);
-        setIntervalKey(id)
-        // }
-    }, []);
-
 
     // useEffect(() => {
     //     setTimeout(() => {
@@ -1072,10 +1061,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         (!isQuiz ? <View
                                                             style={{ flex: 1 }}
                                                         >
-                                                            <WebView
-                                                                onLoad={e => clearInterval(intervalKey)}
-                                                                source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
-                                                                key={webviewKey}
+                                                            <Webview
+                                                                key={url}
+                                                                url={url}
                                                             />
                                                         </View> : null)
                                                 )

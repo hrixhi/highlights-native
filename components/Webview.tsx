@@ -3,25 +3,17 @@ import { WebView } from "react-native-webview";
 
 const Webview: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
-    const [key, setKey] = useState(Math.random())
-    const [proc, setProc] = useState(0)
-
     const ref: any = useRef()
-
-    useEffect(() => {
-        const id = setInterval(() => {
-            setKey(Math.random())
-        }, 3000)
-        setProc(id)
-    }, [])
 
     return (
         <WebView
-            key={key}
-            ref={ref}
-            onLoad={e => {
-                clearInterval(proc)
+            onLoad={(syntheticEvent) => {
+                const { nativeEvent } = syntheticEvent;
+                if (nativeEvent.title == "") {
+                    ref.current.reload();
+                }
             }}
+            ref={ref}
             style={{ flex: 1 }}
             scrollEnabled={true}
             javaScriptEnabled={true}

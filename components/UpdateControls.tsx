@@ -128,25 +128,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [showEndPlayAtTimeAndroid, setShowEndPlayAtTimeAndroid] = useState(false);
   const [showEndPlayAtDateAndroid, setShowEndPlayAtDateAndroid] = useState(false);
 
-  // Alerts
-  // const [webviewKey, setWebviewKey] = useState(Math.random());
-  // const [intervalKey, setIntervalKey] = useState(0)
-
-  // useEffect(() => {
-  //   const id = setInterval(() => {
-  //     console.log(Math.random())
-  //     setWebviewKey(Math.random());
-  //   }, 3000);
-  //   for (let x = 0; x < id; x++) {
-  //     clearInterval(x)
-  //   }
-  //   setIntervalKey(id)
-  // }, []);
-
-  // useEffect(() => {
-  //   setReloadEditorKey(Math.random());
-  // }, [props.showOriginal, props.viewSubmission])
-
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
   const enterTitleAlert = PreferredLanguageText("enterTitle");
@@ -1645,15 +1626,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               <Webview
                 key={url}
                 url={url}
-              // style={{ borderWidth: 1 }}
-              // onLoad={e => {
-              //   clearInterval(intervalKey)
-              // }}
-              // cacheMode
-              // source={{
-              //   uri: "https://docs.google.com/gview?embedded=true&url=" + url
-              // }}
-              // key={webviewKey.toString() + imported.toString() + url.toString()}
               />
             </View> : null
         )
@@ -1689,18 +1661,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             />
           </View>
         ) : (
-          <View
-            // key={Math.random()}
-            style={{ flex: 1 }}>
-            <Webview url={submissionUrl} />
-            {/* <WebView
-              onLoad={e => clearInterval(intervalKey)}
-              source={{
-                uri: "https://docs.google.com/gview?embedded=true&url=" + submissionUrl
-              }}
-              key={webviewKey}
-            /> */}
-          </View>
+          submissionUrl && submissionUrl !== '' ?
+            <View
+              key={submissionUrl}
+              style={{ flex: 1 }}>
+              <Webview url={submissionUrl} key={submissionUrl} />
+            </View> : null
         )
       ) : (
         renderRichEditorModified()

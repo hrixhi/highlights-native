@@ -11712,6 +11712,13 @@ react-native-player@^0.0.9:
   resolved "https://registry.yarnpkg.com/react-native-player/-/react-native-player-0.0.9.tgz#be5247f3a8a2fccf53828accc31dd7e09d353401"
   integrity sha1-vlJH86ii/M9TgorMwx3X4J01NAE=
 
+react-native-progress-webview@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-progress-webview/-/react-native-progress-webview-1.2.0.tgz#b3ade136474e9d6dfa4fced660fa3b5082e8776b"
+  integrity sha512-7SdC8zbxhPzmmEWJlsVBWOYKkYcFpXV52x3+EaouIuQTvi007a/OAJ1WXQRWt49usa1GfIf9JR62sqxLpG4ypw==
+  dependencies:
+    prop-types "^15.7.2"
+
 react-native-reanimated@~2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-2.1.0.tgz#b9ad04aee490e1e030d0a6cdaa43a14895d9a54d"
