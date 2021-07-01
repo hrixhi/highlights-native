@@ -67,6 +67,7 @@
     "react-jutsu": "^3.0.2",
     "react-moment": "^1.1.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-41.0.0.tar.gz",
+    "react-native-autogrow-textinput": "^5.4.0",
     "react-native-big-calendar": "^0.9.1",
     "react-native-calendars": "^1.1260.0",
     "react-native-check-box": "^2.1.7",

@@ -20,6 +20,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (
   );
   const checkConnectionAlert = PreferredLanguageText("checkConnection");
 
+
   const loadThreads = useCallback(async () => {
     const u = await AsyncStorage.getItem("user");
     let parsedUser: any = {};

@@ -128,6 +128,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [showEndPlayAtTimeAndroid, setShowEndPlayAtTimeAndroid] = useState(false);
   const [showEndPlayAtDateAndroid, setShowEndPlayAtDateAndroid] = useState(false);
 
+  const [cueFullyLoaded, setCueFullyLoaded] = useState(false);
+
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
   const enterTitleAlert = PreferredLanguageText("enterTitle");
@@ -343,6 +345,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       }
     }
     setLoading(false);
+    setCueFullyLoaded(true);
   }, [props.cue, cue, original, loading]);
 
   const handleHeightChange = useCallback((h: any) => {
@@ -782,7 +785,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       endPlayAt,
       playChannelCueIndef,
       notify,
-      title, url, imported, type, original
+      title, 
+      url, 
+      imported, 
+      type, 
+      original,
+      cueFullyLoaded,
     });
   }, [
     cue,
@@ -806,7 +814,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     endPlayAt,
     playChannelCueIndef,
     notify,
-    imported, url, type, title, original
+    imported, url, type, title, original,
+    cueFullyLoaded
   ]);
 
   const updateStatusAsRead = useCallback(async () => {
