@@ -86,14 +86,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [showEndPlayAtDateAndroid, setShowEndPlayAtDateAndroid] = useState(false);
 
     const [webviewKey, setWebviewKey] = useState(Math.random())
+    const [intervalKey, setIntervalKey] = useState(0)
     useEffect(() => {
-        setTimeout(() => {
-            // if (Platform.OS === "android") {
-            setWebviewKey(Math.random())
-            // }
-        }, 400);
-    }, [imported])
-
+        // if (imported) {
+        const id = setInterval(() => {
+            setWebviewKey(Math.random());
+        }, 3000);
+        setIntervalKey(id)
+        // }
+    }, []);
     // Alerts
 
     const enterOneProblemAlert = PreferredLanguageText('enterOneProblem')
@@ -1249,6 +1250,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 style={{ flex: 1 }}
                                             >
                                                 <WebView
+                                                    onLoad={e => clearInterval(intervalKey)}
                                                     source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
                                                     key={reloadEditorKey}
                                                 />

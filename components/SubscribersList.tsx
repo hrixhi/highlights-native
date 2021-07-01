@@ -56,11 +56,22 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [meetingOn, setMeetingOn] = useState(false)
     const [meetingLink, setMeetingLink] = useState('')
 
+    const [intervalKey, setIntervalKey] = useState(0)
     useEffect(() => {
-        setTimeout(() => {
-            setWebviewKey(Math.random())
-        }, 400);
-    }, [imported])
+        // if (imported) {
+        const id = setInterval(() => {
+            setWebviewKey(Math.random());
+        }, 3000);
+        setIntervalKey(id)
+        // }
+    }, []);
+
+
+    // useEffect(() => {
+    //     setTimeout(() => {
+    //         setWebviewKey(Math.random())
+    //     }, 600);
+    // }, [imported])
 
     const categoriesLanguageMap: { [label: string]: string } = {
         All: 'all',
@@ -1062,6 +1073,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             style={{ flex: 1 }}
                                                         >
                                                             <WebView
+                                                                onLoad={e => clearInterval(intervalKey)}
                                                                 source={{ uri: "https://docs.google.com/gview?embedded=true&url=" + url }}
                                                                 key={webviewKey}
                                                             />

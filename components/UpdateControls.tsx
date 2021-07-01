@@ -41,13 +41,13 @@ import Quiz from "./Quiz";
 import { CountdownCircleTimer } from "react-native-countdown-circle-timer";
 import TeXToSVG from "tex-to-svg";
 import Collapsible from "react-native-collapsible";
-import { WebView } from "react-native-webview";
 import * as DocumentPicker from "expo-document-picker";
 import * as Updates from "expo-updates";
 import { PreferredLanguageText } from "../helpers/LanguageContext";
 import { Video } from "expo-av";
 import moment from "moment";
 import MultiSelectComponent from "./MultiSelect";
+import Webview from "./Webview";
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
   const [cue, setCue] = useState(props.cue.cue);
@@ -129,12 +129,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [showEndPlayAtDateAndroid, setShowEndPlayAtDateAndroid] = useState(false);
 
   // Alerts
-  const [webviewKey, setWebviewKey] = useState(Math.random());
-  useEffect(() => {
-    setTimeout(() => {
-      setWebviewKey(Math.random());
-    }, 400);
-  }, [props.showOriginal, submissionImported]);
+  // const [webviewKey, setWebviewKey] = useState(Math.random());
+  // const [intervalKey, setIntervalKey] = useState(0)
+
+  // useEffect(() => {
+  //   const id = setInterval(() => {
+  //     console.log(Math.random())
+  //     setWebviewKey(Math.random());
+  //   }, 3000);
+  //   for (let x = 0; x < id; x++) {
+  //     clearInterval(x)
+  //   }
+  //   setIntervalKey(id)
+  // }, []);
 
   // useEffect(() => {
   //   setReloadEditorKey(Math.random());
@@ -210,6 +217,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           .then(res => {
             if (res.data.channel && res.data.channel.getChannelCategories) {
               setCustomCategories(res.data.channel.getChannelCategories);
+              setKey(key)
             }
           })
           .catch(err => { });
@@ -225,6 +233,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         .then(res => {
           if (res.data.channel.findByUserId) {
             setChannels(res.data.channel.findByUserId);
+            setKey(key)
           }
         })
         .catch(err => { });
@@ -254,6 +263,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               });
               setSubscribers(shared);
               setSelected(ids);
+              setKey(key)
             }
           })
           .catch((err: any) => console.log(err));
@@ -269,12 +279,24 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     if (props.cue.channelId && props.cue.channelId !== "") {
       const data1 = original;
       const data2 = cue;
+      if (data2 && data2[0] && data2[0] === "{" && data2[data2.length - 1] === "}") {
+        const obj = JSON.parse(data2);
+        setSubmissionImported(true);
+        setSubmissionUrl(obj.url);
+        setSubmissionType(obj.type);
+        setSubmissionTitle(obj.title);
+      } else {
+        setSubmissionImported(false);
+        setSubmissionUrl("");
+        setSubmissionType("");
+        setSubmissionTitle("");
+      }
       if (data1 && data1[0] && data1[0] === "{" && data1[data1.length - 1] === "}") {
         const obj = JSON.parse(data1);
         if (obj.quizId) {
-          if (isQuiz) {
-            return;
-          }
+          // if (isQuiz) {
+          //   return;
+          // }
           if (!loading) {
             return;
           }
@@ -316,24 +338,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           if (loading) {
             setTitle(obj.title);
           }
+          setKey(Math.random());
         }
       } else {
-        setImported(false);
-        setUrl("");
         setType("");
         setTitle("");
-      }
-      if (data2 && data2[0] && data2[0] === "{" && data2[data2.length - 1] === "}") {
-        const obj = JSON.parse(data2);
-        setSubmissionImported(true);
-        setSubmissionUrl(obj.url);
-        setSubmissionType(obj.type);
-        setSubmissionTitle(obj.title);
-      } else {
-        setSubmissionImported(false);
-        setSubmissionUrl("");
-        setSubmissionType("");
-        setSubmissionTitle("");
+        setImported(false);
+        setUrl("");
       }
     } else {
       const data = cue;
@@ -351,8 +362,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       }
     }
     setLoading(false);
-    setKey(Math.random());
-  }, [props.cue, cue, isQuiz, original, loading]);
+  }, [props.cue, cue, original, loading]);
 
   const handleHeightChange = useCallback((h: any) => {
     setHeight(h);
@@ -764,6 +774,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         if (parsedUser.email && parsedUser.email !== "") {
           setUserSetupComplete(true);
         }
+        setKey(key)
       }
     })();
   }, [props.cue]);
@@ -834,6 +845,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           .then(res => {
             if (res.data.status.markAsRead) {
               setMarkedAsRead(true);
+              setKey(key)
             }
           })
           .catch(err => { });
@@ -1264,13 +1276,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       <View style={{ height: 28, backgroundColor: "#fff" }} />
     ) : ((props.cue.graded && submission) || (currentDate > deadline && submission)) && !props.showOriginal ? (
       <View style={{ height: 28, backgroundColor: "#fff" }} />
-    ) : RichText &&
-      RichText.current !== undefined &&
-      RichText.current !== null &&
-      !showImportOptions ? (
+    ) : (
       <RichToolbar
         key={
-          reloadEditorKey.toString()
+          key.toString()
           // + props.showOriginal.toString()
         }
         style={{
@@ -1323,7 +1332,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         onPressAddImage={galleryCallback}
         insertCamera={cameraCallback}
       />
-    ) : null;
+    )
   };
 
   const renderEquationEditor = () => {
@@ -1474,7 +1483,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           backgroundColor: "#fff",
           flexDirection: "row"
         }}>
-        <TouchableOpacity style={{ backgroundColor: "white", marginRight: 20 }} onPress={() => download(true)}>
+        {/* <TouchableOpacity style={{ backgroundColor: "white", marginRight: 20 }} onPress={() => download(true)}>
           <Ionicons
             style={{ alignSelf: "center" }}
             name="reload-outline"
@@ -1490,7 +1499,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             }}>
             Reload
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* <a download={true} href={url} style={{ textDecoration: 'none' }}> */}
         <TouchableOpacity style={{ backgroundColor: "white" }} onPress={() => download(true)}>
@@ -1629,16 +1638,24 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             />
           </View>
         ) : (
-          <View
-            // key={Math.random()}
-            style={{ flex: 1 }}>
-            <WebView
-              source={{
-                uri: "https://docs.google.com/gview?embedded=true&url=" + url
-              }}
-              key={webviewKey}
-            />
-          </View>
+          url && url !== '' ?
+            <View
+              key={url}
+              style={{ flex: 1 }}>
+              <Webview
+                key={url}
+                url={url}
+              // style={{ borderWidth: 1 }}
+              // onLoad={e => {
+              //   clearInterval(intervalKey)
+              // }}
+              // cacheMode
+              // source={{
+              //   uri: "https://docs.google.com/gview?embedded=true&url=" + url
+              // }}
+              // key={webviewKey.toString() + imported.toString() + url.toString()}
+              />
+            </View> : null
         )
       ) : (
         renderRichEditorOriginalCue()
@@ -1675,12 +1692,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <View
             // key={Math.random()}
             style={{ flex: 1 }}>
-            <WebView
+            <Webview url={submissionUrl} />
+            {/* <WebView
+              onLoad={e => clearInterval(intervalKey)}
               source={{
                 uri: "https://docs.google.com/gview?embedded=true&url=" + submissionUrl
               }}
               key={webviewKey}
-            />
+            /> */}
           </View>
         )
       ) : (

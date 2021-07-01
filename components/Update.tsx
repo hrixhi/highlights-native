@@ -144,20 +144,20 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                         });
                                         setSubscribers(subs);
                                         setLoading(false);
-                                        modalAnimation.setValue(0);
-                                        Animated.timing(modalAnimation, {
-                                            toValue: 1,
-                                            duration: 150,
-                                            useNativeDriver: true
-                                        }).start();
+                                        // modalAnimation.setValue(0);
+                                        // Animated.timing(modalAnimation, {
+                                        //     toValue: 1,
+                                        //     duration: 150,
+                                        //     useNativeDriver: true
+                                        // }).start();
                                     } else {
                                         setLoading(false);
-                                        modalAnimation.setValue(0);
-                                        Animated.timing(modalAnimation, {
-                                            toValue: 1,
-                                            duration: 150,
-                                            useNativeDriver: true
-                                        }).start();
+                                        // modalAnimation.setValue(0);
+                                        // Animated.timing(modalAnimation, {
+                                        //     toValue: 1,
+                                        //     duration: 150,
+                                        //     useNativeDriver: true
+                                        // }).start();
                                     }
                                 })
                                 .catch(err => {
@@ -166,57 +166,62 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                         checkConnectionAlert
                                     );
                                     setLoading(false);
-                                    modalAnimation.setValue(0);
-                                    Animated.timing(modalAnimation, {
-                                        toValue: 1,
-                                        duration: 150,
-                                        useNativeDriver: true
-                                    }).start();
+                                    // modalAnimation.setValue(0);
+                                    // Animated.timing(modalAnimation, {
+                                    //     toValue: 1,
+                                    //     duration: 150,
+                                    //     useNativeDriver: true
+                                    // }).start();
                                 });
                         } else {
                             setLoading(false);
-                            modalAnimation.setValue(0);
-                            Animated.timing(modalAnimation, {
-                                toValue: 1,
-                                duration: 150,
-                                useNativeDriver: true
-                            }).start();
+                            // modalAnimation.setValue(0);
+                            // Animated.timing(modalAnimation, {
+                            //     toValue: 1,
+                            //     duration: 150,
+                            //     useNativeDriver: true
+                            // }).start();
                         }
                     } else {
                         setThreads(res.data.thread.findByCueId);
                         setLoading(false);
-                        modalAnimation.setValue(0);
-                        Animated.timing(modalAnimation, {
-                            toValue: 1,
-                            duration: 150,
-                            useNativeDriver: true
-                        }).start();
+                        // modalAnimation.setValue(0);
+                        // Animated.timing(modalAnimation, {
+                        //     toValue: 1,
+                        //     duration: 150,
+                        //     useNativeDriver: true
+                        // }).start();
                     }
                 })
                 .catch(err => {
                     Alert(unableToLoadCommentsAlert, checkConnectionAlert);
                     setLoading(false);
-                    modalAnimation.setValue(0);
-                    Animated.timing(modalAnimation, {
-                        toValue: 1,
-                        duration: 150,
-                        useNativeDriver: true
-                    }).start();
+                    // modalAnimation.setValue(0);
+                    // Animated.timing(modalAnimation, {
+                    //     toValue: 1,
+                    //     duration: 150,
+                    //     useNativeDriver: true
+                    // }).start();
                 });
         } else {
             setLoading(false);
-            modalAnimation.setValue(0);
-            Animated.timing(modalAnimation, {
-                toValue: 1,
-                duration: 150,
-                useNativeDriver: true
-            }).start();
+            // modalAnimation.setValue(0);
+            // Animated.timing(modalAnimation, {
+            //     toValue: 1,
+            //     duration: 150,
+            //     useNativeDriver: true
+            // }).start();
         }
     }, [cueId, modalAnimation, createdBy, channelCreatedBy]);
+
 
     useEffect(() => {
         loadThreadsAndStatuses();
     }, [props.cueId, props.channelId]);
+
+    if (loading) {
+        return null
+    }
 
     const windowHeight =
         Dimensions.get("window").width < 1024
@@ -283,11 +288,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                         nestedScrollEnabled={true}
                         horizontal={false}
                         keyboardDismissMode="on-drag"
-                        onScrollBeginDrag={Keyboard.dismiss}
+                        onScrollBeginDrag={() => Keyboard.dismiss()}
                         onScroll={() => Keyboard.dismiss()}
                     >
                         <UpdateControls
-                            key={props.reopenUpdateWindow}
+                            // key={JSON.stringify(showOriginal) + JSON.stringify(viewStatus)}
                             channelId={props.channelId}
                             customCategories={props.customCategories}
                             cue={props.cue}
