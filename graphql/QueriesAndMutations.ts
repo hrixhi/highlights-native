@@ -23,6 +23,7 @@ export const createUser = gql`
     }
   }
 `;
+
 export const createChannel = gql`
   mutation($name: String!, $password: String, $createdBy: String!) {
     channel {
@@ -241,6 +242,32 @@ export const createDate = gql`
     }
   }
 `;
+
+export const createDateV1 = gql`
+  mutation($title: String!, $userId: String!, $start: String!, $end: String!, $channelId: String, $meeting: Boolean, $description: String, $recordMeeting: Boolean, $frequency: String, $repeatTill: String) {
+    date {
+      createV1(title: $title, userId: $userId, start: $start, end: $end, channelId: $channelId,  meeting: $meeting, description: $description, recordMeeting: $recordMeeting, frequency: $frequency, repeatTill: $repeatTill)
+    }
+  }
+`
+
+export const editDateV1 = gql`
+  mutation($id: String!, $title: String!, $start: String!, $end: String!, $description: String, $recordMeeting: Boolean) {
+    date {
+      editV1(id: $id, title: $title, start: $start, end: $end, description: $description, recordMeeting: $recordMeeting)
+    }
+  }
+`
+
+export const deleteDateV1 = gql`
+mutation($id: String!, $deleteAll: Boolean!) {
+  date {
+    deleteV1(id: $id, deleteAll: $deleteAll) 
+  }
+}
+`
+
+
 export const editMeeting = gql`
   mutation($channelId: String!, $meetingOn: Boolean!) {
     channel {
@@ -637,11 +664,16 @@ export const getEvents = gql`
   query($userId: String!) {
     date {
       getCalendar(userId: $userId) {
+        eventId
         dateId
         title
         start
         end
         channelName
+        description
+        createdBy
+        recurringId
+        recordMeeting
       }
     }
   }

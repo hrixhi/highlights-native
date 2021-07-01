@@ -668,7 +668,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         paddingTop: 25,
                         backgroundColor: "#fff"
                     }}>
-                        <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
+                        {/* <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
                             <View style={{ flex: 1, backgroundColor: '#fff' }}>
                                 <Text
                                     ellipsizeMode="tail"
@@ -691,7 +691,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     showAddEvent ? PreferredLanguageText('hide') : PreferredLanguageText('add')
                                 }
                             </Text>
-                        </View>
+                        </View> */}
                         {
                             showAddEvent ?
                                 <View style={{ backgroundColor: 'white' }}>
