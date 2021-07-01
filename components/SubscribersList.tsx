@@ -1059,6 +1059,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         </View>
                                                         :
                                                         (!isQuiz ? <View
+                                                            key={url}
                                                             style={{ flex: 1 }}
                                                         >
                                                             <Webview
