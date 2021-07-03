@@ -522,7 +522,16 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
             <Text
                 ellipsizeMode="tail"
-                style={{ color: '#a2a2aa', fontSize: 16, fontWeight: 'bold', flex: 1, lineHeight: 25 }}>
+                style={{
+                    color: '#202025',
+                    fontSize: 11,
+                    // paddingBottom: 20,
+                    textTransform: "uppercase",
+                    // paddingLeft: 10,
+                    flex: 1,
+                    lineHeight: 25
+                }}
+            >
                 {PreferredLanguageText('classroom')}
             </Text>
         </View>
@@ -530,19 +539,12 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             {
                 isOwner ?
                     <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column', width: '100%' }}>
-                        <View style={{ width: '100%', paddingTop: 20, backgroundColor: 'white', flex: 1, justifyContent: 'center', flexDirection: 'row' }}>
+                        <View style={{ width: '100%', backgroundColor: 'white', flex: 1, justifyContent: 'flex-start', flexDirection: 'row' }}>
                             <Text style={{ fontSize: 15, color: '#a2a2aa' }}>
                                 {PreferredLanguageText('initiateMeeting')}
                             </Text>
                         </View>
-                        {/* <View style={{
-                            backgroundColor: 'white',
-                            height: 40,
-                            // marginRight: 10,
-                            width: '100%',
-                            display: 'flex'
-                        }}> */}
-                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', backgroundColor: 'white' }}>
+                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-start', backgroundColor: 'white' }}>
                             <Switch
                                 value={meetingOn}
                                 onValueChange={() => updateMeetingStatus()}
@@ -554,13 +556,12 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 thumbColor='white'
                             />
                         </View>
-                        {/* </View> */}
                     </View> : null
             }
             {
                 isOwner ?
                     <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10 }}>
-                        Turn on to begin session.{'\n'}Restart switch if you are unable to join the classroom.
+                        Restart switch if you are unable to join.
                     </Text> : null
             }
             <TouchableOpacity
@@ -594,7 +595,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     backgroundColor: 'white',
                     overflow: 'hidden',
                     height: 35,
-                    width: '100%', justifyContent: 'center', flexDirection: 'row',
+                    width: '100%', justifyContent: 'flex-start', flexDirection: 'row',
                     marginBottom: 20,
                     marginTop: 30
                 }}>
@@ -627,8 +628,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     overflow: 'hidden',
                     height: 35,
                     marginTop: 30,
-                    width: '100%', justifyContent: 'center', flexDirection: 'row',
-                    marginBottom: 30
+                    width: '100%', justifyContent: 'flex-start', flexDirection: 'row',
+                    marginBottom: 20
                 }}>
                 <Text style={{
                     overflow: 'hidden',
@@ -770,7 +771,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             {
                 upcomingMeetings.length === 0 ?
                     <View style={{ backgroundColor: 'white', flex: 1 }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                             {PreferredLanguageText('noMeeting')}
                         </Text>
                     </View>
@@ -829,7 +830,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     {
                                         attendances.length === 0 ?
                                             <View style={{ backgroundColor: 'white', flex: 1, }}>
-                                                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                                     {PreferredLanguageText('noAttendances')}
                                                 </Text>
                                             </View>
@@ -852,7 +853,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 </View>
                                 : (pastMeetings.length === 0 ?
                                     <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                             {PreferredLanguageText('noPastMeetings')}
                                         </Text>
                                     </View>
@@ -927,8 +928,8 @@ const styles = StyleSheet.create({
     },
     col: {
         width: '100%',
-        height: 80,
-        marginBottom: 12,
+        height: 70,
+        marginBottom: 15,
         // flex: 1,
         backgroundColor: 'white'
     },

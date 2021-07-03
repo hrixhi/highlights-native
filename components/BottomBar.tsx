@@ -15,6 +15,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [loggedIn, setLoggedIn] = useState(false)
     const [userLoaded, setUserLoaded] = useState(false)
     const color = '#a2a2a2'
+    const iconColor = colorScheme === 'light' ? '#202025' : '#fff'
 
     const getUser = useCallback(async () => {
         const u = await AsyncStorage.getItem('user')
@@ -54,7 +55,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         choice === 'All' ? '#202025' : 'white'
                                     ),
                                     lineHeight: 22,
-                                    fontSize: 14
+                                    fontSize: 13
                                 }}
                             >
                                 {PreferredLanguageText('myCues')}
@@ -96,16 +97,16 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     My Channels
                 </Text>
             </View>
-            <View style={{ display: 'flex', flexDirection: 'row', height: '40%', paddingTop: 7, paddingHorizontal: 5 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', height: '45%', paddingHorizontal: 10, paddingTop: 4 }}>
                 <View style={styles.icons}>
                     <TouchableOpacity
                         onPress={() => props.openChannels()}
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='radio-outline' size={21} color={color} />
+                            <Ionicons name='radio-outline' size={21} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: '#a2a2a2', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 9, color: iconColor, textAlign: 'center' }}>
                             Channels
                         </Text>
                     </TouchableOpacity>
@@ -116,9 +117,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='calendar-outline' size={21} color={color} />
+                            <Ionicons name='calendar-outline' size={21} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 9, textAlign: 'center', color: iconColor }}>
                             Planner
                         </Text>
                     </TouchableOpacity>
@@ -129,7 +130,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 35, marginTop: 0 }}>
-                            <Ionicons name='add-circle' size={35} color={colorScheme === 'light' ? '#202025' : '#fff'} />
+                            <Ionicons name='add-circle' size={35} color={iconColor} />
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -139,9 +140,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={21} color={color} />
+                            <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={21} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 9, color: iconColor, textAlign: 'center' }}>
                             {
                                 !loggedIn && userLoaded ?
                                     'Sign Up' : 'Profile'
@@ -155,9 +156,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='help-circle-outline' size={21} color={color} />
+                            <Ionicons name='help-circle-outline' size={21} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 9, color: iconColor, textAlign: 'center' }}>
                             Help
                         </Text>
                     </TouchableOpacity>
@@ -174,31 +175,32 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         height: "18%",
         width: '100%',
         display: 'flex',
-        // paddingHorizontal: 20,
         paddingBottom: 10,
         borderTopWidth: 1,
-        borderColor: colorScheme !== 'light' ? '#a2a2aa' : '#dddddd'
+        borderColor: colorScheme !== 'light' ? '#444444' : '#eeeeee'
     },
     icons: {
         width: '20%',
         display: 'flex',
+        // alignContent: 'center',
         justifyContent: 'center',
-        flexDirection: 'column',
+        flexDirection: 'row',
         overflow: 'hidden',
-        textAlign: 'center'
+        textAlign: 'center', paddingTop: 5
     },
     defaultFont: {
         fontFamily: 'system font'
     },
     center: {
         width: '100%',
-        justifyContent: 'center',
-        display: 'flex',
+        // justifyContent: 'center',
+        // display: 'flex',
+        // flexDirection: 'column',
         textAlign: 'center'
     },
     colorBar: {
         width: '98.5%',
-        height: '47%',
+        height: '55%',
         // flexDirection: 'row',
         paddingTop: 15
     },

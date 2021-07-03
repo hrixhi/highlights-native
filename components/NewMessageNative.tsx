@@ -171,7 +171,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             />
                         </View>
                         <View style={{ backgroundColor: '#fff' }}>
-                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                 <Ionicons name='document-outline' size={50} color='#a2a2aa' />
                             </Text>
                         </View>

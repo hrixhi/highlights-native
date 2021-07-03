@@ -47,7 +47,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
             {
                 channelAttendances.length === 0 || pastMeetings.length === 0 ?
                     <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
                                 pastMeetings.length === 0  ? "No past meetings" : "No Students"
                                 // PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
@@ -147,6 +147,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 export default AttendanceList
 
 const styles = StyleSheet.create({
-    row: { height: 80, borderRadius: 15, marginBottom: 12, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
+    row: { height: 70, borderRadius: 15, marginBottom: 15, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
     col: { width: 100, justifyContent: 'center', display: 'flex', flexDirection: 'column', backgroundColor: '#f4f4f6', padding: 5 }
 })

@@ -885,7 +885,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             backgroundColor: 'white',
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            paddingHorizontal: 15,
+            paddingHorizontal: 25,
             overflow: 'hidden'
         }}>
             <Animated.View style={{
@@ -911,7 +911,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 fontSize: 11,
                                 paddingBottom: 20,
                                 textTransform: 'uppercase',
-                                paddingLeft: 10,
+                                // paddingLeft: 10,
                                 paddingTop: 5
                             }}>
                                 {PreferredLanguageText('new')}
@@ -922,7 +922,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onTouchStart={() => setStarred(!starred)}
                         style={{
                             backgroundColor: 'white',
-                            paddingRight: 15,
+                            // paddingRight: 15,
                             marginTop: Platform.OS === "ios" ? 0 : 0,
                         }}>
                         <Text style={{
@@ -946,6 +946,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         style={{ flexDirection: (imported || isQuiz || showImportOptions) ? 'row' : 'column', flex: 1, }}
                         key={reloadEditorKey}
                     >
+                          {
+                            showImportOptions ? null :
                         <RichToolbar
                             key={reloadEditorKey.toString()}
                             style={{
@@ -962,7 +964,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             selectedIconTint={"#a2a2aa"}
                             disabledIconTint={"#a2a2aa"}
                             actions={
-                                imported || isQuiz || showImportOptions ? ["back", "clear"] :
+                                imported || isQuiz ? [""] :
                                     [
                                         actions.setBold,
                                         actions.setItalic,
@@ -982,11 +984,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={16} color={tintColor} onPress={() => {
                                     clearAll()
                                 }} />,
-                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                                // ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
                             }}
                             onPressAddImage={galleryCallback}
                             insertCamera={cameraCallback}
                         />
+                        }
                         {
                             imported || !showImportOptions ? null :
                                 <FileUpload
@@ -1155,7 +1158,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     {
                         imported || isQuiz ?
                             <View style={{ display: 'flex', flexDirection: width < 768 ? 'column' : 'row', overflow: 'visible', backgroundColor: 'white' }}>
-                                <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6', paddingRight: 15, paddingTop: 20, backgroundColor: '#fff' }}>
+                                <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6', paddingRight: 15, display: 'flex', flexDirection: 'row' }}>
                                     <TextInput
                                         value={title}
                                         style={styles.input}
@@ -1163,6 +1166,24 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         onChangeText={val => setTitle(val)}
                                         placeholderTextColor={'#a2a2aa'}
                                     />
+                                    <TouchableOpacity
+                                        style={{
+                                            marginLeft: 15,
+                                            paddingTop: 15,
+                                            backgroundColor: '#fff'
+                                        }}
+                                        onPress={() => clearAll()}
+                                    >
+                                        <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
+                                        <Text
+                                            style={{
+                                                fontSize: 9,
+                                                color: "#a2a2aa",
+                                                textAlign: "center"
+                                            }}>
+                                            Remove
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                                 {
                                     isQuiz ?
@@ -1292,7 +1313,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         />
 
                     </View>
-                    <View style={{ flex: 1, display: 'flex', flexDirection: 'column', marginHorizontal: 10 }}>
+                    <View style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                         {channels.length !== 0 ?
                             <View style={{ display: 'flex', flexDirection: width < 768 ? 'column' : 'row', overflow: 'visible', backgroundColor: 'white' }}>
                                 <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6', backgroundColor: 'white' }}>

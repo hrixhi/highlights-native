@@ -372,7 +372,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
       <View style={styles.screen} key={1}>
         <View style={{ width: "100%", backgroundColor: "white" }}>
           <View style={styles.colorBar}>
-            <Text style={{ fontSize: 25, color: "#a2a2aa" }}>
+            <Text style={{ fontSize: 22, color: "#a2a2aa" }}>
               {PreferredLanguageText("internetRequiried")}
             </Text>
           </View>
@@ -388,7 +388,14 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
         showsVerticalScrollIndicator={false}
       >
         <Text
-          style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, fontWeight: 'bold' }}
+          style={{
+            color: '#202025',
+            fontSize: 11,
+            paddingBottom: 20,
+            textTransform: 'uppercase',
+            // paddingLeft: 10,
+            // paddingTop: 5
+          }}
         >
           {!loggedIn
             ? PreferredLanguageText("backUp")
@@ -667,7 +674,7 @@ export default ProfileControls;
 
 const styles = StyleSheet.create({
   screen: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 5,
     width: "100%",
     height: Dimensions.get("window").height - 85,
     backgroundColor: "white"

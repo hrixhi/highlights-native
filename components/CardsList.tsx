@@ -58,7 +58,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
             height: ((Dimensions.get('window').height) * 0.64),
             width: '100%',
             paddingTop: 0,
-            paddingHorizontal: 18,
+            paddingHorizontal: 25,
         }}>
             {/* <Animated.View style={{
                 opacity: props.fadeAnimation,
@@ -69,7 +69,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 alwaysBounceVertical={true}
                 horizontal={false}
                 contentContainerStyle={{
-                    paddingBottom: 25
+                    paddingBottom: 15
                 }}
             >
                 <RefreshControl
@@ -77,10 +77,10 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                 />
-                <View style={styles.marginSmall} />
+                {/* <View style={styles.marginSmall} /> */}
                 {
                     filteredCues.map((cue: any, index: number) => {
-                        return <View style={{ height: 80, marginBottom: 12, maxWidth: 500 }} key={index}>
+                        return <View style={{ height: 70, marginBottom: 15, maxWidth: 500 }} key={index}>
                             <Card
                                 fadeAnimation={props.fadeAnimation}
                                 updateModal={() => props.openUpdate(
@@ -116,7 +116,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
                 {
                     filteredCues.length === 0 ?
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                             {PreferredLanguageText('noCuesCreated')}
                         </Text> : null
                 }

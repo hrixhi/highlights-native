@@ -28,7 +28,7 @@ const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any)
         >
             <View style={{
                 width: Dimensions.get('window').width < 1024 ? '100%' : '60%',
-                paddingHorizontal: Dimensions.get('window').width < 1024 ? 20 : 0,
+                // paddingHorizontal: Dimensions.get('window').width < 1024 ? 20 : 0,
                 minHeight: '100%',
                 backgroundColor: 'white',
                 alignSelf: 'center'

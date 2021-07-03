@@ -212,18 +212,19 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 }
                 }
             />
-            <View style={{ width: '80%', height: Dimensions.get('window').height * 0.17 * 0.15, alignSelf: 'center' }} />
-            <View style={{ width: '100%', height: Dimensions.get('window').height * 0.83 * 0.15 }}>
+            {/* <View style={{ width: '80%', height: Dimensions.get('window').height * 0.17 * 0.15, alignSelf: 'center' }} /> */}
+            <View style={{ width: '100%', height: Dimensions.get('window').height * 0.15 }}>
                 <View style={{
-                    height: '45%',
+                    height: '55%',
                     flexDirection: 'row',
                     display: 'flex',
-                    paddingLeft: 20,
-                    paddingTop: 3
+                    paddingHorizontal: 25,
+                    paddingTop: 25,
+                    // borderBottomWidth: 1
                 }}>
                     <TouchableOpacity
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
-                        style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025', paddingTop: 9 }}>
+                        style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025' }}>
                         <Image
                             source={colorScheme === 'light' ?
                                 (
@@ -250,7 +251,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }}>
                         {
                             props.channelId !== '' ?
-                                <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', paddingTop: 4 }}>
+                                <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
                                     <TouchableOpacity
                                         style={{ marginRight: 15 }}
                                         onPress={() => props.openMeeting()}>
@@ -294,7 +295,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={{ marginRight: 15 }}
+                                        style={{ marginRight: isOwner ? 15 : 0 }}
                                         onPress={() => props.openGrades()}>
                                         <Text style={styles.channelText}>
                                             <Ionicons name='stats-chart-outline' size={19} color={'#a2a2aa'} />
@@ -306,7 +307,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     {
                                         isOwner ?
                                             <TouchableOpacity
-                                                style={{ marginRight: 20 }}
+                                                style={{ marginRight: 0 }}
                                                 onPress={() => editChannelInfo()}>
                                                 <Text style={styles.channelText}>
                                                     <Ionicons name='settings-outline' size={19} color={'#a2a2aa'} />
@@ -341,15 +342,15 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     key={JSON.stringify(cues) + JSON.stringify(filterChoice)}
                     style={{
                         width: '100%',
-                        height: '55%',
+                        height: '45%',
                         flexDirection: 'column',
-                        paddingTop: 5
+                        paddingTop: 2
                     }}>
                     <View style={{ flex: 1 }} />
                     <ScrollView style={{
                         width: '98.5%',
                         // paddingTop: 2,
-                        paddingLeft: 20
+                        paddingLeft: 25
                     }} horizontal={true}
                         showsHorizontalScrollIndicator={false}
                     >
@@ -357,7 +358,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             style={filterChoice === 'All' ? styles.subOutline : styles.sub}
                             onPress={() => props.setChannelFilterChoice('All')}>
                             <Text
-                                style={{ color: '#a2a2aa', lineHeight: 20 }}
+                                style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 13 }}
                             >
                                 All
                             </Text>
@@ -369,7 +370,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     style={filterChoice === category ? styles.subOutline : styles.sub}
                                     onPress={() => props.setChannelFilterChoice(category)}>
                                     <Text
-                                        style={{ color: '#a2a2aa', lineHeight: 20 }}>
+                                        style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 13 }}>
                                         {category}
                                     </Text>
                                 </TouchableOpacity>
@@ -396,7 +397,8 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         // paddingHorizontal: 20,
         borderTopRightRadius: 0,
         borderTopLeftRadius: 0,
-        paddingTop: 18
+        paddingTop: 25,
+        maxWidth: 550
     },
     badge: {
         position: 'absolute',

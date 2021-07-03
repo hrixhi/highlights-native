@@ -1571,11 +1571,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 resizeMode={'contain'}
               />
             </View>
-            <Text style={{ fontSize: 22, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 500, textAlign: 'center' }}>
+            {/* <Text style={{ fontSize: 22, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 500, textAlign: 'center' }}>
               {
                 showForgotPassword ? '' : PreferredLanguageText('login')
               }
-            </Text>
+            </Text> */}
             <Text style={{ fontSize: 18, color: '#a2a2aa', fontFamily: 'overpass', paddingBottom: 25, maxWidth: 500, textAlign: 'center' }}>
               {
                 showForgotPassword ? PreferredLanguageText('temporaryPassword') : PreferredLanguageText('continueLeftOff')
@@ -1728,7 +1728,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         height: Dimensions.get('window').height,
         flexDirection: 'column',
         backgroundColor: '#fff',
-        borderRightColor: '#dddddd',
+        borderRightColor: '#eeeeee',
         borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 1
       }}>
         <TopBar
@@ -1815,8 +1815,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
               Dimensions.get('window').width < 1024 ?
                 <TouchableOpacity
                   onPress={() => closeModal("")}
-                  style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#dddddd', width: '100%' }}>
-                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#a2a2aa' }}>
+                  style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#eeeeee', width: '100%' }}>
+                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#202025' }}>
                     <Ionicons name='chevron-back-outline' size={15} />{PreferredLanguageText('back')}
                   </Text>
                 </TouchableOpacity> :

@@ -267,7 +267,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             <View style={{ width: '100%', backgroundColor: 'white' }}>
                 <View style={styles.colorBar}>
                     <Text style={{
-                        fontSize: 25, color: '#a2a2aa'
+                        fontSize: 22, color: '#a2a2aa'
                     }}>
                         {PreferredLanguageText('internetRequired')}
                     </Text>
@@ -280,16 +280,16 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         <View style={styles.screen} key={1}>
             <ScrollView style={{ width: '100%', backgroundColor: 'white' }}>
                 <Text
-                    style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, fontWeight: 'bold' }}
+                    style={{
+                        color: '#202025',
+                        fontSize: 11,
+                        paddingBottom: 20,
+                        textTransform: 'uppercase',
+                        // paddingLeft: 10,
+                        // paddingTop: 5
+                    }}
                 >
                     {PreferredLanguageText('channels')}
-                </Text>
-                <Text style={{ paddingVertical: 25, fontSize: 14, color: '#a2a2a2' }}>
-                    Channels faciliate classrooms of various types & sizes.{'\n\n'}
-                    Each subject/section should have its own unique channel.{'\n\n'}
-                    Once an instructor creates a channel, students can subscribe to it using the channel name & password.{'\n\n'}
-                    Instructors can also directly add students to a channel through its inbox.{'\n\n'}
-                    Users can store personal content in the 'My Cues' channel.{'\n\n'}
                 </Text>
                 <View style={styles.colorBar}>
                     <TouchableOpacity
@@ -345,7 +345,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         :
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                {PreferredLanguageText('channel') + ' ' + PreferredLanguageText('name')}
+                                {PreferredLanguageText('channel') + ' Name'}
                             </Text>
                             <TextInput
                                 value={name}
@@ -433,7 +433,7 @@ export default ChannelControls;
 const styles = StyleSheet.create({
     screen: {
         padding: 15,
-        paddingHorizontal: 30,
+        paddingHorizontal: 25,
         width: '100%',
         height: Dimensions.get('window').height - 85,
         backgroundColor: 'white'
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         marginBottom: '15%',
         lineHeight: 18,
-        paddingTop: 0
+        paddingTop: 100
     },
     input: {
         width: '100%',

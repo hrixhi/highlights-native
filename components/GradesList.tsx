@@ -17,26 +17,34 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             backgroundColor: 'white',
             width: '100%',
             height: '100%',
-            paddingHorizontal: 20,
+            paddingHorizontal: 25,
             borderTopRightRadius: 0,
             borderTopLeftRadius: 0
         }}>
             <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25 }}>
                 {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
             </Text>
-            <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
+            <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 15 }}>
                 <Text
                     ellipsizeMode="tail"
-                    style={{ color: '#a2a2aa', fontSize: 16, flex: 1, lineHeight: 25 }}>
+                    style={{
+                        color: '#202025',
+                        fontSize: 11,
+                        paddingBottom: 20,
+                        textTransform: "uppercase",
+                        // paddingLeft: 10,
+                        flex: 1,
+                        lineHeight: 23
+                    }}>
                     {PreferredLanguageText('grades')}
                 </Text>
             </View>
             {
                 scores.length === 0 || cues.length === 0 ?
                     <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 25, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
-                                cues.length === 0  ? PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
+                                cues.length === 0 ? PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
                             }
                         </Text>
                     </View>
@@ -78,10 +86,10 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                         <View style={styles.col} key={'total'}>
                                             <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025', fontFamily: 'inter' }}>
                                                 {PreferredLanguageText('total')}
-                                                    </Text>
+                                            </Text>
                                             <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
                                                 100%
-                                                    </Text>
+                                            </Text>
                                         </View>
                                 }
                             </View>
@@ -113,9 +121,9 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     <Text style={{ textAlign: 'left', fontSize: 12, color: '#202025', fontFamily: 'inter' }}>
                                                         {score.fullName}
                                                     </Text>
-                                                    <Text style={{ textAlign: 'left', fontSize: 12, color: '#202025' }}>
+                                                    {/* <Text style={{ textAlign: 'left', fontSize: 12, color: '#202025' }}>
                                                         {score.displayName}
-                                                    </Text>
+                                                    </Text> */}
                                                 </View>
                                                 {
                                                     cues.map((cue: any, col: number) => {
@@ -136,7 +144,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         <View style={styles.col} key={'total'}>
                                                             <Text style={{ textAlign: 'center', fontSize: 12, color: '#a2a2aa' }}>
                                                                 {totalScore !== 0 ? (totalPoints / totalScore).toFixed(2) : '0'}%
-                                                        </Text>
+                                                            </Text>
                                                         </View>
                                                 }
                                             </View>
@@ -157,6 +165,6 @@ export default React.memo(GradesList, (prev, next) => {
 
 
 const styles = StyleSheet.create({
-    row: { height: 80, borderRadius: 15, marginBottom: 12, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
+    row: { height: 70, borderRadius: 15, marginBottom: 15, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
     col: { width: 100, justifyContent: 'center', display: 'flex', flexDirection: 'column', backgroundColor: '#f4f4f6', padding: 5 }
 })

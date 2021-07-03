@@ -104,7 +104,7 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     <Ionicons name="chevron-forward-outline" color="#a2a2aa" size={20} style={{ marginTop: 4 }} />
                                 </Text>
                             </View>
-                            : <View style={{ backgroundColor: '#f4f4f6', width: '100%', flexDirection: 'row', display: 'flex', height: '44%' }}>
+                            : <View style={{ backgroundColor: '#f4f4f6', width: '100%', flexDirection: 'row', display: 'flex' }}>
                                 <Text ellipsizeMode={'tail'}
                                     numberOfLines={1}
                                     style={styleObject.title}>
@@ -134,11 +134,11 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </Text>
                             </View>
                     }
-                    <Text ellipsizeMode={'tail'}
+                    {/* <Text ellipsizeMode={'tail'}
                         numberOfLines={1}
                         style={styleObject.description}>
                         {subtitle}
-                    </Text>
+                    </Text> */}
                 </View>
             </TouchableOpacity>
         </View>
@@ -151,7 +151,7 @@ export default React.memo(ThreadCard, (prev, next) => {
 
 const styles: any = () => StyleSheet.create({
     swiper: {
-        height: 80,
+        height: 70,
         width: '100%',
         maxWidth: 500,
         borderRadius: 15,

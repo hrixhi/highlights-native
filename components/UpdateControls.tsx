@@ -785,10 +785,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       endPlayAt,
       playChannelCueIndef,
       notify,
-      title, 
-      url, 
-      imported, 
-      type, 
+      title,
+      url,
+      imported,
+      type,
       original,
       cueFullyLoaded,
     });
@@ -1262,23 +1262,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   };
 
   const renderRichToolbar = () => {
-    return (props.cue.channelId && props.cue.channelId !== '' && !isOwner && props.showOriginal) ? (
-      <View style={{ height: 28, backgroundColor: "#fff" }} />
-    ) : ((props.cue.graded && submission) || (currentDate > deadline && submission)) && !props.showOriginal ? (
-      <View style={{ height: 28, backgroundColor: "#fff" }} />
+    return (props.cue.channelId && props.cue.channelId !== '' && !isOwner && props.showOriginal) || (props.showOriginal && showImportOptions) ? (
+      <View style={{ height: 0, backgroundColor: "#fff" }} />
+    ) : (((props.cue.graded && submission && !isOwner) || (currentDate > deadline && submission)) && !props.showOriginal) || (!props.showOriginal && showImportOptions) ? (
+      <View style={{ height: 0, backgroundColor: "#fff" }} />
     ) : (
       <RichToolbar
-        key={
-          key.toString()
-          // + props.showOriginal.toString()
-        }
+        key={reloadEditorKey.toString() + props.showOriginal.toString()}
         style={{
           flexWrap: "wrap",
           backgroundColor: "white",
           height: 28,
           overflow: "visible"
         }}
-        iconSize={16}
+        iconSize={12}
         editor={RichText}
         disabled={false}
         iconTint={"#a2a2aa"}
@@ -1286,7 +1283,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         disabledIconTint={"#a2a2aa"}
         actions={
           (!props.showOriginal && submissionImported) || (imported && props.showOriginal)
-            ? ["clear"]
+            ? ['']
             : [
               actions.setBold,
               actions.setItalic,
@@ -1298,25 +1295,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               actions.insertImage,
               "insertCamera",
               actions.undo,
-              "clear",
-              actions.redo
+              actions.redo,
+              "clear"
             ]
         }
         iconMap={{
-          ["insertCamera"]: ({ tintColor }) => <Ionicons name="camera-outline" size={16} color={tintColor} />,
+          ["insertCamera"]: ({ tintColor }) => <Ionicons name="camera-outline" size={15} color={tintColor} />,
           ["clear"]: ({ tintColor }) => (
-            <Ionicons
-              name="trash-outline"
-              size={16}
-              color={tintColor}
-              onPress={() => {
-                console.log("Clear button pressed");
-                clearAll();
-              }}
-            />
-          ),
-          ["back"]: ({ tintColor }) => (
-            <Ionicons name="arrow-back" size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
+            <Ionicons name="trash-outline" size={13} color={tintColor} onPress={() => clearAll()} />
           )
         }}
         onPressAddImage={galleryCallback}
@@ -1503,6 +1489,26 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             Download
           </Text>
         </TouchableOpacity>
+        {
+          isOwner ?
+            <TouchableOpacity
+              style={{
+                marginLeft: 15,
+                backgroundColor: '#fff'
+              }}
+              onPress={() => clearAll()}
+            >
+              <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
+              <Text
+                style={{
+                  fontSize: 9,
+                  color: "#a2a2aa",
+                  textAlign: "center"
+                }}>
+                Remove
+              </Text>
+            </TouchableOpacity> : null
+        }
         {/* </a> */}
       </View>
     );
@@ -2672,7 +2678,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         backgroundColor: "white",
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
-        paddingHorizontal: 20
+        paddingHorizontal: 25
         // overflow: 'hidden'
       }}>
       <Animated.View
@@ -2725,14 +2731,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               style={{
                 backgroundColor: "white",
                 flex: 1,
-                marginTop: Platform.OS === "ios" ? -35 : -15,
-                paddingRight: 25
+                marginTop: -25,
+                // paddingRight: 25
               }}>
               <Text
                 style={{
                   textAlign: "right",
                   lineHeight: 34,
-                  marginTop: 20
+                  marginTop: 40
                 }}>
                 <Ionicons name="bookmark" size={34} color={starred ? "#d91d56" : "#a2a2aa"} />
               </Text>
@@ -2748,7 +2754,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   color: "#202025",
                   paddingBottom: 20,
                   textTransform: "uppercase",
-                  paddingLeft: 10,
+                  // paddingLeft: 10,
                   paddingTop: 0
                 }}>
                 {PreferredLanguageText("update")}
@@ -2759,8 +2765,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               style={{
                 backgroundColor: "white",
                 flex: 1,
-                marginTop: Platform.OS === "ios" ? -36 : -16,
-                paddingRight: 25
+                marginTop: -25,
+                // paddingRight: 25
               }}>
               <Text
                 style={{
@@ -2827,7 +2833,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   fontSize: 12,
                   lineHeight: 30,
                   textAlign: "right",
-                  paddingRight: 10,
+                  // paddingRight: 10,
+                  paddingLeft: 10,
                   textTransform: "uppercase"
                 }}
                 onPress={() => {
@@ -2836,24 +2843,29 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 }}>
                 {PreferredLanguageText("import")} {Dimensions.get("window").width < 768 ? "" : "|  "}
               </Text>
-            ) : (
-              props.showOriginal && isOwner && !imported && !showImportOptions ?
+            ) :
+              (props.showOriginal && !isOwner) || // viewing import as non import
+                (props.showOriginal && isOwner && imported) ||  // viewing import as owner
+                (!props.showOriginal && isOwner && (props.cue.channelId && props.cue.channelId !== '')) || // no submission as owner
+                (!props.showOriginal && submissionImported && !isOwner) ||  // submitted as non owner
+                (!props.showOriginal && !submission && (props.cue.channelId && props.cue.channelId !== ''))   // my notes
+                ? null :
                 (
                   <Text style={{
                     color: '#a2a2aa',
                     fontSize: 11,
                     lineHeight: 30,
                     textAlign: 'right',
-                    paddingRight: 10,
+                    paddingLeft: 10,
+                    // paddingRight: 10,
                     textTransform: 'uppercase'
                   }}
                     onPress={() => setShowImportOptions(true)}
                   >
                     {PreferredLanguageText('import')}     {Dimensions.get('window').width < 768 ? '' : '   '}
                   </Text>
-                ) : null
-            )}
-            <Text
+                )}
+            {/* <Text
               style={{
                 color: "#a2a2aa",
                 fontSize: 11,
@@ -2863,7 +2875,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 marginRight: 10
               }}>
               {now.toString().split(" ")[1] + " " + now.toString().split(" ")[2] + ", " + now.toString().split(" ")[3]}
-            </Text>
+            </Text> */}
           </View>
         </View>
         {renderEquationEditor()}
@@ -2949,6 +2961,26 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     </Text>
                   </TouchableOpacity>
                   {/* </a> */}
+                  {
+                    isOwner ?
+                      <TouchableOpacity
+                        style={{
+                          marginLeft: 15,
+                          backgroundColor: '#fff'
+                        }}
+                        onPress={() => clearAll()}
+                      >
+                        <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
+                        <Text
+                          style={{
+                            fontSize: 9,
+                            color: "#a2a2aa",
+                            textAlign: "center"
+                          }}>
+                          Remove
+                        </Text>
+                      </TouchableOpacity> : null
+                  }
                 </View>
               ) : null}
             </View>
@@ -2976,24 +3008,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               // marginTop: 20,
               backgroundColor: "#fff",
               borderTopColor: "#f4f4f6",
-              borderTopWidth: 1,
+              // borderTopWidth: 1,
               marginTop: 20,
               paddingTop: 20,
               paddingBottom: 20
             }}>
-            <Text
-              style={{
-                color: "#a2a2aa",
-                fontSize: 14,
-                paddingRight: 10
-              }}>
-              {PreferredLanguageText("options")}
+            <Text style={{
+              lineHeight: 23,
+              marginRight: 10,
+              color: '#a2a2aa',
+              fontSize: 11,
+              textTransform: 'uppercase'
+            }}>
+              {PreferredLanguageText('options') + '       '}
             </Text>
-            <Ionicons
-              size={14}
-              name={showOptions ? "caret-down-circle-outline" : "caret-forward-circle-outline"}
-              color="#a2a2aa"
-            />
+            <Text style={{ lineHeight: 21 }}>
+              <Ionicons size={14} name={showOptions ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2aa' />
+            </Text>
           </TouchableOpacity>
           <Collapsible collapsed={!showOptions} key={showOptions.toString()}>
             <View

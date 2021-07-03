@@ -46,7 +46,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     width: '100%',
                     height: '100%',
                     backgroundColor: 'white',
-                    padding: 18,
+                    padding: 25,
+                    paddingTop: 10,
                     opacity: modalAnimation,
                     borderTopLeftRadius: 0,
                     borderTopRightRadius: 0,
@@ -57,7 +58,12 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 </Text>
                 <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 50, paddingLeft: 0 }}>
                     <Text
-                        style={{ color: '#a2a2aa', fontSize: 17, lineHeight: 25, fontWeight: 'bold' }}
+                        style={{
+                            color: '#202025',
+                            fontSize: 11,
+                            paddingBottom: 35,
+                            textTransform: 'uppercase'
+                        }}
                     >
                         Walkthrough
                     </Text>

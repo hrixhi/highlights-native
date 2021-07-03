@@ -348,11 +348,12 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             </View>
                         )}
                     </ScrollView> : <Fragment>
-                        <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 30, backgroundColor: 'white' }}>
-                            {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
-                        </Text>
-
-                        <View style={{ flexDirection: 'row', paddingLeft: 20, backgroundColor: 'white' }}>
+                        <View style={{
+                            flexDirection: 'row',
+                            paddingLeft: 20,
+                            backgroundColor: 'white',
+                            paddingTop: viewStatus ? 45 : 0
+                        }}>
                             <TouchableOpacity
                                 style={{
                                     justifyContent: 'center',
