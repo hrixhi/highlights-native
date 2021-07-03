@@ -47,7 +47,7 @@ const EnglishBank: { [key: string]: string } = {
     submissionRequired: "Submission Required", // Done
     deadline: "Deadline", // Done
     graded: "Graded", // Done
-    percentageOverall: "(% of overall grade)", // Done
+    percentageOverall: "% of total", // Done
     none: 'None', // Done
     viewShared: "View Shared", // Done
     viewSubmission: "View Submission",

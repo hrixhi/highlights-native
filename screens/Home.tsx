@@ -1325,7 +1325,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
               handleCueUpdate().then(() => {
                 setUpdatedCueCount(0);
-                setUpdateCueData({});        
+                setUpdateCueData({});
                 loadData(true)
               })
 
@@ -1747,7 +1747,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           unsubscribe={() => unsubscribeChannel()}
           openWalkthrough={() => openModal('Walkthrough')}
           deleteChannel={() => deleteChannel()}
-          openCalendar={() => openModal('Calendar')}
+          // openCalendar={() => openModal('Calendar')}
           openMeeting={() => openModal('Meeting')}
         />
         {
@@ -1774,7 +1774,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           openProfile={() => openModal('Profile')}
           filterChoice={filterChoice}
           handleFilterChange={(choice: any) => handleFilterChange(choice)}
-          key={Math.random()}
+          key={filterChoice.toString() + customCategories.toString() + subscriptions.toString()}
           customCategories={customCategories}
           subscriptions={subscriptions}
           setChannelId={(id: string) => setChannelId(id)}

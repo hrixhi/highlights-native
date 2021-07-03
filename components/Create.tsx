@@ -1079,7 +1079,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             isQuiz ? null :
                                 <Text style={{
                                     color: '#a2a2aa',
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     lineHeight: 30,
                                     textAlign: 'right',
                                     paddingRight: 20,

@@ -11,8 +11,16 @@ const MultiSelectComponent: React.FunctionComponent<{ [label: string]: any }> = 
         items={props.subscribers}
         uniqueKey="value"
         ref={ref}
+        styleRowList={{
+           height: 23
+        }}
         styleTextDropdown={{
-            fontFamily: "overpass"
+            fontFamily: "overpass",
+            fontSize: 12,
+            color: '#a2a2aa'
+        }}
+        styleTextDropdownSelected={{
+            fontSize: 12
         }}
         styleDropdownMenuSubsection={{
             height: 50
@@ -21,7 +29,7 @@ const MultiSelectComponent: React.FunctionComponent<{ [label: string]: any }> = 
             height: 250
         }}
         styleItemsContainer={{
-            height: 150
+            height: 210
         }}
         styleListContainer={{
             height: 250,

@@ -29,7 +29,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, [])
 
     useEffect(() => {
-        getUser()
+        (
+            async () => await getUser()
+        )()
     }, [])
 
     return (
@@ -177,7 +179,7 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         display: 'flex',
         paddingBottom: 10,
         borderTopWidth: 1,
-        borderColor: colorScheme !== 'light' ? '#444444' : '#eeeeee'
+        borderColor: colorScheme !== 'light' ? '#333333' : '#eeeeee'
     },
     icons: {
         width: '20%',

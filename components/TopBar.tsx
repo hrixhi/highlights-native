@@ -238,7 +238,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 )
                             }
                             style={{
-                                width: Dimensions.get('window').height * 0.13 * 0.53456,
+                                width: Dimensions.get('window').height * 0.14 * 0.53456,
                                 height: Dimensions.get('window').height * 0.15 * 0.2
                             }}
                             resizeMode={'contain'}
