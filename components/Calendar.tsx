@@ -117,8 +117,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       setEditChannelName(editEvent.channelName)
 
       if (editEvent.dateId !== "channel" && editEvent.createdBy) {
-        console.log("Could be meeting")
-        console.log(editEvent)
         setIsMeeting(true)
         if (editEvent.recordMeeting) {
           setRecordMeeting(true)
@@ -182,18 +180,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     if (u) {
       const user = JSON.parse(u);
 
-      console.log({
-        title,
-        userId: user._id,
-        start: start.toUTCString(),
-        end: end.toUTCString(),
-        channelId,
-        meeting,
-        description,
-        recordMeeting,
-        frequency: freq,
-        repeatTill: repeat
-      })
       const server = fetchAPI("");
       server
         .mutate({
@@ -212,7 +198,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           }
         })
         .then(res => {
-          console.log(res);
           loadEvents();
           setTitle("");
           setRepeatTill(new Date())
@@ -235,15 +220,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   const handleEdit = useCallback(async () => {
 
     setIsEditingEvents(true);
-
-    console.log({
-      id: editEvent.eventId,
-      title,
-      start: start.toUTCString(),
-      end: end.toUTCString(),
-      description,
-      recordMeeting,
-    })
 
     const server = fetchAPI("");
     server
@@ -357,8 +333,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           // Add Logic to convert to items for Agenda
           res.data.date.getCalendar.map((item: any) => {
             const strTime = timeToString(item.start);
-
-            console.log(strTime);
 
             const { title } = htmlStringParser(item.title);
 
@@ -1030,7 +1004,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           borderRadius: 15
         }}
         onPress={() => {
-          console.log("On select", item)
           onSelectEvent(item)
         }}
       >
@@ -1054,8 +1027,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   }
 
   const onSelectEvent = async (event: any) => {
-    console.log(event)
-
     const uString: any = await AsyncStorage.getItem("user");
     // Only allow edit if event is not past
     if (uString) {
@@ -1067,25 +1038,40 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       const descriptionString = event.description ? event.description + "- " + timeString : "" + timeString
 
       if (user._id === event.createdBy && new Date(event.end) > new Date() && event.eventId) {
-
-        Alert("Edit " + event.title + "?", descriptionString, [
-          {
-            text: "Cancel",
-            style: "cancel",
-            onPress: () => {
-              return;
+        setEditEvent(event)
+        setShowAddEvent(true)
+      } else if (user._id === event.createdBy && new Date(event.end) < new Date() && event.eventId) {
+        // console.log("Delete prompt should come")
+        Alert("Delete " + event.title + "?", descriptionString, [
+            {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => {
+                    return;
+                }
+            },
+            {
+                text: "Delete",
+                onPress: async () => {
+                    const server = fetchAPI("");
+                    server
+                        .mutate({
+                            mutation: deleteDateV1,
+                            variables: {
+                                id: event.eventId,
+                                deleteAll: false
+                            }
+                        })
+                        .then(res => {
+                            if (res.data && res.data.date.deleteV1) {
+                                Alert("Event Deleted!");
+                                loadEvents();
+                            }
+                        });
+                }
             }
-          },
-          {
-            text: "Edit",
-            onPress: () => {
-              setEditEvent(event)
-              setShowAddEvent(true)
-            }
-          }
         ]);
-
-      } else {
+    } else {
         Alert(
           event.title,
           descriptionString
@@ -1154,7 +1140,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             }}
             selectedValue={frequency}
             onValueChange={(itemValue: any) => {
-              console.log(itemValue);
               setFrequency(itemValue)
             }}>
             {eventFrequencyOptions.map((item: any, index: number) => {

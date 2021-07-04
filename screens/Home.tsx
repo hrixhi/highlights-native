@@ -1369,8 +1369,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }, [sheetRef, fadeAnimation, modalType, filterChoice, updateCueData])
 
-  console.log("Cue Count", updatedCueCount)
-
   const modalContent = modalType === 'Menu' ? <Menu
     sleepFrom={sleepFrom}
     sleepTo={sleepTo}
@@ -1412,10 +1410,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
         reopenUpdateWindow={reopenUpdateWindow}
         updateCueData={(update: any) => {
-          console.log("Update cue data called", update);
           const { cueFullyLoaded } = update;
           if (cueFullyLoaded) {
-            console.log("Updating cue count");
             setUpdatedCueCount(updatedCueCount + 1);
           }
           setUpdateCueData(update);

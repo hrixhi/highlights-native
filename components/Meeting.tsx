@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { Jutsu } from 'react-jutsu'
 import { fetchAPI } from '../graphql/FetchAPI';
 // import Datetime from 'react-datetime';
-import { createScheduledMeeting, editMeeting, getAttendances, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel } from '../graphql/QueriesAndMutations';
+import { createScheduledMeeting, editMeeting, getAttendances, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1 } from '../graphql/QueriesAndMutations';
 import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -19,75 +19,17 @@ import AttendanceList from "./AttendanceList";
 const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const [modalAnimation] = useState(new Animated.Value(0))
-    const [room] = useState(props.channelId)
-    const [email, setEmail] = useState('')
     const [name, setName] = useState('')
-    const [password] = useState(props.channelCreatedBy)
     const [isOwner, setIsOwner] = useState(false)
     const [meetingOn, setMeetingOn] = useState(false)
-    const [start, setStart] = useState(new Date())
-    const [end, setEnd] = useState(new Date(start.getTime() + 1000 * 60 * 60))
-    const [showAddEvent, setShowAddEvent] = useState(false)
-    const [showStartTimeAndroid, setShowStartTimeAndroid] = useState(false);
-    const [showStartDateAndroid, setShowStartDateAndroid] = useState(false);
-
-    const [showEndTimeAndroid, setShowEndTimeAndroid] = useState(false);
-    const [showEndDateAndroid, setShowEndDateAndroid] = useState(false);
-
-    const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([])
     const [pastMeetings, setPastMeetings] = useState<any[]>([])
     const [showAttendances, setShowAttendances] = useState(false)
     const [attendances, setAttendances] = useState<any[]>([])
     const [meetingLink, setMeetingLink] = useState('')
     const [channelAttendances, setChannelAttendances] = useState<any[]>([])
     const [viewChannelAttendance, setViewChannelAttendance] = useState(false)
-
-    const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
-
-    const meetingMustBeFutureAlert = PreferredLanguageText('meetingMustBeFuture')
     const classroomNotInSession = PreferredLanguageText('classroomNotInSession')
-
-    const [meetingEndText, setMeetingEndText] = useState(classroomNotInSession)
-
-    useEffect(() => {
-        if (end > start) {
-            setIsSubmitDisabled(false);
-            return;
-        }
-
-        setIsSubmitDisabled(true);
-
-    }, [start, end])
-
-
-    const loadAttendances = useCallback((dateId) => {
-        const server = fetchAPI('')
-        server.query({
-            query: getAttendances,
-            variables: {
-                dateId
-            }
-        }).then(res => {
-            if (res.data && res.data.attendance.getAttendances) {
-                setShowAttendances(true)
-                setAttendances(res.data.attendance.getAttendances)
-            }
-        })
-    }, [])
-
-    const loadSchedule = useCallback(() => {
-        const server = fetchAPI('')
-        server.query({
-            query: getUpcomingDates,
-            variables: {
-                channelId: props.channelId
-            }
-        }).then(res => {
-            if (res.data && res.data.attendance.getUpcomingDates) {
-                setUpcomingMeetings(res.data.attendance.getUpcomingDates)
-            }
-        })
-    }, [props.channelId])
+    const [showPastMeetings, setShowPastMeetings] = useState(false);
 
     const loadChannelAttendances = useCallback(() => {
         const server = fetchAPI('')
@@ -132,7 +74,6 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     }, [props.channelId])
 
     useEffect(() => {
-        loadSchedule()
         loadChannelAttendances()
         setPastMeetings([])
         setShowAttendances(false)
@@ -212,32 +153,6 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         }).catch(e => console.log(e))
     }, [meetingOn, props.channelId])
 
-    const handleCreate = useCallback(() => {
-
-        if (start < new Date()) {
-            Alert(meetingMustBeFutureAlert);
-            return;
-        }
-
-        const server = fetchAPI('')
-        server.mutate({
-            mutation: createScheduledMeeting,
-            variables: {
-                channelId: props.channelId,
-                start: start.toISOString(),
-                end: end.toISOString()
-            }
-        }).then(res => {
-            if (res.data && res.data.attendance.create) {
-                loadSchedule()
-            }
-        })
-    }, [start, end, props.channelId])
-
-    if (name === '') {
-        return null
-    }
-
     const toolbarButtons = [
         'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
         'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
@@ -249,255 +164,93 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         toolbarButtons.push('mute-everyone', 'mute-video-everyone', 'stats', 'settings', 'livestreaming')
     }
 
-    const renderStartDateTimePicker = () => {
-        return (<View style={{ backgroundColor: 'white' }}>
-            {Platform.OS === "ios" ? <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={'date'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    const currentDate: any = selectedDate;
-                    setStart(currentDate)
-                }}
-            /> : null}
-            {Platform.OS === "android" && showStartDateAndroid ? <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={'date'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    if (!selectedDate) return;
-                    const currentDate: any = selectedDate;
-                    setShowStartDateAndroid(false)
-                    setStart(currentDate)
-                }}
-            /> : null}
-            {Platform.OS === "android" ? <View style={{
-                width: '100%',
-                flexDirection: 'row',
-                marginTop: 12,
-                backgroundColor: '#fff',
-                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-            }}>
+    console.log("is owner", isOwner)
 
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: 'white',
-                        overflow: 'hidden',
-                        height: 35,
-                        borderRadius: 15,
-                        marginBottom: 10,
-                        width: 150, justifyContent: 'center', flexDirection: 'row',
-                    }}
-                    onPress={() => {
-                        setShowStartDateAndroid(true)
-                        setShowStartTimeAndroid(false)
-                        setShowEndDateAndroid(false)
-                        setShowEndTimeAndroid(false)
-                    }}
-                >
-                    <Text style={{
-                        textAlign: 'center',
-                        lineHeight: 35,
-                        color: '#202025',
-                        overflow: 'hidden',
-                        fontSize: 10,
-                        // backgroundColor: '#f4f4f6',
-                        paddingHorizontal: 25,
-                        fontFamily: 'inter',
-                        height: 35,
-                        width: 150,
-                        borderRadius: 15,
-                    }}>
-                        Set Date
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: 'white',
-                        overflow: 'hidden',
-                        height: 35,
-                        borderRadius: 15,
-                        width: 150, justifyContent: 'center', flexDirection: 'row',
-                    }}
-                    onPress={() => {
-                        setShowStartDateAndroid(false)
-                        setShowStartTimeAndroid(true)
-                        setShowEndDateAndroid(false)
-                        setShowEndTimeAndroid(false)
-                    }}
-                >
-                    <Text style={{
-                        textAlign: 'center',
-                        lineHeight: 35,
-                        color: '#202025',
-                        overflow: 'hidden',
-                        fontSize: 10,
-                        // backgroundColor: '#f4f4f6',
-                        paddingHorizontal: 25,
-                        fontFamily: 'inter',
-                        height: 35,
-                        width: 150,
-                        borderRadius: 15,
-                    }}>
-                        Set Time
-                    </Text>
-                </TouchableOpacity>
-            </View> : null}
-            <View style={{ height: 10, backgroundColor: 'white' }} />
-            {Platform.OS === "ios" && <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={'time'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    if (!selectedDate) return;
-                    const currentDate: any = selectedDate;
-                    setStart(currentDate)
-                }}
-            />}
-            {Platform.OS === "android" && showStartTimeAndroid && <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={'time'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    if (!selectedDate) return;
-                    const currentDate: any = selectedDate;
-                    setShowStartTimeAndroid(false)
-                    setStart(currentDate)
-                }}
-            />}
-        </View>)
+    const renderPastMeetings = () => {
+        return (pastMeetings.length === 0 ?
+            <View style={{ backgroundColor: 'white', flex: 1 }}>
+                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                    {PreferredLanguageText('noPastMeetings')}
+                </Text>
+            </View>
+            :
+            pastMeetings.map((date: any, index: any) => {
+                return <View style={styles.col} key={index}>
+                     <View
+                        style={styles.swiper}
+                    >
+                        <View
+                            onPress={() => {return}}
+                            key={'textPage'}
+                            style={styles.card}>
+
+                            <View style={{ flexDirection: 'column', width: '90%', backgroundColor: '#f4f4f6'}}>
+                                <View style={{ backgroundColor: '#f4f4f6', width: '100%', flexDirection: 'column', display: 'flex', minHeight: 25 }}>
+                                    <Text ellipsizeMode={'tail'}
+                                        numberOfLines={1}
+                                        style={styles.title}>
+                                        {moment(new Date(date.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(date.end)).format('MMMM Do YYYY, h:mm a')}
+                                    </Text>
+                                </View>
+                                <View style={styles.meetingText}>
+                                    <Text ellipsizeMode={'tail'}
+                                        numberOfLines={1}
+                                        style={styles.description}>
+                                        {PreferredLanguageText('ended')}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {
+                                isOwner ?
+                                     <TouchableOpacity style={{ backgroundColor: '#f4f4f6', width: '10%' }}
+                                        onPress={() => {
+
+                                            Alert("Delete past lecture ?", "", [
+                                                {
+                                                    text: "Cancel",
+                                                    style: "cancel",
+                                                    onPress: () => {
+                                                        return;
+                                                    }
+                                                },
+                                                {
+                                                    text: "Delete",
+                                                    onPress: async () => {
+                                                        const server = fetchAPI("");
+                                                        server
+                                                            .mutate({
+                                                                mutation: deleteDateV1,
+                                                                variables: {
+                                                                    id: date.dateId,
+                                                                    deleteAll: false
+                                                                }
+                                                            })
+                                                            .then(res => {
+                                                                if (res.data && res.data.date.deleteV1) {
+                                                                    Alert("Event Deleted!");
+                                                                    loadPastSchedule();
+                                                                }
+                                                            });
+                                                    }
+                                                }
+                                            ]);
+                                        }}
+                                    >
+                                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 16, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                            <Ionicons name='trash-outline' size={17} color='#d91d56' />
+                                        </Text>
+                                    </TouchableOpacity>
+                                : null
+                            }
+                            
+                            
+                        </View>
+                        
+                    </View>
+                </View>
+            }))
     }
-
-    const renderEndDateTimePicker = () => {
-        return (<View style={{ backgroundColor: 'white' }}>
-            {Platform.OS === "ios" && <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={'date'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    if (!selectedDate) return;
-                    const currentDate: any = selectedDate;
-                    setEnd(currentDate)
-                }}
-            />}
-            {Platform.OS === "android" && showEndDateAndroid ? <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={'date'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    if (!selectedDate) return;
-                    const currentDate: any = selectedDate;
-                    setShowEndDateAndroid(false)
-                    setEnd(currentDate)
-                }}
-            /> : null}
-            {Platform.OS === "android" ? <View style={{
-                width: '100%',
-                flexDirection: 'row',
-                marginTop: 12,
-                backgroundColor: '#fff',
-                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-            }}>
-
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: 'white',
-                        overflow: 'hidden',
-                        height: 35,
-                        width: 150,
-                        borderRadius: 15,
-                        marginBottom: 10,
-                        justifyContent: 'center', flexDirection: 'row',
-                    }}
-                    onPress={() => {
-                        setShowStartDateAndroid(false)
-                        setShowStartTimeAndroid(false)
-                        setShowEndDateAndroid(true)
-                        setShowEndTimeAndroid(false)
-                    }}
-                >
-                    <Text style={{
-                        textAlign: 'center',
-                        lineHeight: 35,
-                        color: '#202025',
-                        overflow: 'hidden',
-                        fontSize: 10,
-                        // backgroundColor: '#f4f4f6',
-                        paddingHorizontal: 25,
-                        fontFamily: 'inter',
-                        height: 35,
-                        width: 150,
-                        borderRadius: 15,
-                    }}>
-                        Set Date
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: 'white',
-                        overflow: 'hidden',
-                        height: 35,
-                        borderRadius: 15,
-                        width: 150, justifyContent: 'center', flexDirection: 'row',
-                    }}
-                    onPress={() => {
-                        setShowStartDateAndroid(false)
-                        setShowStartTimeAndroid(false)
-                        setShowEndDateAndroid(false)
-                        setShowEndTimeAndroid(true)
-                    }}
-                >
-                    <Text style={{
-                        textAlign: 'center',
-                        lineHeight: 35,
-                        color: '#202025',
-                        overflow: 'hidden',
-                        fontSize: 10,
-                        // backgroundColor: '#f4f4f6',
-                        paddingHorizontal: 25,
-                        fontFamily: 'inter',
-                        height: 35,
-                        width: 150,
-                        borderRadius: 15,
-                    }}>
-                        Set Time
-                    </Text>
-                </TouchableOpacity>
-            </View> : null}
-
-            <View style={{ height: 10, backgroundColor: 'white' }} />
-            {Platform.OS === "ios" && <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={'time'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    if (!selectedDate) return;
-                    const currentDate: any = selectedDate;
-                    setEnd(currentDate)
-                }}
-            />}
-            {Platform.OS === "android" && showEndTimeAndroid && <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={'time'}
-                textColor={'#202025'}
-                onChange={(event, selectedDate) => {
-                    if (!selectedDate) return;
-                    const currentDate: any = selectedDate;
-                    setShowEndTimeAndroid(false)
-                    setEnd(currentDate)
-                }}
-            />}
-        </View>)
-    }
-
 
     const mainClassroomView = (<ScrollView style={{
         width: '100%',
@@ -507,15 +260,6 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         borderTopRightRadius: 0,
         padding: 20,
     }}>
-        {/* <Animated.View style={{
-            width: '100%',
-            backgroundColor: 'white',
-            padding: 20,
-            opacity: modalAnimation,
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-            alignSelf: 'center'
-        }}> */}
         <Text style={{ width: '100%', textAlign: 'center', paddingTop: 5 }}>
             {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
         </Text>
@@ -651,185 +395,44 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 20 }}>
                 Attendances will only be captured for scheduled lectures.
             </Text>
+            
+            
             {
-                !isOwner ? <View style={{ borderColor: '#f4f4f6', borderTopWidth: 1, backgroundColor: '#fff' }}>
-                    <Text
-                        ellipsizeMode="tail"
-                        style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginVertical: 25 }}>
-                        {PreferredLanguageText('upcoming')}
+                    
+                    <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25, backgroundColor: 'white' }}>
+                         <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25, backgroundColor: 'white' }}>
+                        {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                     </Text>
-                </View> : null
-            }
-            {
-                isOwner ?
-                    <View style={{
-                        flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-                        marginBottom: 40,
-                        borderColor: '#f4f4f6', borderTopWidth: 1,
-                        paddingTop: 25,
-                        backgroundColor: "#fff"
-                    }}>
-                        {/* <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
-                            <View style={{ flex: 1, backgroundColor: '#fff' }}>
-                                <Text
-                                    ellipsizeMode="tail"
-                                    style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginBottom: 25, marginTop: 10 }}>
-                                    {PreferredLanguageText('upcoming')}
+                        <TouchableOpacity
+                                onPress={() => setShowPastMeetings(!showPastMeetings)}
+                                style={{
+                                    flex: 1,
+                                    flexDirection: 'row',
+                                    // paddingTop: 10,
+                                    paddingBottom: 40,
+                                    backgroundColor: 'white'
+                                }}>
+                                <Text style={{
+                                    lineHeight: 23,
+                                    marginRight: 10,
+                                    color: '#a2a2aa',
+                                    fontSize: 11,
+                                    textTransform: 'uppercase',
+                                    backgroundColor: 'white'
+                                }}>
+                                    {PreferredLanguageText('past')}
                                 </Text>
-                            </View>
-                            <Text style={{
-                                color: '#a2a2aa',
-                                fontSize: 11,
-                                lineHeight: 30,
-                                paddingTop: 8,
-                                textAlign: 'right',
-                                // paddingRight: 20,
-                                textTransform: 'uppercase'
-                            }}
-                                onPress={() => setShowAddEvent(!showAddEvent)}
-                            >
-                                {
-                                    showAddEvent ? PreferredLanguageText('hide') : PreferredLanguageText('add')
-                                }
-                            </Text>
-                        </View> */}
-                        {
-                            showAddEvent ?
-                                <View style={{ backgroundColor: 'white' }}>
-                                    <View style={{
-                                        width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                                        flexDirection: Platform.OS === "ios" ? 'row' : 'column',
-                                        marginTop: 12,
-                                        backgroundColor: 'white',
-                                        marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-                                    }}>
-                                        <Text style={styles.text}>
-                                            {PreferredLanguageText('start')} {Platform.OS === "android" ? ": " + moment(new Date(start)).format('MMMM Do YYYY, h:mm a') : null}
-                                        </Text>
-                                        {renderStartDateTimePicker()}
-                                    </View>
-                                    <View style={{
-                                        width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                                        flexDirection: Platform.OS === "ios" ? 'row' : 'column',
-                                        paddingTop: 12,
-                                        backgroundColor: '#fff',
-                                        marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-                                    }}>
-                                        <Text style={styles.text}>
-                                            {PreferredLanguageText('end')} {Platform.OS === "android" ? ": " + moment(new Date(end)).format('MMMM Do YYYY, h:mm a') : null}
-                                        </Text>
-                                        <View style={{ width: 6, backgroundColor: '#fff' }} />
-                                        {/* <Datetime
-                                    value={end}
-                                    onChange={(event: any) => {
-                                        const date = new Date(event)
-                                        setEnd(date)
-                                    }}
-                                /> */}
-                                        {renderEndDateTimePicker()}
-                                    </View>
-                                    <View style={{
-                                        backgroundColor: '#fff',
-                                        width: Dimensions.get('window').width < 768 ? '100%' : '10%',
-                                        flexDirection: 'row',
-                                        display: 'flex',
-                                        justifyContent: 'center'
-                                    }}>
-                                        <TouchableOpacity
-                                            style={{
-                                                backgroundColor: 'white',
-                                                overflow: 'hidden',
-                                                height: 35,
-                                                marginTop: 15,
-                                                borderRadius: 15,
-                                                width: '100%', justifyContent: 'center', flexDirection: 'row',
-                                            }}
-                                            onPress={() => handleCreate()}
-                                            disabled={isSubmitDisabled}
-                                        >
-                                            <Text style={{
-                                                textAlign: 'center',
-                                                lineHeight: 35,
-                                                color: '#202025',
-                                                overflow: 'hidden',
-                                                fontSize: 12,
-                                                backgroundColor: '#f4f4f6',
-                                                paddingHorizontal: 25,
-                                                fontFamily: 'inter',
-                                                height: 35,
-                                                width: 150,
-                                                borderRadius: 15,
-                                            }}>
-                                                ADD
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View> : null
-                        }
-                    </View> : null
-            }
-            {
-                upcomingMeetings.length === 0 ?
-                    <View style={{ backgroundColor: 'white', flex: 1 }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                            {PreferredLanguageText('noMeeting')}
-                        </Text>
-                    </View>
-                    :
-                    upcomingMeetings.map((date: any, index: any) => {
-                        return <View style={styles.col} key={index}>
-                            <SubscriberCard
-                                hideChevron={true}
-                                fadeAnimation={props.fadeAnimation}
-                                subscriber={{
-                                    displayName: moment(new Date(date.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(date.end)).format('MMMM Do YYYY, h:mm a'),
-                                    fullName: 'scheduled'
-                                }}
-                                onPress={() => { }}
-                                status={!props.cueId ? false : true}
-                                disabled={true}
-                            />
-                        </View>
-                    })
-
-            }
-            {/* {
-                isOwner ?
-                    <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25, backgroundColor: '#fff' }}>
-                        <View style={{ paddingVertical: 15, backgroundColor: '#fff' }}>
-                            {
-                                showAttendances ?
-                                    <TouchableOpacity
-                                        key={Math.random()}
-                                        style={{
-                                            flex: 1,
-                                            backgroundColor: 'white'
-                                        }}
-                                        onPress={() => {
-                                            setShowAttendances(false)
-                                            setAttendances([])
-                                        }}>
-                                        <Text style={{
-                                            width: '100%',
-                                            fontSize: 16,
-                                            color: '#a2a2aa'
-                                        }}>
-                                            <Ionicons name='chevron-back-outline' size={17} color={'#202025'} style={{ marginRight: 10 }} /> Attended By
-                                        </Text>
-                                    </TouchableOpacity>
-                                    : <Text
-                                        ellipsizeMode="tail"
-                                        style={{ color: '#a2a2aa', fontSize: 14, fontWeight: 'bold', lineHeight: 25, marginVertical: 25 }}>
-                                        {PreferredLanguageText('past')}
-                                    </Text>}
-                        </View>
+                                <Text style={{ lineHeight: 21 }}>
+                                    <Ionicons size={14} name={showPastMeetings ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2aa' />
+                                </Text>
+                            </TouchableOpacity>
                         {
 
                             showAttendances ?
-                                <View style={{ backgroundColor: '#fff' }}>
+                                <View>
                                     {
                                         attendances.length === 0 ?
-                                            <View style={{ backgroundColor: 'white', flex: 1, }}>
+                                            <View style={{ backgroundColor: 'white', flex: 1 }}>
                                                 <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                                     {PreferredLanguageText('noAttendances')}
                                                 </Text>
@@ -851,37 +454,11 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                             })
                                     }
                                 </View>
-                                : (pastMeetings.length === 0 ?
-                                    <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                            {PreferredLanguageText('noPastMeetings')}
-                                        </Text>
-                                    </View>
-                                    :
-                                    pastMeetings.map((date: any, index: any) => {
-                                        return <View style={styles.col} key={index}>
-                                            <SubscriberCard
-                                                chat={!props.cueId}
-                                                fadeAnimation={props.fadeAnimation}
-                                                subscriber={{
-                                                    displayName: moment(new Date(date.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(date.end)).format('MMMM Do YYYY, h:mm a'),
-                                                    fullName: 'ended'
-                                                }}
-                                                onPress={() => {
-                                                    // load attendances
-                                                    loadAttendances(date.dateId)
-                                                    setShowAttendances(true)
-                                                }}
-                                                status={!props.cueId ? false : true}
-                                            />
-                                        </View>
-                                    }))
-
+                                : (showPastMeetings ? renderPastMeetings() : null)
                         }
-                    </View> : null
-            } */}
+                    </View> 
+            }
         </View>
-        {/* </Animated.View> */}
     </ScrollView >)
 
     const attendanceListView = (<AttendanceList
@@ -941,4 +518,40 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginLeft: 10
     },
+    swiper: {
+        height: 70,
+        width: '100%',
+        maxWidth: 500,
+        borderRadius: 15,
+        overflow: 'hidden',
+        backgroundColor: 'white'
+    },
+    card: {
+        height: '100%',
+        width: '100%',
+        flexDirection: 'row',
+        borderRadius: 15,
+        padding: 13,
+        backgroundColor: '#f4f4f6',
+    },
+    meetingText: {
+        display: 'flex',
+        flexDirection: 'column',
+        // flex: 1,
+        backgroundColor: '#f4f4f6',
+        color: '#202025'
+    },
+    title: {
+        fontFamily: 'inter',
+        fontSize: 13,
+        paddingTop: 5,
+        color: '#202025',
+        flex: 1
+    },
+    description: {
+        fontSize: 13,
+        color: '#a2a2aa',
+        // height: '30%',
+    },
+ 
 });
