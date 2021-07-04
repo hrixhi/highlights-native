@@ -647,6 +647,21 @@ export const getGradesList = gql`
     }
   }
 `;
+export const getSubmissionStatistics = gql`
+  query($channelId: String!) {
+    channel {
+      getSubmissionCuesStatistics(channelId: $channelId) {
+        max
+        min
+        mean
+        median
+        std
+        submissionCount
+        cueId
+      }
+    }
+  }
+`;
 export const getMessages = gql`
   query($users: [String!]!) {
     message {

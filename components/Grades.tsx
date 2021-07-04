@@ -4,7 +4,7 @@ import Alert from '../components/Alert'
 import { View } from './Themed';
 // import { } from 'react-native-gesture-handler'
 import { fetchAPI } from '../graphql/FetchAPI';
-import { getGrades, getGradesList } from '../graphql/QueriesAndMutations';
+import { getGrades, getGradesList, getSubmissionStatistics } from '../graphql/QueriesAndMutations';
 import GradesList from './GradesList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -15,6 +15,9 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [loading, setLoading] = useState(true)
     const [cues, setCues] = useState<any[]>([])
     const [scores, setScores] = useState<any[]>([])
+    const [submissionStatistics, setSubmissionStatistics] = useState<any[]>([])
+    const [viewStatisticsCue, setViewStatisticsCue] = useState<any>({})
+
     const couldNotLoadSubscribersAlert = PreferredLanguageText('couldNotLoadSubscribers');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
 
@@ -103,8 +106,29 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }
     }, [props.channelId, modalAnimation, props.channelCreatedBy])
 
+    const loadSubmissionStatistics = useCallback(() => {
+
+        if (props.channelId && props.channelId !== '') {
+            const server = fetchAPI('')
+            server.query({
+                query: getSubmissionStatistics,
+                variables: {
+                    channelId: props.channelId
+                }
+            }).then(res => {
+                if (res.data.channel && res.data.channel.getSubmissionCuesStatistics) {
+                    setSubmissionStatistics(res.data.channel.getSubmissionCuesStatistics)
+                }
+            })
+
+        }
+
+    }, [props.channelId, modalAnimation, props.channelCreatedBy])
+
+
     useEffect(() => {
         loadCuesAndScores()
+        loadSubmissionStatistics()
     }, [props.channelId])
 
     const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
@@ -160,6 +184,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 }).start(() => props.closeModal())
                             }}
                             reload={() => loadCuesAndScores()}
+                            submissionStatistics={submissionStatistics}
                         />
                 }
             </Animated.View>

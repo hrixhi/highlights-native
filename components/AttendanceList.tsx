@@ -140,9 +140,9 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         const fileExtension = '.xlsx';
 
         const ws = XLSX.utils.aoa_to_sheet(exportAoa);
-		const wb = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, "Attendance ");
-		/* generate XLSX file and send to client */
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Attendance ");
+		    /* generate XLSX file and send to client */
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
         
         const uri = FileSystem.cacheDirectory + 'attendance.xlsx';
