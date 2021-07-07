@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Animated, Dimensions, Switch, StyleSheet, Linking, Platform } from 'react-native';
+import { Animated, Dimensions, Switch, StyleSheet, Linking, Platform, Image } from 'react-native';
 import { Text, TouchableOpacity, View } from './Themed';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { Jutsu } from 'react-jutsu'
 import { fetchAPI } from '../graphql/FetchAPI';
 // import Datetime from 'react-datetime';
-import { createScheduledMeeting, editMeeting, getAttendances, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1 } from '../graphql/QueriesAndMutations';
+import { createScheduledMeeting, editMeeting, getAttendances, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1, deleteRecording, getRecordings } from '../graphql/QueriesAndMutations';
 import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -26,6 +26,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [showAttendances, setShowAttendances] = useState(false)
     const [attendances, setAttendances] = useState<any[]>([])
     const [meetingLink, setMeetingLink] = useState('')
+    const [reloadKey, setReloadKey] = useState(Math.random())
+
     const [channelAttendances, setChannelAttendances] = useState<any[]>([])
     const [viewChannelAttendance, setViewChannelAttendance] = useState(false)
     const classroomNotInSession = PreferredLanguageText('classroomNotInSession')
@@ -59,26 +61,26 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         })
     }, [props.channelId])
 
-    const loadPastSchedule = useCallback(() => {
+    useEffect(() => {
         const server = fetchAPI('')
         server.query({
-            query: getPastDates,
+            query: getRecordings,
             variables: {
                 channelId: props.channelId
             }
         }).then(res => {
-            if (res.data && res.data.attendance.getPastDates) {
-                setPastMeetings(res.data.attendance.getPastDates)
+            if (res.data && res.data.channel.getRecordings) {
+                setPastMeetings(res.data.channel.getRecordings)
             }
         })
-    }, [props.channelId])
+    }, [props.channelId, meetingOn, reloadKey])
 
     useEffect(() => {
         loadChannelAttendances()
         setPastMeetings([])
         setShowAttendances(false)
         setIsOwner(false)
-        loadPastSchedule()
+        // loadPastSchedule()
         setViewChannelAttendance(false)
     }, [props.channelId])
 
@@ -176,36 +178,40 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             :
             pastMeetings.map((date: any, index: any) => {
                 return <View style={styles.col} key={index}>
-                     <View
+                    <View
                         style={styles.swiper}
                     >
                         <View
-                            onPress={() => {return}}
                             key={'textPage'}
                             style={styles.card}>
-
-                            <View style={{ flexDirection: 'column', width: '90%', backgroundColor: '#f4f4f6'}}>
-                                <View style={{ backgroundColor: '#f4f4f6', width: '100%', flexDirection: 'column', display: 'flex', minHeight: 25 }}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (Platform.OS == 'web') {
+                                        window.open(date.url, '_blank');
+                                    } else {
+                                        Linking.openURL(date.url)
+                                    }
+                                }}
+                                style={{ flexDirection: 'row', backgroundColor: '#f4f4f6', width: '90%' }}>
+                                <Image
+                                    height={45}
+                                    width={75}
+                                    style={{ height: 45, width: 75, borderRadius: 5 }}
+                                    source={{ uri: date.thumbnail }}
+                                    resizeMode={'contain'}
+                                />
+                                <View style={{ backgroundColor: '#f4f4f6', width: '100%', flexDirection: 'row', display: 'flex', marginLeft: 20 }}>
                                     <Text ellipsizeMode={'tail'}
                                         numberOfLines={1}
                                         style={styles.title}>
-                                        {moment(new Date(date.start)).format('MMMM Do YYYY, h:mm a') + ' to ' + moment(new Date(date.end)).format('MMMM Do YYYY, h:mm a')}
+                                        {moment(new Date(date.startTime)).format('MMMM Do YYYY, h:mm a')}
                                     </Text>
                                 </View>
-                                <View style={styles.meetingText}>
-                                    <Text ellipsizeMode={'tail'}
-                                        numberOfLines={1}
-                                        style={styles.description}>
-                                        {PreferredLanguageText('ended')}
-                                    </Text>
-                                </View>
-                            </View>
-
+                            </TouchableOpacity>
                             {
                                 isOwner ?
-                                     <TouchableOpacity style={{ backgroundColor: '#f4f4f6', width: '10%' }}
+                                    <TouchableOpacity style={{ backgroundColor: '#f4f4f6', width: '10%' }}
                                         onPress={() => {
-
                                             Alert("Delete past lecture ?", "", [
                                                 {
                                                     text: "Cancel",
@@ -220,16 +226,16 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                                         const server = fetchAPI("");
                                                         server
                                                             .mutate({
-                                                                mutation: deleteDateV1,
+                                                                mutation: deleteRecording,
                                                                 variables: {
-                                                                    id: date.dateId,
-                                                                    deleteAll: false
+                                                                    recordID: date.recordID
                                                                 }
                                                             })
                                                             .then(res => {
-                                                                if (res.data && res.data.date.deleteV1) {
-                                                                    Alert("Event Deleted!");
-                                                                    loadPastSchedule();
+                                                                if (res.data && res.data.channel.deleteRecording) {
+                                                                    console.log(res.data)
+                                                                    Alert("Recording Deleted!");
+                                                                    setReloadKey(Math.random())
                                                                 }
                                                             });
                                                     }
@@ -237,16 +243,13 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                             ]);
                                         }}
                                     >
-                                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 16, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 16, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                             <Ionicons name='trash-outline' size={17} color='#d91d56' />
                                         </Text>
                                     </TouchableOpacity>
-                                : null
+                                    : null
                             }
-                            
-                            
                         </View>
-                        
                     </View>
                 </View>
             }))
@@ -395,68 +398,68 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 20 }}>
                 Attendances will only be captured for scheduled lectures.
             </Text>
-            
-            
+
+
             {
-                    
-                    <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25, backgroundColor: 'white' }}>
-                         <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25, backgroundColor: 'white' }}>
+
+                <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25, backgroundColor: 'white' }}>
+                    <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25, backgroundColor: 'white' }}>
                         {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                     </Text>
-                        <TouchableOpacity
-                                onPress={() => setShowPastMeetings(!showPastMeetings)}
-                                style={{
-                                    flex: 1,
-                                    flexDirection: 'row',
-                                    // paddingTop: 10,
-                                    paddingBottom: 40,
-                                    backgroundColor: 'white'
-                                }}>
-                                <Text style={{
-                                    lineHeight: 23,
-                                    marginRight: 10,
-                                    color: '#a2a2aa',
-                                    fontSize: 11,
-                                    textTransform: 'uppercase',
-                                    backgroundColor: 'white'
-                                }}>
-                                    {PreferredLanguageText('past')}
-                                </Text>
-                                <Text style={{ lineHeight: 21 }}>
-                                    <Ionicons size={14} name={showPastMeetings ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2aa' />
-                                </Text>
-                            </TouchableOpacity>
-                        {
+                    <TouchableOpacity
+                        onPress={() => setShowPastMeetings(!showPastMeetings)}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            // paddingTop: 10,
+                            paddingBottom: 40,
+                            backgroundColor: 'white'
+                        }}>
+                        <Text style={{
+                            lineHeight: 23,
+                            marginRight: 10,
+                            color: '#a2a2aa',
+                            fontSize: 11,
+                            textTransform: 'uppercase',
+                            backgroundColor: 'white'
+                        }}>
+                            RECORDINGS
+                        </Text>
+                        <Text style={{ lineHeight: 21 }}>
+                            <Ionicons size={14} name={showPastMeetings ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2aa' />
+                        </Text>
+                    </TouchableOpacity>
+                    {
 
-                            showAttendances ?
-                                <View>
-                                    {
-                                        attendances.length === 0 ?
-                                            <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                                    {PreferredLanguageText('noAttendances')}
-                                                </Text>
+                        showAttendances ?
+                            <View>
+                                {
+                                    attendances.length === 0 ?
+                                        <View style={{ backgroundColor: 'white', flex: 1 }}>
+                                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                                {PreferredLanguageText('noAttendances')}
+                                            </Text>
+                                        </View>
+                                        :
+                                        attendances.map((att: any, index: any) => {
+                                            return <View style={styles.col} key={index}>
+                                                <SubscriberCard
+                                                    hideChevron={true}
+                                                    fadeAnimation={props.fadeAnimation}
+                                                    subscriber={{
+                                                        displayName: att.displayName,
+                                                        fullName: PreferredLanguageText('joinedAt') + ' ' + moment(new Date(att.joinedAt)).format('MMMM Do YYYY, h:mm a')
+                                                    }}
+                                                    onPress={() => { }}
+                                                    status={!props.cueId ? false : true}
+                                                />
                                             </View>
-                                            :
-                                            attendances.map((att: any, index: any) => {
-                                                return <View style={styles.col} key={index}>
-                                                    <SubscriberCard
-                                                        hideChevron={true}
-                                                        fadeAnimation={props.fadeAnimation}
-                                                        subscriber={{
-                                                            displayName: att.displayName,
-                                                            fullName: PreferredLanguageText('joinedAt') + ' ' + moment(new Date(att.joinedAt)).format('MMMM Do YYYY, h:mm a')
-                                                        }}
-                                                        onPress={() => { }}
-                                                        status={!props.cueId ? false : true}
-                                                    />
-                                                </View>
-                                            })
-                                    }
-                                </View>
-                                : (showPastMeetings ? renderPastMeetings() : null)
-                        }
-                    </View> 
+                                        })
+                                }
+                            </View>
+                            : (showPastMeetings ? renderPastMeetings() : null)
+                    }
+                </View>
             }
         </View>
     </ScrollView >)
@@ -520,15 +523,16 @@ const styles = StyleSheet.create({
     },
     swiper: {
         height: 70,
-        width: '100%',
-        maxWidth: 500,
+        width: 350,
+        maxWidth: '100%',
         borderRadius: 15,
         overflow: 'hidden',
         backgroundColor: 'white'
     },
     card: {
         height: '100%',
-        width: '100%',
+        width: 350,
+        maxWidth: '100%',
         flexDirection: 'row',
         borderRadius: 15,
         padding: 13,
@@ -553,5 +557,5 @@ const styles = StyleSheet.create({
         color: '#a2a2aa',
         // height: '30%',
     },
- 
+
 });
