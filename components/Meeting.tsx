@@ -22,6 +22,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [name, setName] = useState('')
     const [isOwner, setIsOwner] = useState(false)
     const [meetingOn, setMeetingOn] = useState(false)
+    const [pastAttendances, setPastAttendances] = useState<any[]>([])
     const [pastMeetings, setPastMeetings] = useState<any[]>([])
     const [showAttendances, setShowAttendances] = useState(false)
     const [attendances, setAttendances] = useState<any[]>([])
@@ -80,9 +81,25 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         setPastMeetings([])
         setShowAttendances(false)
         setIsOwner(false)
-        // loadPastSchedule()
+        loadPastSchedule()
         setViewChannelAttendance(false)
     }, [props.channelId])
+
+    const loadPastSchedule = useCallback(() => {
+        const server = fetchAPI("");
+        server
+            .query({
+                query: getPastDates,
+                variables: {
+                    channelId: props.channelId
+                }
+            })
+            .then(res => {
+                if (res.data && res.data.attendance.getPastDates) {
+                    setPastAttendances(res.data.attendance.getPastDates);
+                }
+            });
+    }, [props.channelId]);
 
     const loadMeetingStatus = useCallback(() => {
         const server = fetchAPI('')
@@ -467,7 +484,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const attendanceListView = (<AttendanceList
         key={JSON.stringify(channelAttendances)}
         channelAttendances={channelAttendances}
-        pastMeetings={pastMeetings}
+        pastMeetings={pastAttendances}
         channelName={props.filterChoice}
         channelId={props.channelId}
         closeModal={() => {
