@@ -57,7 +57,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [height, setHeight] = useState(100)
     const [init, setInit] = useState(false)
     const [submission, setSubmission] = useState(false)
-    const [deadline, setDeadline] = useState(new Date(current.getTime() + 1000 * 60 * 60))
+    const [deadline, setDeadline] = useState(new Date(current.getTime() + 1000 * 60 * 60 * 24))
+    const [initiateAt, setInitiateAt] = useState(new Date(current.getTime()))
     const [gradeWeight, setGradeWeight] = useState<any>(0)
     const [graded, setGraded] = useState(false)
     const [imported, setImported] = useState(false)
@@ -75,9 +76,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [duration, setDuration] = useState({
         hours: 1, minutes: 0, seconds: 0
     })
+
+    const [shuffleQuiz, setShuffleQuiz] = useState(false);
+    
     const [equation, setEquation] = useState('y = x + 1')
     const [showEquationEditor, setShowEquationEditor] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [showInitiateAtTimeAndroid, setShowInitiateAtTimeAndroid] = useState(false);
+    const [showInitiateAtDateAndroid, setShowInitiateAtDateAndroid] = useState(false);
 
     const [showDeadlineTimeAndroid, setShowDeadlineTimeAndroid] = useState(false);
     const [showDeadlineDateAndroid, setShowDeadlineDateAndroid] = useState(false);
@@ -136,7 +143,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             }
         }
         problems.map((problem) => {
-            if (problem.question === '') {
+            if (problem.question === '' || problem.question === 'formula:') {
                 Alert(fillMissingProblemsAlert)
                 error = true;
             }
@@ -150,36 +157,40 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             //     error = true;
             // }
 
-            if (problem.options.length < 2) {
+            // If MCQ then > 2 options
+            if (!problem.questionType && problem.options.length < 2) {
                 Alert("Problem must have at least 2 options")
                 error = true;
             }
 
-            // Create object and check if any options repeat:
+            // If MCQ, check if any options repeat:
+            if (!problem.questionType) {
+                const keys: any = {};
 
-            const keys: any = {};
+                problem.options.map((option: any) => {
+                    if (option.option === '' || option.option === 'formula:') {
+                        Alert(fillMissingOptionsAlert)
+                        error = true;
+                    }
 
-            problem.options.map((option: any) => {
-                if (option.option === '') {
-                    Alert(fillMissingOptionsAlert)
+                    if (option.option in keys) {
+                        Alert("Option repeated in a question");
+                        error = true
+                    }
+
+                    if (option.isCorrect) {
+                        optionFound = true
+                    }
+
+                    keys[option.option] = 1
+                })
+                
+                if (!optionFound) {
+                    Alert(eachOptionOneCorrectAlert)
                     error = true;
                 }
-
-                if (option.option in keys) {
-                    Alert("Option repeated in a question");
-                    error = true
-                }
-
-                if (option.isCorrect) {
-                    optionFound = true
-                }
-
-                keys[option.option] = 1
-            })
-            if (!optionFound) {
-                Alert(eachOptionOneCorrectAlert)
-                error = true;
             }
+            
         })
         if (error) {
             return
@@ -191,18 +202,20 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             variables: {
                 quiz: {
                     problems,
-                    duration: timer ? durationMinutes.toString() : null
+                    duration: timer ? durationMinutes.toString() : null,
+                    shuffleQuiz
                 }
             }
         }).then(res => {
             if (res.data && res.data.quiz.createQuiz !== 'error') {
+                storeDraft('quizDraft', '');
                 handleCreate(res.data.quiz.createQuiz)
             }
         })
     }, [problems, cue, modalAnimation, customCategory, props.saveDataInCloud, isQuiz,
-        gradeWeight, deadline, submission, imported, selected, subscribers,
+        gradeWeight, deadline, initiateAt, submission, imported, selected, subscribers,
         shuffle, frequency, starred, color, notify, title, type, url, timer, duration,
-        props.closeModal, channelId, endPlayAt, playChannelCueIndef])
+        props.closeModal, channelId, endPlayAt, playChannelCueIndef, shuffleQuiz])
 
     const loadChannelCategoriesAndSubscribers = useCallback(async () => {
 
@@ -388,6 +401,17 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 title
             }
             saveCue = JSON.stringify(obj)
+        } else if (isQuiz)  {
+            const quiz = {
+                title,
+                problems,
+                timer,
+                duration
+            }
+
+            const saveQuiz = JSON.stringify(quiz)
+
+            storeDraft('quizDraft', saveQuiz)
         } else {
             saveCue = cue
         }
@@ -396,7 +420,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         } else {
             storeDraft('cueDraft', '')
         }
-    }, [cue, init, type, url, imported, title])
+    }, [cue, init, type, url, imported, title,  isQuiz, problems, timer, duration])
 
     const storeDraft = useCallback(async (type, value) => {
         await AsyncStorage.setItem(type, value)
@@ -491,6 +515,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 return;
             }
 
+            if ((submission || isQuiz) && deadline < initiateAt) {
+                Alert("Available from time must be set before deadline", "")
+                return;
+            }
+
             const user = JSON.parse(uString)
             const server = fetchAPI('')
             // const userIds: any[] = []
@@ -512,6 +541,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 gradeWeight: gradeWeight.toString(),
                 submission: submission || isQuiz,
                 deadline: submission || isQuiz ? deadline.toISOString() : '',
+                initiateAt: submission || isQuiz ? initiateAt.toISOString() : '',
                 endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : '',
                 shareWithUserIds: selected.length === subscribers.length ? null : selected
             }
@@ -541,7 +571,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
         setIsSubmitting(false)
     }, [cue, modalAnimation, customCategory, props.saveDataInCloud, isQuiz, timer, duration,
-        gradeWeight, deadline, submission, imported, selected, subscribers,
+        gradeWeight, deadline, initiateAt, submission, imported, selected, subscribers,
         shuffle, frequency, starred, color, notify, title, type, url,
         props.closeModal, channelId, endPlayAt, playChannelCueIndef])
 
@@ -551,6 +581,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 const h = await AsyncStorage.getItem('cueDraft')
                 if (h !== null) {
                     setCue(h)
+                }
+                const quizDraft = await AsyncStorage.getItem('quizDraft')
+                if (quizDraft !== null) {
+                    const { duration, timer, problems, title } = JSON.parse(quizDraft);
+
+                    setDuration(duration);
+                    setTimer(timer);
+                    setProblems(problems);
+                    setTitle(title);
                 }
             } catch (e) {
                 console.log(e)
@@ -619,6 +658,131 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     //     // Positioning scroll bar
     //     RichText.current.scrollTo({ y: scrollY - 60, animated: true });
     // }
+
+    const renderInitiateAtDateTimePicker = () => {
+        return (<View style={{ backgroundColor: '#fff' }}>
+            {Platform.OS === "ios" ? <DateTimePicker
+                style={styles.timePicker}
+                value={initiateAt}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    const currentDate: any = selectedDate;
+                    setInitiateAt(currentDate)
+                }}
+                minimumDate={new Date()}
+            /> : null}
+            {Platform.OS === "android" && showInitiateAtDateAndroid ? <DateTimePicker
+                style={styles.timePicker}
+                value={initiateAt}
+                mode={'date'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowInitiateAtDateAndroid(false);
+                    setInitiateAt(currentDate)
+                }}
+                minimumDate={new Date()}
+            /> : null}
+
+            {Platform.OS === "android" ? <View style={{
+                width: '100%',
+                flexDirection: 'row',
+                marginTop: 12,
+                backgroundColor: '#fff',
+                marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+            }}>
+
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        height: 35,
+                        borderRadius: 15,
+                        marginBottom: 10,
+                        width: 150, justifyContent: 'center', flexDirection: 'row',
+                    }}
+                    onPress={() => {
+                        setShowInitiateAtDateAndroid(true)
+                        setShowInitiateAtTimeAndroid(false)
+                    }}
+                >
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 35,
+                        color: '#202025',
+                        overflow: 'hidden',
+                        fontSize: 10,
+                        // backgroundColor: '#f4f4f6',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        width: 150,
+                        borderRadius: 15,
+                    }}>
+                        Set Date
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: 'white',
+                        overflow: 'hidden',
+                        height: 35,
+                        borderRadius: 15,
+                        width: 150, justifyContent: 'center', flexDirection: 'row',
+                    }}
+                    onPress={() => {
+                        setShowInitiateAtDateAndroid(false)
+                        setShowInitiateAtTimeAndroid(true)
+                    }}
+                >
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 35,
+                        color: '#202025',
+                        overflow: 'hidden',
+                        fontSize: 10,
+                        // backgroundColor: '#f4f4f6',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        width: 150,
+                        borderRadius: 15,
+                    }}>
+                        Set Time
+                    </Text>
+                </TouchableOpacity>
+            </View> : null}
+
+            <View style={{ height: 10, backgroundColor: 'white' }} />
+            {Platform.OS === "ios" ? <DateTimePicker
+                style={styles.timePicker}
+                value={initiateAt}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    const currentDate: any = selectedDate;
+                    setInitiateAt(currentDate)
+                }}
+                minimumDate={new Date()}
+            /> : null}
+            {Platform.OS === "android" && showInitiateAtTimeAndroid ? <DateTimePicker
+                style={styles.timePicker}
+                value={initiateAt}
+                mode={'time'}
+                textColor={'#202025'}
+                onChange={(event, selectedDate) => {
+                    if (!selectedDate) return;
+                    const currentDate: any = selectedDate;
+                    setShowInitiateAtTimeAndroid(false);
+                    setInitiateAt(currentDate)
+
+                }}
+                minimumDate={new Date()}
+            /> : null}
+        </View>)
+    }
 
     const renderDeadlineDateTimePicker = () => {
         return (<View style={{ backgroundColor: '#fff' }}>
@@ -1158,7 +1322,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     {
                         imported || isQuiz ?
                             <View style={{ display: 'flex', flexDirection: width < 768 ? 'column' : 'row', overflow: 'visible', backgroundColor: 'white' }}>
-                                <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6', paddingRight: 15, display: 'flex', flexDirection: 'row' }}>
+                                <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6', paddingRight: 15, display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
                                     <TextInput
                                         value={title}
                                         style={styles.input}
@@ -1448,6 +1612,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         thumbColor='white'
                                                     />
                                                 </View>
+
+                                                <View style={{ display: 'flex', flexDirection: 'column' }}>
+                                               
                                                 {
                                                     submission ?
                                                         <View style={{
@@ -1455,23 +1622,38 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             display: 'flex',
                                                             flexDirection: Platform.OS === "android" ? 'column' : 'row',
                                                             backgroundColor: 'white',
+                                                            paddingBottom: 10
                                                         }}>
                                                             <Text style={styles.text}>
+                                                                Available
+                                                                {Platform.OS === "android" ? ": " + moment(new Date(initiateAt)).format('MMMM Do YYYY, h:mm a') : null}
+                                                            </Text>
+                                                            
+                                                            {renderInitiateAtDateTimePicker()}
+                                                        </View>
+                                                        : <View style={{ flex: 1, backgroundColor: '#fff' }} />
+                                                }
 
+                                                {
+                                                    submission ?
+                                                        <View style={{
+                                                            width: '100%',
+                                                            display: 'flex',
+                                                            flexDirection: Platform.OS === "android" ? 'column' : 'row',
+                                                            backgroundColor: 'white',
+                                                            
+                                                        }}>
+                                                            <Text style={styles.text}>
                                                                 {PreferredLanguageText('deadline')}
                                                                 {Platform.OS === "android" ? ": " + moment(new Date(deadline)).format('MMMM Do YYYY, h:mm a') : null}
                                                             </Text>
-                                                            {/* <Datetime
-                                                                value={deadline}
-                                                                onChange={(event: any) => {
-                                                                    const date = new Date(event)
-                                                                    setDeadline(date)
-                                                                }}
-                                                            /> */}
                                                             {renderDeadlineDateTimePicker()}
                                                         </View>
                                                         : <View style={{ flex: 1, backgroundColor: '#fff' }} />
                                                 }
+
+                                                </View>
+                                                            
                                             </View>
                                         </View> : null
                                 }
@@ -1791,6 +1973,32 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </View>
                                     </View> : null
                             }
+
+                            {isQuiz ?  <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
+                                        <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
+                                            <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                                                Shuffle Questions
+                                            </Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row',  backgroundColor: 'white', }}>
+                                            <View style={{
+                                                backgroundColor: 'white',
+                                                height: 40,
+                                                marginRight: 10
+                                            }}>
+                                                <Switch
+                                                    value={shuffleQuiz}
+                                                    onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
+                                                    style={{ height: 20, marginRight: 'auto'  }}
+                                                    trackColor={{
+                                                        false: '#f4f4f6',
+                                                        true: '#a2a2aa'
+                                                    }}
+                                                    thumbColor='white'
+                                                />
+                                            </View>
+                                        </View>
+                                    </View> : null}
                         </View>
                     </View>
                     <View style={styles.footer}>

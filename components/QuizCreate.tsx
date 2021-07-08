@@ -6,10 +6,23 @@ import { Ionicons } from '@expo/vector-icons';
 import CheckBox from 'react-native-check-box';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from "@react-native-picker/picker";
+
+const questionTypeOptions = [
+    {
+        label: "MCQ",
+        value: "",
+    },
+    {
+        label: "Free response",
+        value: "freeResponse"
+    },
+]
+
 
 const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
-    const [problems, setProblems] = useState<any[]>([])
+    const [problems, setProblems] = useState<any[]>(props.problems ? props.problems : [])
 
     const galleryCallback = useCallback(async (index: any, i: any) => {
         const gallerySettings = await ImagePicker.getMediaLibraryPermissionsAsync()
@@ -53,6 +66,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
         }}>
             {
                 problems.map((problem: any, index: any) => {
+
+                    const { questionType } = problem;
+
                     return <View style={{ borderBottomColor: '#f4f4f6', borderBottomWidth: index === (problems.length - 1) ? 0 : 1, marginBottom: 25, backgroundColor: 'white' }}>
                         <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
                             <View style={{ paddingTop: 15, backgroundColor: 'white' }}>
@@ -79,7 +95,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             <TextInput
                                                 value={problem.question}
                                                 // style={styles.input}
-                                                placeholder={PreferredLanguageText('problem') + (index + 1).toString()}
+                                                placeholder={PreferredLanguageText('problem') + " " + (index + 1).toString()}
                                                 onChangeText={val => {
                                                     const newProbs = [...problems];
                                                     newProbs[index].question = val;
@@ -111,7 +127,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     ? 10 : 0,
                                                 color: '#a2a2aa',
                                                 fontFamily: 'Overpass',
-                                                fontSize: 10
+                                                fontSize: 10,
                                             }}
                                         >
                                             {
@@ -148,10 +164,59 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 
                                 
                             </View>
-                            {/* <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff' }}>
-                               
-                            </View> */}
                         </View>
+                        <View
+                            style={{
+                                backgroundColor: "white",
+                                display: "flex",
+                                flexDirection: 'row',
+                                marginTop: 10
+                                // height: 40,
+                                // marginRight: 10
+                            }}>
+                            <Text
+                                style={{
+                                    paddingTop: 10,
+                                    color: '#a2a2aa',
+                                    fontFamily: 'Overpass',
+                                    fontSize: 12,
+                                    marginRight: 10,
+                                    marginLeft: 20
+                                }}
+                            >
+                                Question Type:
+                            </Text>
+                            <Picker
+                                style={styles.picker}
+                                itemStyle={{
+                                    fontSize: 15
+                                }}
+                                selectedValue={questionType}
+                                onValueChange={(questionType: any) => {
+                                    const updatedProblems = [...problems]
+                                    updatedProblems[index].questionType = questionType;
+
+                                    // Clear Options 
+                                    if (questionType !== "") {
+                                        updatedProblems[index].options = []
+                                    }
+                                    setProblems(updatedProblems)
+                                    props.setProblems(updatedProblems)
+                                }}>
+                                {questionTypeOptions.map((item: any, index: number) => {
+                                    return (
+                                        <Picker.Item
+                                            color={questionType === item.value ? "#3B64F8" : "#202025"}
+                                            label={item.value === "" ? "MCQ" : item.label}
+                                            value={item.value}
+                                            key={index}
+                                        />
+                                    );
+                                })}
+                            </Picker>
+                        </View>
+
+
                         {
                             problem.options.map((option: any, i: any) => {
                                 return <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
@@ -167,7 +232,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             }}
                                         />
                                     </View>
-                                    <View style={{ backgroundColor: '#fff' }}>
+                                    <View style={{ backgroundColor: '#fff', width: '80%' }}>
                                         {
                                             option.option && option.option.includes("image:") ?
                                                 <Image
@@ -183,7 +248,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 <TextInput
                                                     value={option.option}
                                                     // style={styles.input}
-                                                    placeholder={PreferredLanguageText('option') + (i + 1).toString()}
+                                                    placeholder={PreferredLanguageText('option') + " " + (i + 1).toString()}
                                                     onChangeText={val => {
                                                         const newProbs = [...problems];
                                                         newProbs[index].options[i].option = val;
@@ -238,7 +303,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </View>
                             })
                         }
-                        <TouchableOpacity
+                        {questionType === "" ? <TouchableOpacity
                             onPress={() => {
                                 const updatedProblems = [...problems]
                                 updatedProblems[index].options.push({
@@ -274,14 +339,14 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             }}>
                                 {PreferredLanguageText('addChoice')}
                             </Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> : null}
                     </View>
                 })
             }
             <View style={{ backgroundColor: 'white' }}>
                 <TouchableOpacity
                     onPress={() => {
-                        const updatedProblems = [...problems, { question: '', options: [], points: '' }]
+                        const updatedProblems = [...problems, { question: '', options: [], points: '', questionType: '' }]
                         setProblems(updatedProblems)
                         props.setProblems(updatedProblems)
                     }}
@@ -328,5 +393,19 @@ const styles = StyleSheet.create({
         paddingBottom: 12,
         marginTop: 5,
         marginBottom: 20
-    }
+    },
+    picker: {
+        display: 'flex',
+        justifyContent: 'center',
+        backgroundColor: 'white',
+        overflow: 'hidden',
+        fontSize: 12,
+        textAlign: 'center',
+        width: 200,
+        height: 200,
+        alignSelf: 'center',
+        marginTop: -20,
+        borderRadius: 3
+    },
 });
+

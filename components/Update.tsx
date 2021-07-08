@@ -139,7 +139,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                                 comment: status.comment,
                                                 score: status.score,
                                                 graded: status.graded,
-                                                userId: status.userId
+                                                userId: status.userId,
+                                                submittedAt: status.submittedAt
+                                                
                                             });
                                         });
                                         setSubscribers(subs);
@@ -313,6 +315,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             updateCueData={(update: any) =>
                                 props.updateCueData(update)
                             }
+                            resetCueUpdateCount={() => props.resetCueUpdateCount()}
                             changeViewStatus={() => setViewStatus(true)}
                             viewStatus={viewStatus}
                             showOriginal={showOriginal}

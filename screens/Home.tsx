@@ -1185,6 +1185,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       submissionImported,
       submission,
       deadline,
+      initiateAt,
       gradeWeight,
       submitted,
       submissionTitle,
@@ -1274,7 +1275,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       submittedAt: submitted
         ? submittedNow.toISOString()
         : unmodified.submittedAt,
-      deadline: submission ? deadline.toISOString() : ""
+      deadline: submission ? deadline.toISOString() : "",
+      initiateAt: submission ? initiateAt.toISOString() : "",
     };
     const stringifiedCues = JSON.stringify(subCues);
     await AsyncStorage.setItem("cues", stringifiedCues);

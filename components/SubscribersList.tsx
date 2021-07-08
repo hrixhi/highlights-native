@@ -9,7 +9,7 @@ import {
     RichEditor
 } from "react-native-pell-rich-editor";
 import { fetchAPI } from '../graphql/FetchAPI';
-import { editPersonalMeeting, findUserById, getMessages, getPersonalMeetingLink, getPersonalMeetingLinkStatus, inviteByEmail, isSubInactive, makeSubActive, makeSubInactive, markMessagesAsRead, submitGrade, unsubscribe } from '../graphql/QueriesAndMutations';
+import { editPersonalMeeting, findUserById, getMessages, getPersonalMeetingLink, getPersonalMeetingLinkStatus, inviteByEmail, isSubInactive, makeSubActive, makeSubInactive, markMessagesAsRead, submitGrade, unsubscribe, getQuiz, gradeQuiz } from '../graphql/QueriesAndMutations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Alert from './Alert';
 import NewMessage from "./NewMessage";
@@ -23,6 +23,8 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { Video } from 'expo-av';
 import moment from "moment";
 import Webview from './Webview';
+
+import QuizGrading from './QuizGrading';
 
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
@@ -38,6 +40,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [isOwner, setIsOwner] = useState(false)
     const [submission, setSubmission] = useState<any>('')
     const [score, setScore] = useState("0")
+    const [graded, setGraded] = useState(false)
     const [status, setStatus] = useState("")
     const [userId, setUserId] = useState("")
     const [messages, setMessages] = useState<any[]>([])
@@ -62,6 +65,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [meetingLink, setMeetingLink] = useState('')
     const [showMeetingOptions, setShowMeetingOptions] = useState(false);
     const scrollRef: any = useRef();
+    const [loading, setLoading] = useState(false);
+    const [problems, setProblems] = useState<any[]>([]);
+    const [submittedAt, setSubmittedAt] = useState('');
+    const [isV0Quiz, setIsV0Quiz] = useState(false)
 
     // Test
     const [height, setHeight] = useState(42)
@@ -151,6 +158,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             if (obj.solutions) {
                 setIsQuiz(true)
                 setQuizSolutions(obj)
+
             } else {
                 setImported(true)
                 setUrl(obj.url)
@@ -164,6 +172,46 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             setTitle('')
         }
     }, [submission])
+
+    useEffect(() => {
+        if (quizSolutions) {
+            if (quizSolutions.problemScores) {
+                setIsV0Quiz(false)
+            } else {
+                setIsV0Quiz(true)
+            }
+        }
+    }, [quizSolutions])
+
+    useEffect(() => {
+        if (isQuiz) {
+            const obj = JSON.parse(props.cue.original);
+
+            console.log(obj)
+            setLoading(true)
+
+            if (obj.quizId) {
+                const server = fetchAPI("");
+                    server
+                        .query({
+                            query: getQuiz,
+                            variables: {
+                                quizId: obj.quizId
+                            }
+                        })
+                        .then(res => {
+                            console.log(res.data);
+
+                            if (res.data && res.data.quiz.getQuiz) {
+                                console.log(res.data.quiz.getQuiz.problems)
+                                setProblems(res.data.quiz.getQuiz.problems);
+                                setLoading(false);
+                            }
+                        });
+
+            }
+        }
+    }, [isQuiz])
 
     useEffect(() => {
         // get meeting status & set the meeting link accordingly
@@ -462,6 +510,30 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     }, [isLoadedUserInactive, loadedChatWithUser, props.channelId])
 
+    const onGradeQuiz = (problemScores: string[], score: number) => {
+        const server = fetchAPI("");
+        server
+            .mutate({
+                mutation: gradeQuiz,
+                variables: {
+                    cueId: props.cueId,
+                    userId,
+                    score,
+                    problemScores
+                }
+            })
+            .then(res => {
+                if (res.data && res.data.cue.gradeQuiz) {
+
+                    props.reload()
+                    setShowSubmission(false)
+                }
+        });
+
+    }
+
+    console.log("Quiz solutions", quizSolutions);
+
     const renderQuizSubmissions = () => {
 
         const { initiatedAt, solutions } = quizSolutions;
@@ -475,22 +547,32 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             <Text style={{ width: '100%', height: 15, color: 'black', marginTop: 20, paddingBottom: 25, fontWeight: 'bold' }}>
                 Selected Answers:
             </Text>
-            <View style={{ backgroundColor: 'white', marginVertical: 20, display: 'flex', flexDirection: "column" }}>
-                {solutions.map((problem: any, index: number) => {
+            <View style={{ marginTop: 20, display: 'flex', flexDirection: "column", backgroundColor: '#fff' }}>
+                {solutions.map((solution: any, index: number) => {
 
-                    const answers: any[] = problem.selected;
+                    
+                    if (solution.selected) {
+                        const answers: any[] = solution.selected;
 
-                    const selectedAnswers = answers.filter(ans => ans.isSelected);
+                        const selectedAnswers = answers.filter(ans => ans.isSelected);
 
-                    let selectedAnswersString: any[] = []
+                        let selectedAnswersString: any[] = []
 
-                    selectedAnswers.forEach((ans: any) => {
-                        selectedAnswersString.push(ans.options)
-                    })
+                        selectedAnswers.forEach((ans: any) => {
+                            selectedAnswersString.push(ans.options)
+                        })
 
-                    return (<Text style={{ width: '100%', height: 15, marginTop: 10, paddingBottom: 25, color: 'black' }}>
-                        Problem {index + 1} : {selectedAnswersString.join(", ")}
-                    </Text>)
+                        return (<Text style={{ width: '100%', height: 15, marginTop: 10, paddingBottom: 25, color: '#202025' }}>
+                            Problem {index + 1} : {selectedAnswersString.join(", ")}
+                        </Text>)
+                    } else {
+                        return (<Text style={{ width: '100%', height: 15, marginTop: 10, paddingBottom: 25, color: '#202025' }}>
+                            Problem {index + 1} : {solution.response}
+                        </Text>)
+                    }
+                    
+
+                    
                 })}
             </View>
         </View>)
@@ -995,9 +1077,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                         if (props.cueId && props.cueId !== null) {
                                                                             if (subscriber.fullName === 'submitted' || subscriber.fullName === 'graded') {
                                                                                 setSubmission(subscriber.submission)
+                                                                                setSubmittedAt(subscriber.submittedAt)
                                                                                 setShowSubmission(true)
                                                                                 setStatus(subscriber.fullName)
-                                                                                setScore(`${subscriber.score}`)
+                                                                                setScore(subscriber.score)
+                                                                                setGraded(subscriber.graded)
                                                                                 setComment(subscriber.comment)
                                                                                 setUserId(subscriber.userId)
                                                                             }
@@ -1012,6 +1096,15 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     }
                                                 </ScrollView>)
                                 ) :
+                                isQuiz && !isV0Quiz ?
+                                    <QuizGrading 
+                                        loading={loading}
+                                        problems={problems}
+                                        solutions={quizSolutions}
+                                        partiallyGraded={!graded}
+                                        onGradeQuiz={onGradeQuiz}
+                                    />
+                                :
                                 <View>
                                     <ScrollView
                                         showsVerticalScrollIndicator={false}
