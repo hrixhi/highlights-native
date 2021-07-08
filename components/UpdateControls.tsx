@@ -50,6 +50,7 @@ import MultiSelectComponent from "./MultiSelect";
 import Webview from "./Webview";
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+  const current = new Date();
   const [cue, setCue] = useState(props.cue.cue);
   const [shuffle, setShuffle] = useState(props.cue.shuffle);
   const [starred, setStarred] = useState(props.cue.starred);
@@ -79,12 +80,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const colorChoices: any[] = ["#d91d56", "#ED7D22", "#F8D41F", "#B8D41F", "#53BE6D"].reverse();
   const [submission, setSubmission] = useState(props.cue.submission ? props.cue.submission : false);
   const dead =
-    props.cue.deadline && props.cue.deadline !== ""
-      ? props.cue.deadline === "Invalid Date"
-        ? new Date()
-        : new Date(props.cue.deadline)
-      : new Date();
+        props.cue.deadline && props.cue.deadline !== ""
+            ? props.cue.deadline === "Invalid Date"
+                ? new Date(current.getTime() + 1000 * 60 * 60 * 24)
+                : new Date(props.cue.deadline)
+            : new Date(current.getTime() + 1000 * 60 * 60 * 24);
+
+    const initiate =
+        props.cue.initiateAt && props.cue.initiateAt !== ""
+            ? props.cue.initiateAt === "Invalid Date"
+                ? new Date()
+                : new Date(props.cue.initiateAt)
+            : new Date();
   const [deadline, setDeadline] = useState<Date>(dead);
+  const [initiateAt, setInitiateAt] = useState<Date>(initiate)
   const [gradeWeight, setGradeWeight] = useState<any>(props.cue.gradeWeight ? props.cue.gradeWeight : 0);
   const [score] = useState<any>(props.cue.score ? props.cue.score : 0);
   const [graded, setGraded] = useState(props.cue.gradeWeight && props.cue.gradeWeight !== 0 ? true : false);
@@ -121,6 +130,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [equation, setEquation] = useState("y = x + 1");
   const [showEquationEditor, setShowEquationEditor] = useState(false);
   const [handlingSubmit, setHandlingSubmit] = useState(false);
+  const [shuffleQuiz, setShuffleQuiz] = useState(false);
+
+  const [showInitiateAtTimeAndroid, setShowInitiateAtTimeAndroid] = useState(false);
+  const [showInitiateAtDateAndroid, setShowInitiateAtDateAndroid] = useState(false);
 
   const [showDeadlineTimeAndroid, setShowDeadlineTimeAndroid] = useState(false);
   const [showDeadlineDateAndroid, setShowDeadlineDateAndroid] = useState(false);
@@ -129,6 +142,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [showEndPlayAtDateAndroid, setShowEndPlayAtDateAndroid] = useState(false);
 
   const [cueFullyLoaded, setCueFullyLoaded] = useState(false);
+
+  const [isV0Quiz, setIsV0Quiz] = useState(false)
 
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
@@ -309,6 +324,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   const init = new Date(solutionsObject.initiatedAt);
                   setInitiatedAt(init);
                 }
+                props.resetCueUpdateCount()
+                setShuffleQuiz(res.data.quiz.getQuiz.shuffleQuiz ? true : false)
                 setTitle(obj.title);
                 setIsQuiz(true);
                 setLoading(false);
@@ -459,6 +476,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       Alert(unableToStartQuizAlert, deadlineHasPassedAlert);
       return;
     }
+    if (now < initiateAt) {
+      Alert("Quiz not available")
+      return;
+    }
     const u = await AsyncStorage.getItem("user");
     if (u) {
       const user = JSON.parse(u);
@@ -487,7 +508,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       // after saving time in cloud, save it locally, set initiatedAt
       // quiz gets triggered
     }
-  }, [props.cue._id, solutions, deadline]);
+  }, [props.cue._id, solutions, deadline, initiateAt]);
 
   const fileUpload = useCallback(async () => {
     const file = await DocumentPicker.getDocumentAsync();
@@ -702,6 +723,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               saveCue = cue;
             }
 
+            console.log(saveCue);
+
             const server = fetchAPI("");
             server
               .mutate({
@@ -779,6 +802,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       isQuiz,
       submission,
       deadline,
+      initiateAt,
       solutions,
       initiatedAt,
       customCategory,
@@ -807,7 +831,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     // isQuiz,
     submission,
     deadline,
-    // solutions,
+    initiateAt,
+    solutions,
     initiatedAt,
     customCategory,
     props.cueKey,
@@ -979,6 +1004,131 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     },
     [submissionUrl, url, submissionTitle, submissionType, type, title]
   );
+
+  const renderInitiateAtDateTimePicker = () => {
+    return (<View style={{ backgroundColor: '#fff' }}>
+        {Platform.OS === "ios" ? <DateTimePicker
+            style={styles.timePicker}
+            value={initiateAt}
+            mode={'date'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                const currentDate: any = selectedDate;
+                setInitiateAt(currentDate)
+            }}
+            minimumDate={new Date()}
+        /> : null}
+        {Platform.OS === "android" && showInitiateAtDateAndroid ? <DateTimePicker
+            style={styles.timePicker}
+            value={initiateAt}
+            mode={'date'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                if (!selectedDate) return;
+                const currentDate: any = selectedDate;
+                setShowInitiateAtDateAndroid(false);
+                setInitiateAt(currentDate)
+            }}
+            minimumDate={new Date()}
+        /> : null}
+
+        {Platform.OS === "android" ? <View style={{
+            width: '100%',
+            flexDirection: 'row',
+            marginTop: 12,
+            backgroundColor: '#fff',
+            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+        }}>
+
+            <TouchableOpacity
+                style={{
+                    backgroundColor: 'white',
+                    overflow: 'hidden',
+                    height: 35,
+                    borderRadius: 15,
+                    marginBottom: 10,
+                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                }}
+                onPress={() => {
+                    setShowInitiateAtDateAndroid(true)
+                    setShowInitiateAtTimeAndroid(false)
+                }}
+            >
+                <Text style={{
+                    textAlign: 'center',
+                    lineHeight: 35,
+                    color: '#202025',
+                    overflow: 'hidden',
+                    fontSize: 10,
+                    // backgroundColor: '#f4f4f6',
+                    paddingHorizontal: 25,
+                    fontFamily: 'inter',
+                    height: 35,
+                    width: 150,
+                    borderRadius: 15,
+                }}>
+                    Set Date
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={{
+                    backgroundColor: 'white',
+                    overflow: 'hidden',
+                    height: 35,
+                    borderRadius: 15,
+                    width: 150, justifyContent: 'center', flexDirection: 'row',
+                }}
+                onPress={() => {
+                    setShowInitiateAtDateAndroid(false)
+                    setShowInitiateAtTimeAndroid(true)
+                }}
+            >
+                <Text style={{
+                    textAlign: 'center',
+                    lineHeight: 35,
+                    color: '#202025',
+                    overflow: 'hidden',
+                    fontSize: 10,
+                    // backgroundColor: '#f4f4f6',
+                    paddingHorizontal: 25,
+                    fontFamily: 'inter',
+                    height: 35,
+                    width: 150,
+                    borderRadius: 15,
+                }}>
+                    Set Time
+                </Text>
+            </TouchableOpacity>
+        </View> : null}
+
+        <View style={{ height: 10, backgroundColor: 'white' }} />
+        {Platform.OS === "ios" ? <DateTimePicker
+            style={styles.timePicker}
+            value={initiateAt}
+            mode={'time'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                const currentDate: any = selectedDate;
+                setInitiateAt(currentDate)
+            }}
+            minimumDate={new Date()}
+        /> : null}
+        {Platform.OS === "android" && showInitiateAtTimeAndroid ? <DateTimePicker
+            style={styles.timePicker}
+            value={initiateAt}
+            mode={'time'}
+            textColor={'#202025'}
+            onChange={(event, selectedDate) => {
+                if (!selectedDate) return;
+                const currentDate: any = selectedDate;
+                setShowInitiateAtTimeAndroid(false);
+                setInitiateAt(currentDate)
+
+            }}
+            minimumDate={new Date()}
+        /> : null}
+    </View>)
+}
 
   const renderDeadlineDateTimePicker = () => {
     return (
@@ -1560,6 +1710,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           initiatedAt ? (
             <Quiz
               // disable quiz if graded or deadline has passed
+              submitted={props.cue.submittedAt && props.cue.submittedAt !== ""}
               graded={props.cue.graded}
               hasEnded={currentDate >= deadline}
               solutions={solutions}
@@ -1604,11 +1755,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         ) : (
           <Quiz
             isOwner={isOwner}
-            // disable quiz if graded or deadline has passed
+            submitted={props.cue.submittedAt && props.cue.submittedAt !== ""}
             graded={props.cue.graded || currentDate >= deadline}
             solutions={solutions}
             problems={problems}
             setSolutions={(s: any) => setSolutions(s)}
+            shuffleQuiz={shuffleQuiz}
           />
         )
       ) : imported ? (
@@ -1891,6 +2043,47 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               </Text>
             </View>
           )}
+
+          <View style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', width: '100%'}}>
+
+         
+
+          {submission ? (
+            <View
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: Platform.OS === "android" ? "column" : "row",
+                backgroundColor: "white",
+                paddingTop: 10,
+                paddingBottom: 10
+              }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: "#a2a2aa",
+                  textAlign: "left",
+                  paddingRight: 10
+                }}>
+                Available
+                {Platform.OS === "android" ? ": " + moment(new Date(initiateAt)).format("MMMM Do YYYY, h:mm a") : null}
+              </Text>
+              {isOwner ? (
+                renderInitiateAtDateTimePicker()
+              ) : (
+                null
+              )}
+            </View>
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "#fff"
+              }}
+            />
+          )}  
+
+
           {submission ? (
             <View
               style={{
@@ -1912,14 +2105,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               {isOwner ? (
                 renderDeadlineDateTimePicker()
               ) : (
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: "#a2a2aa",
-                    textAlign: "left"
-                  }}>
-                  {deadline.toLocaleString()}
-                </Text>
+                null
               )}
             </View>
           ) : (
@@ -1930,6 +2116,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}
             />
           )}
+
+        </View>
+
+
         </View>
       </View>
     ) : null;
@@ -2670,6 +2860,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     return null;
   }
 
+  if (initiateAt > new Date() && !isOwner) {
+    return  (<View style={{ minHeight: Dimensions.get('window').height }}>
+            <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20  }}>
+              <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
+                    This assignment is locked till {moment(initiateAt).format('MMMM Do YYYY, h:mm a')}
+                </Text>
+            </View>
+        </View>)
+}
+
   return (
     <View
       style={{
@@ -2704,6 +2904,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             style={{
               width: "100%",
               flexDirection: "row",
+              alignItems: 'center',
               marginBottom: 5,
               backgroundColor: "#fff"
             }}>
@@ -3055,6 +3256,32 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               </View>
             </View>
             {renderReminderOptions()}
+            {isQuiz && isOwner ?  <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: 'white' }}>
+                <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
+                    <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                      Shuffle Questions
+                    </Text>
+                </View>
+                <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
+                    <View style={{
+                      backgroundColor: 'white',
+                      height: 40,
+                      marginRight: 10
+                  }}>
+                      <Switch
+                          value={shuffleQuiz}
+                          disabled={true}
+                          onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
+                          style={{ height: 20 }}
+                          trackColor={{
+                              false: '#f4f4f6',
+                              true: '#a2a2aa'
+                          }}
+                          thumbColor='white'
+                      />
+                    </View>
+                </View>
+            </View> : null}
             {renderFooter()}
           </Collapsible>
         </ScrollView>
