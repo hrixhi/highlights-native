@@ -875,3 +875,20 @@ query($channelId: String!) {
   }
 }
 `
+export const getOrganisation = gql`
+query($userId: String!) {
+  school {
+    findByUserId(userId: $userId) {
+      logo
+      allowStudentChannelCreation
+    }
+  }
+}
+`
+export const getRole = gql`
+query($userId: String!) {
+  user {
+    getRole(userId: $userId) 
+  }
+}
+`

@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchAPI } from '../graphql/FetchAPI';
-import { doesChannelNameExist, getMeetingStatus, totalUnreadDiscussionThreads, totalUnreadMessages, updateChannel } from '../graphql/QueriesAndMutations';
+import { doesChannelNameExist, getMeetingStatus, getOrganisation, totalUnreadDiscussionThreads, totalUnreadMessages, updateChannel } from '../graphql/QueriesAndMutations';
 import useColorScheme from '../hooks/useColorScheme';
 import alert from './Alert';
 import Prompt from 'rn-prompt';
@@ -24,6 +24,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [isOwner, setIsOwner] = useState(false)
     const [showResetNamePromptAndroid, setShowResetNamePromptAndroid] = useState(false);
     const [showResetPasswordPromptAndroid, setShowResetPasswordPromptAndroid] = useState(false);
+    const [school, setSchool] = useState<any>(null)
     const [resetChannelName, setResetChannelName] = useState('');
 
     const editChannelInfo = useCallback(() => {
@@ -76,6 +77,26 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }
 
     }, [props.filterChoice, props.loadData])
+
+    useEffect(() => {
+        (async () => {
+            const u = await AsyncStorage.getItem('user')
+            if (u) {
+                const user = JSON.parse(u)
+                const server = fetchAPI('')
+                server.query({
+                    query: getOrganisation,
+                    variables: {
+                        userId: user._id
+                    }
+                }).then(res => {
+                    if (res.data && res.data.school.findByUserId) {
+                        setSchool(res.data.school.findByUserId)
+                    }
+                })
+            }
+        })()
+    }, [])
 
     useEffect(() => {
 
@@ -226,20 +247,24 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
                         style={{ backgroundColor: colorScheme === 'light' ? 'white' : '#202025' }}>
                         <Image
-                            source={colorScheme === 'light' ?
-                                (
-                                    // !hideExclaimation ? require('./default-images/cues-logo-black.jpg') : 
-                                    require('./default-images/cues-logo-black-exclamation-hidden.jpg')
-                                )
-                                :
-                                (
-                                    // !hideExclaimation ? require('./default-images/cues-logo-white.jpg') : 
-                                    require('./default-images/cues-logo-white-exclamation-hidden.jpg')
-                                )
+                            key={school}
+                            source={
+                                school && school.logo && school.logo !== ''
+                                    ?
+                                    { uri: school.logo }
+                                    :
+                                    (
+                                        colorScheme === 'light' ?
+                                            require('./default-images/cues-logo-black-exclamation-hidden.jpg')
+                                            :
+                                            require('./default-images/cues-logo-white-exclamation-hidden.jpg')
+                                    )
                             }
                             style={{
-                                width: Dimensions.get('window').height * 0.14 * 0.53456,
-                                height: Dimensions.get('window').height * 0.15 * 0.2
+                                width: school && school.logo && school.logo !== '' ?
+                                    Dimensions.get('window').height * 0.14 * 0.53456 : Dimensions.get('window').height * 0.14 * 0.53456,
+                                height: school && school.logo && school.logo !== '' ?
+                                    Dimensions.get('window').height * 0.15 * 0.35 : Dimensions.get('window').height * 0.15 * 0.2,
                             }}
                             resizeMode={'contain'}
                         />

@@ -80,18 +80,18 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const colorChoices: any[] = ["#d91d56", "#ED7D22", "#F8D41F", "#B8D41F", "#53BE6D"].reverse();
   const [submission, setSubmission] = useState(props.cue.submission ? props.cue.submission : false);
   const dead =
-        props.cue.deadline && props.cue.deadline !== ""
-            ? props.cue.deadline === "Invalid Date"
-                ? new Date(current.getTime() + 1000 * 60 * 60 * 24)
-                : new Date(props.cue.deadline)
-            : new Date(current.getTime() + 1000 * 60 * 60 * 24);
+    props.cue.deadline && props.cue.deadline !== ""
+      ? props.cue.deadline === "Invalid Date"
+        ? new Date(current.getTime() + 1000 * 60 * 60 * 24)
+        : new Date(props.cue.deadline)
+      : new Date(current.getTime() + 1000 * 60 * 60 * 24);
 
-    const initiate =
-        props.cue.initiateAt && props.cue.initiateAt !== ""
-            ? props.cue.initiateAt === "Invalid Date"
-                ? new Date()
-                : new Date(props.cue.initiateAt)
-            : new Date();
+  const initiate =
+    props.cue.initiateAt && props.cue.initiateAt !== ""
+      ? props.cue.initiateAt === "Invalid Date"
+        ? new Date()
+        : new Date(props.cue.initiateAt)
+      : new Date();
   const [deadline, setDeadline] = useState<Date>(dead);
   const [initiateAt, setInitiateAt] = useState<Date>(initiate)
   const [gradeWeight, setGradeWeight] = useState<any>(props.cue.gradeWeight ? props.cue.gradeWeight : 0);
@@ -282,7 +282,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         setSubmissionImported(true);
         setSubmissionUrl(obj.url);
         setSubmissionType(obj.type);
-        setSubmissionTitle(obj.title);
+        if (loading) {
+          setSubmissionTitle(obj.title);
+        }
       } else {
         setSubmissionImported(false);
         setSubmissionUrl("");
@@ -1007,128 +1009,128 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
   const renderInitiateAtDateTimePicker = () => {
     return (<View style={{ backgroundColor: '#fff' }}>
-        {Platform.OS === "ios" ? <DateTimePicker
-            style={styles.timePicker}
-            value={initiateAt}
-            mode={'date'}
-            textColor={'#202025'}
-            onChange={(event, selectedDate) => {
-                const currentDate: any = selectedDate;
-                setInitiateAt(currentDate)
-            }}
-            minimumDate={new Date()}
-        /> : null}
-        {Platform.OS === "android" && showInitiateAtDateAndroid ? <DateTimePicker
-            style={styles.timePicker}
-            value={initiateAt}
-            mode={'date'}
-            textColor={'#202025'}
-            onChange={(event, selectedDate) => {
-                if (!selectedDate) return;
-                const currentDate: any = selectedDate;
-                setShowInitiateAtDateAndroid(false);
-                setInitiateAt(currentDate)
-            }}
-            minimumDate={new Date()}
-        /> : null}
+      {Platform.OS === "ios" ? <DateTimePicker
+        style={styles.timePicker}
+        value={initiateAt}
+        mode={'date'}
+        textColor={'#202025'}
+        onChange={(event: any, selectedDate: any) => {
+          const currentDate: any = selectedDate;
+          setInitiateAt(currentDate)
+        }}
+        minimumDate={new Date()}
+      /> : null}
+      {Platform.OS === "android" && showInitiateAtDateAndroid ? <DateTimePicker
+        style={styles.timePicker}
+        value={initiateAt}
+        mode={'date'}
+        textColor={'#202025'}
+        onChange={(event: any, selectedDate: any) => {
+          if (!selectedDate) return;
+          const currentDate: any = selectedDate;
+          setShowInitiateAtDateAndroid(false);
+          setInitiateAt(currentDate)
+        }}
+        minimumDate={new Date()}
+      /> : null}
 
-        {Platform.OS === "android" ? <View style={{
-            width: '100%',
-            flexDirection: 'row',
-            marginTop: 12,
-            backgroundColor: '#fff',
-            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
-        }}>
+      {Platform.OS === "android" ? <View style={{
+        width: '100%',
+        flexDirection: 'row',
+        marginTop: 12,
+        backgroundColor: '#fff',
+        marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+      }}>
 
-            <TouchableOpacity
-                style={{
-                    backgroundColor: 'white',
-                    overflow: 'hidden',
-                    height: 35,
-                    borderRadius: 15,
-                    marginBottom: 10,
-                    width: 150, justifyContent: 'center', flexDirection: 'row',
-                }}
-                onPress={() => {
-                    setShowInitiateAtDateAndroid(true)
-                    setShowInitiateAtTimeAndroid(false)
-                }}
-            >
-                <Text style={{
-                    textAlign: 'center',
-                    lineHeight: 35,
-                    color: '#202025',
-                    overflow: 'hidden',
-                    fontSize: 10,
-                    // backgroundColor: '#f4f4f6',
-                    paddingHorizontal: 25,
-                    fontFamily: 'inter',
-                    height: 35,
-                    width: 150,
-                    borderRadius: 15,
-                }}>
-                    Set Date
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    backgroundColor: 'white',
-                    overflow: 'hidden',
-                    height: 35,
-                    borderRadius: 15,
-                    width: 150, justifyContent: 'center', flexDirection: 'row',
-                }}
-                onPress={() => {
-                    setShowInitiateAtDateAndroid(false)
-                    setShowInitiateAtTimeAndroid(true)
-                }}
-            >
-                <Text style={{
-                    textAlign: 'center',
-                    lineHeight: 35,
-                    color: '#202025',
-                    overflow: 'hidden',
-                    fontSize: 10,
-                    // backgroundColor: '#f4f4f6',
-                    paddingHorizontal: 25,
-                    fontFamily: 'inter',
-                    height: 35,
-                    width: 150,
-                    borderRadius: 15,
-                }}>
-                    Set Time
-                </Text>
-            </TouchableOpacity>
-        </View> : null}
+        <TouchableOpacity
+          style={{
+            backgroundColor: 'white',
+            overflow: 'hidden',
+            height: 35,
+            borderRadius: 15,
+            marginBottom: 10,
+            width: 150, justifyContent: 'center', flexDirection: 'row',
+          }}
+          onPress={() => {
+            setShowInitiateAtDateAndroid(true)
+            setShowInitiateAtTimeAndroid(false)
+          }}
+        >
+          <Text style={{
+            textAlign: 'center',
+            lineHeight: 35,
+            color: '#202025',
+            overflow: 'hidden',
+            fontSize: 10,
+            // backgroundColor: '#f4f4f6',
+            paddingHorizontal: 25,
+            fontFamily: 'inter',
+            height: 35,
+            width: 150,
+            borderRadius: 15,
+          }}>
+            Set Date
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            backgroundColor: 'white',
+            overflow: 'hidden',
+            height: 35,
+            borderRadius: 15,
+            width: 150, justifyContent: 'center', flexDirection: 'row',
+          }}
+          onPress={() => {
+            setShowInitiateAtDateAndroid(false)
+            setShowInitiateAtTimeAndroid(true)
+          }}
+        >
+          <Text style={{
+            textAlign: 'center',
+            lineHeight: 35,
+            color: '#202025',
+            overflow: 'hidden',
+            fontSize: 10,
+            // backgroundColor: '#f4f4f6',
+            paddingHorizontal: 25,
+            fontFamily: 'inter',
+            height: 35,
+            width: 150,
+            borderRadius: 15,
+          }}>
+            Set Time
+          </Text>
+        </TouchableOpacity>
+      </View> : null}
 
-        <View style={{ height: 10, backgroundColor: 'white' }} />
-        {Platform.OS === "ios" ? <DateTimePicker
-            style={styles.timePicker}
-            value={initiateAt}
-            mode={'time'}
-            textColor={'#202025'}
-            onChange={(event, selectedDate) => {
-                const currentDate: any = selectedDate;
-                setInitiateAt(currentDate)
-            }}
-            minimumDate={new Date()}
-        /> : null}
-        {Platform.OS === "android" && showInitiateAtTimeAndroid ? <DateTimePicker
-            style={styles.timePicker}
-            value={initiateAt}
-            mode={'time'}
-            textColor={'#202025'}
-            onChange={(event, selectedDate) => {
-                if (!selectedDate) return;
-                const currentDate: any = selectedDate;
-                setShowInitiateAtTimeAndroid(false);
-                setInitiateAt(currentDate)
+      <View style={{ height: 10, backgroundColor: 'white' }} />
+      {Platform.OS === "ios" ? <DateTimePicker
+        style={styles.timePicker}
+        value={initiateAt}
+        mode={'time'}
+        textColor={'#202025'}
+        onChange={(event: any, selectedDate: any) => {
+          const currentDate: any = selectedDate;
+          setInitiateAt(currentDate)
+        }}
+        minimumDate={new Date()}
+      /> : null}
+      {Platform.OS === "android" && showInitiateAtTimeAndroid ? <DateTimePicker
+        style={styles.timePicker}
+        value={initiateAt}
+        mode={'time'}
+        textColor={'#202025'}
+        onChange={(event: any, selectedDate: any) => {
+          if (!selectedDate) return;
+          const currentDate: any = selectedDate;
+          setShowInitiateAtTimeAndroid(false);
+          setInitiateAt(currentDate)
 
-            }}
-            minimumDate={new Date()}
-        /> : null}
+        }}
+        minimumDate={new Date()}
+      /> : null}
     </View>)
-}
+  }
 
   const renderDeadlineDateTimePicker = () => {
     return (
@@ -1412,7 +1414,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   };
 
   const renderRichToolbar = () => {
-    return (props.cue.channelId && props.cue.channelId !== '' && !isOwner && props.showOriginal) || (props.showOriginal && showImportOptions) ? (
+    return (props.cue.channelId && props.cue.channelId !== '' && !isOwner && props.showOriginal) || (props.showOriginal && showImportOptions) || isQuiz ? (
       <View style={{ height: 0, backgroundColor: "#fff" }} />
     ) : (((props.cue.graded && submission && !isOwner) || (currentDate > deadline && submission)) && !props.showOriginal) || (!props.showOriginal && showImportOptions) ? (
       <View style={{ height: 0, backgroundColor: "#fff" }} />
@@ -2044,80 +2046,80 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             </View>
           )}
 
-          <View style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', width: '100%'}}>
+          <View style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', width: '100%' }}>
 
-         
 
-          {submission ? (
-            <View
-              style={{
-                width: "100%",
-                display: "flex",
-                flexDirection: Platform.OS === "android" ? "column" : "row",
-                backgroundColor: "white",
-                paddingTop: 10,
-                paddingBottom: 10
-              }}>
-              <Text
+
+            {submission ? (
+              <View
                 style={{
-                  fontSize: 12,
-                  color: "#a2a2aa",
-                  textAlign: "left",
-                  paddingRight: 10
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: Platform.OS === "android" ? "column" : "row",
+                  backgroundColor: "white",
+                  paddingTop: 10,
+                  paddingBottom: 10
                 }}>
-                Available
-                {Platform.OS === "android" ? ": " + moment(new Date(initiateAt)).format("MMMM Do YYYY, h:mm a") : null}
-              </Text>
-              {isOwner ? (
-                renderInitiateAtDateTimePicker()
-              ) : (
-                null
-              )}
-            </View>
-          ) : (
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#fff"
-              }}
-            />
-          )}  
-
-
-          {submission ? (
-            <View
-              style={{
-                width: "100%",
-                display: "flex",
-                flexDirection: Platform.OS === "android" ? "column" : "row",
-                backgroundColor: "white"
-              }}>
-              <Text
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#a2a2aa",
+                    textAlign: "left",
+                    paddingRight: 10
+                  }}>
+                  Available
+                  {Platform.OS === "android" ? ": " + moment(new Date(initiateAt)).format("MMMM Do YYYY, h:mm a") : null}
+                </Text>
+                {isOwner ? (
+                  renderInitiateAtDateTimePicker()
+                ) : (
+                  null
+                )}
+              </View>
+            ) : (
+              <View
                 style={{
-                  fontSize: 12,
-                  color: "#a2a2aa",
-                  textAlign: "left",
-                  paddingRight: 10
-                }}>
-                {PreferredLanguageText("due")}
-                {Platform.OS === "android" ? ": " + moment(new Date(deadline)).format("MMMM Do YYYY, h:mm a") : null}
-              </Text>
-              {isOwner ? (
-                renderDeadlineDateTimePicker()
-              ) : (
-                null
-              )}
-            </View>
-          ) : (
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#fff"
-              }}
-            />
-          )}
+                  flex: 1,
+                  backgroundColor: "#fff"
+                }}
+              />
+            )}
 
-        </View>
+
+            {submission ? (
+              <View
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: Platform.OS === "android" ? "column" : "row",
+                  backgroundColor: "white"
+                }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#a2a2aa",
+                    textAlign: "left",
+                    paddingRight: 10
+                  }}>
+                  {PreferredLanguageText("due")}
+                  {Platform.OS === "android" ? ": " + moment(new Date(deadline)).format("MMMM Do YYYY, h:mm a") : null}
+                </Text>
+                {isOwner ? (
+                  renderDeadlineDateTimePicker()
+                ) : (
+                  null
+                )}
+              </View>
+            ) : (
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: "#fff"
+                }}
+              />
+            )}
+
+          </View>
 
 
         </View>
@@ -2861,14 +2863,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   }
 
   if (initiateAt > new Date() && !isOwner) {
-    return  (<View style={{ minHeight: Dimensions.get('window').height }}>
-            <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20  }}>
-              <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
-                    This assignment is locked till {moment(initiateAt).format('MMMM Do YYYY, h:mm a')}
-                </Text>
-            </View>
-        </View>)
-}
+    return (<View style={{ minHeight: Dimensions.get('window').height }}>
+      <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20 }}>
+        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
+          This assignment is locked till {moment(initiateAt).format('MMMM Do YYYY, h:mm a')}
+        </Text>
+      </View>
+    </View>)
+  }
 
   return (
     <View
@@ -3129,7 +3131,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               <View
                 style={{
-                  width: "100%",
+                  width: "85%",
                   alignSelf: "flex-start",
                   backgroundColor: "white"
                 }}>
@@ -3163,7 +3165,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   </TouchableOpacity>
                   {/* </a> */}
                   {
-                    isOwner ?
+                    props.cue.graded || (currentDate > deadline) ? null :
                       <TouchableOpacity
                         style={{
                           marginLeft: 15,
@@ -3180,10 +3182,27 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                           }}>
                           Remove
                         </Text>
-                      </TouchableOpacity> : null
+                      </TouchableOpacity>
                   }
                 </View>
-              ) : null}
+              ) : <TouchableOpacity
+                style={{
+                  marginLeft: 15,
+                  paddingTop: 10,
+                  backgroundColor: '#fff'
+                }}
+                onPress={() => clearAll()}
+              >
+                <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
+                <Text
+                  style={{
+                    fontSize: 9,
+                    color: "#a2a2aa",
+                    textAlign: "center"
+                  }}>
+                  Remove
+                </Text>
+              </TouchableOpacity>}
             </View>
           ) : null}
           {submissionImported || imported ? (
@@ -3256,31 +3275,31 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               </View>
             </View>
             {renderReminderOptions()}
-            {isQuiz && isOwner ?  <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: 'white' }}>
-                <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
-                    <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                      Shuffle Questions
-                    </Text>
+            {isQuiz && isOwner ? <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: 'white' }}>
+              <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
+                <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                  Shuffle Questions
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
+                <View style={{
+                  backgroundColor: 'white',
+                  height: 40,
+                  marginRight: 10
+                }}>
+                  <Switch
+                    value={shuffleQuiz}
+                    disabled={true}
+                    onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
+                    style={{ height: 20 }}
+                    trackColor={{
+                      false: '#f4f4f6',
+                      true: '#a2a2aa'
+                    }}
+                    thumbColor='white'
+                  />
                 </View>
-                <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
-                    <View style={{
-                      backgroundColor: 'white',
-                      height: 40,
-                      marginRight: 10
-                  }}>
-                      <Switch
-                          value={shuffleQuiz}
-                          disabled={true}
-                          onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
-                          style={{ height: 20 }}
-                          trackColor={{
-                              false: '#f4f4f6',
-                              true: '#a2a2aa'
-                          }}
-                          thumbColor='white'
-                      />
-                    </View>
-                </View>
+              </View>
             </View> : null}
             {renderFooter()}
           </Collapsible>
