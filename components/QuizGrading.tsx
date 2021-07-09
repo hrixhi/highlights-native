@@ -92,7 +92,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         >
             <View style={{ width: '100%', flexDirection: 'row', backgroundColor: '#fff' }}>
                 <Text style={{ width: '25%', fontSize: 15, color: "#202025", marginBottom: 10, backgroundColor: '#fff'  }}>
-                    {props.partiallyGraded ? "Finish Grading" : "Graded" }
+                    {props.partiallyGraded ? "Finish Grading" : "" }
                 </Text>
                 <View style={{ width: '70%', flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10, backgroundColor: '#fff'  }}>
                     <Text
@@ -206,8 +206,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 value={"/ " + problem.points }
                                 style={{
                                     width: '25%',
-                                    borderBottomColor: '#f4f4f6',
-                                    borderBottomWidth: 1,
                                     fontSize: 15,
                                     padding: 15,
                                     paddingTop: 12,
@@ -369,8 +367,8 @@ export default Quiz;
 const styles = StyleSheet.create({
     input: {
         width: '50%',
-        borderBottomColor: '#f4f4f6',
-        borderBottomWidth: 1,
+        // borderBottomColor: '#f4f4f6',
+        // borderBottomWidth: 1,
         fontSize: 15,
         padding: 15,
         paddingTop: 12,

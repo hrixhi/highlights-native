@@ -60,11 +60,10 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 return updated
             })
 
-            const shuffledArray = shuffle(updatedProblemsWithIndex);
-
-            console.log(updatedProblemsWithIndex)
-
             setProblems(updatedProblemsWithIndex)
+
+            const shuffledArray = shuffle(updatedProblemsWithIndex);
+           
             setShuffledProblems(shuffledArray)
             
         } else {
@@ -80,7 +79,10 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     }, [props.shuffleQuiz])
 
-    function shuffle(array: any[]) {
+    function shuffle(input: any[]) {
+
+        const array = [...input];
+
         var currentIndex = array.length,  randomIndex;
       
         // While there remain elements to shuffle...

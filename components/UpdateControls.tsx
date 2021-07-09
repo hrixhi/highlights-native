@@ -1710,7 +1710,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           initiatedAt ? (
             <Quiz
               // disable quiz if graded or deadline has passed
-              submitted={props.cue.submittedAt && props.cue.submittedAt !== ""}
+              submitted={isQuiz && props.cue.submittedAt && props.cue.submittedAt !== "" ? true : false}
               graded={props.cue.graded}
               hasEnded={currentDate >= deadline}
               solutions={solutions}
@@ -1755,7 +1755,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         ) : (
           <Quiz
             isOwner={isOwner}
-            submitted={props.cue.submittedAt && props.cue.submittedAt !== ""}
+            submitted={isQuiz && props.cue.submittedAt && props.cue.submittedAt !== "" ? true : false}
             graded={props.cue.graded || currentDate >= deadline}
             solutions={solutions}
             problems={problems}
@@ -2066,12 +2066,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   paddingRight: 10
                 }}>
                 Available
-                {Platform.OS === "android" ? ": " + moment(new Date(initiateAt)).format("MMMM Do YYYY, h:mm a") : null}
+                {Platform.OS === "android" && isOwner ? ": " + moment(new Date(initiateAt)).format("MMMM Do YYYY, h:mm a") : null}
               </Text>
               {isOwner ? (
                 renderInitiateAtDateTimePicker()
               ) : (
-                null
+                <Text
+                style={{
+                  fontSize: 12,
+                  color: "#a2a2aa",
+                  textAlign: "left"
+                }}>
+                  {initiateAt.toLocaleString()}
+              </Text>
               )}
             </View>
           ) : (
@@ -2099,13 +2106,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   textAlign: "left",
                   paddingRight: 10
                 }}>
-                {PreferredLanguageText("due")}
-                {Platform.OS === "android" ? ": " + moment(new Date(deadline)).format("MMMM Do YYYY, h:mm a") : null}
+                Deadline
+                {Platform.OS === "android" && isOwner ? ": " + moment(new Date(deadline)).format("MMMM Do YYYY, h:mm a") : null}
               </Text>
               {isOwner ? (
                 renderDeadlineDateTimePicker()
               ) : (
-                null
+                <Text
+                style={{
+                  fontSize: 12,
+                  color: "#a2a2aa",
+                  textAlign: "left"
+                }}>
+                {deadline.toLocaleString()}
+              </Text>
               )}
             </View>
           ) : (
@@ -2864,7 +2878,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     return  (<View style={{ minHeight: Dimensions.get('window').height }}>
             <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20  }}>
               <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
-                    This assignment is locked till {moment(initiateAt).format('MMMM Do YYYY, h:mm a')}
+                    Available from {moment(initiateAt).format('MMMM Do YYYY, h:mm a')}
                 </Text>
             </View>
         </View>)
