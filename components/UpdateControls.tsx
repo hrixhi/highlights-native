@@ -2156,7 +2156,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               fontSize: 12,
               color: "#a2a2aa"
             }}>
-            {PreferredLanguageText("graded")}
+            Grade Weight
           </Text>
         </View>
         <View
@@ -2191,16 +2191,17 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 width: "100%",
                 display: "flex",
                 flexDirection: "row",
-                backgroundColor: "white"
+                backgroundColor: "white",
+                marginTop: 10
               }}>
               <Text
                 style={{
                   fontSize: 12,
                   color: "#a2a2aa",
                   textAlign: "left",
-                  paddingRight: 10
+                  paddingRight: 10,
+                  paddingLeft: 10
                 }}>
-                Grade Weight {"\n"}
                 {PreferredLanguageText("percentageOverall")}
               </Text>
               {isOwner ? (

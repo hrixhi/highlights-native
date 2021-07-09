@@ -371,7 +371,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     }}>
                     {PreferredLanguageText('grades')}
                 </Text>
-                {scores.length === 0 || cues.length === 0 ?  null : <Text
+                {(scores.length === 0 || cues.length === 0 || !props.isOwner) ?  null : <Text
                     style={{
                         color: "#a2a2aa",
                         fontSize: 11,

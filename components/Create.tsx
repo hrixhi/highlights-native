@@ -1662,14 +1662,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
                                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                                 <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                                                    {PreferredLanguageText('graded')}
+                                                    Grade Weight
                                                 </Text>
                                             </View>
                                             <View style={{ flexDirection: 'row', backgroundColor: 'white', }}>
                                                 <View style={{
                                                     backgroundColor: 'white',
                                                     height: 40,
-                                                    paddingRight: 10
+                                                    paddingRight: 10,
+                                                    paddingLeft: 10
                                                 }}>
                                                     <Switch
                                                         value={graded}
@@ -1688,14 +1689,26 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             width: '100%',
                                                             display: 'flex',
                                                             flexDirection: 'row',
-                                                            backgroundColor: 'white'
+                                                            backgroundColor: 'white',
+                                                            alignItems:'flex-start',
+                                                            marginTop: 10
                                                         }}>
                                                             <Text style={styles.text}>
-                                                                Grade Weight {'\n'}{PreferredLanguageText('percentageOverall')}
+                                                                {PreferredLanguageText('percentageOverall')}
                                                             </Text>
                                                             <TextInput
                                                                 value={gradeWeight}
-                                                                style={styles.input}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    borderBottomColor: '#f4f4f6',
+                                                                    borderBottomWidth: 1,
+                                                                    fontSize: 15,
+                                                                    padding: 15,
+                                                                    paddingTop: 0,
+                                                                    paddingBottom: 12,
+                                                                    // marginTop: 5,
+                                                                    marginBottom: 20
+                                                                }}
                                                                 placeholder={'0-100'}
                                                                 onChangeText={val => setGradeWeight(val)}
                                                                 placeholderTextColor={'#a2a2aa'}

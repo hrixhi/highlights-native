@@ -615,7 +615,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     }}>
                     {!enableFilter ? "FILTER" : "HIDE"}
                 </Text>}
-                {pastMeetings.length === 0 || channelAttendances.length === 0 ?  null : <Text
+                {(pastMeetings.length === 0 || channelAttendances.length === 0 || !props.isOwner) ?  null : <Text
                     style={{
                         color: "#a2a2aa",
                         fontSize: 11,

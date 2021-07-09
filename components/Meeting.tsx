@@ -183,8 +183,6 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         toolbarButtons.push('mute-everyone', 'mute-video-everyone', 'stats', 'settings', 'livestreaming')
     }
 
-    console.log("is owner", isOwner)
-
     const renderPastMeetings = () => {
         return (pastMeetings.length === 0 ?
             <View style={{ backgroundColor: 'white', flex: 1 }}>
@@ -250,7 +248,6 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                                             })
                                                             .then(res => {
                                                                 if (res.data && res.data.channel.deleteRecording) {
-                                                                    console.log(res.data)
                                                                     Alert("Recording Deleted!");
                                                                     setReloadKey(Math.random())
                                                                 }
@@ -486,6 +483,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         channelAttendances={channelAttendances}
         pastMeetings={pastAttendances}
         channelName={props.filterChoice}
+        isOwner={isOwner}
         channelId={props.channelId}
         closeModal={() => {
             Animated.timing(modalAnimation, {

@@ -162,7 +162,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     />
                                 </View>
                                 
-                                
                             </View>
                         </View>
                         <View
@@ -170,22 +169,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 backgroundColor: "white",
                                 display: "flex",
                                 flexDirection: 'row',
-                                marginTop: 10
-                                // height: 40,
-                                // marginRight: 10
                             }}>
-                            <Text
-                                style={{
-                                    paddingTop: 10,
-                                    color: '#a2a2aa',
-                                    fontFamily: 'Overpass',
-                                    fontSize: 12,
-                                    marginRight: 10,
-                                    marginLeft: 20
-                                }}
-                            >
-                                Question Type:
-                            </Text>
                             <Picker
                                 style={styles.picker}
                                 itemStyle={{
@@ -318,7 +302,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 overflow: 'hidden',
                                 height: 35,
                                 maxHeight: 70,
-                                marginTop: 15,
+                                // marginTop: ,
                                 width: '100%',
                                 justifyContent: 'flex-start', flexDirection: 'row',
                                 marginBottom: 50
@@ -401,10 +385,10 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         fontSize: 12,
         textAlign: 'center',
-        width: 200,
-        height: 200,
-        alignSelf: 'center',
-        marginTop: -20,
+        width: "100%",
+        // height: 200,
+        // alignSelf: 'center',
+        // marginTop: -20,
         borderRadius: 3
     },
 });
