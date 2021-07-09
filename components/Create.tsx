@@ -1148,7 +1148,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={16} color={tintColor} onPress={() => {
                                     clearAll()
                                 }} />,
-                                // ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
                             }}
                             onPressAddImage={galleryCallback}
                             insertCamera={cameraCallback}
@@ -1203,7 +1203,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 iconMap={{
                                     ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={18} color={tintColor} />,
                                     ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={18} color={tintColor} onPress={() => clearAll()} />,
-                                    ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={18} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                                    // ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={18} color={tintColor} onPress={() => setShowImportOptions(false)} />
                                 }}
                                 onPressAddImage={galleryCallback}
                                 insertCamera={cameraCallback}
