@@ -3120,7 +3120,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               currentDate < deadline &&
               !submissionImported &&
               !showImportOptions &&
-              !props.cue.graded ? (
+              !props.cue.graded && !isQuiz ? (
               <Text
                 style={{
                   color: "#a2a2aa",
@@ -3142,7 +3142,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 (props.showOriginal && isOwner && imported) ||  // viewing import as owner
                 (!props.showOriginal && isOwner && (props.cue.channelId && props.cue.channelId !== '')) || // no submission as owner
                 (!props.showOriginal && submissionImported && !isOwner) ||  // submitted as non owner
-                (!props.showOriginal && !submission && (props.cue.channelId && props.cue.channelId !== ''))   // my notes
+                (!props.showOriginal && !submission && (props.cue.channelId && props.cue.channelId !== '')) || // my notes
+                isQuiz
                 ? null :
                 (
                   <Text style={{
