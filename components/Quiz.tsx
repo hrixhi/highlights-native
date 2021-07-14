@@ -3,6 +3,7 @@ import { Image, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
 import { Text, View } from './Themed';
 import CheckBox from 'react-native-check-box';
 import Latex from 'react-native-latex';
+import MathJax from 'react-native-mathjax-svg';
 
 import { TextInput as CustomTextInput } from './CustomTextInput';
 
@@ -14,9 +15,15 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [updateKey, setUpdateKey] = useState(Math.random())
     const [shuffledProblems, setShuffledProblems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [headers, setHeaders] = useState<any>(props.headers)
+    const [instructions, setInstructions] = useState(props.instructions)
 
+    useEffect(() => {
 
-    console.log(props);
+        setHeaders(props.headers);
+        setInstructions(props.instructions);
+
+    }, [props.headers, props.instructions])
 
     // Over here the solutions objeect for modification is first set and updated based on changes...
     useEffect(() => {
@@ -62,22 +69,63 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
             setProblems(updatedProblemsWithIndex)
 
-            const shuffledArray = shuffle(updatedProblemsWithIndex);
-           
-            setShuffledProblems(shuffledArray)
-            
+            const headerPositions = Object.keys(headers);
+
+            // Headers not at index 0
+            const filteredHeaderPositions = headerPositions.filter((pos:any) => pos > 0);
+
+            // If headers then we only shuffle the questions between each header
+            if (filteredHeaderPositions.length > 0) {
+
+                let arrayOfArrays = [];
+
+                let start = 0;
+
+                for (let i = 0; i <= filteredHeaderPositions.length; i++) {
+                    if (i === filteredHeaderPositions.length) {
+                        const subArray = updatedProblemsWithIndex.slice(start, updatedProblemsWithIndex.length);
+                        arrayOfArrays.push(subArray);
+
+                    } else {
+                        const subArray = updatedProblemsWithIndex.slice(start, Number(filteredHeaderPositions[i]));
+                        arrayOfArrays.push(subArray);
+                        start = Number(filteredHeaderPositions[i]);
+    
+                    }
+                    
+                }
+
+                let shuffled: any = [];
+
+                for (let i = 0; i < arrayOfArrays.length; i++) {
+                    const s = shuffle(arrayOfArrays[i]);
+                    shuffled.push(s);
+                }
+
+                const shuffledArray = shuffled.flat();
+
+                setShuffledProblems(shuffledArray)
+                
+
+            } else {
+
+                const shuffledArray = shuffle(updatedProblemsWithIndex);
+          
+                setShuffledProblems(shuffledArray)
+
+            }
+
         } else {
             const updatedProblemsWithIndex = problems.map((prob: any, index: number) => {
                 const updated = { ...prob, problemIndex: index };
                 return updated
             })
-            console.log(updatedProblemsWithIndex)
 
             setProblems(updatedProblemsWithIndex)
         }
         setLoading(false)
 
-    }, [props.shuffleQuiz])
+    }, [props.shuffleQuiz, headers])
 
     function shuffle(input: any[]) {
 
@@ -98,8 +146,47 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
       
         return array;
-      }
-      
+    }
+    
+    const renderHeader = (index: number) => {
+
+        if (index in headers) {
+            return (<Text style={{ width: '100%', marginBottom: 30, marginTop: 50, fontSize: 15, fontWeight: "bold", color: 'black' }}>
+                {headers[index]}
+            </Text>)
+        } 
+
+        return null;
+    }
+
+    const selectMCQOption = (problem: any, problemIndex: number, optionIndex: number) => {
+
+        let onlyOneCorrect = true;
+
+        if (!problem.questionType) {
+            let noOfCorrect = 0;
+
+            problem.options.map((option: any) => {
+                if (option.isCorrect) noOfCorrect++;    
+            })
+
+            if (noOfCorrect > 1) onlyOneCorrect = false;
+        }
+        // Check if one correct or multiple correct
+        const updatedSolution = [...solutions]
+
+        if (onlyOneCorrect && !updatedSolution[problemIndex].selected[optionIndex].isSelected) {
+            problem.options.map((option: any, optionIndex: any) => {
+                updatedSolution[problemIndex].selected[optionIndex].isSelected = false;
+            })
+        }
+        
+        updatedSolution[problemIndex].selected[optionIndex].isSelected = !updatedSolution[problemIndex].selected[optionIndex].isSelected;
+
+        setSolutions(updatedSolution)
+        props.setSolutions(updatedSolution)
+
+    }
 
     if (problems.length !== solutions.length) {
         return null
@@ -131,6 +218,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }}
             key={solutions}
         >
+            {instructions !== "" ? <Text style={{ width: '100%', marginTop: 20, marginBottom: 50, fontSize: 15, color: 'black' }}>
+                {instructions}
+            </Text> : null}
             {
                 displayProblems.map((problem: any, index: any) => {
 
@@ -138,7 +228,20 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                     if (problemIndex === undefined || problemIndex === null) return;
 
+                    let onlyOneCorrect = true;
+
+                    if (!problem.questionType) {
+                        let noOfCorrect = 0;
+
+                        problem.options.map((option: any) => {
+                            if (option.isCorrect) noOfCorrect++;    
+                        })
+
+                        if (noOfCorrect > 1) onlyOneCorrect = false;
+                    }
+
                     return <View style={{ borderBottomColor: '#f4f4f6', borderBottomWidth: index === (problems.length - 1) ? 0 : 1, marginBottom: 25, backgroundColor: '#fff' }} key={index}>
+                        {renderHeader(index)}
                         <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
                             <View style={{ paddingTop: 15, backgroundColor: '#fff' }}>
                                 <Text style={{ color: '#a2a2aa', fontSize: 16, paddingBottom: 25, marginRight: 10 }}>
@@ -148,35 +251,48 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             {
                                 problem.question && problem.question.includes("image:") ?
                                     (<Image
-                                        resizeMode={'contain'}
+                                        // resizeMode={'contain'}
                                         style={{
                                             width: 400,
                                             height: 400
                                         }}
                                         source={{
-                                            uri: problem.question.split("image:")[1]
+                                            uri: (problem.question.split("image:")[1])
                                         }}
                                     />) :
                                     (
                                         problem.question && problem.question.includes("formula:") ? (
                                             <View style={{
-                                                borderColor: '#f4f4f6',
-                                                borderWidth: 1,
-                                                borderRadius: 15,
+                                                // borderColor: '#f4f4f6',
+                                                // borderWidth: 1,
+                                                // borderRadius: 15,
                                                 padding: 10,
-                                                width: '50%'
+                                                width: '50%',
+                                                backgroundColor: 'white'
                                             }}>
-                                                <Latex style={{
+                                                <MathJax style={{
                                                     width: '100%',
                                                     height: 100
-                                                }}>
-                                                    {problem.question.split("formula:")[1]}</Latex>
+                                                }}
+                                                color="black"
+                                                >
+                                                    {problem.question.split("formula:")[1]}
+                                                </MathJax>
                                             </View>
                                         ) :
                                             <TextInput
                                                 editable={false}
                                                 value={problem.question}
-                                                style={styles.input}
+                                                style={{
+                                                    width: '70%',
+                                                    fontSize: 15,
+                                                    padding: 15,
+                                                    paddingTop: 12,
+                                                    paddingBottom: 12,
+                                                    marginTop: 5,
+                                                    marginBottom: 20
+                                                }}
+                                                multiline={true}
                                                 placeholder={'Problem ' + (index + 1).toString()}
                                                 placeholderTextColor={'#a2a2aa'}
                                             />
@@ -184,12 +300,37 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             }
                             <TextInput
                                 editable={false}
-                                value={problem.points + ' Points'}
-                                style={styles.input}
+                                value={problem.points + " " + (Number(problem.points) === 1 ? 'Point' : ' Points')}
+                                style={{
+                                    width: '100%',
+                                    fontSize: 15,
+                                    padding: 15,
+                                    paddingTop: 12,
+                                    paddingBottom: 12,
+                                    marginTop: 5,
+                                    marginBottom: 20
+                                }}
                                 placeholder={'Enter points'}
                                 placeholderTextColor={'#a2a2aa'}
                             />
                         </View>
+
+                        {
+                            !problem.questionType && !onlyOneCorrect ? 
+                                (<Text style={{ fontSize: 11, color: '#a2a2aa', marginBottom: 20, textAlign: 'right' }}>
+                                    more than one correct answer
+                                </Text>)
+                                : null
+                        }
+                        {
+                            !problem.required ? 
+                                (<Text style={{ fontSize: 11, color: '#a2a2aa', marginBottom: 20, textAlign: 'right' }}>
+                                    optional
+                                </Text>)
+                                : (<Text style={{ fontSize: 11, color: '#a2a2aa', marginBottom: 20, textAlign: 'right'  }}>
+                                    required
+                                    </Text>)
+                        }
                         {
                             !problem.questionType && problem.options.map((option: any, i: any) => {
 
@@ -210,10 +351,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             style={{ paddingRight: 20 }}
                                             isChecked={props.isOwner ? option.isCorrect : solutions[problemIndex].selected[i].isSelected}
                                             onClick={() => {
-                                                const updatedSolution = [...solutions]
-                                                updatedSolution[problemIndex].selected[i].isSelected = Boolean(!updatedSolution[problemIndex].selected[i].isSelected);
-                                                setSolutions(updatedSolution)
-                                                props.setSolutions(updatedSolution)
+                                                selectMCQOption(problem, problemIndex, i);
                                             }}
                                         />
                                     </View>
@@ -221,7 +359,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         {
                                             option.option && option.option.includes("image:") ?
                                                 (<Image
-                                                    resizeMode={'contain'}
+                                                    // resizeMode={'contain'}
                                                     style={{
                                                         width: 200,
                                                         height: 200
@@ -233,17 +371,20 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 (
                                                     option.option && option.option.includes("formula:") ?
                                                         <View style={{
-                                                            borderColor: '#f4f4f6',
-                                                            borderWidth: 1,
-                                                            borderRadius: 15,
+                                                            // borderColor: '#f4f4f6',
+                                                            // borderWidth: 1,
+                                                            // borderRadius: 15,
                                                             padding: 10,
-                                                            width: '30%'
+                                                            width: '30%',
+                                                            backgroundColor: 'white'
                                                         }}>
-                                                            <Latex style={{
+                                                            <MathJax style={{
                                                                 width: '100%',
                                                                 height: 100
-                                                            }}>
-                                                                {option.option.split("formula:")[1]}</Latex>
+                                                            }}
+                                                            color='black'
+                                                            >
+                                                                {option.option.split("formula:")[1]}</MathJax>
                                                         </View> :
                                                         <TextInput
                                                             editable={false}
