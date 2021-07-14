@@ -11767,6 +11767,11 @@ react-native-latex@^0.5.0:
     gently-copy latest
     react-native-webview latest
 
+react-native-mathjax-svg@^0.9.9:
+  version "0.9.9"
+  resolved "https://registry.yarnpkg.com/react-native-mathjax-svg/-/react-native-mathjax-svg-0.9.9.tgz#dc642eb549f4fe151294aaab86016c95a21b5c45"
+  integrity sha512-DEG8g5FJPbw1Vnvj/lSr4ThcTyKq87MR/wpa/W9977Ze0+zoJ4IOyrbEPK2IhRrHzA7rwwhhbAVlyFlBjZt3Sg==
+
 react-native-mov-to-mp4@^0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/react-native-mov-to-mp4/-/react-native-mov-to-mp4-0.2.2.tgz#d59f91aec180f80f48f54eb36c6ddd03ad5f5655"

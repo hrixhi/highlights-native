@@ -23,6 +23,7 @@ const questionTypeOptions = [
 const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const [problems, setProblems] = useState<any[]>(props.problems ? props.problems : [])
+    const [headers, setHeaders] = useState<any>(props.headers ? props.headers : {});
 
     const galleryCallback = useCallback(async (index: any, i: any) => {
         const gallerySettings = await ImagePicker.getMediaLibraryPermissionsAsync()
@@ -55,6 +56,104 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
         }
     }, [problems, props.setProblems])
 
+    const removeHeadersOnDeleteProblem = (index: number) => {
+
+        const headerPositions = Object.keys(headers);
+
+        const headerIndicesToUpdate = headerPositions.filter((i: any) => i > index);
+
+        const currentHeaders = JSON.parse(JSON.stringify(headers));
+
+        delete currentHeaders[index];
+
+        headerIndicesToUpdate.forEach((i: any) => {
+
+            const currHeaderValue = headers[i];
+
+            delete currentHeaders[i];
+
+            currentHeaders[i - 1] = currHeaderValue;
+
+        })
+
+        setHeaders(currentHeaders);
+        props.setHeaders(currentHeaders)
+
+    }
+
+    const addHeader = (index: number) => {
+
+        // Use headers as an object with key as index values
+        const currentHeaders = JSON.parse(JSON.stringify(headers));
+        currentHeaders[index] = "";
+        setHeaders(currentHeaders);
+        props.setHeaders(currentHeaders);
+
+    }
+
+    const removeHeader = (index: number) => {
+
+        const currentHeaders = JSON.parse(JSON.stringify(headers));
+        delete currentHeaders[index];
+        setHeaders(currentHeaders)
+        props.setHeaders(currentHeaders);
+
+    }
+
+    const renderHeaderOption = (index: number) => {
+        return <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center', backgroundColor: '#fff'  }} >
+                { index in headers
+                ? 
+                <View style={{ flexDirection: 'row', width: '100%', marginTop: 50, backgroundColor: '#fff'  }}>
+                    <View style={{ width: '90%', backgroundColor: '#fff' }}>
+                        <TextInput
+                            value={headers[index]}
+                            placeholder={'Header'}
+                            onChangeText={val => {
+                                const currentHeaders = JSON.parse(JSON.stringify(headers)) 
+                                currentHeaders[index] = val
+                                setHeaders(currentHeaders);
+                                props.setHeaders(currentHeaders)
+                            }}
+                            placeholderTextColor={'#a2a2aa'}
+                            hasMultipleLines={false}
+                        />
+                    </View>
+
+                    <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff'  }}>
+                        <Ionicons
+                            name='close-outline'
+                            onPress={() => {
+                               removeHeader(index)
+                            }}
+                        />
+                    </View>
+                </View>
+                : 
+                
+                <TouchableOpacity 
+                    style={{ width: 100, flexDirection: 'row', backgroundColor: '#fff' }} 
+                    onPress={() => addHeader(index)}
+                >
+                    {/* <Ionicons name='add-circle' size={19} color={"#202025"} /> */}
+                    <Text
+                        style={{
+                            marginLeft: 10,
+                            fontSize: 10,
+                            paddingBottom: 20,
+                            textTransform: "uppercase",
+                            // paddingLeft: 20,
+                            flex: 1,
+                            lineHeight: 25,
+                            color: '#a2a2aa'
+                        }}>
+                        Add HEADER
+                    </Text>
+                </TouchableOpacity>}
+            </View>
+    }
+
+
     return (
         <View style={{
             width: '100%', backgroundColor: 'white',
@@ -64,6 +163,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
             flexDirection: 'column',
             justifyContent: 'flex-start'
         }}>
+             {/* Insert HEADER FOR INDEX 0 */}
+            {renderHeaderOption(0)}
             {
                 problems.map((problem: any, index: any) => {
 
@@ -138,24 +239,29 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     </TouchableOpacity>
                                 </View>
                                 <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'row', width: '50%', maxWidth: '50%', paddingLeft: 10, }}>
-                                    <TextInput
-                                        value={problem.points}
-                                        // style={{ width: '100%' }}
-                                        // style={styles.input}
-                                        placeholder={PreferredLanguageText('enterPoints')}
-                                        onChangeText={val => {
-                                            const newProbs = [...problems];
-                                            newProbs[index].points = val;
-                                            setProblems(newProbs)
-                                            props.setProblems(newProbs)
-                                        }}
-                                        placeholderTextColor={'#a2a2aa'}
-                                    />
+
+                                    <View style={{ width: '75%', backgroundColor: 'white' }}>
+                                        <TextInput
+                                            value={problem.points}
+                                            // style={{ width: '100%' }}
+                                            // style={styles.input}
+                                            placeholder={PreferredLanguageText('enterPoints')}
+                                            onChangeText={val => {
+                                                const newProbs = [...problems];
+                                                newProbs[index].points = val;
+                                                setProblems(newProbs)
+                                                props.setProblems(newProbs)
+                                            }}
+                                            placeholderTextColor={'#a2a2aa'}
+                                        />
+                                    </View>
+                                    
                                      <Ionicons
                                         name='close-outline'
                                         onPress={() => {
                                             const updatedProblems = [...problems]
                                             updatedProblems.splice(index, 1);
+                                            removeHeadersOnDeleteProblem(index + 1);
                                             setProblems(updatedProblems)
                                             props.setProblems(updatedProblems)
                                         }}
@@ -164,7 +270,26 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 
                             </View>
                         </View>
-                        <View
+
+                        {/* Required */}
+                        
+                        <View style={{ paddingTop: 25, paddingLeft: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: "#fff"}}>
+                            <CheckBox
+                                style={{ paddingRight: 10 }}
+                                isChecked={problem.required}
+                                onClick={() => {
+                                    const updatedProblems = [...problems]
+                                    updatedProblems[index].required = !updatedProblems[index].required;
+                                    setProblems(updatedProblems)
+                                    props.setProblems(updatedProblems)
+                                }}
+                            />
+                            <Text style={{ fontSize: 12, color: '#a2a2aa'  }}>
+                                Required
+                            </Text>
+                        </View>
+
+                        {/* <View
                             style={{
                                 backgroundColor: "white",
                                 display: "flex",
@@ -198,6 +323,49 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     );
                                 })}
                             </Picker>
+                        </View> */}
+
+                        {/* Use Checkbox for Question Type */}
+                        <View style={{ paddingTop: 25, paddingLeft: 10, paddingBottom: 25, flexDirection: 'row', alignItems: 'center', backgroundColor: "#fff"}}>
+                            
+                            <CheckBox
+                                style={{ paddingRight: 10 }}
+                                isChecked={questionType === ""}
+                                onClick={() => {
+                                    const updatedProblems = [...problems]
+                                    updatedProblems[index].questionType = "";
+
+                                    // Clear Options 
+                                    // if (questionType !== "") {
+                                    updatedProblems[index].options = []
+                                    // }
+                                    setProblems(updatedProblems)
+                                    props.setProblems(updatedProblems)
+                                }}
+                            />
+                            <Text style={{ fontSize: 12, color: '#a2a2aa', marginRight: 50  }}>
+                                MCQ
+                            </Text>
+
+                            <CheckBox
+                                style={{ paddingRight: 10 }}
+                                isChecked={questionType === "freeResponse"}
+                                onClick={() => {
+                                    const updatedProblems = [...problems]
+                                    updatedProblems[index].questionType = "freeResponse";
+
+                                    // Clear Options 
+                                    // if (questionType !== "") {
+                                    updatedProblems[index].options = []
+                                    // }
+                                    setProblems(updatedProblems)
+                                    props.setProblems(updatedProblems)
+                                }}
+                            />
+                            <Text style={{ fontSize: 12, color: '#a2a2aa'  }}>
+                                Free Response
+                            </Text>
+
                         </View>
 
 
@@ -298,63 +466,47 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 props.setProblems(updatedProblems)
                             }}
                             style={{
-                                backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
-                                maxHeight: 70,
-                                // marginTop: ,
-                                width: '100%',
-                                justifyContent: 'flex-start', flexDirection: 'row',
-                                marginBottom: 50
+                                width: 100, flexDirection: 'row', backgroundColor: 'white'
                             }}>
                             <Text style={{
-                                textAlign: 'center',
-                                lineHeight: 35,
-                                color: '#202025',
-                                fontSize: 12,
-                                overflow: 'hidden',
-                                backgroundColor: '#f4f4f6',
-                                paddingHorizontal: 25,
-                                fontFamily: 'inter',
-                                height: 35,
-                                width: 150,
-                                borderRadius: 15,
-                                textTransform: 'uppercase'
+                                marginLeft: 10,
+                                fontSize: 10,
+                                paddingBottom: 50,
+                                textTransform: "uppercase",
+                                flex: 1,
+                                lineHeight: 25,
+                                color: "#a2a2aa",
+                                paddingTop: 30
+
                             }}>
                                 {PreferredLanguageText('addChoice')}
                             </Text>
-                        </TouchableOpacity> : null}
+                        </TouchableOpacity> : <View style={{ height: 100, backgroundColor: 'white' }} />}
+                        {renderHeaderOption(index + 1)}
                     </View>
                 })
             }
-            <View style={{ backgroundColor: 'white' }}>
+
+            
+
+            <View style={{ backgroundColor: 'white', flexDirection: 'row', justifyContent: 'center' }}>
                 <TouchableOpacity
                     onPress={() => {
-                        const updatedProblems = [...problems, { question: '', options: [], points: '', questionType: '' }]
+                        const updatedProblems = [...problems, { question: '', options: [], points: '', questionType: '', required: true }]
                         setProblems(updatedProblems)
                         props.setProblems(updatedProblems)
                     }}
                     style={{
-                        backgroundColor: 'white',
-                        overflow: 'hidden',
-                        height: 35,
-                        marginTop: 15,
-                        width: '100%', justifyContent: 'center', flexDirection: 'row',
-                        marginBottom: 50
+                        width: 100, flexDirection: 'row', backgroundColor: 'white'
                     }}>
                     <Text style={{
-                        textAlign: 'center',
-                        lineHeight: 35,
-                        color: '#202025',
-                        fontSize: 12,
-                        backgroundColor: '#f4f4f6',
-                        paddingHorizontal: 25,
-                        fontFamily: 'inter',
-                        height: 35,
-                        width: 200,
-                        overflow: 'hidden',
-                        borderRadius: 15,
-                        textTransform: 'uppercase'
+                        marginLeft: 10,
+                        fontSize: 10,
+                        paddingBottom: 20,
+                        textTransform: "uppercase",
+                        flex: 1,
+                        lineHeight: 25,
+                        color: "#a2a2aa"
                     }}>
                         {PreferredLanguageText('addProblem')}
                     </Text>

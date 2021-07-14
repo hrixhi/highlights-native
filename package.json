@@ -85,6 +85,7 @@
     "react-native-jitsi-meet": "^2.1.1",
     "react-native-keyboard-accessory": "^0.1.14",
     "react-native-latex": "^0.5.0",
+    "react-native-mathjax-svg": "^0.9.9",
     "react-native-mov-to-mp4": "^0.2.2",
     "react-native-multiple-select": "^0.5.6",
     "react-native-pell-rich-editor": "^1.7.0",

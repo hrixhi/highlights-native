@@ -48,6 +48,7 @@ import { Video } from "expo-av";
 import moment from "moment";
 import MultiSelectComponent from "./MultiSelect";
 import Webview from "./Webview";
+import QuizGrading from './QuizGrading';
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
   const current = new Date();
@@ -131,6 +132,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [showEquationEditor, setShowEquationEditor] = useState(false);
   const [handlingSubmit, setHandlingSubmit] = useState(false);
   const [shuffleQuiz, setShuffleQuiz] = useState(false);
+  const [instructions, setInstructions] = useState('');
+  const [headers, setHeaders] = useState({})
+  const [cueGraded, setCueGraded] = useState(props.cue.graded); 
+  const [quizSolutions, setQuizSolutions] = useState<any>({});
+  const [isV0Quiz, setIsV0Quiz] = useState(false);
+  const [comment, setComment] = useState(props.cue.comment) 
 
   const [showInitiateAtTimeAndroid, setShowInitiateAtTimeAndroid] = useState(false);
   const [showInitiateAtDateAndroid, setShowInitiateAtDateAndroid] = useState(false);
@@ -142,8 +149,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [showEndPlayAtDateAndroid, setShowEndPlayAtDateAndroid] = useState(false);
 
   const [cueFullyLoaded, setCueFullyLoaded] = useState(false);
-
-  const [isV0Quiz, setIsV0Quiz] = useState(false)
 
   const unableToStartQuizAlert = PreferredLanguageText("unableToStartQuiz");
   const deadlineHasPassedAlert = PreferredLanguageText("deadlineHasPassed");
@@ -316,6 +321,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 const solutionsObject = cue ? JSON.parse(cue) : {};
                 if (solutionsObject.solutions) {
                   setSolutions(solutionsObject.solutions);
+                  setQuizSolutions(solutionsObject);
                 }
                 setProblems(res.data.quiz.getQuiz.problems);
                 if (res.data.quiz.getQuiz.duration && res.data.quiz.getQuiz.duration !== 0) {
@@ -330,6 +336,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 setShuffleQuiz(res.data.quiz.getQuiz.shuffleQuiz ? true : false)
                 setTitle(obj.title);
                 setIsQuiz(true);
+                setInstructions(res.data.quiz.getQuiz.instructions ? res.data.quiz.getQuiz.instructions : '')
+                setHeaders(res.data.quiz.getQuiz.headers ? JSON.parse(res.data.quiz.getQuiz.headers) : {})
                 setLoading(false);
               }
             });
@@ -367,6 +375,17 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     setCueFullyLoaded(true);
   }, [props.cue, cue, original, loading]);
 
+  // Important for new Quiz version with problemScores and comments
+  useEffect(() => {
+    if (quizSolutions) {
+      if (quizSolutions.problemScores) {
+        setIsV0Quiz(false)
+      } else {
+        setIsV0Quiz(true)
+        }
+      }
+    }, [quizSolutions])
+    
   const handleHeightChange = useCallback((h: any) => {
     setHeight(h);
   }, []);
@@ -667,6 +686,49 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       Alert(enterTitleAlert);
       return;
     }
+
+    // Here check if required questions have been answered
+
+    let requiredMissing = false;
+
+    for (let i = 0; i < problems.length; i++) {
+        const problem = problems[i];
+        const solution = solutions[i];
+        
+        if ((!problem.questionType || problem.questionType === "") && problem.required) {
+            // Check completeness for MCQs
+        
+            const { selected } = solution;
+
+            let selectionMade = false;
+
+            selected.forEach((selection: any) => {
+                if (selection.isSelected) selectionMade = true;
+            })
+
+            if (!selectionMade) {
+                requiredMissing = true;
+            }
+
+        } else if (problem.questionType === "freeResponse" && problem.required) {
+            // Check completeness for free response
+
+            const { response } = solution;
+        
+            if (response === "") {
+                requiredMissing = true;
+            }
+
+        } else {
+            // Optional
+        }
+    }
+
+    if (requiredMissing) {
+        Alert("A required question is missing a response.");
+        return;
+    }
+
 
     Alert("Submit?", "", [
       {
@@ -1564,8 +1626,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const renderQuizTimerOrUploadOptions = () => {
     return isQuiz && !props.cue.graded ? (
       isQuizTimed && (!props.cue.submittedAt || props.cue.submittedAt !== "") ? (
-        initiatedAt && initDuration !== 0 ? (
-          <View
+        initiatedAt && initDuration !== 0 && props.cue.submittedAt === "" ? (
+        <View
             style={{
               flex: 1,
               flexDirection: "row",
@@ -1718,6 +1780,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               solutions={solutions}
               problems={problems}
               setSolutions={(s: any) => setSolutions(s)}
+              shuffleQuiz={shuffleQuiz}
+              instructions={instructions}
+              headers={headers}
             />
           ) : (
             <View>
@@ -1763,6 +1828,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             problems={problems}
             setSolutions={(s: any) => setSolutions(s)}
             shuffleQuiz={shuffleQuiz}
+            instructions={instructions}
+            headers={headers}
           />
         )
       ) : imported ? (
@@ -2884,6 +2951,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     </View>)
   }
 
+  console.log(props.cue)
+
+  if (props.cue.submission && props.cue.submittedAt !== null && !props.cue.releaseSubmission && !isOwner) {
+    return (<View style={{ minHeight: Dimensions.get('window').height }}>
+    <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20 }}>
+      <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
+        Your instructor has not made this submission available.
+      </Text>
+    </View>
+  </View>)
+}
+
+
   return (
     <View
       style={{
@@ -2923,8 +3003,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               backgroundColor: "#fff"
             }}>
             {renderCueTabs()}
-
-            {props.cue.graded && props.cue.score !== undefined && props.cue.score !== null ? (
+            {props.cue.graded && props.cue.score !== undefined && props.cue.score !== null && !isQuiz ? (
               <Text
                 style={{
                   fontSize: 12,
@@ -3041,7 +3120,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               currentDate < deadline &&
               !submissionImported &&
               !showImportOptions &&
-              !props.cue.graded ? (
+              !props.cue.graded && !isQuiz ? (
               <Text
                 style={{
                   color: "#a2a2aa",
@@ -3063,7 +3142,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 (props.showOriginal && isOwner && imported) ||  // viewing import as owner
                 (!props.showOriginal && isOwner && (props.cue.channelId && props.cue.channelId !== '')) || // no submission as owner
                 (!props.showOriginal && submissionImported && !isOwner) ||  // submitted as non owner
-                (!props.showOriginal && !submission && (props.cue.channelId && props.cue.channelId !== ''))   // my notes
+                (!props.showOriginal && !submission && (props.cue.channelId && props.cue.channelId !== '')) || // my notes
+                isQuiz
                 ? null :
                 (
                   <Text style={{
@@ -3231,7 +3311,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}
             />
           ) : null}
-          {renderMainCueContent()}
+          {isQuiz && cueGraded && !isV0Quiz ? <QuizGrading 
+                         problems={problems}
+                         solutions={quizSolutions}
+                         partiallyGraded={false}
+                        //  onGradeQuiz={onGradeQuiz}
+                         comment={comment}
+                         isOwner={false}
+                         headers={headers}
+                    /> : renderMainCueContent()}
           <TouchableOpacity
             onPress={() => setShowOptions(!showOptions)}
             style={{

@@ -9,7 +9,7 @@ import {
     RichEditor
 } from "react-native-pell-rich-editor";
 import { fetchAPI } from '../graphql/FetchAPI';
-import { editPersonalMeeting, findUserById, getMessages, getPersonalMeetingLink, getPersonalMeetingLinkStatus, inviteByEmail, isSubInactive, makeSubActive, makeSubInactive, markMessagesAsRead, submitGrade, unsubscribe, getQuiz, gradeQuiz } from '../graphql/QueriesAndMutations';
+import { editPersonalMeeting, findUserById, getMessages, getPersonalMeetingLink, getPersonalMeetingLinkStatus, inviteByEmail, isSubInactive, makeSubActive, makeSubInactive, markMessagesAsRead, submitGrade, unsubscribe, getQuiz, gradeQuiz, editReleaseSubmission } from '../graphql/QueriesAndMutations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Alert from './Alert';
 import NewMessage from "./NewMessage";
@@ -52,6 +52,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [selected, setSelected] = useState<any[]>([])
     const [expandMenu, setExpandMenu] = useState(false)
     const [comment, setComment] = useState('')
+    const [releaseSubmission, setReleaseSubmission] = useState(false);
+
     const [imported, setImported] = useState(false)
     const [url, setUrl] = useState('')
     const [type, setType] = useState('')
@@ -69,16 +71,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [problems, setProblems] = useState<any[]>([]);
     const [submittedAt, setSubmittedAt] = useState('');
     const [isV0Quiz, setIsV0Quiz] = useState(false)
+    const [headers, setHeaders] = useState({})
 
     // Test
     const [height, setHeight] = useState(42)
-
-
-    // useEffect(() => {
-    //     setTimeout(() => {
-    //         setWebviewKey(Math.random())
-    //     }, 600);
-    // }, [imported])
 
     const categoriesLanguageMap: { [label: string]: string } = {
         All: 'all',
@@ -153,6 +149,14 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     })
 
     useEffect(() => {
+        if (props.cue.releaseSubmission !== null && props.cue.releaseSubmission !== undefined) {
+            setReleaseSubmission(props.cue.releaseSubmission)
+        } else {
+            setReleaseSubmission(false)
+        }
+    }, [props.cue])
+
+    useEffect(() => {
         if (submission[0] === '{' && submission[submission.length - 1] === '}') {
             const obj = JSON.parse(submission)
             if (obj.solutions) {
@@ -187,7 +191,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         if (isQuiz) {
             const obj = JSON.parse(props.cue.original);
 
-            console.log(obj)
             setLoading(true)
 
             if (obj.quizId) {
@@ -203,8 +206,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             console.log(res.data);
 
                             if (res.data && res.data.quiz.getQuiz) {
-                                console.log(res.data.quiz.getQuiz.problems)
                                 setProblems(res.data.quiz.getQuiz.problems);
+                                setHeaders(res.data.quiz.getQuiz.headers ? JSON.parse(res.data.quiz.getQuiz.headers) : {})
                                 setLoading(false);
                             }
                         });
@@ -265,6 +268,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     getMeetingLink()
                 }
                 setMeetingOn(!meetingOn)
+                props.handleReleaseSubmissionUpdate()
             } else {
                 console.log(res)
                 alert('Something went wrong')
@@ -510,29 +514,52 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     }, [isLoadedUserInactive, loadedChatWithUser, props.channelId])
 
-    const onGradeQuiz = (problemScores: string[], score: number) => {
+
+    const updateReleaseSubmission = useCallback(() => {
+        const server = fetchAPI('')
+        server.mutate({
+            mutation: editReleaseSubmission,
+            variables: {
+                cueId: props.cueId,
+                releaseSubmission: !releaseSubmission,
+            }
+        }).then((res: any) => {
+            if (res.data && res.data.cue.editReleaseSubmission) {
+                setReleaseSubmission(!releaseSubmission)
+            } else {
+                console.log(res)
+                alert('Something went wrong')
+            }
+        }).catch(err => {
+            console.log(err)
+            alert('Something went wrong')
+        })
+    }, [releaseSubmission, props.cueId])
+
+
+    const onGradeQuiz = (problemScores: string[], problemComments: string[], score: number, comment: string) => {
         const server = fetchAPI("");
+        console.log("Saving problem comments", problemComments);
         server
             .mutate({
                 mutation: gradeQuiz,
                 variables: {
                     cueId: props.cueId,
                     userId,
+                    problemScores,
+                    problemComments,
                     score,
-                    problemScores
+                    comment
                 }
             })
             .then(res => {
                 if (res.data && res.data.cue.gradeQuiz) {
-
                     props.reload()
                     setShowSubmission(false)
                 }
         });
 
     }
-
-    console.log("Quiz solutions", quizSolutions);
 
     const renderQuizSubmissions = () => {
 
@@ -887,6 +914,34 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     </View>
             }
             {
+                !showAddUsers && !showSubmission && props.cue && props.cue.submission ?
+                <View style={{
+                    backgroundColor: 'white',
+                    height: 40,
+                    // marginTop: 20,
+                    marginBottom: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <Switch
+                        value={releaseSubmission}
+                        onValueChange={() => updateReleaseSubmission()}
+                        style={{ height: 20, marginRight: 20 }}
+                        trackColor={{
+                            false: '#f4f4f6',
+                            true: '#3B64F8'
+                        }}
+                        activeThumbColor='white'
+                    />
+                    <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 3 }}>
+                        <Text style={{ fontSize: 15, color: '#a2a2aa', }}>
+                            Visible to students
+                        </Text>
+                    </View>
+                </View>
+                : null
+            }
+            {
                 !showAddUsers ? (subscribers.length === 0 ?
                     <View style={{ backgroundColor: 'white', flex: 1 }}>
                         <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
@@ -1103,6 +1158,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         solutions={quizSolutions}
                                         partiallyGraded={!graded}
                                         onGradeQuiz={onGradeQuiz}
+                                        comment={comment}
+                                        headers={headers}
+                                        isOwner={true}
                                     />
                                 :
                                 <View>
