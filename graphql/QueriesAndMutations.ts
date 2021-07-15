@@ -25,9 +25,9 @@ export const createUser = gql`
 `;
 
 export const createChannel = gql`
-  mutation($name: String!, $password: String, $createdBy: String!) {
+  mutation($name: String!, $password: String, $createdBy: String!, $temporary: Boolean) {
     channel {
-      create(name: $name, password: $password, createdBy: $createdBy)
+      create(name: $name, password: $password, createdBy: $createdBy, temporary: $temporary)
     }
   }
 `;
@@ -380,9 +380,9 @@ export const deleteCue = gql`
   }
 `;
 export const updateChannel = gql`
-mutation($channelId: String!, $password: String, $name: String!) {
+mutation($channelId: String!, $password: String, $name: String!, $temporary: Boolean) {
   channel {
-    update(channelId: $channelId, password: $password, name: $name)
+    update(channelId: $channelId, password: $password, name: $name, temporary: $temporary)
   }
 }
 `
@@ -880,6 +880,7 @@ query($userId: String!) {
   school {
     findByUserId(userId: $userId) {
       logo
+      _id
       allowStudentChannelCreation
     }
   }
@@ -892,3 +893,61 @@ query($userId: String!) {
   }
 }
 `
+export const isChannelTemporary = gql`
+query($channelId: String!) {
+  channel {
+    isChannelTemporary(channelId: $channelId)
+  }
+}
+`
+export const findChannelById = gql`
+query($channelId: String!) {
+  channel {
+    findById(channelId: $channelId) {
+      name
+      password
+      temporary
+    }
+  }
+}
+`
+export const getUserCount = gql`
+ query($schoolId: String!) {
+     user {
+        getSchoolUsers(schoolId: $schoolId) {
+            email
+            displayName
+            fullName
+            _id
+            role
+            grade
+            section
+            inactive
+            lastLoginAt
+        }
+     }
+ }
+ `
+export const findBySchoolId = gql`
+ query($schoolId: String!) {
+     channel {
+         findBySchoolId(schoolId: $schoolId) {
+             name
+             _id
+             password
+             createdBy
+             createdByUsername
+             numSubs
+             role
+             meetingOn
+         }
+     }
+ }
+ `
+export const getSharableLink = gql`
+ query($channelId: String!, $moderator: Boolean!) {
+   channel {
+     getSharableLink(channelId: $channelId, moderator: $moderator)
+   }
+ }
+ `

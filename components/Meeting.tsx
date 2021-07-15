@@ -5,11 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { Jutsu } from 'react-jutsu'
 import { fetchAPI } from '../graphql/FetchAPI';
 // import Datetime from 'react-datetime';
-import { createScheduledMeeting, editMeeting, getAttendances, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1, deleteRecording, getRecordings } from '../graphql/QueriesAndMutations';
+import Clipboard from 'expo-clipboard';
+import { editMeeting, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1, deleteRecording, getRecordings, getSharableLink } from '../graphql/QueriesAndMutations';
 import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
 import { ScrollView } from 'react-native-gesture-handler';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import Alert from './Alert';
 import moment from 'moment';
 // import JitsiMeet, { JitsiMeetView } from 'react-native-jitsi-meet';
@@ -33,6 +33,35 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [viewChannelAttendance, setViewChannelAttendance] = useState(false)
     const classroomNotInSession = PreferredLanguageText('classroomNotInSession')
     const [showPastMeetings, setShowPastMeetings] = useState(false);
+
+    const [guestLink, setGuestLink] = useState('')
+    const [instructorLink, setInstructorLink] = useState('')
+
+    useEffect(() => {
+        const server = fetchAPI('')
+        server.query({
+            query: getSharableLink,
+            variables: {
+                channelId: props.channelId,
+                moderator: true
+            }
+        }).then((res: any) => {
+            if (res.data && res.data.channel.getSharableLink) {
+                setInstructorLink(res.data.channel.getSharableLink)
+            }
+        })
+        server.query({
+            query: getSharableLink,
+            variables: {
+                channelId: props.channelId,
+                moderator: false
+            }
+        }).then((res: any) => {
+            if (res.data && res.data.channel.getSharableLink) {
+                setGuestLink(res.data.channel.getSharableLink)
+            }
+        })
+    }, [isOwner, props.channelId])
 
     const loadChannelAttendances = useCallback(() => {
         const server = fetchAPI('')
@@ -322,8 +351,41 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             {
                 isOwner ?
                     <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10 }}>
-                        Restart switch if you are unable to join.
+                        Restart switch if you cannot join.
                     </Text> : null
+            }
+            {
+                isOwner && meetingOn ?
+                    <View style={{ backgroundColor: '#fff', flexDirection: 'row' }}>
+                        <TouchableOpacity
+                            style={{ backgroundColor: '#fff', paddingVertical: 20, flex: 1 }}
+                            onPress={() => {
+                                Clipboard.setString(instructorLink);
+                                Alert('Link copied!')
+                            }}
+                        >
+                            <Text style={{
+                                fontSize: 12,
+                                color: '#202025', textAlign: 'left', textDecorationLine: 'underline'
+                            }}>
+                                Sharable Instructor Link
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                Clipboard.setString(guestLink);
+                                Alert('Link copied!')
+                            }}
+                            style={{ backgroundColor: '#fff', paddingVertical: 20, flex: 1 }}
+                        >
+                            <Text style={{
+                                fontSize: 12,
+                                color: '#202025', textAlign: 'left', textDecorationLine: 'underline'
+                            }}>
+                                Sharable Guest Link
+                            </Text>
+                        </TouchableOpacity>
+                    </View> : null
             }
             <TouchableOpacity
                 onPress={async () => {

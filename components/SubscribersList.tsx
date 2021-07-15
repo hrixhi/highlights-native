@@ -16,8 +16,6 @@ import NewMessage from "./NewMessage";
 import NewMessageNative from './NewMessageNative';
 import MessageCard from './MessageCard';
 import { validateEmail } from '../helpers/emailCheck';
-// import Select from 'react-select'
-// import FileViewer from 'react-file-viewer';
 import MultiSelect from 'react-native-multiple-select';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { Video } from 'expo-av';
@@ -25,9 +23,6 @@ import moment from "moment";
 import Webview from './Webview';
 
 import QuizGrading from './QuizGrading';
-
-import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
-
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -192,22 +187,22 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
             if (obj.quizId) {
                 const server = fetchAPI("");
-                    server
-                        .query({
-                            query: getQuiz,
-                            variables: {
-                                quizId: obj.quizId
-                            }
-                        })
-                        .then(res => {
-                            console.log(res.data);
+                server
+                    .query({
+                        query: getQuiz,
+                        variables: {
+                            quizId: obj.quizId
+                        }
+                    })
+                    .then(res => {
+                        console.log(res.data);
 
-                            if (res.data && res.data.quiz.getQuiz) {
-                                console.log(res.data.quiz.getQuiz.problems)
-                                setProblems(res.data.quiz.getQuiz.problems);
-                                setLoading(false);
-                            }
-                        });
+                        if (res.data && res.data.quiz.getQuiz) {
+                            console.log(res.data.quiz.getQuiz.problems)
+                            setProblems(res.data.quiz.getQuiz.problems);
+                            setLoading(false);
+                        }
+                    });
 
             }
         }
@@ -528,7 +523,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     props.reload()
                     setShowSubmission(false)
                 }
-        });
+            });
 
     }
 
@@ -550,7 +545,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             <View style={{ marginTop: 20, display: 'flex', flexDirection: "column", backgroundColor: '#fff' }}>
                 {solutions.map((solution: any, index: number) => {
 
-                    
+
                     if (solution.selected) {
                         const answers: any[] = solution.selected;
 
@@ -570,9 +565,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             Problem {index + 1} : {solution.response}
                         </Text>)
                     }
-                    
 
-                    
+
+
                 })}
             </View>
         </View>)
@@ -635,7 +630,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         </Text>
                                     </View> : null
                             }
-                            {
+                            {/* {
                                 isOwner && !props.cueId && !showAddUsers && !showNewGroup && !showSubmission && users.length < 3
                                     ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
                                         <TouchableOpacity
@@ -655,7 +650,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 }
                                             </Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity
+                                        {/* <TouchableOpacity
                                             style={{ backgroundColor: '#fff' }}
                                             onPress={() => handleDelete()}
                                         >
@@ -669,10 +664,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             }}>
                                                 {PreferredLanguageText('removeFromChannel')}
                                             </Text>
-                                        </TouchableOpacity>
+                                        </TouchableOpacity> 
                                     </View>
                                     : null
-                            }
+                            } */}
                             {
                                 showChat ? <View style={{ flexDirection: 'column', backgroundColor: 'white' }}>
                                     {
@@ -862,7 +857,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </Text>
                                 </TouchableOpacity> : null
                         }
-                        {
+                        {/* {
                             isOwner && !props.cueId ?
                                 <TouchableOpacity
                                     key={Math.random()}
@@ -883,7 +878,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         {PreferredLanguageText('inviteUser')}
                                     </Text>
                                 </TouchableOpacity> : null
-                        }
+                        } */}
                     </View>
             }
             {
@@ -1097,175 +1092,175 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 </ScrollView>)
                                 ) :
                                 isQuiz && !isV0Quiz ?
-                                    <QuizGrading 
+                                    <QuizGrading
                                         loading={loading}
                                         problems={problems}
                                         solutions={quizSolutions}
                                         partiallyGraded={!graded}
                                         onGradeQuiz={onGradeQuiz}
                                     />
-                                :
-                                <View>
-                                    <ScrollView
-                                        showsVerticalScrollIndicator={false}
-                                        keyboardDismissMode={'on-drag'}
-                                        // style={{ flex: 1, paddingTop: 12 }}
-                                        style={{ backgroundColor: 'white' }}
-                                    >
-                                        <View style={{
-                                            width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center',
-                                            backgroundColor: 'white'
-                                        }}>
-                                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                                {PreferredLanguageText('score')}
-                                            </Text>
-                                            <TextInput
-                                                value={score}
-                                                style={styles.input}
-                                                placeholder={'0-100'}
-                                                onChangeText={val => setScore(val)}
-                                                placeholderTextColor={'#a2a2aa'}
-                                            />
-                                            <Text style={{ color: '#202025', fontSize: 14, paddingVertical: 10, }}>
-                                                {PreferredLanguageText('comment')}
-                                            </Text>
-                                            <TextInput
-                                                value={comment}
-                                                style={{
-                                                    height: 200,
-                                                    backgroundColor: '#f4f4f6',
-                                                    borderRadius: 10,
-                                                    fontSize: 15,
-                                                    padding: 15,
-                                                    paddingTop: 13,
-                                                    paddingBottom: 13,
-                                                    marginTop: 5,
-                                                    marginBottom: 20
-                                                }}
-                                                placeholder={'Optional'}
-                                                onChangeText={val => setComment(val)}
-                                                placeholderTextColor={'#a2a2aa'}
-                                                multiline={true}
-                                            />
-                                            <View
-                                                style={{
-                                                    flex: 1,
-                                                    backgroundColor: 'white',
-                                                    justifyContent: 'center',
-                                                    display: 'flex',
-                                                    flexDirection: 'row',
-                                                    marginTop: 25,
-                                                    marginBottom: 25
-                                                }}>
-                                                <TouchableOpacity
-                                                    onPress={() => handleGradeSubmit()}
+                                    :
+                                    <View>
+                                        <ScrollView
+                                            showsVerticalScrollIndicator={false}
+                                            keyboardDismissMode={'on-drag'}
+                                            // style={{ flex: 1, paddingTop: 12 }}
+                                            style={{ backgroundColor: 'white' }}
+                                        >
+                                            <View style={{
+                                                width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center',
+                                                backgroundColor: 'white'
+                                            }}>
+                                                <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
+                                                    {PreferredLanguageText('score')}
+                                                </Text>
+                                                <TextInput
+                                                    value={score}
+                                                    style={styles.input}
+                                                    placeholder={'0-100'}
+                                                    onChangeText={val => setScore(val)}
+                                                    placeholderTextColor={'#a2a2aa'}
+                                                />
+                                                <Text style={{ color: '#202025', fontSize: 14, paddingVertical: 10, }}>
+                                                    {PreferredLanguageText('comment')}
+                                                </Text>
+                                                <TextInput
+                                                    value={comment}
                                                     style={{
+                                                        height: 200,
+                                                        backgroundColor: '#f4f4f6',
+                                                        borderRadius: 10,
+                                                        fontSize: 15,
+                                                        padding: 15,
+                                                        paddingTop: 13,
+                                                        paddingBottom: 13,
+                                                        marginTop: 5,
+                                                        marginBottom: 20
+                                                    }}
+                                                    placeholder={'Optional'}
+                                                    onChangeText={val => setComment(val)}
+                                                    placeholderTextColor={'#a2a2aa'}
+                                                    multiline={true}
+                                                />
+                                                <View
+                                                    style={{
+                                                        flex: 1,
                                                         backgroundColor: 'white',
-                                                        borderRadius: 15,
-                                                        overflow: 'hidden',
-                                                        height: 35,
+                                                        justifyContent: 'center',
+                                                        display: 'flex',
+                                                        flexDirection: 'row',
+                                                        marginTop: 25,
+                                                        marginBottom: 25
                                                     }}>
-                                                    <Text style={{
-                                                        textAlign: 'center',
-                                                        lineHeight: 35,
-                                                        color: 'white',
-                                                        fontSize: 12,
-                                                        backgroundColor: '#3B64F8',
-                                                        paddingHorizontal: 25,
-                                                        fontFamily: 'inter',
-                                                        height: 35,
-                                                    }}>
-                                                        {status === 'graded' ? 'REGRADE' : 'ENTER GRADE'}
-                                                    </Text>
-                                                </TouchableOpacity>
+                                                    <TouchableOpacity
+                                                        onPress={() => handleGradeSubmit()}
+                                                        style={{
+                                                            backgroundColor: 'white',
+                                                            borderRadius: 15,
+                                                            overflow: 'hidden',
+                                                            height: 35,
+                                                        }}>
+                                                        <Text style={{
+                                                            textAlign: 'center',
+                                                            lineHeight: 35,
+                                                            color: 'white',
+                                                            fontSize: 12,
+                                                            backgroundColor: '#3B64F8',
+                                                            paddingHorizontal: 25,
+                                                            fontFamily: 'inter',
+                                                            height: 35,
+                                                        }}>
+                                                            {status === 'graded' ? 'REGRADE' : 'ENTER GRADE'}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                </View>
                                             </View>
-                                        </View>
-                                        <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 25, marginLeft: '5%' }}>
-                                            {PreferredLanguageText('viewSubmission')}
-                                        </Text>
-                                        {
-                                            imported ?
-                                                <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%', }}>
-                                                    <TextInput
-                                                        editable={false}
-                                                        value={title}
-                                                        style={styles.input}
-                                                        placeholder={'Title'}
-                                                        onChangeText={val => setTitle(val)}
-                                                        placeholderTextColor={'#a2a2aa'}
-                                                    />
-                                                </View> : null
-                                        }
-                                        {
-                                            isQuiz && Object.keys(quizSolutions).length > 0 ?
-                                                renderQuizSubmissions() : null
-                                        }
-                                        {
-                                            !imported && !isQuiz ?
-                                                <RichEditor
-                                                    disabled={true}
-                                                    key={Math.random()}
-                                                    containerStyle={{
-                                                        backgroundColor: '#f4f4f6',
-                                                        padding: 3,
-                                                        paddingTop: 5,
-                                                        paddingBottom: 10,
-                                                        borderRadius: 15,
-                                                    }}
-                                                    ref={RichText}
-                                                    style={{
-                                                        width: '100%',
-                                                        backgroundColor: '#f4f4f6',
-                                                        borderRadius: 15,
-                                                        minHeight: 450
-                                                    }}
-                                                    editorStyle={{
-                                                        backgroundColor: '#f4f4f6',
-                                                        placeholderColor: '#a2a2aa',
-                                                        color: '#202025',
-                                                        contentCSSText: 'font-size: 13px;'
-                                                    }}
-                                                    initialContentHTML={submission}
-                                                    placeholder={"Title"}
-                                                    onChange={(text) => { }}
-                                                    allowFileAccess={true}
-                                                    allowFileAccessFromFileURLs={true}
-                                                    allowUniversalAccessFromFileURLs={true}
-                                                    allowsFullscreenVideo={true}
-                                                    allowsInlineMediaPlayback={true}
-                                                    allowsLinkPreview={true}
-                                                    allowsBackForwardNavigationGestures={true}
-                                                /> : (
-                                                    type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
-                                                        <View style={{ backgroundColor: '#fff', height: 300 }}>
-                                                            <Video
-                                                                ref={RichText}
-                                                                style={{
-                                                                    width: '100%',
-                                                                    height: 300
-                                                                }}
-                                                                source={{
-                                                                    uri: url,
-                                                                }}
-                                                                useNativeControls={true}
-                                                                resizeMode="contain"
-                                                                isLooping={false}
-                                                            />
-                                                        </View>
-                                                        :
-                                                        (!isQuiz ? <View
-                                                            key={url}
-                                                            style={{ flex: 1 }}
-                                                        >
-                                                            <Webview
+                                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 25, marginLeft: '5%' }}>
+                                                {PreferredLanguageText('viewSubmission')}
+                                            </Text>
+                                            {
+                                                imported ?
+                                                    <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%', }}>
+                                                        <TextInput
+                                                            editable={false}
+                                                            value={title}
+                                                            style={styles.input}
+                                                            placeholder={'Title'}
+                                                            onChangeText={val => setTitle(val)}
+                                                            placeholderTextColor={'#a2a2aa'}
+                                                        />
+                                                    </View> : null
+                                            }
+                                            {
+                                                isQuiz && Object.keys(quizSolutions).length > 0 ?
+                                                    renderQuizSubmissions() : null
+                                            }
+                                            {
+                                                !imported && !isQuiz ?
+                                                    <RichEditor
+                                                        disabled={true}
+                                                        key={Math.random()}
+                                                        containerStyle={{
+                                                            backgroundColor: '#f4f4f6',
+                                                            padding: 3,
+                                                            paddingTop: 5,
+                                                            paddingBottom: 10,
+                                                            borderRadius: 15,
+                                                        }}
+                                                        ref={RichText}
+                                                        style={{
+                                                            width: '100%',
+                                                            backgroundColor: '#f4f4f6',
+                                                            borderRadius: 15,
+                                                            minHeight: 450
+                                                        }}
+                                                        editorStyle={{
+                                                            backgroundColor: '#f4f4f6',
+                                                            placeholderColor: '#a2a2aa',
+                                                            color: '#202025',
+                                                            contentCSSText: 'font-size: 13px;'
+                                                        }}
+                                                        initialContentHTML={submission}
+                                                        placeholder={"Title"}
+                                                        onChange={(text) => { }}
+                                                        allowFileAccess={true}
+                                                        allowFileAccessFromFileURLs={true}
+                                                        allowUniversalAccessFromFileURLs={true}
+                                                        allowsFullscreenVideo={true}
+                                                        allowsInlineMediaPlayback={true}
+                                                        allowsLinkPreview={true}
+                                                        allowsBackForwardNavigationGestures={true}
+                                                    /> : (
+                                                        type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
+                                                            <View style={{ backgroundColor: '#fff', height: 300 }}>
+                                                                <Video
+                                                                    ref={RichText}
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: 300
+                                                                    }}
+                                                                    source={{
+                                                                        uri: url,
+                                                                    }}
+                                                                    useNativeControls={true}
+                                                                    resizeMode="contain"
+                                                                    isLooping={false}
+                                                                />
+                                                            </View>
+                                                            :
+                                                            (!isQuiz ? <View
                                                                 key={url}
-                                                                url={url}
-                                                            />
-                                                        </View> : null)
-                                                )
-                                        }
-                                    </ScrollView>
-                                </View>
+                                                                style={{ flex: 1 }}
+                                                            >
+                                                                <Webview
+                                                                    key={url}
+                                                                    url={url}
+                                                                />
+                                                            </View> : null)
+                                                    )
+                                            }
+                                        </ScrollView>
+                                    </View>
                         }
                         {
                             !props.cueId || showSubmission ? null :

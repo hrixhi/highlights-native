@@ -4,13 +4,13 @@ import { TextInput } from "./CustomTextInput";
 import { Text, View, TouchableOpacity } from './Themed';
 import { fetchAPI } from '../graphql/FetchAPI';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { checkChannelStatus, createChannel, createUser, getOrganisation, getRole, subscribe, updateUser } from '../graphql/QueriesAndMutations';
+import { checkChannelStatus, createChannel, createUser, findBySchoolId, getOrganisation, getRole, subscribe, updateUser } from '../graphql/QueriesAndMutations';
 import Alert from '../components/Alert'
 import { uniqueNamesGenerator, colors } from 'unique-names-generator'
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
-import { ScrollView } from 'react-native-gesture-handler';
+import { ScrollView, Switch } from 'react-native-gesture-handler';
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -21,7 +21,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [displayName, setDisplayName] = useState('')
     const [fullName, setFullName] = useState('')
     const [userFound, setUserFound] = useState(false)
-
+    const [temporary, setTemporary] = useState(false)
+    const [channels, setChannels] = useState<any[]>([])
     const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
 
     // Alert messages
@@ -154,7 +155,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 variables: {
                     name,
                     password,
-                    createdBy: user._id
+                    createdBy: user._id,
+                    temporary
                 }
             })
                 .then(res => {
@@ -211,7 +213,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         }
 
-    }, [option, name, password, props.closeModal, passwordRequired, displayName, fullName])
+    }, [option, name, password, props.closeModal, passwordRequired, displayName, fullName, temporary])
 
     const loadUser = useCallback(async () => {
         const u = await AsyncStorage.getItem('user')
@@ -285,6 +287,32 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         loadUser()
     }, [])
 
+    useEffect(() => {
+        if (role === 'instructor' && school) {
+            const server = fetchAPI('')
+            server.query({
+                query: findBySchoolId,
+                variables: {
+                    schoolId: school._id
+                }
+            }).then((res: any) => {
+                if (res.data && res.data.channel.findBySchoolId) {
+                    res.data.channel.findBySchoolId.sort((a: any, b: any) => {
+                        if (a.name < b.name) { return -1; }
+                        if (a.name > b.name) { return 1; }
+                        return 0;
+                    })
+                    const c = res.data.channel.findBySchoolId.map((item: any, index: any) => {
+                        const x = { ...item, selected: false, index }
+                        delete x.__typename
+                        return x
+                    })
+                    setChannels(c)
+                }
+            })
+        }
+    }, [role, school])
+
     if (!userFound) {
         return <View style={styles.screen} key={1}>
             <View style={{ width: '100%', backgroundColor: 'white' }}>
@@ -301,7 +329,9 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     return (
         <View style={styles.screen} key={1}>
-            <ScrollView style={{ width: '100%', backgroundColor: 'white' }}>
+            <ScrollView style={{ width: '100%', backgroundColor: 'white' }}
+                nestedScrollEnabled={true}
+            >
                 <Text
                     style={{
                         color: '#202025',
@@ -337,119 +367,175 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 </Text>
                             </TouchableOpacity>
                     }
-                    {/* <TouchableOpacity
-                        style={option === 'Profile' ? styles.allOutline : styles.all}
-                        onPress={() => {
-                            setOption('Profile')
-                        }}>
-                        <Text style={{ color: '#a2a2aa', lineHeight: 20 }}>
-                            Profile
-                        </Text>
-                    </TouchableOpacity> */}
-                </View>
-                {
-                    option === 'Profile' ?
-                        <View style={{ width: '100%', backgroundColor: 'white' }}>
-                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                Display Name
-                            </Text>
-                            <TextInput
-                                value={displayName}
-                                placeholder={''}
-                                onChangeText={val => setDisplayName(val)}
-                                placeholderTextColor={'#a2a2aa'}
-                            />
-                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                Full Name
-                            </Text>
-                            <TextInput
-                                value={fullName}
-                                placeholder={''}
-                                onChangeText={val => setFullName(val)}
-                                placeholderTextColor={'#a2a2aa'}
-                            />
-                        </View>
-                        :
-                        <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                {PreferredLanguageText('channel') + ' Name'}
-                            </Text>
-                            <TextInput
-                                value={name}
-                                placeholder={''}
-                                onChangeText={val => {
-                                    setName(val)
-                                    setPasswordRequired(false)
-                                }}
-                                placeholderTextColor={'#a2a2aa'}
-                                required={true}
-                                footerMessage={'case sensitive'}
-                            />
-                        </View>
-                }
-                {
-                    (option === 'Subscribe' && passwordRequired) || option === 'Create' ?
-                        <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
-                                {PreferredLanguageText('enrolmentPassword')}
-                            </Text>
-                            <TextInput
-                                value={password}
-                                // style={styles.input}
-                                placeholder={option === 'Subscribe' ? '' : `(${PreferredLanguageText('optional')})`}
-                                onChangeText={val => setPassword(val)}
-                                placeholderTextColor={'#a2a2aa'}
-                                secureTextEntry={true}
-                                required={option === "Subscribe" ? true : false}
-                            />
-                        </View>
-                        : (
-                            option === 'Subscribe' && !passwordRequired ?
-                                <View
-                                    style={{ height: 115, width: '100%', backgroundColor: 'white' }}
-                                /> : null
-                        )
-                }
-                <View
-                    style={{
-                        // flex: 1,
-                        backgroundColor: 'white',
-                        justifyContent: 'center',
-                        // display: 'flex',
-                        flexDirection: 'row',
-                        marginBottom: 50,
-                        // height: 50,
-                        // marginTop: 75
-                    }}>
                     {
-                        option === 'About' ? null :
+                        role === 'instructor' ?
                             <TouchableOpacity
-                                onPress={() => handleSubmit()}
-                                style={{
-                                    backgroundColor: 'white',
-                                    borderRadius: 15,
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    marginTop: 15
-                                }}
-                                disabled={isSubmitDisabled}
-                            >
-                                <Text style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: 'white',
-                                    fontSize: 12,
-                                    backgroundColor: '#3B64F8',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    textTransform: 'uppercase'
+                                style={option === 'All' ? styles.allOutline : styles.all}
+                                onPress={() => {
+                                    setOption('All')
                                 }}>
-                                    {option === 'Subscribe' ? PreferredLanguageText('subscribe') : PreferredLanguageText('create')}
+                                <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 12 }}>
+                                    All Channels
                                 </Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> : null
                     }
                 </View>
+                {
+                    option === 'All' ?
+                        <View style={{ backgroundColor: '#fff', flexDirection: 'row' }}>
+                            <View style={{ flex: 1, backgroundColor: '#f4f4f6', paddingLeft: 10 }}>
+                                <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                    Name
+                                </Text>
+                            </View>
+                            <View style={{ flex: 1, backgroundColor: '#f4f4f6', paddingLeft: 10 }}>
+                                <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                    Owner
+                                </Text>
+                            </View>
+                        </View> : null
+                }
+                {
+                    option === 'All' ?
+                        <View style={{ backgroundColor: '#fff', marginBottom: 20 }}>
+                            {
+                                channels.map((channel: any) => {
+                                    return <View style={{ backgroundColor: '#fff', flexDirection: 'row' }}>
+                                        <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 10 }}>
+                                            <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                                {channel.name}
+                                            </Text>
+                                        </View>
+                                        <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 10 }}>
+                                            <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                                {channel.createdByUsername}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                })
+                            }
+                        </View> :
+                        <View style={{ backgroundColor: '#fff' }}>
+                            <View style={{ backgroundColor: 'white' }}>
+                                <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
+                                    {PreferredLanguageText('channel') + ' Name'}
+                                </Text>
+                                <TextInput
+                                    value={name}
+                                    placeholder={''}
+                                    onChangeText={val => {
+                                        setName(val)
+                                        setPasswordRequired(false)
+                                    }}
+                                    placeholderTextColor={'#a2a2aa'}
+                                    required={true}
+                                    footerMessage={'case sensitive'}
+                                />
+                            </View>
+                            {
+                                (option === 'Subscribe' && passwordRequired) || option === 'Create' ?
+                                    <View style={{ backgroundColor: 'white' }}>
+                                        <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
+                                            {PreferredLanguageText('enrolmentPassword')}
+                                        </Text>
+                                        <TextInput
+                                            value={password}
+                                            // style={styles.input}
+                                            placeholder={option === 'Subscribe' ? '' : `(${PreferredLanguageText('optional')})`}
+                                            onChangeText={val => setPassword(val)}
+                                            placeholderTextColor={'#a2a2aa'}
+                                            secureTextEntry={true}
+                                            required={option === "Subscribe" ? true : false}
+                                        />
+                                    </View>
+                                    : (
+                                        option === 'Subscribe' && !passwordRequired ?
+                                            <View
+                                                style={{ height: 115, width: '100%', backgroundColor: 'white' }}
+                                            /> : null
+                                    )
+                            }
+                            {
+                                option === 'Create' ?
+                                    <View
+                                        style={{
+                                            width: "100%",
+                                            backgroundColor: '#fff'
+                                        }}>
+                                        <View
+                                            style={{
+                                                width: "100%",
+                                                paddingBottom: 15,
+                                                backgroundColor: "white"
+                                            }}>
+                                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10, backgroundColor: '#fff' }}>Temporary</Text>
+                                        </View>
+                                        <View
+                                            style={{
+                                                backgroundColor: "white",
+                                                width: "100%",
+                                                height: 40,
+                                                marginHorizontal: 10
+                                            }}>
+                                            <Switch
+                                                value={temporary}
+                                                onValueChange={() => setTemporary(!temporary)}
+                                                style={{ height: 20 }}
+                                                trackColor={{
+                                                    false: "#f4f4f6",
+                                                    true: "#3B64F8"
+                                                }}
+                                                activeThumbColor="white"
+                                            />
+                                        </View>
+                                        <Text style={{ color: '#a2a2aa', fontSize: 12, backgroundColor: '#fff' }}>
+                                            Channels that are not temporary can only be deleted by the school administrator.
+                                        </Text>
+                                    </View>
+                                    : null
+                            }
+                            <View
+                                style={{
+                                    // flex: 1,
+                                    backgroundColor: 'white',
+                                    justifyContent: 'center',
+                                    // display: 'flex',
+                                    flexDirection: 'row',
+                                    marginBottom: 50,
+                                    // height: 50,
+                                    // marginTop: 75
+                                }}>
+                                {
+                                    option === 'About' ? null :
+                                        <TouchableOpacity
+                                            onPress={() => handleSubmit()}
+                                            style={{
+                                                backgroundColor: 'white',
+                                                borderRadius: 15,
+                                                overflow: 'hidden',
+                                                height: 35,
+                                                marginTop: 15
+                                            }}
+                                            disabled={isSubmitDisabled}
+                                        >
+                                            <Text style={{
+                                                textAlign: 'center',
+                                                lineHeight: 35,
+                                                color: 'white',
+                                                fontSize: 12,
+                                                backgroundColor: '#3B64F8',
+                                                paddingHorizontal: 25,
+                                                fontFamily: 'inter',
+                                                height: 35,
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                {option === 'Subscribe' ? PreferredLanguageText('subscribe') : PreferredLanguageText('create')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                }
+                            </View>
+                        </View>
+                }
             </ScrollView>
         </View>
     );

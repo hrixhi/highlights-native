@@ -333,7 +333,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         isOwner ?
                                             <TouchableOpacity
                                                 style={{ marginRight: 0 }}
-                                                onPress={() => editChannelInfo()}>
+                                                onPress={() => props.openChannelSettings()}>
                                                 <Text style={styles.channelText}>
                                                     <Ionicons name='settings-outline' size={19} color={'#a2a2aa'} />
                                                 </Text>

@@ -78,7 +78,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     })
 
     const [shuffleQuiz, setShuffleQuiz] = useState(false);
-    
+
     const [equation, setEquation] = useState('y = x + 1')
     const [showEquationEditor, setShowEquationEditor] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,13 +184,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                     keys[option.option] = 1
                 })
-                
+
                 if (!optionFound) {
                     Alert(eachOptionOneCorrectAlert)
                     error = true;
                 }
             }
-            
+
         })
         if (error) {
             return
@@ -401,7 +401,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 title
             }
             saveCue = JSON.stringify(obj)
-        } else if (isQuiz)  {
+        } else if (isQuiz) {
             const quiz = {
                 title,
                 problems,
@@ -420,7 +420,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         } else {
             storeDraft('cueDraft', '')
         }
-    }, [cue, init, type, url, imported, title,  isQuiz, problems, timer, duration])
+    }, [cue, init, type, url, imported, title, isQuiz, problems, timer, duration])
 
     const storeDraft = useCallback(async (type, value) => {
         await AsyncStorage.setItem(type, value)
@@ -1110,49 +1110,49 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         style={{ flexDirection: (imported || isQuiz || showImportOptions) ? 'row' : 'column', flex: 1, }}
                         key={reloadEditorKey}
                     >
-                          {
+                        {
                             showImportOptions ? null :
-                        <RichToolbar
-                            key={reloadEditorKey.toString()}
-                            style={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                backgroundColor: 'white',
-                                // height: 28,
-                                overflow: 'scroll',
-                            }}
-                            iconSize={16}
-                            editor={RichText}
-                            disabled={false}
-                            iconTint={"#a2a2aa"}
-                            selectedIconTint={"#a2a2aa"}
-                            disabledIconTint={"#a2a2aa"}
-                            actions={
-                                imported || isQuiz ? [""] :
-                                    [
-                                        actions.setBold,
-                                        actions.setItalic,
-                                        actions.setUnderline,
-                                        actions.insertBulletsList,
-                                        actions.insertOrderedList,
-                                        actions.checkboxList,
-                                        actions.insertLink,
-                                        actions.insertImage,
-                                        "insertCamera",
-                                        actions.undo,
-                                        "clear",
-                                        actions.redo,
-                                    ]}
-                            iconMap={{
-                                ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={16} color={tintColor} />,
-                                ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={16} color={tintColor} onPress={() => {
-                                    clearAll()
-                                }} />,
-                                ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
-                            }}
-                            onPressAddImage={galleryCallback}
-                            insertCamera={cameraCallback}
-                        />
+                                <RichToolbar
+                                    key={reloadEditorKey.toString()}
+                                    style={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        backgroundColor: 'white',
+                                        // height: 28,
+                                        overflow: 'scroll',
+                                    }}
+                                    iconSize={16}
+                                    editor={RichText}
+                                    disabled={false}
+                                    iconTint={"#a2a2aa"}
+                                    selectedIconTint={"#a2a2aa"}
+                                    disabledIconTint={"#a2a2aa"}
+                                    actions={
+                                        imported || isQuiz ? [""] :
+                                            [
+                                                actions.setBold,
+                                                actions.setItalic,
+                                                actions.setUnderline,
+                                                actions.insertBulletsList,
+                                                actions.insertOrderedList,
+                                                actions.checkboxList,
+                                                actions.insertLink,
+                                                actions.insertImage,
+                                                "insertCamera",
+                                                actions.undo,
+                                                "clear",
+                                                actions.redo,
+                                            ]}
+                                    iconMap={{
+                                        ["insertCamera"]: ({ tintColor }) => <Ionicons name='camera-outline' size={16} color={tintColor} />,
+                                        ["clear"]: ({ tintColor }) => <Ionicons name='trash-outline' size={16} color={tintColor} onPress={() => {
+                                            clearAll()
+                                        }} />,
+                                        ["back"]: ({ tintColor }) => <Ionicons name='arrow-back' size={16} color={tintColor} onPress={() => setShowImportOptions(false)} />
+                                    }}
+                                    onPressAddImage={galleryCallback}
+                                    insertCamera={cameraCallback}
+                                />
                         }
                         {
                             imported || !showImportOptions ? null :
@@ -1537,7 +1537,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     </View>
                                     {
                                         channelId !== '' ?
-                                            <View style={{ flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
+                                            <View style={{ flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white', flex: 1 }}>
                                                 <ScrollView style={{
                                                     width: '100%',
                                                     padding: 5,
@@ -1614,46 +1614,46 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 </View>
 
                                                 <View style={{ display: 'flex', flexDirection: 'column' }}>
-                                               
-                                                {
-                                                    submission ?
-                                                        <View style={{
-                                                            width: '100%',
-                                                            display: 'flex',
-                                                            flexDirection: Platform.OS === "android" ? 'column' : 'row',
-                                                            backgroundColor: 'white',
-                                                            paddingBottom: 10
-                                                        }}>
-                                                            <Text style={styles.text}>
-                                                                Available
-                                                                {Platform.OS === "android" ? ": " + moment(new Date(initiateAt)).format('MMMM Do YYYY, h:mm a') : null}
-                                                            </Text>
-                                                            
-                                                            {renderInitiateAtDateTimePicker()}
-                                                        </View>
-                                                        : <View style={{ flex: 1, backgroundColor: '#fff' }} />
-                                                }
 
-                                                {
-                                                    submission ?
-                                                        <View style={{
-                                                            width: '100%',
-                                                            display: 'flex',
-                                                            flexDirection: Platform.OS === "android" ? 'column' : 'row',
-                                                            backgroundColor: 'white',
-                                                            
-                                                        }}>
-                                                            <Text style={styles.text}>
-                                                                {PreferredLanguageText('deadline')}
-                                                                {Platform.OS === "android" ? ": " + moment(new Date(deadline)).format('MMMM Do YYYY, h:mm a') : null}
-                                                            </Text>
-                                                            {renderDeadlineDateTimePicker()}
-                                                        </View>
-                                                        : <View style={{ flex: 1, backgroundColor: '#fff' }} />
-                                                }
+                                                    {
+                                                        submission ?
+                                                            <View style={{
+                                                                width: '100%',
+                                                                display: 'flex',
+                                                                flexDirection: Platform.OS === "android" ? 'column' : 'row',
+                                                                backgroundColor: 'white',
+                                                                paddingBottom: 10
+                                                            }}>
+                                                                <Text style={styles.text}>
+                                                                    Available
+                                                                    {Platform.OS === "android" ? ": " + moment(new Date(initiateAt)).format('MMMM Do YYYY, h:mm a') : null}
+                                                                </Text>
+
+                                                                {renderInitiateAtDateTimePicker()}
+                                                            </View>
+                                                            : <View style={{ flex: 1, backgroundColor: '#fff' }} />
+                                                    }
+
+                                                    {
+                                                        submission ?
+                                                            <View style={{
+                                                                width: '100%',
+                                                                display: 'flex',
+                                                                flexDirection: Platform.OS === "android" ? 'column' : 'row',
+                                                                backgroundColor: 'white',
+
+                                                            }}>
+                                                                <Text style={styles.text}>
+                                                                    {PreferredLanguageText('deadline')}
+                                                                    {Platform.OS === "android" ? ": " + moment(new Date(deadline)).format('MMMM Do YYYY, h:mm a') : null}
+                                                                </Text>
+                                                                {renderDeadlineDateTimePicker()}
+                                                            </View>
+                                                            : <View style={{ flex: 1, backgroundColor: '#fff' }} />
+                                                    }
 
                                                 </View>
-                                                            
+
                                             </View>
                                         </View> : null
                                 }
@@ -1690,7 +1690,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             display: 'flex',
                                                             flexDirection: 'row',
                                                             backgroundColor: 'white',
-                                                            alignItems:'flex-start',
+                                                            alignItems: 'flex-start',
                                                             marginTop: 10
                                                         }}>
                                                             <Text style={styles.text}>
@@ -1987,31 +1987,31 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     </View> : null
                             }
 
-                            {isQuiz ?  <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
-                                        <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
-                                            <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
-                                                Shuffle Questions
-                                            </Text>
-                                        </View>
-                                        <View style={{ flexDirection: 'row',  backgroundColor: 'white', }}>
-                                            <View style={{
-                                                backgroundColor: 'white',
-                                                height: 40,
-                                                marginRight: 10
-                                            }}>
-                                                <Switch
-                                                    value={shuffleQuiz}
-                                                    onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
-                                                    style={{ height: 20, marginRight: 'auto'  }}
-                                                    trackColor={{
-                                                        false: '#f4f4f6',
-                                                        true: '#a2a2aa'
-                                                    }}
-                                                    thumbColor='white'
-                                                />
-                                            </View>
-                                        </View>
-                                    </View> : null}
+                            {isQuiz ? <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
+                                <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
+                                    <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                                        Shuffle Questions
+                                    </Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', backgroundColor: 'white', }}>
+                                    <View style={{
+                                        backgroundColor: 'white',
+                                        height: 40,
+                                        marginRight: 10
+                                    }}>
+                                        <Switch
+                                            value={shuffleQuiz}
+                                            onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
+                                            style={{ height: 20, marginRight: 'auto' }}
+                                            trackColor={{
+                                                false: '#f4f4f6',
+                                                true: '#a2a2aa'
+                                            }}
+                                            thumbColor='white'
+                                        />
+                                    </View>
+                                </View>
+                            </View> : null}
                         </View>
                     </View>
                     <View style={styles.footer}>
