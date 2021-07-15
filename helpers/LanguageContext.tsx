@@ -604,7 +604,6 @@ export const LanguageProvider: React.FC<React.ReactNode> = ({ children }) => {
 
     const retrieveSavedLang = async () => {
         const storedLang: string = await AsyncStorage.getItem('preferred_lang') || "en";
-        console.log(storedLang);
         setLanguage(storedLang);
         return;
     };

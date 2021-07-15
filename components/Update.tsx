@@ -196,6 +196,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                     }
                 })
                 .catch(err => {
+                    console.log(err);
                     Alert(unableToLoadCommentsAlert, checkConnectionAlert);
                     setLoading(false);
                     // modalAnimation.setValue(0);
@@ -471,6 +472,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                             }}
                                             reload={() => loadThreadsAndStatuses()}
                                             cue={props.cue}
+                                            handleReleaseSubmissionUpdate={() => props.handleReleaseSubmissionUpdate()}
                                         />
                                     </ScrollView>
                                 </View>

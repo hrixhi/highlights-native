@@ -1163,6 +1163,35 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     })
   }, [email])
 
+  const handleReleaseSubmissionUpdate = useCallback(async (releaseSubmission: boolean) => {
+
+    const unmodified = cues ? cues[updateModalKey][updateModalIndex] : {};
+
+    let subCues: any = {};
+    try {
+      const value = await AsyncStorage.getItem("cues");
+      if (value) {
+        subCues = JSON.parse(value);
+      }
+    } catch (e) { }
+    if (subCues[updateModalKey].length === 0) {
+      return;
+    }
+  
+    // Update only release Submission
+    
+    unmodified.releaseSubmission = releaseSubmission;
+
+    subCues[updateModalKey][updateModalIndex] = unmodified
+      
+    const stringifiedCues = JSON.stringify(subCues);
+
+    await AsyncStorage.setItem("cues", stringifiedCues);
+
+    // reloadCueListAfterUpdate();
+
+  }, [])
+
   const handleCueUpdate = useCallback(async () => {
 
     if (!updateCueData) return;
@@ -1199,7 +1228,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       isQuiz,
       endPlayAt,
       solutions,
-      initiatedAt
+      initiatedAt,
+      releaseSubmission
     } = updateCueData;
 
     if (submissionImported && submissionTitle === "") {
@@ -1277,6 +1307,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         : unmodified.submittedAt,
       deadline: submission ? deadline.toISOString() : "",
       initiateAt: submission ? initiateAt.toISOString() : "",
+      // releaseSubmission: releaseSubmission ? releaseSubmission : false
     };
     const stringifiedCues = JSON.stringify(subCues);
     await AsyncStorage.setItem("cues", stringifiedCues);
@@ -1406,6 +1437,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           setUpdateCueData(update);
         }}
         resetCueUpdateCount={() => setUpdatedCueCount(0)}
+        handleReleaseSubmissionUpdate={handleReleaseSubmissionUpdate}
       />
         :
         (modalType === 'Walkthrough' ? <Walkthrough
