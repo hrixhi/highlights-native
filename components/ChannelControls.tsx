@@ -350,7 +350,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         onPress={() => {
                             setOption('Subscribe')
                         }}>
-                        <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 12 }}>
+                        <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
                             {PreferredLanguageText('subscribe')}
                         </Text>
                     </TouchableOpacity>
@@ -362,7 +362,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 onPress={() => {
                                     setOption('Create')
                                 }}>
-                                <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 12 }}>
+                                <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
                                     {PreferredLanguageText('create')}
                                 </Text>
                             </TouchableOpacity>
@@ -374,7 +374,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 onPress={() => {
                                     setOption('All')
                                 }}>
-                                <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 12 }}>
+                                <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
                                     All Channels
                                 </Text>
                             </TouchableOpacity> : null
@@ -384,12 +384,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     option === 'All' ?
                         <View style={{ backgroundColor: '#fff', flexDirection: 'row' }}>
                             <View style={{ flex: 1, backgroundColor: '#f4f4f6', paddingLeft: 10 }}>
-                                <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                <Text style={{ fontSize: 11, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
                                     Name
                                 </Text>
                             </View>
                             <View style={{ flex: 1, backgroundColor: '#f4f4f6', paddingLeft: 10 }}>
-                                <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                <Text style={{ fontSize: 11, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
                                     Owner
                                 </Text>
                             </View>
@@ -402,12 +402,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 channels.map((channel: any) => {
                                     return <View style={{ backgroundColor: '#fff', flexDirection: 'row' }}>
                                         <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 10 }}>
-                                            <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                            <Text style={{ fontSize: 11, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
                                                 {channel.name}
                                             </Text>
                                         </View>
                                         <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 10 }}>
-                                            <Text style={{ fontSize: 12, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
+                                            <Text style={{ fontSize: 11, lineHeight: 25, color: '#202025' }} ellipsizeMode='tail'>
                                                 {channel.createdByUsername}
                                             </Text>
                                         </View>
@@ -488,7 +488,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 activeThumbColor="white"
                                             />
                                         </View>
-                                        <Text style={{ color: '#a2a2aa', fontSize: 12, backgroundColor: '#fff' }}>
+                                        <Text style={{ color: '#a2a2aa', fontSize: 11, backgroundColor: '#fff' }}>
                                             Channels that are not temporary can only be deleted by the school administrator.
                                         </Text>
                                     </View>
@@ -522,7 +522,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 textAlign: 'center',
                                                 lineHeight: 35,
                                                 color: 'white',
-                                                fontSize: 12,
+                                                fontSize: 11,
                                                 backgroundColor: '#3B64F8',
                                                 paddingHorizontal: 25,
                                                 fontFamily: 'inter',

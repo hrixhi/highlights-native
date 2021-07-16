@@ -403,7 +403,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
         </Text>
         <Text
           style={{
-            fontSize: 12,
+            fontSize: 11,
             color: "#a2a2aa",
             fontFamily: "overpass",
             paddingBottom: 25,
@@ -567,7 +567,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                   lineHeight: 35,
                   color: "#202025",
                   overflow: "hidden",
-                  fontSize: 12,
+                  fontSize: 11,
                   backgroundColor: "#f4f4f6",
                   paddingHorizontal: 25,
                   fontFamily: "inter",
@@ -604,7 +604,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                 textAlign: "center",
                 lineHeight: 35,
                 color: "white",
-                fontSize: 12,
+                fontSize: 11,
                 backgroundColor: "#3B64F8",
                 paddingHorizontal: 25,
                 fontFamily: "inter",
@@ -648,7 +648,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                 lineHeight: 35,
                 color: "#202025",
                 overflow: "hidden",
-                fontSize: 12,
+                fontSize: 11,
                 backgroundColor: "#f4f4f6",
                 paddingHorizontal: 25,
                 fontFamily: "inter",

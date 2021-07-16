@@ -16,11 +16,11 @@ const MultiSelectComponent: React.FunctionComponent<{ [label: string]: any }> = 
         }}
         styleTextDropdown={{
             fontFamily: "overpass",
-            fontSize: 12,
+            fontSize: 11,
             color: '#a2a2aa'
         }}
         styleTextDropdownSelected={{
-            fontSize: 12
+            fontSize: 11
         }}
         styleDropdownMenuSubsection={{
             height: 50

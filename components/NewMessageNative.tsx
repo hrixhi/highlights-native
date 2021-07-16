@@ -303,7 +303,7 @@ const styles: any = StyleSheet.create({
         paddingLeft: 7.5
     },
     text: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         textAlign: 'left'
     },
@@ -319,14 +319,14 @@ const styles: any = StyleSheet.create({
         marginBottom: 20
     },
     all: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         height: 20,
         paddingHorizontal: 10,
         backgroundColor: 'white'
     },
     allOutline: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         height: 22,
         paddingHorizontal: 10,

@@ -284,7 +284,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     props.setProblems(updatedProblems)
                                 }}
                             />
-                            <Text style={{ fontSize: 12, color: '#a2a2aa'  }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase'  }}>
                                 Required
                             </Text>
                         </View>
@@ -343,7 +343,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     props.setProblems(updatedProblems)
                                 }}
                             />
-                            <Text style={{ fontSize: 12, color: '#a2a2aa', marginRight: 50  }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', marginRight: 50  }}>
                                 MCQ
                             </Text>
 
@@ -362,7 +362,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     props.setProblems(updatedProblems)
                                 }}
                             />
-                            <Text style={{ fontSize: 12, color: '#a2a2aa'  }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase'  }}>
                                 Free Response
                             </Text>
 
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: 'white',
         overflow: 'hidden',
-        fontSize: 12,
+        fontSize: 11,
         textAlign: 'center',
         width: "100%",
         // height: 200,

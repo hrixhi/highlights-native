@@ -705,7 +705,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                 <Text style={{ textAlign: 'center', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
                                                     {title}
                                                 </Text>
-                                                <Text style={{ textAlign: 'center', fontSize: 12, color: '#202025' }}>
+                                                <Text style={{ textAlign: 'center', fontSize: 11, color: '#202025' }}>
                                                     {moment(new Date(start)).format('MMMM Do YYYY, h:mm a')}
                                                 </Text>
                                             </View>
@@ -740,12 +740,12 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                             return s.dateId.toString().trim() === meeting.dateId.toString().trim()
                                                         })
                                                         return <View style={styles.col} key={row.toString() + '-' + col.toString()}>
-                                                            <Text style={{ textAlign: 'center', fontSize: 12, color: '#a2a2aa' }}>
+                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                                                                 {
                                                                     attendanceObject ? "Present" : '-'
                                                                 }
                                                             </Text>
-                                                            {attendanceObject ? <Text style={{ textAlign: 'left', fontSize: 12, color: '#202025' }}>
+                                                            {attendanceObject ? <Text style={{ textAlign: 'left', fontSize: 11, color: '#202025' }}>
                                                                 {PreferredLanguageText('joinedAt') + ' ' + moment(new Date(attendanceObject.joinedAt)).format('h:mm a')}
                                                             </Text> : null}
                                                             
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
     row: { height: 70, borderRadius: 15, marginBottom: 15, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
     col: { width: 100, justifyContent: 'center', display: 'flex', flexDirection: 'column', backgroundColor: '#f4f4f6', padding: 5 },
     allGrayFill: {
-        fontSize: 12,
+        fontSize: 11,
         overflow: "hidden",
         color: "#fff",
         paddingHorizontal: 10,
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
         lineHeight: 20
     },
     all: {
-        fontSize: 12,
+        fontSize: 11,
         color: "#a2a2aa",
         height: 22,
         overflow: "hidden",
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
         lineHeight: 20
     },
     text: {
-        fontSize: 12,
+        fontSize: 11,
         color: "#a2a2aa",
         textAlign: "left",
         paddingHorizontal: 10,

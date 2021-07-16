@@ -350,7 +350,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             }
             {
                 isOwner ?
-                    <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10 }}>
+                    <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingTop: 10 }}>
                         Restart switch if you cannot join.
                     </Text> : null
             }
@@ -365,7 +365,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             }}
                         >
                             <Text style={{
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: '#202025', textAlign: 'left', textDecorationLine: 'underline'
                             }}>
                                 Sharable Instructor Link
@@ -379,7 +379,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             style={{ backgroundColor: '#fff', paddingVertical: 20, flex: 1 }}
                         >
                             <Text style={{
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: '#202025', textAlign: 'left', textDecorationLine: 'underline'
                             }}>
                                 Sharable Guest Link
@@ -427,7 +427,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     textAlign: 'center',
                     lineHeight: 35,
                     color: meetingOn ? '#fff' : '#202025',
-                    fontSize: 12,
+                    fontSize: 11,
                     backgroundColor: meetingOn ? '#3B64F8' : '#f4f4f6',
                     paddingHorizontal: 25,
                     fontFamily: 'inter',
@@ -439,7 +439,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     {PreferredLanguageText('enterClassroom')}
                 </Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', marginBottom: 10 }}>
                 Enabled only when classroom in session.
             </Text>
             <TouchableOpacity
@@ -459,7 +459,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     textAlign: 'center',
                     lineHeight: 35,
                     color: '#202025',
-                    fontSize: 12,
+                    fontSize: 11,
                     backgroundColor: '#f4f4f6',
                     paddingHorizontal: 25,
                     fontFamily: 'inter',
@@ -471,7 +471,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     {PreferredLanguageText('viewAttendance')}
                 </Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 20 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', marginBottom: 20 }}>
                 Attendances will only be captured for scheduled lectures.
             </Text>
 
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
         paddingBottom: Platform.OS === "android" ? 50 : 0
     },
     text: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         textAlign: 'left',
         paddingHorizontal: 10,

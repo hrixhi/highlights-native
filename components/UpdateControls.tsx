@@ -1561,8 +1561,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <Text
             style={{
               flex: 1,
-              fontSize: 12,
-              color: "#a2a2aa"
+              fontSize: 11,
+              color: "#a2a2aa",
+              textTransform: 'uppercase'
             }}>
             ^ → Superscript, _ → Subscript, int → Integral, sum → Summation, prod → Product, sqrt → Square root, bar →
             Bar over letter, alpha, beta, ... omega → Small Greek letter, Alpha, Beta, ... Omega → Capital Greek letter
@@ -1803,7 +1804,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       textAlign: "center",
                       lineHeight: 35,
                       color: "#202025",
-                      fontSize: 12,
+                      fontSize: 11,
                       overflow: "hidden",
                       backgroundColor: "#f4f4f6",
                       paddingHorizontal: 25,
@@ -2013,8 +2014,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           }}>
           <Text
             style={{
-              fontSize: 12,
-              color: "#a2a2aa"
+              fontSize: 11,
+              color: "#a2a2aa",
+              textTransform: 'uppercase'
             }}>
             Shared with
           </Text>
@@ -2062,8 +2064,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           }}>
           <Text
             style={{
-              fontSize: 12,
-              color: "#a2a2aa"
+              fontSize: 11,
+              color: "#a2a2aa",
+              textTransform: 'uppercase'
             }}>
             {PreferredLanguageText("submissionRequired")}
           </Text>
@@ -2105,7 +2108,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
                   color: "#a2a2aa"
                 }}>
                 {!submission ? PreferredLanguageText("no") : null}
@@ -2129,7 +2132,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 }}>
                 <Text
                   style={{
-                    fontSize: 12,
+                    fontSize: 11,
                     color: "#a2a2aa",
                     textAlign: "left",
                     paddingRight: 10
@@ -2142,7 +2145,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 ) : (
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                       color: "#a2a2aa",
                       textAlign: "left"
                     }}>
@@ -2170,7 +2173,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 <Text
                   style={{
-                    fontSize: 12,
+                    fontSize: 11,
                     color: "#a2a2aa",
                     textAlign: "left",
                     paddingRight: 10
@@ -2182,7 +2185,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 ) : (
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                       color: "#a2a2aa",
                       textAlign: "left"
                     }}>
@@ -2220,8 +2223,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           }}>
           <Text
             style={{
-              fontSize: 12,
-              color: "#a2a2aa"
+              fontSize: 11,
+              color: "#a2a2aa",
+              textTransform: 'uppercase'
             }}>
             Grade Weight
           </Text>
@@ -2263,7 +2267,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
                   color: "#a2a2aa",
                   textAlign: "left",
                   paddingRight: 10,
@@ -2284,7 +2288,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   style={{
                     color: "#a2a2aa",
                     textAlign: "left",
-                    fontSize: 12
+                    fontSize: 11
                   }}>
                   {gradeWeight}
                 </Text>
@@ -2322,8 +2326,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           }}>
           <Text
             style={{
-              fontSize: 12,
-              color: "#a2a2aa"
+              fontSize: 11,
+              color: "#a2a2aa",
+              textTransform: 'uppercase'
             }}>
             {PreferredLanguageText("category")}
           </Text>
@@ -2347,7 +2352,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                       color: "#a2a2aa",
                       lineHeight: 20,
-                      fontSize: 12
+                      fontSize: 11
                     }}>
                     {props.cue.customCategory === "" ? PreferredLanguageText("none") : props.cue.customCategory}
                   </Text>
@@ -2391,7 +2396,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       style={{
                         color: "#a2a2aa",
                         lineHeight: 20,
-                        fontSize: 12
+                        fontSize: 11
                       }}>
                       {PreferredLanguageText("none")}
                     </Text>
@@ -2408,7 +2413,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                           style={{
                             color: "#a2a2aa",
                             lineHeight: 20,
-                            fontSize: 12
+                            fontSize: 11
                           }}>
                           {category}
                         </Text>
@@ -2468,8 +2473,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }}>
         <Text
           style={{
-            fontSize: 12,
-            color: "#a2a2aa"
+            fontSize: 11,
+            color: "#a2a2aa",
+            textTransform: 'uppercase'
           }}>
           {PreferredLanguageText("priority")}
         </Text>
@@ -2536,8 +2542,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           }}>
           <Text
             style={{
-              fontSize: 12,
-              color: "#a2a2aa"
+              fontSize: 11,
+              color: "#a2a2aa",
+              textTransform: 'uppercase'
             }}>
             {/* {PreferredLanguageText("share")} */}
             Forward
@@ -2571,7 +2578,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     <Text
                       style={{
                         lineHeight: 20,
-                        fontSize: 12,
+                        fontSize: 11,
                         color: shareWithChannelId === channel._id ? "#fff" : "#202025"
                       }}>
                       {channel.name}
@@ -2633,8 +2640,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           }}>
           <Text
             style={{
-              fontSize: 12,
-              color: "#a2a2aa"
+              fontSize: 11,
+              color: "#a2a2aa", 
+              textTransform: 'uppercase'
             }}>
             Reminder
           </Text>
@@ -2686,8 +2694,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             }}>
             <Text
               style={{
-                fontSize: 12,
-                color: "#a2a2aa"
+                fontSize: 11,
+                color: "#a2a2aa",
+                textTransform: 'uppercase'
               }}>
               Recurring
             </Text>
@@ -2779,8 +2788,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             }}>
             <Text
               style={{
-                fontSize: 12,
-                color: "#a2a2aa"
+                fontSize: 11,
+                color: "#a2a2aa",
+                textTransform: 'uppercase'
               }}>
               Indefinite
             </Text>
@@ -2864,7 +2874,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 textAlign: "center",
                 lineHeight: 35,
                 color: "white",
-                fontSize: 12,
+                fontSize: 11,
                 backgroundColor: "#3B64F8",
                 borderRadius: 15,
                 paddingHorizontal: 25,
@@ -2905,7 +2915,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 textAlign: "center",
                 lineHeight: 35,
                 color: "white",
-                fontSize: 12,
+                fontSize: 11,
                 backgroundColor: "#3B64F8",
                 borderRadius: 15,
                 paddingHorizontal: 25,
@@ -3006,7 +3016,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             {props.cue.graded && props.cue.score !== undefined && props.cue.score !== null && !isQuiz ? (
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
                   color: "white",
                   height: 22,
                   overflow: "hidden",
@@ -3124,7 +3134,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               <Text
                 style={{
                   color: "#a2a2aa",
-                  fontSize: 12,
+                  fontSize: 11,
                   lineHeight: 30,
                   textAlign: "right",
                   // paddingRight: 10,
@@ -3377,7 +3387,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             {renderReminderOptions()}
             {isQuiz && isOwner ? <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: 'white' }}>
               <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
-                <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                   Shuffle Questions
                 </Text>
               </View>
@@ -3512,7 +3522,7 @@ const styles: any = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "white",
     overflow: "hidden",
-    fontSize: 12,
+    fontSize: 11,
     textAlign: "center",
     width: 100,
     height: 200,
@@ -3521,13 +3531,13 @@ const styles: any = StyleSheet.create({
     borderRadius: 3
   },
   text: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#a2a2aa",
     textAlign: "left",
     paddingHorizontal: 10
   },
   all: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#a2a2aa",
     height: 22,
     overflow: "hidden",
@@ -3536,21 +3546,21 @@ const styles: any = StyleSheet.create({
     lineHeight: 20
   },
   allOutline: {
-    fontSize: 12,
+    fontSize: 11,
     backgroundColor: "#202025",
     height: 22,
     paddingHorizontal: 10,
     borderRadius: 10
   },
   allBlack: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#202025",
     height: 22,
     paddingHorizontal: 10,
     backgroundColor: "white"
   },
   allGrayFill: {
-    fontSize: 12,
+    fontSize: 11,
     overflow: "hidden",
     color: "#fff",
     paddingHorizontal: 10,
@@ -3559,7 +3569,7 @@ const styles: any = StyleSheet.create({
     lineHeight: 20
   },
   allGrayOutline: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#a2a2aa",
     height: 22,
     paddingHorizontal: 10,
@@ -3588,6 +3598,6 @@ const styles: any = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#a2a2aa",
-    fontSize: 12
+    fontSize: 11
   }
 });

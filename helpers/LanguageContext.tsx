@@ -688,7 +688,7 @@ export function LanguageSelect() {
                 //             selectedValue={language}
                 //             style={{ height: 28,  borderRadius: 10,
                 //                 // border: "1px solid #A2A2AA",
-                //                 fontSize: 12,
+                //                 fontSize: 11,
                 //                 flex: 1
                 //              }}
                 //             onValueChange={(itemValue, itemIndex) => context.changeLanguage(itemValue)}
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: 'white',
         overflow: 'hidden',
-        fontSize: 12,
+        fontSize: 11,
         textAlign: 'center',
         width: 100,
         height: 200,
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
         borderRadius: 3
     },
     text: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         textAlign: 'left',
         paddingHorizontal: 10

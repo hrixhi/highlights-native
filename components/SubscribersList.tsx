@@ -895,7 +895,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                     HIDE
                                                                 </Text>
                                                             </View>
-                                                            <Text style={{ fontSize: 12, color: '#a2a2aa', paddingTop: 10, backgroundColor: 'white' }}>
+                                                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingTop: 10, backgroundColor: 'white' }}>
                                                                 Restart switch if you are unable to join.
                                                             </Text>
                                                         </View>
@@ -947,7 +947,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     textAlign: 'center',
                                                     lineHeight: 35,
                                                     color: meetingOn ? '#fff' : '#202025',
-                                                    fontSize: 12,
+                                                    fontSize: 11,
                                                     backgroundColor: meetingOn ? '#3B64F8' : '#f4f4f6',
                                                     paddingHorizontal: 25,
                                                     fontFamily: 'inter',
@@ -960,7 +960,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     Join Meeting
                                                 </Text>
                                             </TouchableOpacity>
-                                            <Text style={{ fontSize: 12, color: '#a2a2aa', marginBottom: 10, backgroundColor: 'white' }}>
+                                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', marginBottom: 10, backgroundColor: 'white' }}>
                                                 Enabled only when meeting in session.
                                             </Text>
                                         </View>
@@ -1077,7 +1077,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             activeThumbColor='white'
                         />
                         <View style={{ width: '100%', backgroundColor: 'white', paddingTop:10 }}>
-                            <Text style={{ fontSize: 12, color: '#a2a2aa', }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', }}>
                                 RELEASE GRADES
                             </Text>
                         </View>
@@ -1385,7 +1385,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             textAlign: 'center',
                                                             lineHeight: 35,
                                                             color: 'white',
-                                                            fontSize: 12,
+                                                            fontSize: 11,
                                                             backgroundColor: '#3B64F8',
                                                             paddingHorizontal: 25,
                                                             fontFamily: 'inter',
@@ -1518,7 +1518,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         style={{
                                                             color: '#a2a2aa',
                                                             lineHeight: 20,
-                                                            fontSize: 12
+                                                            fontSize: 11
                                                         }}>
                                                         {PreferredLanguageText(categoriesLanguageMap[category])}
                                                     </Text>
@@ -1572,7 +1572,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 textAlign: 'center',
                                 lineHeight: 35,
                                 color: '#202025s',
-                                fontSize: 12,
+                                fontSize: 11,
                                 backgroundColor: '#f4f4f6',
                                 paddingHorizontal: 25,
                                 fontFamily: 'inter',
@@ -1590,7 +1590,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             textAlign: 'center',
                             lineHeight: 35,
                             color: '#202025',
-                            fontSize: 12,
+                            fontSize: 11,
                             paddingHorizontal: 25,
                             width: "100%",
                             fontFamily: 'inter',

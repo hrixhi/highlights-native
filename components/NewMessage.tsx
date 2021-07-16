@@ -316,7 +316,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             !cueId && !parentId ?
                                 <View style={{ width: '100%', backgroundColor: 'white' }}>
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                        <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                                        <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                                             {PreferredLanguageText('category')}
                                         </Text>
                                     </View>
@@ -341,7 +341,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             onPress={() => {
                                                                 setCustomCategory('')
                                                             }}>
-                                                            <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 12 }}>
+                                                            <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
                                                                 {PreferredLanguageText('none')}
                                                             </Text>
                                                         </TouchableOpacity>
@@ -353,7 +353,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     onPress={() => {
                                                                         setCustomCategory(category)
                                                                     }}>
-                                                                    <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 12 }}>
+                                                                    <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
                                                                         {category}
                                                                     </Text>
                                                                 </TouchableOpacity>
@@ -388,7 +388,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     parentId ? null :
                                         <View style={{ width: '100%', backgroundColor: 'white' }}>
                                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                                <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                                                <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                                                     {PreferredLanguageText('private')}
                                                 </Text>
                                             </View>
@@ -408,7 +408,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         }
                         {/* <View style={{ width: '100%', backgroundColor: 'white' }}>
                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+                                <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                                     {PreferredLanguageText('anonymous')}
                                 </Text>
                             </View>
@@ -455,7 +455,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             textAlign: 'center',
                             lineHeight: 35,
                             color: 'white',
-                            fontSize: 12,
+                            fontSize: 11,
                             backgroundColor: '#3B64F8',
                             borderRadius: 15,
                             paddingHorizontal: 25,
@@ -521,7 +521,7 @@ const styles: any = StyleSheet.create({
         paddingLeft: 7.5
     },
     text: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         textAlign: 'left'
     },
@@ -537,14 +537,14 @@ const styles: any = StyleSheet.create({
         marginBottom: 20
     },
     all: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         height: 20,
         paddingHorizontal: 10,
         backgroundColor: 'white'
     },
     allOutline: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#a2a2aa',
         height: 22,
         paddingHorizontal: 10,

@@ -92,6 +92,7 @@
     "react-native-multiple-select": "^0.5.6",
     "react-native-pell-rich-editor": "^1.7.0",
     "react-native-player": "^0.0.9",
+    "react-native-popup-menu": "^0.15.11",
     "react-native-progress-webview": "^1.2.0",
     "react-native-reanimated": "~2.1.0",
     "react-native-restart": "^0.0.22",

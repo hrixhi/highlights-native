@@ -126,7 +126,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 <View style={{ width: '70%', flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10, backgroundColor: '#fff'  }}>
                     <Text
                         style={{
-                            fontSize: 12,
+                            fontSize: 11,
                             color: "white",
                             height: 22,
                             overflow: "hidden",
@@ -141,7 +141,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </Text>
                     <Text
                         style={{
-                            fontSize: 12,
+                            fontSize: 11,
                             color: "white",
                             height: 22,
                             overflow: "hidden",
@@ -448,7 +448,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         textAlign: 'center',
                         lineHeight: 35,
                         color: 'white',
-                        fontSize: 12,
+                        fontSize: 11,
                         backgroundColor: '#3B64F8',
                         paddingHorizontal: 25,
                         fontFamily: 'inter',

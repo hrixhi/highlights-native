@@ -63,7 +63,7 @@ const FileUpload: React.FC<any> = (props: any) => {
         paddingBottom: Dimensions.get('window').width < 768 ? 5 : 0
     }}>
         {
-            uploading ? <Text style={{ fontSize: 12, color: '#a2a2aa' }}>
+            uploading ? <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                 Importing...
             </Text> :
                 <View style={{ flexDirection: 'row', width: 220, backgroundColor: 'white' }}>
@@ -79,7 +79,7 @@ const FileUpload: React.FC<any> = (props: any) => {
                             textAlign: 'center',
                             lineHeight: 25,
                             color: '#202025',
-                            fontSize: 12,
+                            fontSize: 11,
                             backgroundColor: '#f4f4f6',
                             borderRadius: 10,
                             paddingHorizontal: 25,

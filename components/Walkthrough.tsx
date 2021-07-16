@@ -196,7 +196,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         lineHeight: 35,
                         color: '#202025',
                         overflow: 'hidden',
-                        fontSize: 12,
+                        fontSize: 11,
                         backgroundColor: '#f4f4f6',
                         paddingHorizontal: 25,
                         fontFamily: 'inter',

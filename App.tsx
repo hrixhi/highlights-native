@@ -8,6 +8,7 @@ import Navigation from './navigation/Navigator';
 import * as SplashScreen from 'expo-splash-screen';
 // import "react-datetime/css/react-datetime.css"
 import { LanguageProvider } from "./helpers/LanguageContext";
+import { MenuProvider } from 'react-native-popup-menu';
 
 export default function App() {
 
@@ -33,9 +34,11 @@ export default function App() {
   } else {
     return (
       <SafeAreaProvider style={styles.font}>
-        <LanguageProvider>
-          <Navigation colorScheme={colorScheme} />
-        </LanguageProvider>
+        <MenuProvider>
+          <LanguageProvider>
+            <Navigation colorScheme={colorScheme} />
+          </LanguageProvider>
+        </MenuProvider>
         <StatusBar />
       </SafeAreaProvider>
     );

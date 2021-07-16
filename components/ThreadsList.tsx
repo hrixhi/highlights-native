@@ -361,7 +361,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                             style={{
                                                                                 color: '#a2a2aa',
                                                                                 lineHeight: 20,
-                                                                                fontSize: 12
+                                                                                fontSize: 11
                                                                             }}
                                                                         >
                                                                             {PreferredLanguageText('all')}
@@ -378,7 +378,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                             style={{
                                                                                 color: '#a2a2aa',
                                                                                 lineHeight: 20,
-                                                                                fontSize: 12
+                                                                                fontSize: 11
                                                                             }}>
                                                                             {category}
                                                                         </Text>

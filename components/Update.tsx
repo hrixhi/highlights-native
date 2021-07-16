@@ -489,7 +489,7 @@ export default Update;
 
 const styles: any = StyleSheet.create({
     all: {
-        fontSize: 12,
+        fontSize: 11,
         color: "#a2a2aa",
         height: 22,
         overflow: "hidden",
@@ -498,7 +498,7 @@ const styles: any = StyleSheet.create({
         lineHeight: 20
     },
     allGrayFill: {
-        fontSize: 12,
+        fontSize: 11,
         overflow: "hidden",
         color: "#fff",
         paddingHorizontal: 10,

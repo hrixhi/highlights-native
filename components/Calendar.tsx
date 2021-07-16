@@ -465,7 +465,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                       backgroundColor: "white"
                     }}
                   >
-                    <Text style={{ fontSize: 12, color: "#a2a2aa" }}>
+                    <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                       Filter by Channels
                     </Text>
                 </View>
@@ -505,7 +505,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                               <Text
                                   style={{
                                       lineHeight: 20,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       color: filterChannels.includes('') ? "#fff" : "#202025"
                                   }}>
                                   {PreferredLanguageText("myCues")}
@@ -535,7 +535,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                                       <Text
                                           style={{
                                               lineHeight: 20,
-                                              fontSize: 12,
+                                              fontSize: 11,
                                               color:
                                                   filterChannels.includes(channel)
                                                       ? "#fff"
@@ -553,7 +553,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
             <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
               <View style={{ width: "100%", paddingTop: width < 768 ? 0 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-                <Text style={{ fontSize: 12, color: "#a2a2aa" }}>Lectures</Text>
+                <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>Lectures</Text>
               </View>
               <View
                 style={{
@@ -1063,7 +1063,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             textAlign: "center",
             lineHeight: 35,
             color: "white",
-            fontSize: 12,
+            fontSize: 11,
             backgroundColor: '#3B64F8',
             paddingHorizontal: 25,
             fontFamily: "inter",
@@ -1091,7 +1091,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             textAlign: "center",
             lineHeight: 35,
             color: "#202025",
-            fontSize: 12,
+            fontSize: 11,
             backgroundColor: "#f4f4f6",
             paddingHorizontal: 25,
             fontFamily: "inter",
@@ -1120,7 +1120,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             textAlign: "center",
             lineHeight: 35,
             color: "#202025",
-            fontSize: 12,
+            fontSize: 11,
             backgroundColor: "#f4f4f6",
             paddingHorizontal: 25,
             fontFamily: "inter",
@@ -1290,7 +1290,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     <View style={{ flexDirection: width < 768 ? "column" : "row", backgroundColor: "#fff" }}>
       <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
         <View style={{ width: "100%", paddingTop: width < 768 ? 0 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 12, color: "#a2a2aa" }}>Recurring</Text>
+          <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>Recurring</Text>
         </View>
         <View
           style={{
@@ -1313,7 +1313,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
       {recurring ? <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex" }}>
         <View style={{ width: "100%", paddingTop: width < 768 ? 20 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 12, color: "#a2a2aa" }}>Repeat every</Text>
+          <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>Repeat every</Text>
         </View>
         <View
           style={{
@@ -1388,7 +1388,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             width: "50%"
           }}>
           <View style={{ width: "100%", backgroundColor: "white", }}>
-            <Text style={{ fontSize: 12, color: "#a2a2aa", paddingBottom: 15 }}>Lecture</Text>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingBottom: 15 }}>Lecture</Text>
           </View>
 
           <View
@@ -1421,7 +1421,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               width: "50%"
             }}>
             <View style={{ width: "100%", backgroundColor: "white", }}>
-              <Text style={{ fontSize: 12, color: "#a2a2aa", paddingBottom: 15 }}>Record Lecture</Text>
+              <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingBottom: 15 }}>Record Lecture</Text>
             </View>
 
             <Switch
@@ -1699,7 +1699,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                       backgroundColor: "white"
                     }}
                   >
-                    <Text style={{ fontSize: 12, color: "#a2a2aa" }}>
+                    <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                       Event for
                       {/* <Ionicons
                                                 name='school-outline' size={20} color={'#a2a2aa'} /> */}
@@ -1736,7 +1736,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                           <Text
                             style={{
                               lineHeight: 20,
-                              fontSize: 12,
+                              fontSize: 11,
                               color: channelId === "" ? "#fff" : "#202025"
                             }}
                           >
@@ -1759,7 +1759,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                               <Text
                                 style={{
                                   lineHeight: 20,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   color:
                                     channelId === channel._id ? "#fff" : "#202025"
                                 }}
@@ -1778,7 +1778,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
             {!editEvent && renderRecurringOptions()}
             {renderMeetingOptions()}
-            {channelId !== "" && <Text style={{ fontSize: 12, color: "#a2a2aa", paddingTop: 20 }}>
+            {channelId !== "" && <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingTop: 20 }}>
               Attendances will only be captured for scheduled lectures.
             </Text>}
             {!editEvent ? <View
@@ -1812,7 +1812,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                     lineHeight: 35,
                     color: "white",
                     overflow: "hidden",
-                    fontSize: 12,
+                    fontSize: 11,
                     backgroundColor: '#3B64F8',
                     paddingHorizontal: 25,
                     fontFamily: "inter",
@@ -1858,7 +1858,7 @@ const styles: any = StyleSheet.create({
     marginBottom: 20
   },
   text: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#a2a2aa",
     textAlign: "left",
     paddingHorizontal: 10
@@ -1872,14 +1872,14 @@ const styles: any = StyleSheet.create({
     marginLeft: 10
   },
   allBlack: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#202025",
     height: 22,
     paddingHorizontal: 10,
     backgroundColor: "white"
   },
   allOutline: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#FFF",
     height: 22,
     paddingHorizontal: 10,

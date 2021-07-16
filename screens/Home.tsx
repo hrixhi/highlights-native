@@ -1178,13 +1178,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     if (subCues[updateModalKey].length === 0) {
       return;
     }
-  
+
     // Update only release Submission
-    
+
     unmodified.releaseSubmission = releaseSubmission;
 
     subCues[updateModalKey][updateModalIndex] = unmodified
-      
+
     const stringifiedCues = JSON.stringify(subCues);
 
     await AsyncStorage.setItem("cues", stringifiedCues);
@@ -1662,7 +1662,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     textAlign: 'center',
                     lineHeight: 35,
                     color: 'white',
-                    fontSize: 12,
+                    fontSize: 11,
                     backgroundColor: '#3B64F8',
                     paddingHorizontal: 25,
                     overflow: 'hidden',
@@ -1690,7 +1690,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     textAlign: 'center',
                     lineHeight: 35,
                     color: '#202025',
-                    fontSize: 12,
+                    fontSize: 11,
                     backgroundColor: '#f4f4f6',
                     paddingHorizontal: 25,
                     fontFamily: 'inter',
@@ -1722,7 +1722,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     textAlign: 'center',
                     lineHeight: 35,
                     color: '#202025',
-                    fontSize: 12,
+                    fontSize: 11,
                     backgroundColor: '#f4f4f6',
                     overflow: 'hidden',
                     paddingHorizontal: 25,
@@ -1758,7 +1758,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           channelFilterChoice={channelFilterChoice}
           channelCreatedBy={channelCreatedBy}
           loadData={() => loadData()}
-          setChannelFilterChoice={(choice: any) => setChannelFilterChoice(choice)}
+          // setChannelFilterChoice={(choice: any) => setChannelFilterChoice(choice)}
           openDiscussion={() => openModal('Discussion')}
           openSubscribers={() => openModal('Subscribers')}
           openGrades={() => openModal('Grades')}
@@ -1788,6 +1788,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             </View>
         }
         <BottomBar
+          cues={filteredCues}
           openCreate={() => openModal('Create')}
           openChannels={() => openModal('Channels')}
           openProfile={() => openModal('Profile')}
@@ -1801,6 +1802,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           setChannelFilterChoice={(choice: string) => setChannelFilterChoice(choice)}
           openWalkthrough={() => openModal('Walkthrough')}
           openCalendar={() => openModal('Calendar')}
+          channelFilterChoice={channelFilterChoice}
         />
       </View >
       {
@@ -1858,7 +1860,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomWidth: 0,
     borderColor: '#f4f4f6',
-    height: '64%',
+    height: '66%',
     width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,
     justifyContent: "center",
   },
