@@ -12,7 +12,7 @@ const MultiSelectComponent: React.FunctionComponent<{ [label: string]: any }> = 
         uniqueKey="value"
         ref={ref}
         styleRowList={{
-           height: 23
+            height: 23
         }}
         styleTextDropdown={{
             fontFamily: "overpass",
@@ -36,10 +36,14 @@ const MultiSelectComponent: React.FunctionComponent<{ [label: string]: any }> = 
             backgroundColor: "#fff"
         }}
         onSelectedItemsChange={(sel: any) => {
-            if (sel.length > props.selected.length) {
-                props.onAddNew(sel[props.selected.length]);
+            if (props.settings) {
+                props.onAddNew(sel)
             } else {
-                Alert("Cannot un-share!");
+                if (sel.length > props.selected.length) {
+                    props.onAddNew(sel[props.selected.length]);
+                } else {
+                    Alert("Cannot un-share!");
+                }
             }
         }}
         selectedItems={props.selected}

@@ -11,6 +11,7 @@ import {
     getUserCount, subscribe, unsubscribe, updateChannel
 } from '../graphql/QueriesAndMutations';
 import Alert from './Alert';
+import MultiSelectComponent from './MultiSelect';
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -23,6 +24,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [options, setOptions] = useState<any[]>([])
     const [selected, setSelected] = useState<any[]>([])
     const [owner, setOwner] = useState<any>('')
+    const [owners, setOwners] = useState<any[]>([])
+
 
     const RichText: any = useRef()
 
@@ -44,13 +47,21 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         }).then(res => {
             if (res.data && (res.data.channel.doesChannelNameExist !== true || name.trim() === originalName.trim())) {
+
+                let unsub = false
+                // if (confirm('Unsubscribe removed moderators?')) {
+                //     unsubscribe = true
+                // }
+
                 server.mutate({
                     mutation: updateChannel,
                     variables: {
                         name: name.trim(),
                         password,
                         channelId: props.channelId,
-                        temporary
+                        temporary,
+                        owners,
+                        unsubscribe: unsub
                     }
                 }).then(res2 => {
                     if (res2.data && res2.data.channel.update) {
@@ -102,7 +113,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         }).catch(err => {
             Alert("Something went wrong.")
         })
-    }, [name, password, props.channelId, options, originalSubs,
+    }, [name, password, props.channelId, options, originalSubs, owners,
         temporary, selected, originalName])
 
     const handleDelete = useCallback(() => {
@@ -160,24 +171,35 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         })
                                         return x
                                     })
+                                    // get channel details
+                                    server.query({
+                                        query: findChannelById,
+                                        variables: {
+                                            channelId: props.channelId
+                                        }
+                                    }).then(res => {
+                                        if (res.data && res.data.channel.findById) {
+                                            setName(res.data.channel.findById.name)
+                                            setOriginalName(res.data.channel.findById.name)
+                                            setPassword(res.data.channel.findById.password ? res.data.channel.findById.password : '')
+                                            setTemporary(res.data.channel.findById.temporary ? true : false)
+                                            if (res.data.channel.findById.owners) {
+                                                const ownerOptions: any[] = []
+                                                tempUsers.map((item: any) => {
+                                                    const u = res.data.channel.findById.owners.find((i: any) => {
+                                                        return i === item.value
+                                                    })
+                                                    if (u) {
+                                                        ownerOptions.push(item.value)
+                                                    }
+                                                })
+                                                setOwners(ownerOptions)
+                                            }
+                                        }
+                                    })
                                     setOptions(tempUsers)
                                 })
                             }
-                        }
-                    })
-
-                    // get channel details
-                    server.query({
-                        query: findChannelById,
-                        variables: {
-                            channelId: props.channelId
-                        }
-                    }).then(res => {
-                        if (res.data && res.data.channel.findById) {
-                            setName(res.data.channel.findById.name)
-                            setOriginalName(res.data.channel.findById.name)
-                            setPassword(res.data.channel.findById.password ? res.data.channel.findById.password : '')
-                            setTemporary(res.data.channel.findById.temporary ? true : false)
                         }
                     })
 
@@ -212,8 +234,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         )()
 
-    }, [props.channelId])
-
+    }, [props.channelId, props.user])
 
     return (
         <View style={styles.screen} key={1}>
@@ -311,6 +332,23 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 textColor="#202025"
                                 submitButtonColor={'#202025'}
                                 submitButtonText="Done"
+                            />
+                        </View>
+                        <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10, backgroundColor: '#fff', paddingTop: 40 }}>
+                            Moderators
+                        </Text>
+                        <View
+                            style={{
+                                paddingTop: 25,
+                                backgroundColor: "#fff",
+                                // borderWidth: 1,
+                                // flex: 1
+                            }}>
+                            <MultiSelectComponent
+                                subscribers={options}
+                                selected={owners}
+                                onAddNew={(e: any) => setOwners(e)}
+                                settings={true}
                             />
                         </View>
                         <View
