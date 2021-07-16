@@ -63,6 +63,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   const [isEditingEvents, setIsEditingEvents] = useState(false);
   const [isDeletingEvents, setIsDeletingEvents] = useState(false);
 
+  // FILTERS
+  const [showFilter, setShowFilter] = useState(false);
+  const [eventChannels, setEventChannels] = useState<any[]>([]);
+  const [filterChannels, setFilterChannels] = useState<any[]>([]);
+  const [allItems, setAllItems] = useState<any[]>([]);
+  const [filterByLectures, setFilterByLectures] = useState(false);
 
   const [showStartTimeAndroid, setShowStartTimeAndroid] = useState(false);
   const [showStartDateAndroid, setShowStartDateAndroid] = useState(false);
@@ -97,6 +103,52 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         .catch(err => { });
     }
   }, []);
+
+  useEffect(() => {
+
+    let total = [...allItems];
+
+    // Filter the meetings first 
+    if (filterByLectures) {
+        total = total.filter((e: any) => e.meeting)
+    } 
+
+    let filterByChannels = [];
+
+    if (filterChannels.length === 0) {
+        filterByChannels = total;
+    } else {
+        const all = [...total];
+        const filter = all.filter((e: any) => filterChannels.includes(e.channelName));
+        
+        filterByChannels = filter;
+    }
+
+    // Now we have the filtered events so we need to put them in an object for Calendar
+    const loadedItems: { [key: string]: any } = {};
+
+    filterByChannels.map((item: any) => {
+      const strTime = timeToString(item.start);
+    
+      if (!loadedItems[strTime]) {
+        loadedItems[strTime] = [item];
+      } else {
+        const existingItems = loadedItems[strTime];
+        loadedItems[strTime] = [...existingItems, item];
+      }
+
+    })
+
+    // Selected date (current date) should never be empty, otherwise Calendar will keep loading
+    const todayStr = timeToString(new Date());
+
+    if (!loadedItems[todayStr]) {
+      loadedItems[todayStr] = [];
+    }
+
+    setItems(loadedItems);
+
+}, [filterChannels, filterByLectures])
 
   useEffect(() => {
     if (title !== "" && end > start) {
@@ -310,9 +362,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       })
       .then(res => {
         if (res.data.date && res.data.date.getCalendar) {
+
+          const channelsSet = new Set();
+
           const parsedEvents: any[] = [];
           res.data.date.getCalendar.map((e: any) => {
             const { title } = htmlStringParser(e.title);
+
+            channelsSet.add(e.channelName);
+
             parsedEvents.push({
               eventId: e.eventId ? e.eventId : "",
               originalTitle: title,
@@ -329,6 +387,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           });
 
           const loadedItems: { [key: string]: any } = {};
+
+          const allEvents : any = [];
 
           // Add Logic to convert to items for Agenda
           res.data.date.getCalendar.map((item: any) => {
@@ -347,8 +407,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               createdBy: item.createdBy,
               channelName: item.channelName,
               recurringId: item.recurringId,
-              recordMeeting: item.recordMeeting ? true : false
+              recordMeeting: item.recordMeeting ? true : false,
+              meeting: item.meeting
             }
+
+            allEvents.push(modifiedItem);
 
             if (!loadedItems[strTime]) {
               loadedItems[strTime] = [modifiedItem];
@@ -357,6 +420,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               loadedItems[strTime] = [...existingItems, modifiedItem];
             }
           });
+
           // Selected date (current date) should never be empty, otherwise Calendar will keep loading
           const todayStr = timeToString(new Date());
 
@@ -364,7 +428,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             loadedItems[todayStr] = [];
           }
 
+          setEventChannels(Array.from(channelsSet))
           setItems(loadedItems);
+          setAllItems(allEvents)
         }
 
         modalAnimation.setValue(0);
@@ -386,6 +452,129 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         }).start();
       });
   }, [, modalAnimation]);
+
+  const renderFilterEvents = () => {
+
+    return (eventChannels.length > 0 ? (
+        <View style={{ marginTop: 20, paddingHorizontal: 20, backgroundColor: 'white' }} key={JSON.stringify(eventChannels)}>
+            <View style={{ marginBottom: 40, backgroundColor: 'white' }}>
+                  <View
+                    style={{
+                      width: "100%",
+                      paddingBottom: 15,
+                      backgroundColor: "white"
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#a2a2aa" }}>
+                      Filter by Channels
+                    </Text>
+                </View>
+              <View
+                  style={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "row",
+                      backgroundColor: "white"
+                  }}>
+                  <View
+                      style={{
+                          width: "100%",
+                          backgroundColor: "white",
+                          display: "flex",
+                      }}>
+                      <ScrollView
+                          style={styles.colorBar}
+                          horizontal={true}
+                          showsHorizontalScrollIndicator={false}>
+                          <TouchableOpacity
+                              style={
+                                  filterChannels.includes('') ? styles.allOutline : styles.allBlack
+                              }
+                              onPress={() => {
+                                  const currentFilterChannels = [...filterChannels];
+
+                                  if (currentFilterChannels.includes("")) {
+                                      const filter = currentFilterChannels.filter((channel: any) => channel !== "");
+
+                                      setFilterChannels(filter);
+                                  } else {
+                                      currentFilterChannels.push("");
+                                      setFilterChannels(currentFilterChannels);
+                                  }
+                              }}>
+                              <Text
+                                  style={{
+                                      lineHeight: 20,
+                                      fontSize: 12,
+                                      color: filterChannels.includes('') ? "#fff" : "#202025"
+                                  }}>
+                                  {PreferredLanguageText("myCues")}
+                              </Text>
+                          </TouchableOpacity>
+                          {eventChannels.map(channel => {
+                              return (
+                                  <TouchableOpacity
+                                      key={Math.random()}
+                                      style={
+                                          filterChannels.includes(channel)
+                                              ? styles.allOutline
+                                              : styles.allBlack
+                                      }
+                                      onPress={() => {
+                                          const currentFilterChannels = [...filterChannels]
+
+                                          if (currentFilterChannels.includes(channel)) {
+                                              const filter = currentFilterChannels.filter((channelName: any) => channelName !== channel);
+                                              setFilterChannels(filter);
+
+                                          } else {
+                                              currentFilterChannels.push(channel);
+                                              setFilterChannels(currentFilterChannels);
+                                          }
+                                      }}>
+                                      <Text
+                                          style={{
+                                              lineHeight: 20,
+                                              fontSize: 12,
+                                              color:
+                                                  filterChannels.includes(channel)
+                                                      ? "#fff"
+                                                      : "#202025"
+                                          }}>
+                                          {channel}
+                                      </Text>
+                                  </TouchableOpacity>
+                              );
+                          })}
+                      </ScrollView>
+                  </View>
+              </View>
+            </View>
+
+            <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
+              <View style={{ width: "100%", paddingTop: width < 768 ? 0 : 40, paddingBottom: 15, backgroundColor: "white" }}>
+                <Text style={{ fontSize: 12, color: "#a2a2aa" }}>Lectures</Text>
+              </View>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  height: 40,
+                  marginRight: 10
+                }}>
+                <Switch
+                  value={filterByLectures}
+                  onValueChange={() => setFilterByLectures(!filterByLectures)}
+                  style={{ height: 20 }}
+                  trackColor={{
+                    false: "#f4f4f6",
+                    true: "#3B64F8"
+                  }}
+                  activeThumbColor="white"
+                />
+              </View>
+            </View>
+        </View>
+    ) : null)    }
 
   const renderStartDateTimePicker = () => {
     return (
@@ -1298,38 +1487,63 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         >
           {PreferredLanguageText("planner")}
         </Text>
-        {/* <Text
-          ellipsizeMode="tail"
-          style={{
-            color: "#a2a2aa",
-            fontSize: 13,
-            marginLeft: -15,
-            flex: 1,
-            lineHeight: 25,
-            // paddingHorizontal: 0,
-            marginTop: 3
+        
+        <View style={{ flexDirection: 'row', width: '50%', backgroundColor: 'white', justifyContent: "flex-end" }}>
+          {showAddEvent ? null : <Text style={{
+            // width: '50%',
+            color: '#a2a2aa',
+            fontSize: 11,
+            paddingTop: 5,
+            textAlign: 'right',
+            paddingRight: 25,
+            textTransform: 'uppercase'
           }}
-        >
-          {currentMonth}
-        </Text> */}
-        <Text style={{
-          width: '50%',
-          color: '#a2a2aa',
-          fontSize: 11,
-          paddingTop: 5,
-          textAlign: 'right',
-          paddingRight: 25,
-          textTransform: 'uppercase'
-        }}
-          onPress={() => {
-            setShowAddEvent(!showAddEvent)
-            setEditEvent(null)
+            onPress={() => {
+              setShowFilter(!showFilter)
+            }}
+          >
+            {
+              showFilter ? "HIDE" : "FILTER"
+            }
+          </Text>}
+
+          {filterChannels.length === 0 && !filterByLectures ? null : <Text style={{
+            // width: '50%',
+            color: '#a2a2aa',
+            fontSize: 11,
+            paddingTop: 5,
+            textAlign: 'right',
+            paddingRight: 25,
+            textTransform: 'uppercase'
           }}
-        >
-          {
-            showAddEvent ? PreferredLanguageText('hide') : PreferredLanguageText('add')
-          }
-        </Text>
+            onPress={() => {
+              setFilterChannels([]);
+              setFilterByLectures(false) 
+            }}
+          >
+            RESET
+          </Text>}
+
+          {showFilter ? null : <Text style={{
+            // width: '50%',
+            color: '#a2a2aa',
+            fontSize: 11,
+            paddingTop: 5,
+            textAlign: 'right',
+            paddingRight: 25,
+            textTransform: 'uppercase'
+          }}
+            onPress={() => {
+              setShowAddEvent(!showAddEvent)
+              setEditEvent(null)
+            }}
+          >
+            {
+              showAddEvent ? PreferredLanguageText('hide') : PreferredLanguageText('add')
+            }
+          </Text>}
+        </View>
+        
         {/* {!showAddEvent ? (
           <Ionicons
             name="add-outline"
@@ -1350,7 +1564,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       </View>
 
       {!showAddEvent ? (
-        <View style={{ flex: 1 }}>
+        showFilter ? 
+        renderFilterEvents()
+        :
+        (<View style={{ flex: 1 }}>
           <Agenda
             items={items}
             loadItemsForMonth={loadItemsForMonth}
@@ -1368,7 +1585,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             }}
             onDayPress={onUpdateSelectedDate}
           />
-        </View>
+        </View>) 
       ) : (
         <ScrollView
           style={{
