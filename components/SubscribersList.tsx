@@ -1062,7 +1062,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     <View style={{
                         backgroundColor: 'white',
                         height: 40,
-                        // marginTop: 20,
                         marginBottom: 20,
                         flexDirection: 'row',
                         alignItems: 'center'
@@ -1077,9 +1076,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }}
                             activeThumbColor='white'
                         />
-                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 3 }}>
-                            <Text style={{ fontSize: 15, color: '#a2a2aa', }}>
-                                Visible to students
+                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop:10 }}>
+                            <Text style={{ fontSize: 12, color: '#a2a2aa', }}>
+                                RELEASE GRADES
                             </Text>
                         </View>
                     </View>
