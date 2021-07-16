@@ -704,7 +704,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         const parsedSubscriptions = JSON.parse(sub)
         if (u) {
           const parsedUser = JSON.parse(u)
-          server.query({
+          const server2 = fetchAPI(parsedUser._id)
+          server2.query({
             query: getSubscriptions,
             variables: {
               userId: parsedUser._id
