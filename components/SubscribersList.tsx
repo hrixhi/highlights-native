@@ -23,6 +23,12 @@ import moment from "moment";
 import Webview from './Webview';
 
 import QuizGrading from './QuizGrading';
+import { htmlStringParser } from '../helpers/HTMLParser';
+
+
+import XLSX from "xlsx";
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -67,6 +73,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [submittedAt, setSubmittedAt] = useState('');
     const [isV0Quiz, setIsV0Quiz] = useState(false)
     const [headers, setHeaders] = useState({})
+    const [exportAoa, setExportAoa] = useState<any[]>()
 
     // Test
     const [height, setHeight] = useState(42)
@@ -144,13 +151,130 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     })
 
     useEffect(() => {
+
+        if (problems.length === 0 || subscribers.length === 0) {
+            return;
+        }
+
+        const exportAoa = [];
+
+        // Add row 1 with Overall, problem Score, problem Comments,
+        let row1 = [""];
+
+        // Add Graded 
+        row1.push("Graded")
+
+        // Add total
+        row1.push("Total score")
+        
+        problems.forEach((prob: any, index: number) => {
+            row1.push(`${index + 1}: ${prob.question} (${prob.points})`)
+            row1.push("Score + Remark")
+        })
+
+        row1.push("Submission Date")
+
+        row1.push("Overall Remarks")
+
+        exportAoa.push(row1);
+
+        // Row 2 should be correct answers
+        const row2 = ["", "", ""];
+
+        problems.forEach((prob: any, i: number) => {
+            const { questionType, required, options = [],  } = prob;
+            let type = questionType === "" ? "MCQ" : "Free Response";
+
+            let require = required ? "Required" : "Optional";
+            
+            let answer = "";
+            
+            if (questionType === "") {
+                answer += "Ans: "
+                options.forEach((opt: any, index: number) => {
+                    if (opt.isCorrect) {
+                        answer += ((index + 1) + ", ");
+                    }
+                })
+            } 
+
+            row2.push(`${type} ${answer}`)
+            row2.push(`(${require})`)
+        })
+
+        exportAoa.push(row2)
+
+        // Subscribers
+        subscribers.forEach((sub: any) => {
+
+            const subscriberRow: any[] = [];
+
+            const { displayName, submission, submittedAt, comment, graded, score } = sub;
+
+            subscriberRow.push(displayName);
+            subscriberRow.push(graded ? "Graded" : (submittedAt !== null ? "Submitted" : "Not Submitted"))
+
+            if (!graded || !submittedAt) {
+                exportAoa.push(subscriberRow);
+                return;
+            }
+
+            subscriberRow.push(`${score}`)
+
+            const obj = JSON.parse(submission);
+
+            const { solutions, problemScores, problemComments, initiatedAt,  } = obj;
+
+            solutions.forEach((sol: any, i: number) => {
+                let response = ''
+                if ("selected" in sol) {
+                    const options = sol["selected"];
+
+                    options.forEach((opt: any, index: number) => {
+                        if (opt.isSelected) response += ((index + 1) + " ")
+                    })
+                } else {
+                    response = sol["response"]
+                }
+
+                subscriberRow.push(`${response}`);
+                subscriberRow.push(`${problemScores[i]} - Remark: ${problemComments ? problemComments[i] : ''}`)
+
+                
+            })
+
+            subscriberRow.push(moment(new Date(submittedAt)).format("MMMM Do YYYY, h:mm a"))
+
+            subscriberRow.push(comment)
+
+            exportAoa.push(subscriberRow);
+
+        })
+
+        setExportAoa(exportAoa)
+
+    }, [problems, subscribers])
+
+    useEffect(() => {
+      
         if (!props.cue) {
             return
         }
+
         if (props.cue.releaseSubmission !== null && props.cue.releaseSubmission !== undefined) {
             setReleaseSubmission(props.cue.releaseSubmission)
         } else {
             setReleaseSubmission(false)
+        }
+
+         // Set if quiz when cue loaded
+
+         if (props.cue && props.cue.original && props.cue.original[0] === '{' && props.cue.original[props.cue.original.length - 1] === '}') {
+            const obj = JSON.parse(props.cue.original);
+
+            if (obj.quizId) {
+                setIsQuiz(true);
+            }
         }
     }, [props.cue])
 
@@ -201,7 +325,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         }
                     })
                     .then(res => {
-                        console.log(res.data);
                         if (res.data && res.data.quiz.getQuiz) {
                             setProblems(res.data.quiz.getQuiz.problems);
                             setHeaders(res.data.quiz.getQuiz.headers ? JSON.parse(res.data.quiz.getQuiz.headers) : {})
@@ -229,6 +352,32 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             })
         }
     }, [users])
+
+    const exportScore = async () => {
+        const { title } = htmlStringParser(props.cue.original)
+
+        if (!exportAoa) {
+            alert("Export document being processed. Try again.")
+            return;
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(exportAoa);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Grades ");        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
+        
+        const uri = FileSystem.cacheDirectory + 'scores.xlsx';
+        await FileSystem.writeAsStringAsync(uri, wbout, {
+        encoding: FileSystem.EncodingType.Base64
+        });
+
+        await Sharing.shareAsync(uri, {
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        dialogTitle: 'MyWater data',
+        UTI: 'com.microsoft.excel.xlsx'
+        });
+
+    }
 
     const getMeetingLink = useCallback(() => {
         const server = fetchAPI('')
@@ -535,7 +684,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     const onGradeQuiz = (problemScores: string[], problemComments: string[], score: number, comment: string) => {
         const server = fetchAPI("");
-        console.log("Saving problem comments", problemComments);
         server
             .mutate({
                 mutation: gradeQuiz,
@@ -936,6 +1084,21 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View>
                     </View>
                     : null
+            }
+            {!isQuiz ?  null : <Text
+                    style={{
+                        color: "#a2a2aa",
+                        fontSize: 11,
+                        lineHeight: 25,
+                        // textAlign: "right",
+                        marginBottom: 10,
+                        textTransform: "uppercase"
+                    }}
+                    onPress={() => {
+                        exportScore()
+                    }}>
+                    EXPORT 
+                </Text>
             }
             {
                 !showAddUsers ? (subscribers.length === 0 ?
