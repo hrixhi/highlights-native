@@ -72,6 +72,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
     }, [channelId])
 
     const createDirectMessage = useCallback(async () => {
+
         setSendingThread(true)
         const u = await AsyncStorage.getItem('user')
         if (!message || message === '' || !u) {
@@ -124,7 +125,8 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
             setSendingThread(false)
             return
         }
-        if (message.replace(/\&nbsp;/g, '').replace(/\s/g, '') === '<div></div>') {
+        if (message.replace(/\&nbsp;/g, '').replace(/\s/g, '') == '<div></div>') {
+
             setSendingThread(false)
             return
         }

@@ -20,7 +20,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const [url, setUrl] = useState('')
     const [type, setType] = useState('')
     const [title, setTitle] = useState('')
-
+    const [sendingThread, setSendingThread] = useState(false)
     const [showImportOptions, setShowImportOptions] = useState(false)
 
     const unableToPostAlert = PreferredLanguageText('unableToPost');
@@ -43,8 +43,15 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
 
     const createDirectMessage = useCallback(async () => {
+
+        setSendingThread(true)
         const u = await AsyncStorage.getItem('user')
         if (!message || message === '' || !u) {
+            setSendingThread(false)
+            return
+        }
+        if (message.replace(/\&nbsp;/g, '').replace(/\s/g, '') == '<div></div>') {
+            setSendingThread(false)
             return
         }
         const user = JSON.parse(u)
@@ -72,17 +79,19 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 userId: user._id
             }
         }).then(res => {
+            setSendingThread(false)
             if (res.data.message.create) {
                 props.back()
             } else {
                 Alert(unableToPostAlert, checkConnectionAlert)
             }
         }).catch(err => {
+            setSendingThread(false)
             Alert(somethingWentWrongAlert, checkConnectionAlert)
         })
     }, [props.users, message, props.channelId, imported, type, title, url])
 
-    
+
     return (
         <View style={{
             width: '100%',
@@ -144,6 +153,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 {
                     showImportOptions && !imported ?
                         <FileUpload
+                            action={'message_send'}
                             back={() => setShowImportOptions(false)}
                             onUpload={(u: any, t: any) => {
                                 console.log(t)
@@ -154,77 +164,78 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         /> : null
                 }
             </View>
-            
-            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: 'white'
- }}>
 
-            {
-                imported ?
-                    <View style={{ backgroundColor: 'white', flex: 1, width: '80%',  }}>
-                        <View style={{ width: '100%', alignSelf: 'flex-start', marginLeft: '10%', backgroundColor: '#fff', flexDirection: 'column' }}>
-                            <TextInput
-                                value={title}
-                                style={styles.input}
-                                placeholder={'File Title'}
-                                onChangeText={val => setTitle(val)}
-                                placeholderTextColor={'#a2a2aa'}
+            <View style={{
+                display: 'flex', flexDirection: 'row', backgroundColor: 'white'
+            }}>
+
+                {
+                    imported ?
+                        <View style={{ backgroundColor: 'white', flex: 1, width: '80%', }}>
+                            <View style={{ width: '100%', alignSelf: 'flex-start', marginLeft: '10%', backgroundColor: '#fff', flexDirection: 'column' }}>
+                                <TextInput
+                                    value={title}
+                                    style={styles.input}
+                                    placeholder={'File Title'}
+                                    onChangeText={val => setTitle(val)}
+                                    placeholderTextColor={'#a2a2aa'}
+                                />
+                            </View>
+                            <View style={{ backgroundColor: '#fff' }}>
+                                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                    <Ionicons name='document-outline' size={50} color='#a2a2aa' />
+                                </Text>
+                            </View>
+                        </View>
+                        : <View style={{
+                            width: '80%',
+                            // minHeight: 100,
+                            maxWidth: 500,
+                            backgroundColor: 'white',
+                            paddingBottom: 10,
+
+                        }}>
+                            <RichEditor
+                                disabled={false}
+                                containerStyle={{
+                                    backgroundColor: '#f4f4f6',
+                                    borderRadius: 15,
+                                    padding: 3,
+                                    paddingTop: 5,
+                                    paddingBottom: 10,
+                                }}
+                                ref={RichText}
+                                style={{
+                                    width: '100%',
+                                    backgroundColor: '#f4f4f6',
+                                    borderRadius: 15,
+                                    minHeight: 50
+                                }}
+                                editorStyle={{
+                                    backgroundColor: '#f4f4f6',
+                                    placeholderColor: '#a2a2aa',
+                                    color: '#202025',
+                                    contentCSSText: 'font-size: 13px;'
+                                }}
+                                initialContentHTML={props.message}
+                                onScroll={() => Keyboard.dismiss()}
+                                placeholder={props.placeholder}
+                                onChange={(text) => {
+                                    const modifedText = text.split('&amp;').join('&')
+                                    setMessage(modifedText)
+                                }}
+                                onBlur={() => Keyboard.dismiss()}
+                                allowFileAccess={true}
+                                allowFileAccessFromFileURLs={true}
+                                allowUniversalAccessFromFileURLs={true}
+                                allowsFullscreenVideo={true}
+                                allowsInlineMediaPlayback={true}
+                                allowsLinkPreview={true}
+                                allowsBackForwardNavigationGestures={true}
                             />
                         </View>
-                        <View style={{ backgroundColor: '#fff' }}>
-                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                <Ionicons name='document-outline' size={50} color='#a2a2aa' />
-                            </Text>
-                        </View>
-                    </View>
-                    : <View style={{
-                        width: '80%',
-                        // minHeight: 100,
-                        maxWidth: 500,
-                        backgroundColor: 'white',
-                        paddingBottom: 10,
-                        
-                    }}>
-                        <RichEditor
-                            disabled={false}
-                            containerStyle={{
-                                backgroundColor: '#f4f4f6',
-                                borderRadius: 15,
-                                padding: 3,
-                                paddingTop: 5,
-                                paddingBottom: 10,
-                            }}
-                            ref={RichText}
-                            style={{
-                                width: '100%',
-                                backgroundColor: '#f4f4f6',
-                                borderRadius: 15,
-                                minHeight: 50
-                            }}
-                            editorStyle={{
-                                backgroundColor: '#f4f4f6',
-                                placeholderColor: '#a2a2aa',
-                                color: '#202025',
-                                contentCSSText: 'font-size: 13px;'
-                            }}
-                            initialContentHTML={props.message}
-                            onScroll={() => Keyboard.dismiss()}
-                            placeholder={props.placeholder}
-                            onChange={(text) => {
-                                const modifedText = text.split('&amp;').join('&')
-                                setMessage(modifedText)
-                            }}
-                            onBlur={() => Keyboard.dismiss()}
-                            allowFileAccess={true}
-                            allowFileAccessFromFileURLs={true}
-                            allowUniversalAccessFromFileURLs={true}
-                            allowsFullscreenVideo={true}
-                            allowsInlineMediaPlayback={true}
-                            allowsLinkPreview={true}
-                            allowsBackForwardNavigationGestures={true}
-                        />
-                    </View>
-            }
-            
+                }
+
                 <View
                     style={{
                         flex: 1,
@@ -236,6 +247,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         marginBottom: 0,
                     }}>
                     <TouchableOpacity
+                        disabled={sendingThread}
                         onPress={() => {
                             createDirectMessage()
                         }}
@@ -243,7 +255,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             borderRadius: 15,
                             backgroundColor: 'white'
                         }}>
-                        <Ionicons name='send' size={23}  color={'#202025'}  />
+                        <Ionicons name='send' size={23} color={'#202025'} />
                     </TouchableOpacity>
                 </View>
             </View>

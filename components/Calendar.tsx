@@ -1817,7 +1817,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                   marginTop: 40,
                 }}
                 onPress={() => handleCreate()}
-                disabled={isSubmitDisabled || isCreatingEvents}
+                disabled={isCreatingEvents}
               >
                 <Text
                   style={{

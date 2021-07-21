@@ -16,7 +16,7 @@ const FileUpload: React.FC<any> = (props: any) => {
             setUploading(false)
             return;
         }
-
+        console.log('uploading image with,', props.action)
         // ImagePicker saves the taken photo to disk and returns a local URI to it
         let { name, size, uri } = result;
         let nameParts = name.split('.');
