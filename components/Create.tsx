@@ -81,6 +81,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [shuffleQuiz, setShuffleQuiz] = useState(false);
     const [headers, setHeaders] = useState<any>({});
     const [quizInstructions, setQuizInstructions] = useState('');
+    const [initialDuration, setInitialDuration] = useState(null)
 
     const [equation, setEquation] = useState('y = x + 1')
     const [showEquationEditor, setShowEquationEditor] = useState(false)
@@ -593,7 +594,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 const quizDraft = await AsyncStorage.getItem('quizDraft')
                 if (quizDraft !== null) {
                     const { duration, timer, problems, title, headers, quizInstructions } = JSON.parse(quizDraft);
-
+                    setInitialDuration(duration)
                     setDuration(duration);
                     setTimer(timer);
                     setProblems(problems);
