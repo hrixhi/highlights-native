@@ -23,7 +23,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const iconColor = colorScheme === 'light' ? '#202025' : '#fff'
 
     const [channelCategories, setChannelCategories] = useState([])
-    const [filterChoice] = useState(props.channelFilterChoice)
+    const [filterChoice, setChannelFilterChoice] = useState(props.channelFilterChoice)
     const unparsedCues: any[] = JSON.parse(JSON.stringify(props.cues))
     const [cues] = useState<any[]>(unparsedCues.reverse())
 
@@ -40,6 +40,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
         })
         setChannelCategories(cat)
     }, [cues])
+
+    useEffect(() => {
+        setChannelFilterChoice(props.channelFilterChoice)
+    }, [props.channelFilterChoice])
 
     const getUser = useCallback(async () => {
         const u = await AsyncStorage.getItem('user')

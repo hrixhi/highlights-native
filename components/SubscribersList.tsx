@@ -1058,7 +1058,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     </View>
             }
             {
-                !showAddUsers && !showSubmission && props.cue && props.cue.submission ?
+                !showAddUsers && !showSubmission && props.cue && props.cue.submission && isQuiz ?
                     <View style={{
                         backgroundColor: 'white',
                         height: 40,

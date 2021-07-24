@@ -925,6 +925,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             if (res.data.status.markAsRead) {
               setMarkedAsRead(true);
               setKey(key)
+              // Mark as read
+              // props.markCueAsRead()
             }
           })
           .catch(err => { });

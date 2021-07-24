@@ -321,6 +321,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             viewStatus={viewStatus}
                             showOriginal={showOriginal}
                             setShowOriginal={(val: boolean) => setShowOriginal(val)}
+                            // markCueAsRead={() => props.markCueAsRead()}
                         />
                         {!Number.isNaN(Number(cueId)) ||
                             !props.channelId ||

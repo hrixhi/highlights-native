@@ -648,6 +648,7 @@ export const getGrades = gql`
         _id
         cue
         gradeWeight
+        releaseSubmission
       }
     }
   }

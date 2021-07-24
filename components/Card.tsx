@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { Text, View, TouchableOpacity } from '../components/Themed';
 import useColorScheme from '../hooks/useColorScheme';
@@ -13,6 +13,29 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const styleObject = styles(colorScheme, props.channelId)
     const starred = props.cue.starred;
     const { title, subtitle } = htmlStringParser(props.cue.channelId && props.cue.channelId !== '' ? props.cue.original : props.cue.cue)
+    const [showScore, setShowScore] = useState(false);
+
+    useEffect(() => {
+        if (props.cue && props.cue.original) {
+
+            // Hide scores if it's a quiz and !releaseSubmission
+            if (props.cue.original[0] === '{' && props.cue.original[props.cue.original.length - 1] === '}') {
+                const parsed = JSON.parse(props.cue.original);
+
+                if (parsed && parsed.quizId) {
+                    if (props.cue.releaseSubmission) {
+                        setShowScore(true)
+                    } 
+                } else {
+                    setShowScore(true);
+                }
+
+            } else {
+                setShowScore(true);
+            }
+
+        } 
+    }, [props.cue])
 
     return (
         <View
@@ -59,7 +82,7 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 </Text> : null
                         } */}
                         {
-                            props.cue.graded ? <Text style={{
+                            props.cue.graded && showScore ? <Text style={{
                                 fontSize: 9,
                                 color: '#3B64F8',
                                 marginLeft: 10
