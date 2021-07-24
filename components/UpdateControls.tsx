@@ -49,6 +49,13 @@ import moment from "moment";
 import MultiSelectComponent from "./MultiSelect";
 import Webview from "./Webview";
 import QuizGrading from './QuizGrading';
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+} from 'react-native-popup-menu';
+
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
   const current = new Date();
@@ -134,10 +141,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const [shuffleQuiz, setShuffleQuiz] = useState(false);
   const [instructions, setInstructions] = useState('');
   const [headers, setHeaders] = useState({})
-  const [cueGraded, setCueGraded] = useState(props.cue.graded); 
+  const [cueGraded] = useState(props.cue.graded);
   const [quizSolutions, setQuizSolutions] = useState<any>({});
   const [isV0Quiz, setIsV0Quiz] = useState(false);
-  const [comment, setComment] = useState(props.cue.comment) 
+  const [comment] = useState(props.cue.comment)
+  const [frequencyName, setFrequencyName] = useState('Day')
+  const [shareWithChannelName, setShareWithChannelName] = useState('')
 
   const [showInitiateAtTimeAndroid, setShowInitiateAtTimeAndroid] = useState(false);
   const [showInitiateAtDateAndroid, setShowInitiateAtDateAndroid] = useState(false);
@@ -382,10 +391,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         setIsV0Quiz(false)
       } else {
         setIsV0Quiz(true)
-        }
       }
-    }, [quizSolutions])
-    
+    }
+  }, [quizSolutions])
+
   const handleHeightChange = useCallback((h: any) => {
     setHeight(h);
   }, []);
@@ -692,41 +701,41 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     let requiredMissing = false;
 
     for (let i = 0; i < problems.length; i++) {
-        const problem = problems[i];
-        const solution = solutions[i];
-        
-        if ((!problem.questionType || problem.questionType === "") && problem.required) {
-            // Check completeness for MCQs
-        
-            const { selected } = solution;
+      const problem = problems[i];
+      const solution = solutions[i];
 
-            let selectionMade = false;
+      if ((!problem.questionType || problem.questionType === "") && problem.required) {
+        // Check completeness for MCQs
 
-            selected.forEach((selection: any) => {
-                if (selection.isSelected) selectionMade = true;
-            })
+        const { selected } = solution;
 
-            if (!selectionMade) {
-                requiredMissing = true;
-            }
+        let selectionMade = false;
 
-        } else if (problem.questionType === "freeResponse" && problem.required) {
-            // Check completeness for free response
+        selected.forEach((selection: any) => {
+          if (selection.isSelected) selectionMade = true;
+        })
 
-            const { response } = solution;
-        
-            if (response === "") {
-                requiredMissing = true;
-            }
-
-        } else {
-            // Optional
+        if (!selectionMade) {
+          requiredMissing = true;
         }
+
+      } else if (problem.questionType === "freeResponse" && problem.required) {
+        // Check completeness for free response
+
+        const { response } = solution;
+
+        if (response === "") {
+          requiredMissing = true;
+        }
+
+      } else {
+        // Optional
+      }
     }
 
     if (requiredMissing) {
-        Alert("A required question is missing a response.");
-        return;
+      Alert("A required question is missing a response.");
+      return;
     }
 
 
@@ -1510,9 +1519,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               actions.insertLink,
               actions.insertImage,
               "insertCamera",
+              "clear",
               actions.undo,
               actions.redo,
-              "clear"
             ]
         }
         iconMap={{
@@ -1576,31 +1585,63 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   };
 
   const renderCueTabs = () => (
-    <View
-      style={{
-        flexDirection: "row",
-        backgroundColor: "#fff"
-      }}>
+    <View style={{ flexDirection: "row", backgroundColor: '#fff' }}>
       <TouchableOpacity
         style={{
           justifyContent: "center",
           flexDirection: "column",
-          backgroundColor: "#fff"
+          backgroundColor: '#fff'
         }}
         onPress={() => {
           props.setShowOriginal(true);
+          props.setShowOptions(false)
+          props.setShowComments(false)
         }}>
-        <Text style={props.showOriginal ? styles.allGrayFill : styles.all}>{PreferredLanguageText("viewShared")}</Text>
+        <Text style={!props.showOptions && props.showOriginal && !props.showComments ? styles.allGrayFill : styles.all}>
+          {PreferredLanguageText("viewShared")}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{
+          justifyContent: "center",
+          flexDirection: "column",
+          backgroundColor: '#fff'
+        }}
+        onPress={() => {
+          props.setShowOptions(true)
+          props.setShowOriginal(true);
+          props.setShowComments(false)
+        }}>
+        <Text style={props.showOptions ? styles.allGrayFill : styles.all}>
+          Details
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{
+          justifyContent: "center",
+          flexDirection: "column",
+          backgroundColor: '#fff'
+        }}
+        onPress={() => {
+          props.setShowComments(true)
+          props.setShowOriginal(true);
+          props.setShowOptions(false)
+        }}>
+        <Text style={props.showComments ? styles.allGrayFill : styles.all}>
+          Comments
+        </Text>
       </TouchableOpacity>
       {(isOwner && submission) || isQuiz ? null : (
         <TouchableOpacity
           style={{
             justifyContent: "center",
             flexDirection: "column",
-            backgroundColor: "#fff"
+            backgroundColor: '#fff'
           }}
           onPress={() => {
             props.setShowOriginal(false);
+            props.setShowOptions(false)
+            props.setShowComments(false)
           }}>
           <Text style={!props.showOriginal && !props.viewStatus ? styles.allGrayFill : styles.all}>
             {submission ? PreferredLanguageText("mySubmission") : PreferredLanguageText("myNotes")}
@@ -1613,14 +1654,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           style={{
             justifyContent: "center",
             flexDirection: "column",
-            backgroundColor: "#fff"
+            backgroundColor: '#fff'
           }}
           onPress={() => {
             props.setShowOriginal(false);
             setIsQuiz(false);
+            props.setShowOptions(false)
+            props.setShowComments(true)
             props.changeViewStatus();
           }}>
-          <Text style={props.viewStatus ? styles.allGrayFill : styles.all}>Status</Text>
+          <Text style={props.viewStatus ? styles.allGrayFill : styles.all}>Responses</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -1630,7 +1673,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     return isQuiz && !props.cue.graded ? (
       isQuizTimed && (!props.cue.submittedAt || props.cue.submittedAt !== "") ? (
         initiatedAt && initDuration !== 0 && props.cue.submittedAt === "" ? (
-        <View
+          <View
             style={{
               flex: 1,
               flexDirection: "row",
@@ -1859,12 +1902,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           </View>
         ) : (
           url && url !== '' ?
-            <View
-              key={url}
-              style={{ flex: 1 }}>
+            <View key={url} style={{ zIndex: 1, height: 50000 }}>
               <Webview
-                key={url}
+                fullScreen={true}
                 url={url}
+                key={url}
               />
             </View> : null
         )
@@ -1901,10 +1943,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           </View>
         ) : (
           submissionUrl && submissionUrl !== '' ?
-            <View
-              key={submissionUrl}
-              style={{ flex: 1 }}>
-              <Webview url={submissionUrl} key={submissionUrl} />
+            <View key={submissionUrl} style={{ zIndex: 1, height: 50000 }}>
+              <Webview
+                fullScreen={true}
+                key={submissionUrl}
+                url={submissionUrl}
+              />
             </View> : null
         )
       ) : (
@@ -2388,41 +2432,40 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   />
                 </View>
               ) : (
-                <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
-                  <TouchableOpacity
-                    style={customCategory === "" ? styles.allGrayOutline : styles.all}
-                    onPress={() => {
-                      setCustomCategory("");
-                    }}>
-                    <Text
-                      style={{
-                        color: "#a2a2aa",
-                        lineHeight: 20,
-                        fontSize: 11
-                      }}>
-                      {PreferredLanguageText("none")}
+                <Menu
+                  onSelect={(cat: any) => setCustomCategory(cat)}>
+                  <MenuTrigger>
+                    <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2aa' }}>
+                      {customCategory === '' ? 'None' : customCategory}<Ionicons name='caret-down' size={14} />
                     </Text>
-                  </TouchableOpacity>
-                  {customCategories.map((category: string) => {
-                    return (
-                      <TouchableOpacity
-                        key={Math.random()}
-                        style={customCategory === category ? styles.allGrayOutline : styles.all}
-                        onPress={() => {
-                          setCustomCategory(category);
-                        }}>
-                        <Text
-                          style={{
-                            color: "#a2a2aa",
-                            lineHeight: 20,
-                            fontSize: 11
-                          }}>
-                          {category}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+                  </MenuTrigger>
+                  <MenuOptions customStyles={{
+                    optionsContainer: {
+                      padding: 10,
+                      borderRadius: 15,
+                      shadowOpacity: 0,
+                      borderWidth: 1,
+                      borderColor: '#f4f4f6'
+                    }
+                  }}>
+                    <MenuOption
+                      value={''}>
+                      <Text>
+                        None
+                      </Text>
+                    </MenuOption>
+                    {
+                      customCategories.map((category: any) => {
+                        return <MenuOption
+                          value={category}>
+                          <Text>
+                            {category}
+                          </Text>
+                        </MenuOption>
+                      })
+                    }
+                  </MenuOptions>
+                </Menu>
               )}
             </View>
             <View
@@ -2564,31 +2607,48 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               width: "90%",
               backgroundColor: "white"
             }}>
-            <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
-              {channels.map(channel => {
-                return (
-                  <TouchableOpacity
-                    key={Math.random()}
-                    style={shareWithChannelId === channel._id ? styles.allOutline : styles.allBlack}
-                    onPress={() => {
-                      if (shareWithChannelId === "") {
-                        setShareWithChannelId(channel._id);
-                      } else {
-                        setShareWithChannelId("");
-                      }
-                    }}>
-                    <Text
-                      style={{
-                        lineHeight: 20,
-                        fontSize: 11,
-                        color: shareWithChannelId === channel._id ? "#fff" : "#202025"
-                      }}>
-                      {channel.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            <Menu
+              onSelect={(channel: any) => {
+                if (channel === '') {
+                  setShareWithChannelId('')
+                  setShareWithChannelName('')
+                } else {
+                  setShareWithChannelId(channel._id)
+                  setShareWithChannelName(channel.name)
+                }
+              }}>
+              <MenuTrigger>
+                <Text style={{ fontFamily: 'inter', fontSize: 14, color: shareWithChannelName === '' ? '#a2a2aa' : '#202025' }}>
+                  {shareWithChannelName === '' ? 'None' : shareWithChannelName}<Ionicons name='caret-down' size={14} />
+                </Text>
+              </MenuTrigger>
+              <MenuOptions customStyles={{
+                optionsContainer: {
+                  padding: 10,
+                  borderRadius: 15,
+                  shadowOpacity: 0,
+                  borderWidth: 1,
+                  borderColor: '#f4f4f6'
+                }
+              }}>
+                <MenuOption
+                  value={''}>
+                  <Text>
+                    None
+                  </Text>
+                </MenuOption>
+                {
+                  channels.map((channel: any) => {
+                    return <MenuOption
+                      value={channel}>
+                      <Text>
+                        {channel.name}
+                      </Text>
+                    </MenuOption>
+                  })
+                }
+              </MenuOptions>
+            </Menu>
           </View>
           <View
             style={{
@@ -2643,7 +2703,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <Text
             style={{
               fontSize: 11,
-              color: "#a2a2aa", 
+              color: "#a2a2aa",
               textTransform: 'uppercase'
             }}>
             Reminder
@@ -2736,24 +2796,37 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   backgroundColor: "white"
                 }}>
                 <Text style={styles.text}>{PreferredLanguageText("remindEvery")}</Text>
-                <Picker
-                  style={styles.picker}
-                  itemStyle={{
-                    fontSize: 16
-                  }}
-                  selectedValue={frequency}
-                  onValueChange={(itemValue: any) => setFrequency(itemValue)}>
-                  {timedFrequencyOptions.map((item: any, index: number) => {
-                    return (
-                      <Picker.Item
-                        color={frequency === item.value ? "#3B64F8" : "#202025"}
-                        label={item.value === "0" && cue.channelId !== "" ? "Once" : item.label}
-                        value={item.value}
-                        key={index}
-                      />
-                    );
-                  })}
-                </Picker>
+                <Menu
+                  onSelect={(cat: any) => {
+                    setFrequency(cat.value)
+                    setFrequencyName(cat.label)
+                  }}>
+                  <MenuTrigger>
+                    <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2aa' }}>
+                      {frequencyName}<Ionicons name='caret-down' size={14} />
+                    </Text>
+                  </MenuTrigger>
+                  <MenuOptions customStyles={{
+                    optionsContainer: {
+                      padding: 10,
+                      borderRadius: 15,
+                      shadowOpacity: 0,
+                      borderWidth: 1,
+                      borderColor: '#f4f4f6'
+                    }
+                  }}>
+                    {
+                      timedFrequencyOptions.map((item: any) => {
+                        return <MenuOption
+                          value={item}>
+                          <Text>
+                            {item.value === '0' && channelId !== '' ? 'Once' : item.label}
+                          </Text>
+                        </MenuOption>
+                      })
+                    }
+                  </MenuOptions>
+                </Menu>
               </View>
             ) : (
               <View
@@ -2956,7 +3029,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     return (<View style={{ minHeight: Dimensions.get('window').height }}>
       <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20 }}>
-        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
+        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
           Available from {moment(initiateAt).format('MMMM Do YYYY, h:mm a')}
         </Text>
       </View>
@@ -2967,13 +3040,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
   if (props.cue.submission && props.cue.submittedAt !== null && !props.cue.releaseSubmission && !isOwner) {
     return (<View style={{ minHeight: Dimensions.get('window').height }}>
-    <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20 }}>
-      <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
-        Your instructor has not made this submission available.
-      </Text>
-    </View>
-  </View>)
-}
+      <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20 }}>
+        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
+          Your instructor has not made this submission available.
+        </Text>
+      </View>
+    </View>)
+  }
 
 
   return (
@@ -3009,170 +3082,188 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <View
             style={{
               width: "100%",
-              flexDirection: "row",
-              alignItems: 'center',
               marginBottom: 5,
               backgroundColor: "#fff"
             }}>
+            <View style={{ backgroundColor: 'white', flex: 1, flexDirection: 'row', paddingBottom: 10 }}>
+              {props.cue.graded && props.cue.score !== undefined && props.cue.score !== null && !isQuiz ? (
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: "white",
+                    height: 22,
+                    overflow: "hidden",
+                    paddingHorizontal: 10,
+                    marginLeft: 10,
+                    borderRadius: 10,
+                    backgroundColor: "#3B64F8",
+                    lineHeight: 20,
+                    paddingTop: 1
+                  }}>
+                  {props.cue.score}%
+                </Text>
+              ) : null}
+              <TouchableOpacity
+                onPress={() => setStarred(!starred)}
+                style={{
+                  backgroundColor: "white",
+                  flex: 1,
+                  marginTop: -20,
+                  // paddingRight: 25
+                }}>
+                <Text
+                  style={{
+                    textAlign: "right",
+                    lineHeight: 34,
+                    marginTop: 0,
+                    backgroundColor: 'white'
+                  }}>
+                  <Ionicons name="bookmark" size={34} color={starred ? "#d91d56" : "#a2a2aa"} />
+                </Text>
+              </TouchableOpacity>
+            </View>
             {renderCueTabs()}
-            {props.cue.graded && props.cue.score !== undefined && props.cue.score !== null && !isQuiz ? (
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: "white",
-                  height: 22,
-                  overflow: "hidden",
-                  paddingHorizontal: 10,
-                  marginLeft: 10,
-                  borderRadius: 10,
-                  backgroundColor: "#3B64F8",
-                  lineHeight: 20,
-                  paddingTop: 1
-                }}>
-                {props.cue.score}%
-              </Text>
-            ) : null}
-            <TouchableOpacity
-              onPress={() => setStarred(!starred)}
-              style={{
-                backgroundColor: "white",
-                flex: 1,
-                marginTop: -25,
-                // paddingRight: 25
-              }}>
-              <Text
-                style={{
-                  textAlign: "right",
-                  lineHeight: 34,
-                  marginTop: 40
-                }}>
-                <Ionicons name="bookmark" size={34} color={starred ? "#d91d56" : "#a2a2aa"} />
-              </Text>
-            </TouchableOpacity>
           </View>
         ) : (
-          <View style={{ flexDirection: "row", marginBottom: 20 }}>
-            <View style={{ backgroundColor: "white", flex: 1 }}>
-              <Text
-                ellipsizeMode="tail"
-                style={{
-                  fontSize: 11,
-                  color: "#202025",
-                  paddingBottom: 20,
-                  textTransform: "uppercase",
-                  // paddingLeft: 10,
-                  paddingTop: 0
-                }}>
-                {PreferredLanguageText("update")}
+          <View style={{ flexDirection: "row" }}>
+            <TouchableOpacity
+              style={{
+                justifyContent: "center",
+                flexDirection: "column",
+                backgroundColor: '#fff'
+              }}
+              onPress={() => {
+                props.setShowOptions(false)
+                // props.setShowOptions(false)
+              }}
+            >
+              <Text style={!props.showOptions ? styles.allGrayFill : styles.all}>
+                {PreferredLanguageText("viewShared")}
               </Text>
-            </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                justifyContent: "center",
+                flexDirection: "column",
+                backgroundColor: '#fff'
+              }}
+              onPress={() => {
+                props.setShowOptions(true)
+              }}>
+              <Text style={props.showOptions ? styles.allGrayFill : styles.all}>
+                Details
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setStarred(!starred)}
               style={{
                 backgroundColor: "white",
-                flex: 1,
-                marginTop: -25,
-                // paddingRight: 25
+                flex: 1
               }}>
               <Text
                 style={{
                   textAlign: "right",
                   lineHeight: 34,
-                  marginTop: 20
+                  marginTop: -25,
+                  paddingBottom: 25,
+                  width: "100%"
                 }}>
                 <Ionicons name="bookmark" size={34} color={starred ? "#d91d56" : "#a2a2aa"} />
               </Text>
             </TouchableOpacity>
           </View>
         )}
-        <View
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: Dimensions.get("window").width < 768 ? "column-reverse" : "row",
-            paddingBottom: 4,
-            backgroundColor: "white"
-          }}
-          onTouchStart={() => Keyboard.dismiss()}>
-          <View
-            style={{
-              flexDirection: submissionImported || showImportOptions ? "row" : "column",
-              flex: 1,
-              backgroundColor: "#fff"
-            }}>
-            {renderRichToolbar()}
-            {(!props.showOriginal && props.cue.submission && !submissionImported && showImportOptions)
-              || (props.showOriginal && showImportOptions && isOwner) ? (
-              <FileUpload
-                back={() => setShowImportOptions(false)}
-                onUpload={(u: any, t: any) => {
-                  const obj = {
-                    url: u,
-                    type: t,
-                    title: props.showOriginal ? title : submissionTitle
-                  };
-                  if (props.showOriginal) {
-                    setOriginal(JSON.stringify(obj))
-                  } else {
-                    setCue(JSON.stringify(obj))
-                  }
-                  setShowImportOptions(false);
-                }}
-              />
-            ) : null}
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              backgroundColor: "#fff",
-              marginTop: 10
-            }}>
-            {!props.showOriginal &&
-              props.cue.submission &&
-              currentDate < deadline &&
-              !submissionImported &&
-              !showImportOptions &&
-              !props.cue.graded && !isQuiz ? (
-              <Text
+        {
+          props.showOptions || props.showComments ? null :
+            <View
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: Dimensions.get("window").width < 768 ? "column-reverse" : "row",
+                paddingBottom: 4,
+                backgroundColor: "white"
+              }}
+              onTouchStart={() => Keyboard.dismiss()}>
+              <View
                 style={{
-                  color: "#a2a2aa",
-                  fontSize: 11,
-                  lineHeight: 30,
-                  textAlign: "right",
-                  // paddingRight: 10,
-                  paddingLeft: 10,
-                  textTransform: "uppercase"
-                }}
-                onPress={() => {
-                  setShowImportOptions(true);
-                  fileUpload();
+                  flexDirection: submissionImported || showImportOptions ? "row" : "column",
+                  flex: 1,
+                  backgroundColor: "#fff"
                 }}>
-                {PreferredLanguageText("import")} {Dimensions.get("window").width < 768 ? "" : "|  "}
-              </Text>
-            ) :
-              (props.showOriginal && !isOwner) || // viewing import as non import
-                (props.showOriginal && isOwner && imported) ||  // viewing import as owner
-                (!props.showOriginal && isOwner && (props.cue.channelId && props.cue.channelId !== '')) || // no submission as owner
-                (!props.showOriginal && submissionImported && !isOwner) ||  // submitted as non owner
-                (!props.showOriginal && !submission && (props.cue.channelId && props.cue.channelId !== '')) || // my notes
-                isQuiz
-                ? null :
-                (
-                  <Text style={{
-                    color: '#a2a2aa',
-                    fontSize: 11,
-                    lineHeight: 30,
-                    textAlign: 'right',
-                    paddingLeft: 10,
-                    // paddingRight: 10,
-                    textTransform: 'uppercase'
-                  }}
-                    onPress={() => setShowImportOptions(true)}
-                  >
-                    {PreferredLanguageText('import')}     {Dimensions.get('window').width < 768 ? '' : '   '}
+                {renderRichToolbar()}
+                {(!props.showOriginal && props.cue.submission && !submissionImported && showImportOptions)
+                  || (props.showOriginal && showImportOptions && isOwner) ? (
+                  <FileUpload
+                    back={() => setShowImportOptions(false)}
+                    onUpload={(u: any, t: any) => {
+                      const obj = {
+                        url: u,
+                        type: t,
+                        title: props.showOriginal ? title : submissionTitle
+                      };
+                      if (props.showOriginal) {
+                        setOriginal(JSON.stringify(obj))
+                      } else {
+                        setCue(JSON.stringify(obj))
+                      }
+                      setShowImportOptions(false);
+                    }}
+                  />
+                ) : null}
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: 'flex-end',
+                  backgroundColor: "#fff",
+                  marginTop: 10
+                }}>
+                {!props.showOriginal &&
+                  props.cue.submission &&
+                  currentDate < deadline &&
+                  !submissionImported &&
+                  !showImportOptions &&
+                  !props.cue.graded && !isQuiz ? (
+                  <Text
+                    style={{
+                      color: "#a2a2aa",
+                      fontSize: 11,
+                      lineHeight: 30,
+                      textAlign: "right",
+                      // paddingRight: 10,
+                      paddingLeft: 10,
+                      textTransform: "uppercase"
+                    }}
+                    onPress={() => {
+                      setShowImportOptions(true);
+                      fileUpload();
+                    }}>
+                    {PreferredLanguageText("import")} {Dimensions.get("window").width < 768 ? "" : "|  "}
                   </Text>
-                )}
-            {/* <Text
+                ) :
+                  (props.showOriginal && !isOwner) || // viewing import as non import
+                    (props.showOriginal && isOwner && imported) ||  // viewing import as owner
+                    (!props.showOriginal && isOwner && (props.cue.channelId && props.cue.channelId !== '')) || // no submission as owner
+                    (!props.showOriginal && submissionImported && !isOwner) ||  // submitted as non owner
+                    (!props.showOriginal && !submission && (props.cue.channelId && props.cue.channelId !== '')) || // my notes
+                    isQuiz
+                    ? null :
+                    (
+                      <Text style={{
+                        color: '#a2a2aa',
+                        fontSize: 11,
+                        lineHeight: 30,
+                        textAlign: 'right',
+                        paddingLeft: 10,
+                        // paddingRight: 10,
+                        textTransform: 'uppercase'
+                      }}
+                        onPress={() => setShowImportOptions(true)}
+                      >
+                        {PreferredLanguageText('import')}     {Dimensions.get('window').width < 768 ? '' : '   '}
+                      </Text>
+                    )}
+                {/* <Text
               style={{
                 color: "#a2a2aa",
                 fontSize: 11,
@@ -3183,182 +3274,175 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               {now.toString().split(" ")[1] + " " + now.toString().split(" ")[2] + ", " + now.toString().split(" ")[3]}
             </Text> */}
-          </View>
-        </View>
+              </View>
+            </View>
+        }
         {renderEquationEditor()}
-        <ScrollView
-          style={{
-            paddingBottom: 25,
-            borderBottomColor: "#f4f4f6",
-            borderBottomWidth: 1
-          }}
-          onScrollBeginDrag={Keyboard.dismiss}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={true}
-          scrollEventThrottle={1}
-          keyboardDismissMode={"on-drag"}
-          overScrollMode={"always"}
-          onScroll={() => Keyboard.dismiss()}
-          nestedScrollEnabled={true}>
-          {props.showOriginal && (imported || isQuiz) ? (
-            <View
-              style={{
-                flexDirection: "row",
-                marginRight: 0,
-                marginLeft: 0,
-                backgroundColor: "#fff"
-              }}>
-              <View
-                style={{
-                  width: "65%",
-                  alignSelf: "flex-start",
-                  backgroundColor: "#fff"
-                }}>
-                <TextInput
-                  editable={isOwner}
-                  value={title}
-                  style={styles.input}
-                  placeholder={"Title"}
-                  onChangeText={val => setTitle(val)}
-                  placeholderTextColor={"#a2a2aa"}
-                />
-              </View>
-              {renderQuizTimerOrUploadOptions()}
-            </View>
-          ) : null}
-          {renderCueRemarks()}
-          {!props.showOriginal && submissionImported && !isQuiz ? (
-            <View
-              style={{
-                flexDirection: "row",
-                backgroundColor: "white"
-              }}>
-              <View
-                style={{
-                  width: "85%",
-                  alignSelf: "flex-start",
-                  backgroundColor: "white"
-                }}>
-                <TextInput
-                  value={submissionTitle}
-                  style={styles.input}
-                  placeholder={"Title"}
-                  onChangeText={val => setSubmissionTitle(val)}
-                  placeholderTextColor={"#a2a2aa"}
-                />
-              </View>
-              {props.cue.submittedAt && props.cue.submittedAt !== "" ? (
-                <View
-                  style={{
-                    width: 175,
-                    marginLeft: 25,
-                    marginTop: 5,
-                    alignSelf: "flex-start"
-                  }}>
-                  {/* <a download={true} href={submissionUrl} style={{ textDecoration: 'none' }}> */}
-                  <TouchableOpacity style={{ backgroundColor: "white" }} onPress={() => download(true)}>
-                    <Ionicons name="cloud-download-outline" color="#a2a2aa" size={20} style={{ alignSelf: "center" }} />
-                    <Text
+        <View style={{ backgroundColor: 'white' }}>
+          {
+            props.showComments || props.showOptions ? null :
+              <View style={{ backgroundColor: '#fff' }}>
+                {props.showOriginal && (imported || isQuiz) ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      marginRight: 0,
+                      marginLeft: 0,
+                      backgroundColor: "#fff"
+                    }}>
+                    <View
                       style={{
-                        fontSize: 9,
-                        color: "#a2a2aa",
-                        textAlign: "center"
+                        width: "65%",
+                        alignSelf: "flex-start",
+                        backgroundColor: "#fff"
                       }}>
-                      Download
-                    </Text>
-                  </TouchableOpacity>
-                  {/* </a> */}
-                  {
-                    props.cue.graded || (currentDate > deadline) ? null :
-                      <TouchableOpacity
+                      <TextInput
+                        editable={isOwner}
+                        value={title}
+                        style={styles.input}
+                        placeholder={"Title"}
+                        onChangeText={val => setTitle(val)}
+                        placeholderTextColor={"#a2a2aa"}
+                      />
+                    </View>
+                    {renderQuizTimerOrUploadOptions()}
+                  </View>
+                ) : null}
+                {renderCueRemarks()}
+                {!props.showOriginal && submissionImported && !isQuiz ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      backgroundColor: "white"
+                    }}>
+                    <View
+                      style={{
+                        width: "85%",
+                        alignSelf: "flex-start",
+                        backgroundColor: "white"
+                      }}>
+                      <TextInput
+                        value={submissionTitle}
+                        style={styles.input}
+                        placeholder={"Title"}
+                        onChangeText={val => setSubmissionTitle(val)}
+                        placeholderTextColor={"#a2a2aa"}
+                      />
+                    </View>
+                    {props.cue.submittedAt && props.cue.submittedAt !== "" ? (
+                      <View
                         style={{
-                          marginLeft: 15,
-                          backgroundColor: '#fff'
-                        }}
-                        onPress={() => clearAll()}
-                      >
-                        <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
-                        <Text
-                          style={{
-                            fontSize: 9,
-                            color: "#a2a2aa",
-                            textAlign: "center"
-                          }}>
-                          Remove
-                        </Text>
-                      </TouchableOpacity>
-                  }
-                </View>
-              ) : <TouchableOpacity
-                style={{
-                  marginLeft: 15,
-                  paddingTop: 10,
-                  backgroundColor: '#fff'
-                }}
-                onPress={() => clearAll()}
-              >
-                <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
-                <Text
+                          width: 175,
+                          marginLeft: 25,
+                          marginTop: 5,
+                          alignSelf: "flex-start"
+                        }}>
+                        {/* <a download={true} href={submissionUrl} style={{ textDecoration: 'none' }}> */}
+                        <TouchableOpacity style={{ backgroundColor: "white" }} onPress={() => download(true)}>
+                          <Ionicons name="cloud-download-outline" color="#a2a2aa" size={20} style={{ alignSelf: "center" }} />
+                          <Text
+                            style={{
+                              fontSize: 9,
+                              color: "#a2a2aa",
+                              textAlign: "center"
+                            }}>
+                            Download
+                          </Text>
+                        </TouchableOpacity>
+                        {/* </a> */}
+                        {
+                          props.cue.graded || (currentDate > deadline) ? null :
+                            <TouchableOpacity
+                              style={{
+                                marginLeft: 15,
+                                backgroundColor: '#fff'
+                              }}
+                              onPress={() => clearAll()}
+                            >
+                              <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
+                              <Text
+                                style={{
+                                  fontSize: 9,
+                                  color: "#a2a2aa",
+                                  textAlign: "center"
+                                }}>
+                                Remove
+                              </Text>
+                            </TouchableOpacity>
+                        }
+                      </View>
+                    ) : <TouchableOpacity
+                      style={{
+                        marginLeft: 15,
+                        paddingTop: 10,
+                        backgroundColor: '#fff'
+                      }}
+                      onPress={() => clearAll()}
+                    >
+                      <Ionicons name="trash-outline" color="#a2a2aa" size={20} style={{ alignSelf: 'center' }} />
+                      <Text
+                        style={{
+                          fontSize: 9,
+                          color: "#a2a2aa",
+                          textAlign: "center"
+                        }}>
+                        Remove
+                      </Text>
+                    </TouchableOpacity>}
+                  </View>
+                ) : null}
+                {submissionImported || imported ? (
+                  // This is because the toolbar wont have an editor to connect with if the file is imported
+                  <RichEditor
+                    key={props.showOriginal.toString() + reloadEditorKey.toString()}
+                    disabled={true}
+                    containerStyle={{
+                      display: "none"
+                    }}
+                    ref={RichText}
+                    style={{
+                      display: "none"
+                    }}
+                  />
+                ) : null}
+                {isQuiz && cueGraded && !isV0Quiz ? <QuizGrading
+                  problems={problems}
+                  solutions={quizSolutions}
+                  partiallyGraded={false}
+                  //  onGradeQuiz={onGradeQuiz}
+                  comment={comment}
+                  isOwner={false}
+                  headers={headers}
+                /> : renderMainCueContent()}
+                {/* <TouchableOpacity
+                  onPress={() => setShowOptions(!showOptions)}
                   style={{
-                    fontSize: 9,
-                    color: "#a2a2aa",
-                    textAlign: "center"
+                    width: "100%",
+                    flexDirection: "row",
+                    // marginTop: 20,
+                    backgroundColor: "#fff",
+                    borderTopColor: "#f4f4f6",
+                    // borderTopWidth: 1,
+                    marginTop: 20,
+                    paddingTop: 20,
+                    paddingBottom: 20
                   }}>
-                  Remove
-                </Text>
-              </TouchableOpacity>}
-            </View>
-          ) : null}
-          {submissionImported || imported ? (
-            // This is because the toolbar wont have an editor to connect with if the file is imported
-            <RichEditor
-              key={props.showOriginal.toString() + reloadEditorKey.toString()}
-              disabled={true}
-              containerStyle={{
-                display: "none"
-              }}
-              ref={RichText}
-              style={{
-                display: "none"
-              }}
-            />
-          ) : null}
-          {isQuiz && cueGraded && !isV0Quiz ? <QuizGrading 
-                         problems={problems}
-                         solutions={quizSolutions}
-                         partiallyGraded={false}
-                        //  onGradeQuiz={onGradeQuiz}
-                         comment={comment}
-                         isOwner={false}
-                         headers={headers}
-                    /> : renderMainCueContent()}
-          <TouchableOpacity
-            onPress={() => setShowOptions(!showOptions)}
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              // marginTop: 20,
-              backgroundColor: "#fff",
-              borderTopColor: "#f4f4f6",
-              // borderTopWidth: 1,
-              marginTop: 20,
-              paddingTop: 20,
-              paddingBottom: 20
-            }}>
-            <Text style={{
-              lineHeight: 23,
-              marginRight: 10,
-              color: '#a2a2aa',
-              fontSize: 11,
-              textTransform: 'uppercase'
-            }}>
-              {PreferredLanguageText('options') + '       '}
-            </Text>
-            <Text style={{ lineHeight: 21 }}>
-              <Ionicons size={14} name={showOptions ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2aa' />
-            </Text>
-          </TouchableOpacity>
-          <Collapsible collapsed={!showOptions} key={showOptions.toString()}>
+                  <Text style={{
+                    lineHeight: 23,
+                    marginRight: 10,
+                    color: '#a2a2aa',
+                    fontSize: 11,
+                    textTransform: 'uppercase'
+                  }}>
+                    {PreferredLanguageText('options') + '       '}
+                  </Text>
+                  <Text style={{ lineHeight: 21 }}>
+                    <Ionicons size={14} name={showOptions ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2aa' />
+                  </Text>
+                </TouchableOpacity> */}
+              </View>
+          }
+          <Collapsible collapsed={!props.showOptions} key={props.showOptions.toString()}>
             <View
               style={{
                 flex: 1,
@@ -3415,7 +3499,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             </View> : null}
             {renderFooter()}
           </Collapsible>
-        </ScrollView>
+        </View>
       </Animated.View>
     </View>
   );

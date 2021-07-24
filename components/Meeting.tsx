@@ -215,7 +215,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const renderPastMeetings = () => {
         return (pastMeetings.length === 0 ?
             <View style={{ backgroundColor: 'white', flex: 1 }}>
-                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                     {PreferredLanguageText('noPastMeetings')}
                 </Text>
             </View>
@@ -313,13 +313,14 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             <Text
                 ellipsizeMode="tail"
                 style={{
-                    color: '#202025',
-                    fontSize: 11,
-                    // paddingBottom: 20,
-                    textTransform: "uppercase",
+                    fontSize: 21,
+                    paddingBottom: 20,
+                    fontFamily: 'inter',
+                    // textTransform: "uppercase",
                     // paddingLeft: 10,
                     flex: 1,
-                    lineHeight: 25
+                    lineHeight: 25,
+                    color: '#202025',
                 }}
             >
                 {PreferredLanguageText('classroom')}
@@ -512,7 +513,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 {
                                     attendances.length === 0 ?
                                         <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                                 {PreferredLanguageText('noAttendances')}
                                             </Text>
                                         </View>

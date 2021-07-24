@@ -241,14 +241,17 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
                 <Text
                     style={{
-                        fontSize: 11,
-                        paddingBottom: 75,
-                        textTransform: "uppercase",
+                        fontSize: 21,
+                        // paddingBottom: 20,
+                        fontFamily: 'inter',
+                        // textTransform: "uppercase",
+                        // paddingLeft: 10,
                         flex: 1,
+                        lineHeight: 25,
                         color: '#202025',
-                        lineHeight: 25
+                        paddingBottom: 50
                     }}>
-                    SETTINGS
+                    Settings
                 </Text>
                 <ScrollView
                     style={{
@@ -258,7 +261,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 >
                     <View style={{ flex: 1, paddingBottom: 50, backgroundColor: '#fff' }}>
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                                 {PreferredLanguageText('channel') + ' ' + PreferredLanguageText('name')}
                             </Text>
                             <TextInput
@@ -273,7 +276,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             />
                         </View>
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10 }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                                 {PreferredLanguageText('enrolmentPassword')}
                             </Text>
                             <TextInput
@@ -285,7 +288,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 required={false}
                             />
                         </View>
-                        <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10, backgroundColor: '#fff' }}>
+                        <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                             Subscribers
                         </Text>
                         <View
@@ -334,7 +337,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 submitButtonText="Done"
                             />
                         </View>
-                        <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 10, backgroundColor: '#fff', paddingTop: 40 }}>
+                        <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
                             Moderators
                         </Text>
                         <View

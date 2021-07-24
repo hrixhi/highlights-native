@@ -372,7 +372,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
       <View style={styles.screen} key={1}>
         <View style={{ width: "100%", backgroundColor: "white" }}>
           <View style={styles.colorBar}>
-            <Text style={{ fontSize: 22, color: "#a2a2aa" }}>
+            <Text style={{ fontSize: 21, color: "#a2a2aa" }}>
               {PreferredLanguageText("internetRequiried")}
             </Text>
           </View>
@@ -389,12 +389,14 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
       >
         <Text
           style={{
-            color: '#202025',
-            fontSize: 11,
+            fontSize: 21,
             paddingBottom: 20,
-            textTransform: 'uppercase',
+            fontFamily: 'inter',
+            // textTransform: "uppercase",
             // paddingLeft: 10,
-            // paddingTop: 5
+            flex: 1,
+            lineHeight: 25,
+            color: '#202025',
           }}
         >
           {!loggedIn
@@ -422,7 +424,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               paddingBottom: 20
             }}
           >
-            <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
               {PreferredLanguageText("currentPassword")}
             </Text>
 
@@ -434,7 +436,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               onChangeText={val => setCurrentPassword(val)}
               placeholderTextColor={"#a2a2aa"}
             />
-            <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
               {PreferredLanguageText("newPassword")}
             </Text>
             <TextInput
@@ -446,7 +448,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               errorText={newPasswordValidError}
               footerMessage={PreferredLanguageText("atleast8char")}
             />
-            <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
               {PreferredLanguageText("confirmNewPassword")}
             </Text>
             <TextInput
@@ -467,7 +469,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               paddingBottom: 20
             }}
           >
-            <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
               {PreferredLanguageText("email")}
             </Text>
             <TextInput
@@ -479,7 +481,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               placeholderTextColor={"#a2a2aa"}
               required={true}
             />
-            <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
               {PreferredLanguageText("fullName")}
             </Text>
             <TextInput
@@ -490,7 +492,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
               placeholderTextColor={"#a2a2aa"}
               required={true}
             />
-            <Text style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}>
+            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
               {PreferredLanguageText("displayName")}
             </Text>
             <TextInput
@@ -504,7 +506,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
             {loggedIn ? null : (
               <View style={{ backgroundColor: "#fff" }}>
                 <Text
-                  style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}
+                  style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}
                 >
                   {PreferredLanguageText("password")}
                 </Text>
@@ -519,7 +521,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
                   errorText={passwordValidError}
                 />
                 <Text
-                  style={{ color: "#202025", fontSize: 14, paddingBottom: 10 }}
+                  style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}
                 >
                   {PreferredLanguageText("confirmPassword")}
                 </Text>

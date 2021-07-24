@@ -37,6 +37,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
     const [submission, setSubmission] = useState(props.cue.submission ? props.cue.submission : false)
     const [showOriginal, setShowOriginal] = useState(props.cue.channelId && props.cue.channelId !== '' ? true : false)
     const [isQuiz, setIsQuiz] = useState(false)
+    const [showOptions, setShowOptions] = useState(false)
+    const [showComments, setShowComments] = useState(false)
 
 
     useEffect(() => {
@@ -141,7 +143,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                                 graded: status.graded,
                                                 userId: status.userId,
                                                 submittedAt: status.submittedAt
-                                                
+
                                             });
                                         });
                                         setSubscribers(subs);
@@ -321,7 +323,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             viewStatus={viewStatus}
                             showOriginal={showOriginal}
                             setShowOriginal={(val: boolean) => setShowOriginal(val)}
-                            // markCueAsRead={() => props.markCueAsRead()}
+                            showComments={showComments}
+                            setShowComments={(s: any) => setShowComments(s)}
+                            showOptions={showOptions}
+                            setShowOptions={(o: any) => setShowOptions(o)}
                         />
                         {!Number.isNaN(Number(cueId)) ||
                             !props.channelId ||
@@ -334,23 +339,24 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 }}
                             />
                         ) : (
-                            <View
-                                key={Math.random()}
-                                style={{ backgroundColor: "white" }}
-                            >
-                                <ThreadsList
-                                    channelCreatedBy={
-                                        props.channelCreatedBy
-                                    }
-                                    key={JSON.stringify(threads)}
-                                    threads={threads}
-                                    cueId={cueId}
-                                    channelId={props.channelId}
-                                    channelName={props.filterChoice}
-                                    closeModal={() => props.closeModal()}
-                                    reload={() => loadThreadsAndStatuses()}
-                                />
-                            </View>
+                            showComments ?
+                                <View
+                                    key={Math.random()}
+                                    style={{ backgroundColor: "white" }}
+                                >
+                                    <ThreadsList
+                                        channelCreatedBy={
+                                            props.channelCreatedBy
+                                        }
+                                        key={JSON.stringify(threads)}
+                                        threads={threads}
+                                        cueId={cueId}
+                                        channelId={props.channelId}
+                                        channelName={props.filterChoice}
+                                        closeModal={() => props.closeModal()}
+                                        reload={() => loadThreadsAndStatuses()}
+                                    />
+                                </View> : null
                         )}
                     </ScrollView> : <Fragment>
                         <View style={{
@@ -367,11 +373,46 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 }}
                                 onPress={() => {
                                     setViewStatus(false)
-                                    props.resetCueUpdateCount()
                                     setShowOriginal(true)
+                                    setShowComments(false)
+                                    setShowOptions(false)
                                 }}>
                                 <Text style={showOriginal ? styles.allGrayFill : styles.all}>
                                     {PreferredLanguageText('viewShared')}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    justifyContent: "center",
+                                    flexDirection: "column",
+                                    backgroundColor: '#fff'
+                                }}
+                                onPress={() => {
+                                    // setShowOptions(true)
+                                    setViewStatus(false)
+                                    setShowOriginal(true);
+                                    setShowComments(false)
+                                    setShowOptions(true)
+                                }}>
+                                <Text style={styles.all}>
+                                    Details
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    justifyContent: "center",
+                                    flexDirection: "column",
+                                    backgroundColor: '#fff'
+                                }}
+                                onPress={() => {
+                                    // setShowOptions(true)
+                                    setViewStatus(false)
+                                    setShowOriginal(true);
+                                    setShowComments(true)
+                                    setShowOptions(false)
+                                }}>
+                                <Text style={styles.all}>
+                                    Comments
                                 </Text>
                             </TouchableOpacity>
                             {
@@ -386,6 +427,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                             setViewStatus(false)
                                             props.resetCueUpdateCount()
                                             setShowOriginal(false)
+                                            setShowComments(false)
+                                            setShowOptions(false)
                                         }}>
                                         <Text style={!showOriginal && !viewStatus ? styles.allGrayFill : styles.all}>
                                             {
@@ -405,9 +448,12 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                         }}
                                         onPress={() => {
                                             setViewStatus(true)
+                                            setShowComments(false)
+                                            setShowOptions(false)
+                                            setShowOriginal(false)
                                         }}>
                                         <Text style={viewStatus ? styles.allGrayFill : styles.all}>
-                                            Status
+                                            Responses
                                         </Text>
                                     </TouchableOpacity>
                             }
