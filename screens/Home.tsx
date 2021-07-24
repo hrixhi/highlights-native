@@ -17,7 +17,7 @@ import { defaultCues, defaultRandomShuffleFrequency, defaultSleepInfo } from '..
 import Walkthrough from '../components/Walkthrough';
 import Channels from '../components/Channels';
 import { fetchAPI } from '../graphql/FetchAPI';
-import { createUser, getSubscriptions, getCues, unsubscribe, saveConfigToCloud, saveCuesToCloud, login, getCuesFromCloud, findUserById, resetPassword, updateNotificationId } from '../graphql/QueriesAndMutations';
+import { createUser, getSubscriptions, getCues, unsubscribe, saveConfigToCloud, saveCuesToCloud, login, getCuesFromCloud, findUserById, resetPassword, updateNotificationId, markAsRead } from '../graphql/QueriesAndMutations';
 import Discussion from '../components/Discussion';
 import Subscribers from '../components/Subscribers';
 import Profile from '../components/Profile';
@@ -1316,10 +1316,49 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }, [updateCueData])
 
-  const closeModal = useCallback((val: string) => {
+  const markCueAsRead = useCallback(async () => {
+
+    console.log("Calling Mark Cue as read")
+    console.log("Printing cues", cues);
+    console.log(updateModalKey);
+    console.log(updateModalIndex);
+
+    let subCues: any = {};
+    try {
+      const value = await AsyncStorage.getItem("cues");
+      if (value) {
+        subCues = JSON.parse(value);
+      }
+    } catch (e) { }
+    if (subCues[updateModalKey].length === 0) {
+      return;
+    }
+
+    const unmodified = subCues ? subCues[updateModalKey][updateModalIndex] : {};
+
+    if (!unmodified) return;
+
+    const modified = {
+      ...unmodified,
+      status: "read"
+    }
+
+    subCues[updateModalKey][updateModalIndex] = modified
+
+    const stringifiedCues = JSON.stringify(subCues);
+    await AsyncStorage.setItem("cues", stringifiedCues);
+    reloadCueListAfterUpdate();
+
+  }, [cues, updateModalKey, updateModalIndex]) 
+
+  console.log('Cues', cues)
+
+  const closeModal = useCallback(async (val: string) => {
 
     // Update Cue locally
     if (modalType === 'Update') {
+
+      await markCueAsRead()
 
       if (updatedCueCount < 2 || val === "delete") {
         setUpdatedCueCount(0)
@@ -1439,6 +1478,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }}
         resetCueUpdateCount={() => setUpdatedCueCount(0)}
         handleReleaseSubmissionUpdate={handleReleaseSubmissionUpdate}
+        markCueAsRead={markCueAsRead}
       />
         :
         (modalType === 'Walkthrough' ? <Walkthrough
