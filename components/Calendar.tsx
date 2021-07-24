@@ -218,6 +218,18 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     if (start < new Date()) {
       Alert("Event must be set in the future.");
       return;
+    } else if (title === "") {
+      Alert("New Event/Lecture cannot be empty.");
+      return;
+    } else if (start > end) {
+      Alert("End time must be greater than start time.");
+      return
+    }
+    if (recurring) {
+      if (start > repeatTill) {
+        Alert("Repeat until must be set in the future.");
+        return
+      }
     }
 
     setIsCreatingEvents(true);
@@ -1807,7 +1819,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                   marginTop: 40,
                 }}
                 onPress={() => handleCreate()}
-                disabled={isSubmitDisabled || isCreatingEvents}
+                disabled={isCreatingEvents}
               >
                 <Text
                   style={{
