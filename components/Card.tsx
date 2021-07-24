@@ -9,7 +9,7 @@ import { htmlStringParser } from '../helpers/HTMLParser';
 const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const colorChoices: any[] = ['#d91d56', '#ED7D22', '#F8D41F', '#B8D41F', '#53BE6D'].reverse()
-    const colorScheme = useColorScheme();
+    const colorScheme = 'dark'
     const styleObject = styles(colorScheme, props.channelId)
     const starred = props.cue.starred;
     const { title, subtitle } = htmlStringParser(props.cue.channelId && props.cue.channelId !== '' ? props.cue.original : props.cue.cue)

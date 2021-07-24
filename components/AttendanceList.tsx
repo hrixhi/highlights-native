@@ -617,7 +617,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 </Text>}
                 {(pastMeetings.length === 0 || channelAttendances.length === 0 || !props.isOwner) ?  null : <Text
                     style={{
-                        color: "#a2a2aa",
+                        color: "#3b64f8",
                         fontSize: 11,
                         lineHeight: 25,
                         // paddingTop: 5,
@@ -671,7 +671,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
             {
                 channelAttendances.length === 0 || pastMeetings.length === 0 ?
                     <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
                                 pastMeetings.length === 0  ? "No past meetings" : "No Students"
                                 // PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')

@@ -9,7 +9,7 @@ import XLSX from "xlsx";
 import {
     LineChart,
     PieChart
-  } from "react-native-chart-kit";
+} from "react-native-chart-kit";
 // import RNFS from 'react-native-fs';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -32,7 +32,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
         if (scores.length === 0 || cues.length === 0) {
             return;
         }
-        
+
         const exportAoa = [];
 
         // Add row 1 with past meetings and total
@@ -83,11 +83,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             userRow.push(pointsToAdd)
 
             exportAoa.push(userRow)
-        
+
         })
 
         setExportAoa(exportAoa)
-       
+
     }, [scores, cues])
 
     const exportGrades = async () => {
@@ -95,19 +95,19 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
         const fileExtension = '.xlsx';
 
         const ws = XLSX.utils.aoa_to_sheet(exportAoa);
-		const wb = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, "Grades ");        
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Grades ");
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
-        
+
         const uri = FileSystem.cacheDirectory + 'grades.xlsx';
         await FileSystem.writeAsStringAsync(uri, wbout, {
-        encoding: FileSystem.EncodingType.Base64
+            encoding: FileSystem.EncodingType.Base64
         });
 
         await Sharing.shareAsync(uri, {
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        dialogTitle: 'MyWater data',
-        UTI: 'com.microsoft.excel.xlsx'
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            dialogTitle: 'MyWater data',
+            UTI: 'com.microsoft.excel.xlsx'
         });
 
     }
@@ -125,7 +125,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     setShowStatistics(false);
                 }}>
                 <Text style={!showStatistics ? styles.allGrayFill : styles.all}>
-                    Scores 
+                    Scores
                 </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -139,11 +139,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 }}>
                 <Text style={showStatistics ? styles.allGrayFill : styles.all}>Statistics</Text>
             </TouchableOpacity>
-    </View>)
+        </View>)
     }
 
     const renderStatistics = () => {
-        
+
 
         const mapCuesData: any = {};
 
@@ -198,7 +198,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 color,
                 legendFontColor: "#7F7F7F",
                 legendFontSize: 15,
-                
+
             }
         })
 
@@ -209,12 +209,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             fontFamily: "inter",
             color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
             style: {
-              borderRadius: 16,
+                borderRadius: 16,
             },
-            propsForLabels:{
-                fontFamily:'overpass; Arial',
+            propsForLabels: {
+                fontFamily: 'overpass; Arial',
             },
-          }
+        }
 
 
         return (<View style={{
@@ -227,19 +227,19 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             key={JSON.stringify(scores)}
         >
 
-            <Text style={{ textAlign: 'left', fontSize: 13, color: '#202025', fontFamily: 'inter', paddingBottom: 20, paddingLeft: 120}}>
-                Grade Weightage 
-            </Text> 
+            <Text style={{ textAlign: 'left', fontSize: 13, color: '#202025', fontFamily: 'inter', paddingBottom: 20, paddingLeft: 120 }}>
+                Grade Weightage
+            </Text>
             <PieChart
-            data={pieChartData}
-            width={Dimensions.get('window').width - 50}
-            height={200}
-            chartConfig={chartConfig}
-            accessor={"gradeWeight"}
-            backgroundColor={"transparent"}
-            paddingLeft={"10"}
-            // center={[10, 50]}
-            hasLegend={true}
+                data={pieChartData}
+                width={Dimensions.get('window').width - 50}
+                height={200}
+                chartConfig={chartConfig}
+                accessor={"gradeWeight"}
+                backgroundColor={"transparent"}
+                paddingLeft={"10"}
+                // center={[10, 50]}
+                hasLegend={true}
             />
             {/* {Object.keys(mapCuesData).map((cueId: any) => {
             
@@ -338,8 +338,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             })
         } */}
         </View>)
-        
-        
+
+
 
 
     }
@@ -361,19 +361,20 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 <Text
                     ellipsizeMode="tail"
                     style={{
-                        color: '#202025',
-                        fontSize: 11,
+                        fontSize: 21,
                         paddingBottom: 20,
-                        textTransform: "uppercase",
+                        fontFamily: 'inter',
+                        // textTransform: "uppercase",
                         // paddingLeft: 10,
                         flex: 1,
-                        lineHeight: 23
+                        lineHeight: 25,
+                        color: '#202025',
                     }}>
                     {PreferredLanguageText('grades')}
                 </Text>
-                {(scores.length === 0 || cues.length === 0 || !props.isOwner) ?  null : <Text
+                {(scores.length === 0 || cues.length === 0 || !props.isOwner) ? null : <Text
                     style={{
-                        color: "#a2a2aa",
+                        color: "#3b64f8",
                         fontSize: 11,
                         lineHeight: 25,
                         // paddingTop: 5,
@@ -389,11 +390,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             </View>
 
             {renderGradeStatsTabs()}
-            
+
             {
                 scores.length === 0 || cues.length === 0 ?
                     <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
                                 cues.length === 0 ? PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
                             }
@@ -504,7 +505,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </View>
                             </ScrollView>
                         </ScrollView>
-                    </View> :  renderStatistics())
+                    </View> : renderStatistics())
             }
         </View >
     );

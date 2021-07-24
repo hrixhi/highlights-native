@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, TextInput, Dimensions, Button, Switch, Linking, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, TextInput, Dimensions, Switch, Linking, KeyboardAvoidingView, Platform } from 'react-native';
 import { View, Text, TouchableOpacity } from './Themed';
 import { ScrollView } from "react-native-gesture-handler";
 import _ from 'lodash'
@@ -25,10 +25,16 @@ import Webview from './Webview';
 import QuizGrading from './QuizGrading';
 import { htmlStringParser } from '../helpers/HTMLParser';
 
-
 import XLSX from "xlsx";
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+} from 'react-native-popup-menu';
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -166,7 +172,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         // Add total
         row1.push("Total score")
-        
+
         problems.forEach((prob: any, index: number) => {
             row1.push(`${index + 1}: ${prob.question} (${prob.points})`)
             row1.push("Score + Remark")
@@ -182,13 +188,13 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         const row2 = ["", "", ""];
 
         problems.forEach((prob: any, i: number) => {
-            const { questionType, required, options = [],  } = prob;
+            const { questionType, required, options = [], } = prob;
             let type = questionType === "" ? "MCQ" : "Free Response";
 
             let require = required ? "Required" : "Optional";
-            
+
             let answer = "";
-            
+
             if (questionType === "") {
                 answer += "Ans: "
                 options.forEach((opt: any, index: number) => {
@@ -196,7 +202,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         answer += ((index + 1) + ", ");
                     }
                 })
-            } 
+            }
 
             row2.push(`${type} ${answer}`)
             row2.push(`(${require})`)
@@ -223,7 +229,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
             const obj = JSON.parse(submission);
 
-            const { solutions, problemScores, problemComments, initiatedAt,  } = obj;
+            const { solutions, problemScores, problemComments, initiatedAt, } = obj;
 
             solutions.forEach((sol: any, i: number) => {
                 let response = ''
@@ -240,7 +246,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 subscriberRow.push(`${response}`);
                 subscriberRow.push(`${problemScores[i]} - Remark: ${problemComments ? problemComments[i] : ''}`)
 
-                
+
             })
 
             subscriberRow.push(moment(new Date(submittedAt)).format("MMMM Do YYYY, h:mm a"))
@@ -256,7 +262,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     }, [problems, subscribers])
 
     useEffect(() => {
-      
+
         if (!props.cue) {
             return
         }
@@ -267,9 +273,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             setReleaseSubmission(false)
         }
 
-         // Set if quiz when cue loaded
+        // Set if quiz when cue loaded
 
-         if (props.cue && props.cue.original && props.cue.original[0] === '{' && props.cue.original[props.cue.original.length - 1] === '}') {
+        if (props.cue && props.cue.original && props.cue.original[0] === '{' && props.cue.original[props.cue.original.length - 1] === '}') {
             const obj = JSON.parse(props.cue.original);
 
             if (obj.quizId) {
@@ -362,19 +368,19 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
 
         const ws = XLSX.utils.aoa_to_sheet(exportAoa);
-		const wb = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, "Grades ");        
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Grades ");
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
-        
+
         const uri = FileSystem.cacheDirectory + 'scores.xlsx';
         await FileSystem.writeAsStringAsync(uri, wbout, {
-        encoding: FileSystem.EncodingType.Base64
+            encoding: FileSystem.EncodingType.Base64
         });
 
         await Sharing.shareAsync(uri, {
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        dialogTitle: 'MyWater data',
-        UTI: 'com.microsoft.excel.xlsx'
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            dialogTitle: 'MyWater data',
+            UTI: 'com.microsoft.excel.xlsx'
         });
 
     }
@@ -1000,13 +1006,14 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Text
                                     ellipsizeMode="tail"
                                     style={{
-                                        fontSize: 11,
+                                        fontSize: 21,
                                         paddingBottom: 20,
-                                        color: '#202025',
-                                        textTransform: "uppercase",
+                                        fontFamily: 'inter',
+                                        // textTransform: "uppercase",
                                         // paddingLeft: 10,
                                         flex: 1,
-                                        lineHeight: 23
+                                        lineHeight: 25,
+                                        color: '#202025',
                                     }}>
                                     {PreferredLanguageText('inbox')}
                                 </Text>
@@ -1026,7 +1033,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         marginRight: 20,
                                         marginTop: -1,
                                         fontSize: 10,
-                                        color: '#a2a2aa',
+                                        color: '#3b64f8',
                                         textTransform: 'uppercase'
                                     }}>
                                         {PreferredLanguageText('newGroup')}
@@ -1076,7 +1083,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }}
                             activeThumbColor='white'
                         />
-                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop:10 }}>
+                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
                             <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', }}>
                                 RELEASE GRADES
                             </Text>
@@ -1084,25 +1091,25 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     </View>
                     : null
             }
-            {!isQuiz ?  null : <Text
-                    style={{
-                        color: "#a2a2aa",
-                        fontSize: 11,
-                        lineHeight: 25,
-                        // textAlign: "right",
-                        marginBottom: 10,
-                        textTransform: "uppercase"
-                    }}
-                    onPress={() => {
-                        exportScore()
-                    }}>
-                    EXPORT 
-                </Text>
+            {!isQuiz ? null : <Text
+                style={{
+                    color: "#3b64f8",
+                    fontSize: 11,
+                    lineHeight: 25,
+                    // textAlign: "right",
+                    marginBottom: 10,
+                    textTransform: "uppercase"
+                }}
+                onPress={() => {
+                    exportScore()
+                }}>
+                EXPORT
+            </Text>
             }
             {
                 !showAddUsers ? (subscribers.length === 0 ?
                     <View style={{ backgroundColor: 'white', flex: 1 }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                             {
                                 props.cueId ? PreferredLanguageText('noStatuses') : PreferredLanguageText('noStudents')
                             }
@@ -1133,7 +1140,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 style={{ flex: 1, paddingTop: 12, height: 200, }}>
                                                 {
                                                     messages.length === 0 ?
-                                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingVertical: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                                             {PreferredLanguageText('noMessages')}
                                                         </Text>
                                                         : null
@@ -1175,11 +1182,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     showsVerticalScrollIndicator={false}
                                                     keyboardDismissMode={'on-drag'}
                                                     style={{ flex: 1, paddingTop: 12 }}>
-                                                    <Text
+                                                    {/* <Text
                                                         ellipsizeMode="tail"
                                                         style={{ color: '#a2a2aa', fontSize: 16, flex: 1, lineHeight: 25 }}>
                                                         {PreferredLanguageText('newGroup')}
-                                                    </Text>
+                                                    </Text> */}
                                                     <View style={{ height: 350, flexDirection: 'column', paddingTop: 25, overflow: 'scroll', backgroundColor: 'white' }}>
                                                         <ScrollView style={{
                                                             width: '100%',
@@ -1271,7 +1278,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                             />
                                                                         </View>
                                                                     })) : <View style={{ backgroundColor: 'white', flex: 1 }}>
-                                                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingHorizontal: 50, paddingBottom: 100, paddingTop: 50, fontFamily: 'inter', flex: 1 }}>
+                                                                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingHorizontal: 50, paddingBottom: 100, paddingTop: 50, fontFamily: 'inter', flex: 1 }}>
                                                                             {PreferredLanguageText('noGroups')}
                                                                         </Text>
                                                                     </View>
@@ -1493,39 +1500,40 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     justifyContent: 'center',
                                     flexDirection: 'column'
                                 }}>
-                                    <ScrollView
-                                        // contentContainerStyle={{
-                                        //     // height: 20, 
-                                        //     width: '100%',
-                                        //     paddingTop: 15,
-                                        //     paddingHorizontal: 10
-                                        // }}
-                                        style={{
-                                            width: '98.5%',
-                                            height: '40%',
-                                            flexDirection: 'row',
-                                            paddingTop: 10
-                                        }}
-                                        horizontal={true} showsHorizontalScrollIndicator={false}
-                                    >
-                                        {
-                                            unparsedSubs.length === 0 ? null : categories.map((category: string) => {
-                                                return <TouchableOpacity
-                                                    key={Math.random()}
-                                                    style={filterChoice === category ? styles.cusCategoryOutline : styles.cusCategory}
-                                                    onPress={() => setFilterChoice(category)}>
-                                                    <Text
-                                                        style={{
-                                                            color: '#a2a2aa',
-                                                            lineHeight: 20,
-                                                            fontSize: 11
-                                                        }}>
-                                                        {PreferredLanguageText(categoriesLanguageMap[category])}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            })
-                                        }
-                                    </ScrollView>
+                                    <Menu
+                                        onSelect={(cat: any) => setFilterChoice(cat)}>
+                                        <MenuTrigger>
+                                            <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2aa' }}>
+                                                {filterChoice === '' ? 'All' : filterChoice}<Ionicons name='caret-down' size={14} />
+                                            </Text>
+                                        </MenuTrigger>
+                                        <MenuOptions customStyles={{
+                                            optionsContainer: {
+                                                padding: 10,
+                                                borderRadius: 15,
+                                                shadowOpacity: 0,
+                                                borderWidth: 1,
+                                                borderColor: '#f4f4f6'
+                                            }
+                                        }}>
+                                            {/* <MenuOption
+                                                value={''}>
+                                                <Text>
+                                                    All
+                                                </Text>
+                                            </MenuOption> */}
+                                            {
+                                                categories.map((category: any) => {
+                                                    return <MenuOption
+                                                        value={category}>
+                                                        <Text>
+                                                            {category}
+                                                        </Text>
+                                                    </MenuOption>
+                                                })
+                                            }
+                                        </MenuOptions>
+                                    </Menu>
                                 </View>
                         }
                     </View>) :
