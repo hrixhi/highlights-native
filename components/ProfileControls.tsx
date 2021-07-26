@@ -120,7 +120,9 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
             user.fullName = fullName;
             user.displayName = displayName;
             const updatedUser = JSON.stringify(user);
+
             await AsyncStorage.setItem("user", updatedUser);
+
             props.saveDataInCloud();
             props.reOpenProfile();
           } else {

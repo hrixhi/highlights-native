@@ -46,9 +46,11 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, [props.channelFilterChoice])
 
     const getUser = useCallback(async () => {
+
         const u = await AsyncStorage.getItem('user')
         if (u) {
             const parsedUser = JSON.parse(u)
+            console.log('parsedUser', parsedUser)
             if (parsedUser.email) {
                 setLoggedIn(true)
             }
@@ -58,12 +60,12 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
         }
         setUserLoaded(true)
     }, [])
-
     useEffect(() => {
+
         (
             async () => await getUser()
         )()
-    }, [])
+    }, [props])
 
     return (
         <View style={styles.bottombar}>

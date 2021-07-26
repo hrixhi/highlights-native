@@ -1098,6 +1098,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const openModal = useCallback((type) => {
     setModalType(type)
+
     AsyncStorage.setItem('lastopened', type)
   }, [sheetRef, cues])
 
@@ -1356,9 +1357,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     await AsyncStorage.setItem("cues", stringifiedCues);
     reloadCueListAfterUpdate();
 
-  }, [cues, updateModalKey, updateModalIndex]) 
+  }, [cues, updateModalKey, updateModalIndex])
 
-  console.log('Cues', cues)
+
 
   const closeModal = useCallback(async (val: string) => {
 
