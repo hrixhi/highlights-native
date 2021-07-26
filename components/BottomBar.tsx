@@ -16,14 +16,14 @@ import {
 const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const [choice] = useState(props.filterChoice)
-    const colorScheme = useColorScheme();
+    const colorScheme = 'dark';
     const styles: any = styleObject(colorScheme)
     const [loggedIn, setLoggedIn] = useState(true)
     const [userLoaded, setUserLoaded] = useState(false)
-    const iconColor = colorScheme === 'light' ? '#202025' : '#fff'
+    const iconColor = '#fff'
 
     const [channelCategories, setChannelCategories] = useState([])
-    const [filterChoice] = useState(props.channelFilterChoice)
+    const [filterChoice, setChannelFilterChoice] = useState(props.channelFilterChoice)
     const unparsedCues: any[] = JSON.parse(JSON.stringify(props.cues))
     const [cues] = useState<any[]>(unparsedCues.reverse())
 
@@ -40,6 +40,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
         })
         setChannelCategories(cat)
     }, [cues])
+
+    useEffect(() => {
+        setChannelFilterChoice(props.channelFilterChoice)
+    }, [props.channelFilterChoice])
 
     const getUser = useCallback(async () => {
         const u = await AsyncStorage.getItem('user')
@@ -64,10 +68,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
     return (
         <View style={styles.bottombar}>
             <View style={styles.colorBar}>
-                <View style={{ flexDirection: 'row', flex: 1 }}>
-                    <View style={{ width: '50%', paddingLeft: 20, flexDirection: 'row', justifyContent: 'center' }}>
-                        <View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex' }}>
+                <View style={{ flexDirection: 'row', flex: 1, backgroundColor: '#202025' }}>
+                    <View style={{ width: '50%', paddingLeft: 20, flexDirection: 'row', justifyContent: 'center', backgroundColor: '#202025' }}>
+                        <View style={{ backgroundColor: '#202025' }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: '#202025' }}>
                                 <Menu
                                     onSelect={(subscription: any) => {
                                         if (subscription === 'My Cues') {
@@ -82,7 +86,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         props.setChannelCreatedBy(subscription.channelCreatedBy)
                                     }}>
                                     <MenuTrigger>
-                                        <Text style={{ fontFamily: 'inter', fontSize: 17 }}>
+                                        <Text style={{ fontFamily: 'inter', fontSize: 17, color: '#fff' }}>
                                             {choice === 'All' ? 'My Cues' : choice}<Ionicons name='caret-down' size={17} />
                                         </Text>
                                     </MenuTrigger>
@@ -119,9 +123,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             </Text>
                         </View>
                     </View>
-                    <View style={{ width: '50%', paddingRight: 20, flexDirection: 'row', justifyContent: 'center' }}>
-                        <View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex' }}>
+                    <View style={{ width: '50%', paddingRight: 20, flexDirection: 'row', justifyContent: 'center', backgroundColor: '#202025' }}>
+                        <View style={{ backgroundColor: '#202025' }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: '#202025' }}>
                                 <Menu
                                     onSelect={(category: any) => {
                                         props.setChannelFilterChoice(category)
@@ -227,7 +231,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     My Channels
                 </Text> */}
             </View>
-            <View style={{ display: 'flex', flexDirection: 'row', height: '50%', paddingHorizontal: 10, paddingTop: 7 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', height: '50%', paddingHorizontal: 10, paddingTop: 7, backgroundColor: '#202025' }}>
                 <View style={styles.icons}>
                     <TouchableOpacity
                         onPress={() => props.openChannels()}
@@ -307,7 +311,8 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         display: 'flex',
         paddingBottom: 10,
         borderTopWidth: 1,
-        borderColor: colorScheme !== 'light' ? '#333333' : '#eeeeee'
+        borderColor: '#333333',
+        backgroundColor: '#202025'
     },
     icons: {
         width: '20%',
@@ -316,7 +321,8 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         justifyContent: 'center',
         flexDirection: 'row',
         overflow: 'hidden',
-        textAlign: 'center', paddingTop: 5
+        textAlign: 'center', paddingTop: 5,
+        backgroundColor: '#202025'
     },
     defaultFont: {
         fontFamily: 'system font'
@@ -326,13 +332,15 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         // justifyContent: 'center',
         // display: 'flex',
         // flexDirection: 'column',
-        textAlign: 'center'
+        textAlign: 'center',
+        backgroundColor: '#202025'
     },
     colorBar: {
         width: '98.5%',
         height: '50%',
         // flexDirection: 'row',
-        paddingTop: 18
+        paddingTop: 18,
+        backgroundColor: '#202025'
     },
     iconContainer: {
         width: '20%',

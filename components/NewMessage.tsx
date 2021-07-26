@@ -9,6 +9,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RichEditor } from 'react-native-pell-rich-editor';
 import FileUpload from './UploadFiles';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+} from 'react-native-popup-menu';
 
 
 const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -275,7 +281,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             />
                         </View>
                         <View style={{ backgroundColor: '#fff' }}>
-                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingVertical: 50, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingVertical: 50, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                 <Ionicons name='document-outline' size={50} color='#a2a2aa' />
                             </Text>
                         </View>
@@ -354,31 +360,40 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             placeholderTextColor={'#a2a2aa'}
                                                         />
                                                     </View> :
-                                                    <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
-                                                        <TouchableOpacity
-                                                            style={customCategory === '' ? styles.allOutline : styles.all}
-                                                            onPress={() => {
-                                                                setCustomCategory('')
-                                                            }}>
-                                                            <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
-                                                                {PreferredLanguageText('none')}
+                                                    <Menu
+                                                    onSelect={(cat: any) => setCustomCategory(cat)}>
+                                                    <MenuTrigger>
+                                                        <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2aa' }}>
+                                                            {customCategory === '' ? 'None' : customCategory}<Ionicons name='caret-down' size={14} />
+                                                        </Text>
+                                                    </MenuTrigger>
+                                                    <MenuOptions customStyles={{
+                                                        optionsContainer: {
+                                                            padding: 10,
+                                                            borderRadius: 15,
+                                                            shadowOpacity: 0,
+                                                            borderWidth: 1,
+                                                            borderColor: '#f4f4f6'
+                                                        }
+                                                    }}>
+                                                        <MenuOption
+                                                            value={''}>
+                                                            <Text>
+                                                                None
                                                             </Text>
-                                                        </TouchableOpacity>
+                                                        </MenuOption>
                                                         {
-                                                            categories.map((category) => {
-                                                                return <TouchableOpacity
-                                                                    key={Math.random()}
-                                                                    style={category === customCategory ? styles.allOutline : styles.all}
-                                                                    onPress={() => {
-                                                                        setCustomCategory(category)
-                                                                    }}>
-                                                                    <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
+                                                            categories.map((category: any) => {
+                                                                return <MenuOption
+                                                                    value={category}>
+                                                                    <Text>
                                                                         {category}
                                                                     </Text>
-                                                                </TouchableOpacity>
+                                                                </MenuOption>
                                                             })
                                                         }
-                                                    </ScrollView>}
+                                                    </MenuOptions>
+                                                </Menu>}
                                         </View>
                                         <View style={{ width: '15%', backgroundColor: 'white' }}>
                                             <TouchableOpacity

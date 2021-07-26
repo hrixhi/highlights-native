@@ -33,6 +33,14 @@ import { PreferredLanguageText } from "../helpers/LanguageContext";
 import moment from 'moment';
 import Webview from './Webview';
 
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+} from 'react-native-popup-menu';
+
+
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const current = new Date()
@@ -66,6 +74,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [url, setUrl] = useState('')
     const [type, setType] = useState('')
     const [title, setTitle] = useState('')
+    const [channelName, setChannelName] = useState('')
+    const [frequencyName, setFrequencyName] = useState('Day')
     const [showImportOptions, setShowImportOptions] = useState(false)
     const [selected, setSelected] = useState<any[]>([])
     const [subscribers, setSubscribers] = useState<any[]>([])
@@ -1082,12 +1092,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                         >
                             <Text style={{
-                                color: '#202025',
-                                fontSize: 11,
+                                fontSize: 21,
                                 paddingBottom: 20,
-                                textTransform: 'uppercase',
+                                fontFamily: 'inter',
+                                // textTransform: "uppercase",
                                 // paddingLeft: 10,
-                                paddingTop: 5
+                                flex: 1,
+                                lineHeight: 25,
+                                color: '#202025',
                             }}>
                                 {PreferredLanguageText('new')}
                             </Text>
@@ -1150,8 +1162,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 actions.insertLink,
                                                 actions.insertImage,
                                                 "insertCamera",
-                                                actions.undo,
                                                 "clear",
+                                                actions.undo,
                                                 actions.redo,
                                             ]}
                                     iconMap={{
@@ -1206,8 +1218,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             actions.insertLink,
                                             actions.insertImage,
                                             "insertCamera",
-                                            actions.undo,
                                             "clear",
+                                            actions.undo,
                                             actions.redo,
 
                                         ]}
@@ -1233,7 +1245,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }
                         </View>
                     }
-                    <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
+                    <View style={{ flexDirection: 'row', backgroundColor: '#fff', justifyContent: 'flex-end' }}>
                         {/* {
                             !isQuiz ?
                                 <Text style={{
@@ -1520,11 +1532,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                     </View>
                                     <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
-                                        <View style={{ width: '100%', backgroundColor: 'white', display: 'flex', backgroundColor: 'white' }}>
-                                            <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
-                                                <TouchableOpacity
-                                                    style={channelId === '' ? styles.allOutline : styles.allBlack}
-                                                    onPress={() => {
+                                        <View style={{ width: '100%', display: 'flex', backgroundColor: 'white' }}>
+                                            <Menu
+                                                onSelect={(channel: any) => {
+                                                    if (channel === '') {
                                                         setChannelId('')
                                                         setCustomCategories(localCustomCategories)
                                                         setCustomCategory('')
@@ -1536,33 +1547,50 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         setSubscribers([])
                                                         setProblems([])
                                                         setIsQuiz(false)
+                                                        setChannelName('')
                                                         setTimer(false)
-                                                    }}>
-                                                    <Text style={{ lineHeight: 20, fontSize: 11, color: channelId === '' ? '#fff' : '#202025' }}>
-                                                        {/* <Ionicons name='home-outline' size={15} /> */}
-                                                        {PreferredLanguageText('myCues')}
+                                                    } else {
+                                                        setChannelId(channel._id)
+                                                        setChannelName(channel.name)
+                                                        setAddCustomCategory(false)
+                                                        setCustomCategory('')
+                                                        setSubmission(isQuiz ? true : false)
+                                                        setGradeWeight(0)
+                                                        setGraded(false)
+                                                    }
+                                                }}>
+                                                <MenuTrigger>
+                                                    <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#202025' }}>
+                                                        {channelName === '' ? 'My Cues' : channelName}<Ionicons name='caret-down' size={14} />
                                                     </Text>
-                                                </TouchableOpacity>
-                                                {
-                                                    channels.map((channel) => {
-                                                        return <TouchableOpacity
-                                                            key={Math.random()}
-                                                            style={channelId === channel._id ? styles.allOutline : styles.allBlack}
-                                                            onPress={() => {
-                                                                setChannelId(channel._id)
-                                                                setAddCustomCategory(false)
-                                                                setCustomCategory('')
-                                                                setSubmission(isQuiz ? true : false)
-                                                                setGradeWeight(0)
-                                                                setGraded(false)
-                                                            }}>
-                                                            <Text style={{ lineHeight: 20, fontSize: 11, color: channelId === channel._id ? '#fff' : '#202025' }}>
-                                                                {channel.name}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    })
-                                                }
-                                            </ScrollView>
+                                                </MenuTrigger>
+                                                <MenuOptions customStyles={{
+                                                    optionsContainer: {
+                                                        padding: 10,
+                                                        borderRadius: 15,
+                                                        shadowOpacity: 0,
+                                                        borderWidth: 1,
+                                                        borderColor: '#f4f4f6'
+                                                    }
+                                                }}>
+                                                    <MenuOption
+                                                        value={''}>
+                                                        <Text>
+                                                            {PreferredLanguageText('myCues')}
+                                                        </Text>
+                                                    </MenuOption>
+                                                    {
+                                                        channels.map((channel: any) => {
+                                                            return <MenuOption
+                                                                value={channel}>
+                                                                <Text>
+                                                                    {channel.name}
+                                                                </Text>
+                                                            </MenuOption>
+                                                        })
+                                                    }
+                                                </MenuOptions>
+                                            </Menu>
                                         </View>
                                     </View>
                                     {
@@ -1774,31 +1802,40 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             placeholderTextColor={'#a2a2aa'}
                                                         />
                                                     </View> :
-                                                    <ScrollView style={styles.colorBar} horizontal={true} showsHorizontalScrollIndicator={false}>
-                                                        <TouchableOpacity
-                                                            style={customCategory === '' ? styles.allGrayOutline : styles.all}
-                                                            onPress={() => {
-                                                                setCustomCategory('')
-                                                            }}>
-                                                            <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
-                                                                {PreferredLanguageText('none')}
+                                                    <Menu
+                                                        onSelect={(cat: any) => setCustomCategory(cat)}>
+                                                        <MenuTrigger>
+                                                            <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2aa' }}>
+                                                                {customCategory === '' ? 'None' : customCategory}<Ionicons name='caret-down' size={14} />
                                                             </Text>
-                                                        </TouchableOpacity>
-                                                        {
-                                                            customCategories.map((category: string) => {
-                                                                return <TouchableOpacity
-                                                                    key={Math.random()}
-                                                                    style={customCategory === category ? styles.allGrayOutline : styles.all}
-                                                                    onPress={() => {
-                                                                        setCustomCategory(category)
-                                                                    }}>
-                                                                    <Text style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 11 }}>
-                                                                        {category}
-                                                                    </Text>
-                                                                </TouchableOpacity>
-                                                            })
-                                                        }
-                                                    </ScrollView>
+                                                        </MenuTrigger>
+                                                        <MenuOptions customStyles={{
+                                                            optionsContainer: {
+                                                                padding: 10,
+                                                                borderRadius: 15,
+                                                                shadowOpacity: 0,
+                                                                borderWidth: 1,
+                                                                borderColor: '#f4f4f6'
+                                                            }
+                                                        }}>
+                                                            <MenuOption
+                                                                value={''}>
+                                                                <Text>
+                                                                    None
+                                                                </Text>
+                                                            </MenuOption>
+                                                            {
+                                                                customCategories.map((category: any) => {
+                                                                    return <MenuOption
+                                                                        value={category}>
+                                                                        <Text>
+                                                                            {category}
+                                                                        </Text>
+                                                                    </MenuOption>
+                                                                })
+                                                            }
+                                                        </MenuOptions>
+                                                    </Menu>
                                             }
                                         </View>
                                         <View style={{ width: '15%', backgroundColor: 'white' }}>
@@ -1922,26 +1959,43 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         <Text style={styles.text}>
                                                             {PreferredLanguageText('remindEvery')}
                                                         </Text>
-                                                        <Picker
-                                                            style={styles.picker}
-                                                            itemStyle={{
-                                                                fontSize: 16
-                                                            }}
-                                                            selectedValue={frequency}
-                                                            onValueChange={(itemValue: any) =>
-                                                                setFrequency(itemValue)
-                                                            }>
-                                                            {
-                                                                timedFrequencyOptions.map((item: any, index: number) => {
-                                                                    return <Picker.Item
-                                                                        color={frequency === item.value ? '#3B64F8' : "#202025"}
-                                                                        label={item.value === '0' && channelId !== '' ? 'Once' : item.label}
-                                                                        value={item.value}
-                                                                        key={index}
-                                                                    />
-                                                                })
-                                                            }
-                                                        </Picker>
+                                                        <Menu
+                                                            onSelect={(cat: any) => {
+                                                                setFrequency(cat.value)
+                                                                setFrequencyName(cat.label)
+                                                            }}>
+                                                            <MenuTrigger>
+                                                                <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2aa' }}>
+                                                                    {frequencyName}<Ionicons name='caret-down' size={14} />
+                                                                </Text>
+                                                            </MenuTrigger>
+                                                            <MenuOptions customStyles={{
+                                                                optionsContainer: {
+                                                                    padding: 10,
+                                                                    borderRadius: 15,
+                                                                    shadowOpacity: 0,
+                                                                    borderWidth: 1,
+                                                                    borderColor: '#f4f4f6'
+                                                                }
+                                                            }}>
+                                                                {/* <MenuOption
+                                                                    value={''}>
+                                                                    <Text>
+                                                                        None
+                                                                    </Text>
+                                                                </MenuOption> */}
+                                                                {
+                                                                    timedFrequencyOptions.map((item: any) => {
+                                                                        return <MenuOption
+                                                                            value={item}>
+                                                                            <Text>
+                                                                                {item.value === '0' && channelId !== '' ? 'Once' : item.label}
+                                                                            </Text>
+                                                                        </MenuOption>
+                                                                    })
+                                                                }
+                                                            </MenuOptions>
+                                                        </Menu>
                                                     </View> :
                                                     <View style={{
                                                         width: '100%',

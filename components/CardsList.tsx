@@ -59,6 +59,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
             width: '100%',
             paddingTop: 0,
             paddingHorizontal: 25,
+            backgroundColor: '#202025'
         }}>
             {/* <Animated.View style={{
                 opacity: props.fadeAnimation,
@@ -69,7 +70,8 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 alwaysBounceVertical={true}
                 horizontal={false}
                 contentContainerStyle={{
-                    paddingBottom: 15
+                    paddingBottom: 15,
+                    backgroundColor: '#202025'
                 }}
             >
                 <RefreshControl
@@ -80,7 +82,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {/* <View style={styles.marginSmall} /> */}
                 {
                     filteredCues.map((cue: any, index: number) => {
-                        return <View style={{ height: 70, marginBottom: 15, maxWidth: 500 }} key={index}>
+                        return <View style={{ height: 70, marginBottom: 15, maxWidth: 500, backgroundColor: '#202025' }} key={index}>
                             <Card
                                 fadeAnimation={props.fadeAnimation}
                                 updateModal={() => props.openUpdate(
@@ -116,7 +118,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
                 {
                     filteredCues.length === 0 ?
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 22, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                             {PreferredLanguageText('noCuesCreated')}
                         </Text> : null
                 }
@@ -140,7 +142,8 @@ const styleObject = (channelId: any) => {
             width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : Dimensions.get('window').width * 0.3 - 36
         },
         marginSmall: {
-            height: 10
+            height: 10,
+            backgroundColor: '#202025'
         },
         page: {
             flexDirection: 'column',

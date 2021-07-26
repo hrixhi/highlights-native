@@ -1488,12 +1488,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         <Text
           ellipsizeMode="tail"
           style={{
-            color: '#202025',
-            fontSize: 11,
+            fontSize: 21,
             paddingBottom: 20,
-            textTransform: 'uppercase',
-            paddingLeft: 25,
-            paddingTop: 5,
+            fontFamily: 'inter',
+            // textTransform: "uppercase",
+            paddingLeft: 20,
+            flex: 1,
+            // lineHeight: 25,
+            color: '#202025',
             width: '50%'
           }}
         >
@@ -1503,7 +1505,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         <View style={{ flexDirection: 'row', width: '50%', backgroundColor: 'white', justifyContent: "flex-end" }}>
           {showAddEvent ? null : <Text style={{
             // width: '50%',
-            color: '#a2a2aa',
+            color: '#3b64f8',
             fontSize: 11,
             paddingTop: 5,
             textAlign: 'right',
@@ -1538,7 +1540,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
           {showFilter ? null : <Text style={{
             // width: '50%',
-            color: '#a2a2aa',
+            color: '#3b64f8',
             fontSize: 11,
             paddingTop: 5,
             textAlign: 'right',

@@ -17,7 +17,7 @@ import { defaultCues, defaultRandomShuffleFrequency, defaultSleepInfo } from '..
 import Walkthrough from '../components/Walkthrough';
 import Channels from '../components/Channels';
 import { fetchAPI } from '../graphql/FetchAPI';
-import { createUser, getSubscriptions, getCues, unsubscribe, saveConfigToCloud, saveCuesToCloud, login, getCuesFromCloud, findUserById, resetPassword, updateNotificationId } from '../graphql/QueriesAndMutations';
+import { createUser, getSubscriptions, getCues, unsubscribe, saveConfigToCloud, saveCuesToCloud, login, getCuesFromCloud, findUserById, resetPassword, updateNotificationId, markAsRead } from '../graphql/QueriesAndMutations';
 import Discussion from '../components/Discussion';
 import Subscribers from '../components/Subscribers';
 import Profile from '../components/Profile';
@@ -1323,10 +1323,49 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }, [updateCueData])
 
-  const closeModal = useCallback((val: string) => {
+  const markCueAsRead = useCallback(async () => {
+
+    console.log("Calling Mark Cue as read")
+    console.log("Printing cues", cues);
+    console.log(updateModalKey);
+    console.log(updateModalIndex);
+
+    let subCues: any = {};
+    try {
+      const value = await AsyncStorage.getItem("cues");
+      if (value) {
+        subCues = JSON.parse(value);
+      }
+    } catch (e) { }
+    if (subCues[updateModalKey].length === 0) {
+      return;
+    }
+
+    const unmodified = subCues ? subCues[updateModalKey][updateModalIndex] : {};
+
+    if (!unmodified) return;
+
+    const modified = {
+      ...unmodified,
+      status: "read"
+    }
+
+    subCues[updateModalKey][updateModalIndex] = modified
+
+    const stringifiedCues = JSON.stringify(subCues);
+    await AsyncStorage.setItem("cues", stringifiedCues);
+    reloadCueListAfterUpdate();
+
+  }, [cues, updateModalKey, updateModalIndex]) 
+
+  console.log('Cues', cues)
+
+  const closeModal = useCallback(async (val: string) => {
 
     // Update Cue locally
     if (modalType === 'Update') {
+
+      await markCueAsRead()
 
       if (updatedCueCount < 2 || val === "delete") {
         setUpdatedCueCount(0)
@@ -1446,6 +1485,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }}
         resetCueUpdateCount={() => setUpdatedCueCount(0)}
         handleReleaseSubmissionUpdate={handleReleaseSubmissionUpdate}
+        markCueAsRead={markCueAsRead}
       />
         :
         (modalType === 'Walkthrough' ? <Walkthrough
@@ -1596,7 +1636,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 resizeMode={'contain'}
               />
             </View>
-            {/* <Text style={{ fontSize: 22, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 500, textAlign: 'center' }}>
+            {/* <Text style={{ fontSize: 21, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 500, textAlign: 'center' }}>
               {
                 showForgotPassword ? '' : PreferredLanguageText('login')
               }
@@ -1752,9 +1792,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : Dimensions.get('window').width * 0.3,
         height: Dimensions.get('window').height,
         flexDirection: 'column',
-        backgroundColor: '#fff',
-        borderRightColor: '#eeeeee',
-        borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 1
+        backgroundColor: '#202025',
+        // borderRightColor: '#eeeeef',
+        // borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 1
       }}>
         <TopBar
           key={JSON.stringify(channelFilterChoice) + JSON.stringify(filteredCues) + JSON.stringify(modalType) + JSON.stringify(filterChoice)}
@@ -1795,6 +1835,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             </View>
         }
         <BottomBar
+          closeModal={() => closeModal("")}
           cues={filteredCues}
           openCreate={() => openModal('Create')}
           openChannels={() => openModal('Channels')}
@@ -1838,12 +1879,23 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 <View style={{ backgroundColor: '#fff', height: 30 }} /> :
                 <View style={{ backgroundColor: '#fff', height: 0 }} />
             }
-            {modalContent}
+            <View style={{
+              flex: 1,
+              backgroundColor: 'white',
+              paddingHorizontal: 5,
+              marginTop: Dimensions.get('window').width < 1024 ? 0 : 25,
+              marginRight: Dimensions.get('window').width < 1024 ? 0 : 25,
+              borderTopLeftRadius: Dimensions.get('window').width < 1024 ? 0 : 20,
+              borderTopRightRadius: Dimensions.get('window').width < 1024 ? 0 : 20,
+              overflow: 'hidden'
+            }}>
+              {modalContent}
+            </View>
             {
               Dimensions.get('window').width < 1024 ?
                 <TouchableOpacity
                   onPress={() => closeModal("")}
-                  style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#eeeeee', width: '100%' }}>
+                  style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#eeeeef', width: '100%' }}>
                   <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#202025' }}>
                     <Ionicons name='chevron-back-outline' size={15} />{PreferredLanguageText('back')}
                   </Text>
@@ -1866,6 +1918,7 @@ const styles = StyleSheet.create({
   activityContainer: {
     borderTopWidth: 0,
     borderBottomWidth: 0,
+    backgroundColor: '#202025',
     borderColor: '#f4f4f6',
     height: '66%',
     width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,
