@@ -1364,8 +1364,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   }, [cues, updateModalKey, updateModalIndex])
 
-  console.log('Cues', cues)
-
   const closeModal = useCallback(async (val: string) => {
 
     // Update Cue locally
@@ -1483,13 +1481,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
         reopenUpdateWindow={reopenUpdateWindow}
         updateCueData={(update: any) => {
+          console.log("Update Cue", update);
           const { cueFullyLoaded } = update;
           if (cueFullyLoaded) {
             setUpdatedCueCount(updatedCueCount + 1);
           }
           setUpdateCueData(update);
         }}
-        resetCueUpdateCount={() => setUpdatedCueCount(0)}
+        resetCueUpdateCount={() => {
+          console.log("Reset Cue count")
+          setUpdatedCueCount(0)}
+        }
         handleReleaseSubmissionUpdate={handleReleaseSubmissionUpdate}
         markCueAsRead={markCueAsRead}
       />
