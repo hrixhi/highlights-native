@@ -341,13 +341,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   const init = new Date(solutionsObject.initiatedAt);
                   setInitiatedAt(init);
                 }
-                props.resetCueUpdateCount()
                 setShuffleQuiz(res.data.quiz.getQuiz.shuffleQuiz ? true : false)
                 setTitle(obj.title);
                 setIsQuiz(true);
                 setInstructions(res.data.quiz.getQuiz.instructions ? res.data.quiz.getQuiz.instructions : '')
                 setHeaders(res.data.quiz.getQuiz.headers ? JSON.parse(res.data.quiz.getQuiz.headers) : {})
                 setLoading(false);
+                props.resetCueUpdateCount()
               }
             });
         } else {
@@ -1818,18 +1818,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       {!props.showOriginal ? null : isQuiz ? (
         isQuizTimed && !isOwner ? (
           initiatedAt ? (
-            <Quiz
-              // disable quiz if graded or deadline has passed
-              submitted={isQuiz && props.cue.submittedAt && props.cue.submittedAt !== "" ? true : false}
-              graded={props.cue.graded}
-              hasEnded={currentDate >= deadline}
-              solutions={solutions}
-              problems={problems}
-              setSolutions={(s: any) => setSolutions(s)}
-              shuffleQuiz={shuffleQuiz}
-              instructions={instructions}
-              headers={headers}
-            />
+            <View style={{ width: '100%', backgroundColor: '#fff', paddingBottom: 50 }}>
+              <Quiz
+                // disable quiz if graded or deadline has passed
+                submitted={isQuiz && props.cue.submittedAt && props.cue.submittedAt !== "" ? true : false}
+                graded={props.cue.graded}
+                hasEnded={currentDate >= deadline}
+                solutions={solutions}
+                problems={problems}
+                setSolutions={(s: any) => setSolutions(s)}
+                shuffleQuiz={shuffleQuiz}
+                instructions={instructions}
+                headers={headers}
+              />
+              {renderFooter()}
+            </View>
           ) : (
             <View>
               <View style={{ backgroundColor: "#fff" }}>
@@ -1866,17 +1869,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             </View>
           )
         ) : (
-          <Quiz
-            isOwner={isOwner}
-            submitted={isQuiz && props.cue.submittedAt && props.cue.submittedAt !== "" ? true : false}
-            graded={props.cue.graded || currentDate >= deadline}
-            solutions={solutions}
-            problems={problems}
-            setSolutions={(s: any) => setSolutions(s)}
-            shuffleQuiz={shuffleQuiz}
-            instructions={instructions}
-            headers={headers}
-          />
+          <View style={{ width: '100%', backgroundColor: '#fff', paddingBottom: 50 }}>
+            <Quiz
+              // disable quiz if graded or deadline has passed
+              submitted={isQuiz && props.cue.submittedAt && props.cue.submittedAt !== "" ? true : false}
+              graded={props.cue.graded}
+              hasEnded={currentDate >= deadline}
+              solutions={solutions}
+              problems={problems}
+              setSolutions={(s: any) => setSolutions(s)}
+              shuffleQuiz={shuffleQuiz}
+              instructions={instructions}
+              headers={headers}
+            />
+            {renderFooter()}
+          </View>
         )
       ) : imported ? (
         type === "mp4" || type === "mp3" || type === "mov" || type === "mpeg" || type === "mp2" || type === "wav" ? (
@@ -1952,7 +1959,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             </View> : null
         )
       ) : (
-        renderRichEditorModified()
+        <View style={{ width: '100%', backgroundColor: '#fff', paddingBottom: 50 }}>
+          {renderRichEditorModified()}
+          {renderFooter()}
+        </View>
       )}
     </View>
   );
@@ -3497,7 +3507,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 </View>
               </View>
             </View> : null}
-            {renderFooter()}
+            {/* {renderFooter()} */}
           </Collapsible>
         </View>
       </Animated.View>
