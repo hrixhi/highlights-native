@@ -63,13 +63,13 @@ const FileUpload: React.FC<any> = (props: any) => {
         paddingBottom: Dimensions.get('window').width < 768 ? 5 : 0
     }}>
         {
-            uploading ? <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+            uploading ? <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                 Importing...
             </Text> :
                 <View style={{ flexDirection: 'row', width: 220, backgroundColor: 'white' }}>
                     <Ionicons
                         name="arrow-back"
-                        color="#a2a2aa"
+                        color="#a2a2ac"
                         size={17} style={{ marginRight: 20 }}
                         onPress={() => props.back()} />
                     <TouchableOpacity
@@ -78,7 +78,7 @@ const FileUpload: React.FC<any> = (props: any) => {
                         <Text style={{
                             textAlign: 'center',
                             lineHeight: 25,
-                            color: '#202025',
+                            color: '#2f2f3c',
                             fontSize: 11,
                             backgroundColor: '#f4f4f6',
                             borderRadius: 10,

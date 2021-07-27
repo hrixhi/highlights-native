@@ -258,7 +258,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             key={JSON.stringify(scores)}
         >
 
-            <Text style={{ textAlign: 'left', fontSize: 13, color: '#202025', fontFamily: 'inter', paddingBottom: 20, paddingLeft: 120 }}>
+            <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter', paddingBottom: 20, paddingLeft: 120 }}>
                 Grade Weightage
             </Text>
             <PieChart
@@ -320,24 +320,24 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                   };
 
                 return (<View style={{ flexDirection: 'column', alignItems: 'center', paddingTop :30, width: Dimensions.get("window").width < 768 ? "100%" : 400}}>
-                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#202025', fontFamily: 'inter', paddingBottom: 20,}}>
+                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter', paddingBottom: 20,}}>
                         {title}
                     </Text>
 
                     <View style={{ flexDirection: 'row',  paddingBottom: 20}}>
-                    <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
+                    <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
                             Max: {mapCuesStatistics[cueId].max}%
                         </Text>
-                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
+                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
                             Min: {mapCuesStatistics[cueId].min}%
                         </Text>
-                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
+                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
                             Mean: {mapCuesStatistics[cueId].mean}%
                         </Text>
-                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
+                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
                             Median: {mapCuesStatistics[cueId].median}%
                         </Text>
-                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
+                        <Text style={{ textAlign: 'left', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', fontFamily: 'inter', marginRight: 10 }}>
                             Std Dev: {mapCuesStatistics[cueId].std}%
                         </Text>
                     </View>
@@ -399,7 +399,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         // paddingLeft: 10,
                         flex: 1,
                         lineHeight: 25,
-                        color: '#202025',
+                        color: '#2f2f3c',
                     }}>
                     {PreferredLanguageText('grades')}
                 </Text>
@@ -425,7 +425,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             {
                 scores.length === 0 || cues.length === 0 ?
                     <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
                                 cues.length === 0 ? PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
                             }
@@ -454,10 +454,10 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     cues.map((cue: any, col: number) => {
                                         const { title } = htmlStringParser(cue.cue)
                                         return <View style={styles.col} key={col.toString()}>
-                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#202025', fontFamily: 'inter' }}>
+                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#2f2f3c', fontFamily: 'inter' }}>
                                                 {title}
                                             </Text>
-                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#202025' }}>
+                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#2f2f3c' }}>
                                                 {cue.gradeWeight}%
                                             </Text>
                                         </View>
@@ -467,10 +467,10 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 {
                                     cues.length === 0 ? null :
                                         <View style={styles.col} key={'total'}>
-                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#202025', fontFamily: 'inter' }}>
+                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#2f2f3c', fontFamily: 'inter' }}>
                                                 {PreferredLanguageText('total')}
                                             </Text>
-                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#202025' }}>
+                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#2f2f3c' }}>
                                                 100%
                                             </Text>
                                         </View>
@@ -501,10 +501,10 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
                                             return <View style={styles.row} key={row}>
                                                 <View style={styles.col} >
-                                                    <Text style={{ textAlign: 'left', fontSize: 11, color: '#202025', fontFamily: 'inter' }}>
+                                                    <Text style={{ textAlign: 'left', fontSize: 11, color: '#2f2f3c', fontFamily: 'inter' }}>
                                                         {score.fullName}
                                                     </Text>
-                                                    {/* <Text style={{ textAlign: 'left', fontSize: 11, color: '#202025' }}>
+                                                    {/* <Text style={{ textAlign: 'left', fontSize: 11, color: '#2f2f3c' }}>
                                                         {score.displayName}
                                                     </Text> */}
                                                 </View>
@@ -514,7 +514,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             return s.cueId.toString().trim() === cue._id.toString().trim()
                                                         })
                                                         return <View style={styles.col} key={row.toString() + '-' + col.toString()}>
-                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                                                                 {
                                                                     scoreObject && scoreObject.graded ? scoreObject.score : '-'
                                                                 }
@@ -525,7 +525,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 {
                                                     cues.length === 0 ? null :
                                                         <View style={styles.col} key={'total'}>
-                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                                                                 {totalScore !== 0 ? (totalPoints / totalScore).toFixed(2) : '0'}%
                                                             </Text>
                                                         </View>
@@ -556,12 +556,12 @@ const styles = StyleSheet.create({
         color: "#fff",
         paddingHorizontal: 10,
         borderRadius: 10,
-        backgroundColor: "#a2a2aa",
+        backgroundColor: "#a2a2ac",
         lineHeight: 20
     },
     all: {
         fontSize: 11,
-        color: "#a2a2aa",
+        color: "#a2a2ac",
         height: 22,
         overflow: "hidden",
         paddingHorizontal: 10,

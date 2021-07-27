@@ -66,7 +66,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             // paddingLeft: 10,
                             flex: 1,
                             lineHeight: 25,
-                            color: '#202025',
+                            color: '#2f2f3c',
                         }}
                     >
                         Walkthrough
@@ -83,7 +83,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     }}>
                     <View style={{ flex: 1, backgroundColor: 'white' }}>
                         <Text
-                            style={{ color: '#202025', fontSize: 16, flex: 1, lineHeight: 25 }}
+                            style={{ color: '#2f2f3c', fontSize: 16, flex: 1, lineHeight: 25 }}
                         >
                             {headings[index]}
                         </Text>
@@ -105,14 +105,14 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     style={{ height: 20 }}
                                     trackColor={{
                                         false: '#f4f4f6',
-                                        true: '#a2a2aa'
+                                        true: '#a2a2ac'
                                     }}
                                     activeThumbColor='white'
                                 />
                             </View>
                             <Text style={{
                                 fontSize: 14,
-                                color: '#a2a2aa',
+                                color: '#a2a2ac',
                                 textAlign: 'left',
                                 paddingTop: 7
                             }}>
@@ -134,9 +134,9 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         prevPos: 'left',
                         nextPos: 'right',
                         nextTitle: '›',
-                        nextTitleStyle: { color: '#a2a2aa', fontSize: 60, fontFamily: 'overpass' },
+                        nextTitleStyle: { color: '#a2a2ac', fontSize: 60, fontFamily: 'overpass' },
                         prevTitle: '‹',
-                        prevTitleStyle: { color: '#a2a2aa', fontSize: 60, fontFamily: 'overpass' },
+                        prevTitleStyle: { color: '#a2a2ac', fontSize: 60, fontFamily: 'overpass' },
                         dotActiveStyle: { backgroundColor: '#3B64F8' }
                     }}
                 >
@@ -198,7 +198,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <Text style={{
                         textAlign: 'center',
                         lineHeight: 35,
-                        color: '#202025',
+                        color: '#2f2f3c',
                         overflow: 'hidden',
                         fontSize: 11,
                         backgroundColor: '#f4f4f6',

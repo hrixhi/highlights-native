@@ -17,7 +17,7 @@ const MultiSelectComponent: React.FunctionComponent<{ [label: string]: any }> = 
         styleTextDropdown={{
             fontFamily: "overpass",
             fontSize: 11,
-            color: '#a2a2aa'
+            color: '#a2a2ac'
         }}
         styleTextDropdownSelected={{
             fontSize: 11
@@ -50,15 +50,15 @@ const MultiSelectComponent: React.FunctionComponent<{ [label: string]: any }> = 
         selectText="Share with"
         searchInputPlaceholderText="Search..."
         altFontFamily="overpass"
-        tagRemoveIconColor="#a2a2aa"
-        tagBorderColor="#a2a2aa"
-        tagTextColor="#a2a2aa"
-        selectedItemTextColor="#202025"
-        selectedItemIconColor="#202025"
-        itemTextColor="#202025"
+        tagRemoveIconColor="#a2a2ac"
+        tagBorderColor="#a2a2ac"
+        tagTextColor="#a2a2ac"
+        selectedItemTextColor="#2f2f3c"
+        selectedItemIconColor="#2f2f3c"
+        itemTextColor="#2f2f3c"
         displayKey="label"
-        textColor="#202025"
-        submitButtonColor={"#202025"}
+        textColor="#2f2f3c"
+        submitButtonColor={"#2f2f3c"}
         submitButtonText="Done"
     />
 

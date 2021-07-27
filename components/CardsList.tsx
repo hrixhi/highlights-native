@@ -30,17 +30,6 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const clickPlusAndSelectAlert = PreferredLanguageText('clickPlusAndSelect');
 
     const noChannelCuesAlert = useCallback(async () => {
-        if (props.channelId && props.channelId !== '') {
-            const u = await AsyncStorage.getItem("user")
-            if (u) {
-                const user = JSON.parse(u)
-                if (user._id.toString().trim() === props.createdBy.toString().trim()) {
-                    if (cues.length === 0) {
-                        Alert(clickPlusAndSelectAlert)
-                    }
-                }
-            }
-        }
     }, [props.channelId, props.createdBy, cues])
 
     useEffect(() => {
@@ -59,7 +48,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
             width: '100%',
             paddingTop: 0,
             paddingHorizontal: 25,
-            backgroundColor: '#202025'
+            backgroundColor: '#2f2f3c'
         }}>
             {/* <Animated.View style={{
                 opacity: props.fadeAnimation,
@@ -71,7 +60,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 horizontal={false}
                 contentContainerStyle={{
                     paddingBottom: 15,
-                    backgroundColor: '#202025'
+                    backgroundColor: '#2f2f3c'
                 }}
             >
                 <RefreshControl
@@ -82,7 +71,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {/* <View style={styles.marginSmall} /> */}
                 {
                     filteredCues.map((cue: any, index: number) => {
-                        return <View style={{ height: 70, marginBottom: 15, maxWidth: 500, backgroundColor: '#202025' }} key={index}>
+                        return <View style={{ height: 70, marginBottom: 15, maxWidth: 500, backgroundColor: '#2f2f3c' }} key={index}>
                             <Card
                                 fadeAnimation={props.fadeAnimation}
                                 updateModal={() => props.openUpdate(
@@ -118,7 +107,7 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
                 {
                     filteredCues.length === 0 ?
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                             {PreferredLanguageText('noCuesCreated')}
                         </Text> : null
                 }
@@ -143,7 +132,7 @@ const styleObject = (channelId: any) => {
         },
         marginSmall: {
             height: 10,
-            backgroundColor: '#202025'
+            backgroundColor: '#2f2f3c'
         },
         page: {
             flexDirection: 'column',

@@ -161,19 +161,19 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 }
             /> */}
             {/* <View style={{ width: '80%', height: Dimensions.get('window').height * 0.17 * 0.15, alignSelf: 'center' }} /> */}
-            <View style={{ width: '100%', height: Dimensions.get('window').height * 0.15, backgroundColor: '#202025' }}>
+            <View style={{ width: '100%', height: Dimensions.get('window').height * 0.15, backgroundColor: '#2f2f3c' }}>
                 <View style={{
                     // height: '55%',
                     flexDirection: 'row',
                     display: 'flex',
                     paddingHorizontal: 25,
-                    paddingTop: 27,
-                    backgroundColor: '#202025'
+                    paddingTop: 29,
+                    backgroundColor: '#2f2f3c'
                     // borderBottomWidth: 1
                 }}>
                     <TouchableOpacity
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
-                        style={{ backgroundColor: '#202025' }}>
+                        style={{ backgroundColor: '#2f2f3c' }}>
                         <Image
                             key={school}
                             source={
@@ -190,7 +190,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 width: school && school.logo && school.logo !== '' ?
                                     Dimensions.get('window').height * 0.14 * 0.53456 : Dimensions.get('window').height * 0.14 * 0.53456,
                                 height: school && school.logo && school.logo !== '' ?
-                                    Dimensions.get('window').height * 0.15 * 0.35 : Dimensions.get('window').height * 0.15 * 0.2,
+                                    Dimensions.get('window').height * 0.13 * 0.35 : Dimensions.get('window').height * 0.15 * 0.2,
                             }}
                             resizeMode={'contain'}
                         />
@@ -198,72 +198,72 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     <View
                         // key={JSON.stringify(cues)}
                         style={{
-                            flex: 1, flexDirection: 'row', backgroundColor: '#202025'
+                            flex: 1, flexDirection: 'row', backgroundColor: '#2f2f3c'
                         }}>
                         {
                             props.channelId !== '' ?
-                                <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#202025' }}>
+                                <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#2f2f3c' }}>
                                     <TouchableOpacity
-                                        style={{ marginRight: 15, backgroundColor: '#202025' }}
+                                        style={{ marginRight: 15, backgroundColor: '#2f2f3c' }}
                                         onPress={() => props.openMeeting()}>
                                         <Text style={styles.channelText}>
-                                            <Ionicons name='videocam-outline' size={21} color={'#a2a2aa'} />
+                                            <Ionicons name='videocam-outline' size={19} color={'#fff'} />
                                         </Text>
                                         {
                                             meetingOn ?
                                                 <View style={styles.badge} /> : null
                                         }
-                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                                             Lectures
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={{ marginRight: 15, backgroundColor: '#202025' }}
+                                        style={{ marginRight: 15, backgroundColor: '#2f2f3c' }}
                                         onPress={() => props.openSubscribers()}>
                                         <Text style={styles.channelText}>
-                                            <Ionicons name='mail-outline' size={21} color={'#a2a2aa'} />
+                                            <Ionicons name='mail-outline' size={19} color={'#fff'} />
                                         </Text>
                                         {
                                             unreadMessages !== 0 ?
                                                 <View style={styles.badge2} /> : null
                                         }
-                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                                             Inbox
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={{ marginRight: 15, backgroundColor: '#202025' }}
+                                        style={{ marginRight: 15, backgroundColor: '#2f2f3c' }}
                                         onPress={() => props.openDiscussion()}>
                                         <Text style={styles.channelText}>
-                                            <Ionicons name='chatbubble-ellipses-outline' size={19} color={'#a2a2aa'} />
+                                            <Ionicons name='chatbubble-ellipses-outline' size={18} color={'#fff'} />
                                         </Text>
                                         {
                                             unreadDiscussionThreads !== 0 ?
                                                 <View style={styles.badge3} /> : null
                                         }
-                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                                             Discussion
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={{ marginRight: isOwner ? 15 : 0, backgroundColor: '#202025' }}
+                                        style={{ marginRight: isOwner ? 15 : 0, backgroundColor: '#2f2f3c' }}
                                         onPress={() => props.openGrades()}>
                                         <Text style={styles.channelText}>
-                                            <Ionicons name='stats-chart-outline' size={19} color={'#a2a2aa'} />
+                                            <Ionicons name='stats-chart-outline' size={18} color={'#fff'} />
                                         </Text>
-                                        <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                                             Grades
                                         </Text>
                                     </TouchableOpacity>
                                     {
                                         isOwner ?
                                             <TouchableOpacity
-                                                style={{ marginRight: 0, backgroundColor: '#202025' }}
+                                                style={{ marginRight: 0, backgroundColor: '#2f2f3c' }}
                                                 onPress={() => props.openChannelSettings()}>
                                                 <Text style={styles.channelText}>
-                                                    <Ionicons name='settings-outline' size={19} color={'#a2a2aa'} />
+                                                    <Ionicons name='settings-outline' size={18} color={'#fff'} />
                                                 </Text>
-                                                <Text style={{ fontSize: 9, color: '#a2a2aa', textAlign: 'center' }}>
+                                                <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                                                     Settings
                                                 </Text>
                                             </TouchableOpacity> : null
@@ -274,7 +274,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             //         style={{ marginRight: 15 }}
                             //         onPress={() => props.openCalendar()}>
                             //         <Text style={styles.channelText}>
-                            //             <Ionicons name='calendar-outline' size={20} color={'#a2a2aa'} />
+                            //             <Ionicons name='calendar-outline' size={20} color={'#a2a2ac'} />
                             //         </Text>
                             //     </TouchableOpacity>
                             //     <TouchableOpacity
@@ -282,7 +282,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             //         style={{ marginRight: 5 }}
                             //     >
                             //         <Text style={styles.channelText}>
-                            //             <Ionicons name='help-circle-outline' size={21} color={'#a2a2aa'} />
+                            //             <Ionicons name='help-circle-outline' size={21} color={'#a2a2ac'} />
                             //         </Text>
                             //     </TouchableOpacity>
                             // </View>
@@ -309,7 +309,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             style={filterChoice === 'All' ? styles.subOutline : styles.sub}
                             onPress={() => props.setChannelFilterChoice('All')}>
                             <Text
-                                style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 13 }}
+                                style={{ color: '#a2a2ac', lineHeight: 20, fontSize: 13 }}
                             >
                                 All
                             </Text>
@@ -321,7 +321,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     style={filterChoice === category ? styles.subOutline : styles.sub}
                                     onPress={() => props.setChannelFilterChoice(category)}>
                                     <Text
-                                        style={{ color: '#a2a2aa', lineHeight: 20, fontSize: 13 }}>
+                                        style={{ color: '#a2a2ac', lineHeight: 20, fontSize: 13 }}>
                                         {category}
                                     </Text>
                                 </TouchableOpacity>
@@ -341,7 +341,7 @@ export default React.memo(TopBar, (prev, next) => {
 
 const styleObject: any = (channelId: any) => StyleSheet.create({
     topbar: {
-        height: '14%',
+        height: '13%',
         width: '100%',
         flexDirection: 'column',
         display: 'flex',
@@ -350,7 +350,7 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         borderTopLeftRadius: 0,
         paddingTop: 25,
         maxWidth: 550,
-        backgroundColor: '#202025'
+        backgroundColor: '#2f2f3c'
     },
     badge: {
         position: 'absolute',
@@ -390,23 +390,23 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
     },
     text: {
         textAlign: 'right',
-        color: '#202025',
+        color: '#2f2f3c',
         fontSize: 15,
         paddingRight: 15
     },
     subOutline: {
         fontSize: 15,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         height: 22,
         paddingHorizontal: 10,
         lineHeight: 20,
         borderRadius: 10,
-        borderColor: '#a2a2aa',
+        borderColor: '#a2a2ac',
         borderWidth: 1
     },
     sub: {
         fontSize: 15,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         height: 22,
         paddingHorizontal: 10,
         lineHeight: 20
@@ -415,6 +415,6 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         // paddingTop: 1
         lineHeight: 21,
         textAlign: 'center',
-        backgroundColor: '#202025'
+        backgroundColor: '#2f2f3c'
     }
 });

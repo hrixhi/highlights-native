@@ -253,7 +253,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                         borderTopRightRadius: 0
                     }}
                 >
-                    <ActivityIndicator color={"#a2a2aa"} />
+                    <ActivityIndicator color={"#a2a2ac"} />
                 </View>
             ) : (
                 <View
@@ -412,7 +412,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                     setShowOptions(false)
                                 }}>
                                 <Text style={styles.all}>
-                                    Comments
+                                    FAQ
                                 </Text>
                             </TouchableOpacity>
                             {
@@ -483,9 +483,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                             <Text style={{
                                                 width: '100%',
                                                 fontSize: 16,
-                                                color: '#a2a2aa'
+                                                color: '#a2a2ac'
                                             }}>
-                                                <Ionicons name='chevron-back-outline' size={17} color={'#202025'} style={{ marginRight: 10 }} /> Cue
+                                                <Ionicons name='chevron-back-outline' size={17} color={'#2f2f3c'} style={{ marginRight: 10 }} /> Cue
                                             </Text>
                                     </TouchableOpacity>
                                     </View> */}
@@ -537,7 +537,7 @@ export default Update;
 const styles: any = StyleSheet.create({
     all: {
         fontSize: 11,
-        color: "#a2a2aa",
+        color: "#a2a2ac",
         height: 22,
         overflow: "hidden",
         paddingHorizontal: 10,
@@ -550,7 +550,7 @@ const styles: any = StyleSheet.create({
         color: "#fff",
         paddingHorizontal: 10,
         borderRadius: 10,
-        backgroundColor: "#a2a2aa",
+        backgroundColor: "#2f2f3c",
         lineHeight: 20
     },
 })

@@ -29,6 +29,7 @@ import Meeting from '../components/Meeting';
 import * as Notifications from 'expo-notifications';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText, LanguageSelect } from '../helpers/LanguageContext';
+import moment from 'moment'
 
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -58,6 +59,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   const [reopenUpdateWindow, setReopenUpdateWindow] = useState(Math.random())
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [firstOpened, setFirstOpened] = useState(new Date())
+  const [filterStart, setFilterStart] = useState<any>(null)
+  const [filterEnd, setFilterEnd] = useState<any>(null)
+  const [displayedDate, setDisplayedDate] = useState(moment())
   const responseListener: any = useRef()
 
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(true)
@@ -1098,11 +1102,20 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     setUpdateModalKey(key)
     setUpdateModalIndex(index)
     setPageNumber(pageNumber)
+    if (channId !== '') {
+      const sub = subscriptions.find((item: any) => {
+        return item.channelId === channId
+      })
+      if (sub) {
+        setFilterChoice(sub.channelName)
+        setChannelCreatedBy(sub.channelCreatedBy)
+      }
+    }
     setChannelId(channId)
     setCreatedBy(by)
     setCueId(_id)
     openModal('Update')
-  }, [])
+  }, [subscriptions])
 
   const reloadCueListAfterUpdate = useCallback(async () => {
     const unparsedCues = await AsyncStorage.getItem('cues')
@@ -1349,7 +1362,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     await AsyncStorage.setItem("cues", stringifiedCues);
     reloadCueListAfterUpdate();
 
-  }, [cues, updateModalKey, updateModalIndex]) 
+  }, [cues, updateModalKey, updateModalIndex])
 
   const closeModal = useCallback(async (val: string) => {
 
@@ -1564,7 +1577,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }
     return 0;
   })
+
   if (filterChoice === 'All') {
+    filteredCues = cuesCopy
+  } else if (filterChoice === 'MyCues') {
     filteredCues = cuesCopy.filter((item) => {
       return !item.channelId || item.channelId === ''
     })
@@ -1580,6 +1596,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     filteredCues = cuesCopy.filter((item) => {
       return item.customCategory === filterChoice
     })
+  }
+
+  let dateFilteredCues: any[] = []
+  if (filterStart && filterEnd) {
+    dateFilteredCues = filteredCues.filter((item) => {
+      const date = new Date(item.date)
+      return date >= filterStart && date <= filterEnd
+    })
+    console.log(dateFilteredCues)
+  } else {
+    dateFilteredCues = filteredCues
   }
 
   if (!init) {
@@ -1631,12 +1658,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 resizeMode={'contain'}
               />
             </View>
-            {/* <Text style={{ fontSize: 21, color: '#202025', fontFamily: 'inter', paddingBottom: 15, maxWidth: 500, textAlign: 'center' }}>
+            {/* <Text style={{ fontSize: 21, color: '#2f2f3c', fontFamily: 'inter', paddingBottom: 15, maxWidth: 500, textAlign: 'center' }}>
               {
                 showForgotPassword ? '' : PreferredLanguageText('login')
               }
             </Text> */}
-            <Text style={{ fontSize: 18, color: '#a2a2aa', fontFamily: 'overpass', paddingBottom: 25, maxWidth: 500, textAlign: 'center' }}>
+            <Text style={{ fontSize: 18, color: '#a2a2ac', fontFamily: 'overpass', paddingBottom: 25, maxWidth: 500, textAlign: 'center' }}>
               {
                 showForgotPassword ? PreferredLanguageText('temporaryPassword') : PreferredLanguageText('continueLeftOff')
               }
@@ -1647,14 +1674,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
               justifyContent: 'center',
               paddingTop: 25
             }}>
-              <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 5, paddingTop: 10 }}>
+              <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 5, paddingTop: 10 }}>
                 {PreferredLanguageText('email')}
               </Text>
               <TextInput
                 value={email}
                 placeholder={''}
                 onChangeText={(val: any) => setEmail(val)}
-                placeholderTextColor={'#a2a2aa'}
+                placeholderTextColor={'#a2a2ac'}
                 errorText={emailValidError}
               />
               {
@@ -1662,7 +1689,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   <View style={{
                     backgroundColor: 'white',
                   }}>
-                    <Text style={{ color: '#202025', fontSize: 14, paddingBottom: 5 }}>
+                    <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 5 }}>
                       {PreferredLanguageText('password')}
                     </Text>
                     <TextInput
@@ -1670,7 +1697,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                       value={password}
                       placeholder={''}
                       onChangeText={(val: any) => setPassword(val)}
-                      placeholderTextColor={'#a2a2aa'}
+                      placeholderTextColor={'#a2a2ac'}
                     />
                   </View>
               }
@@ -1731,7 +1758,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   <Text style={{
                     textAlign: 'center',
                     lineHeight: 35,
-                    color: '#202025',
+                    color: '#2f2f3c',
                     fontSize: 11,
                     backgroundColor: '#f4f4f6',
                     paddingHorizontal: 25,
@@ -1763,7 +1790,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                   <Text style={{
                     textAlign: 'center',
                     lineHeight: 35,
-                    color: '#202025',
+                    color: '#2f2f3c',
                     fontSize: 11,
                     backgroundColor: '#f4f4f6',
                     overflow: 'hidden',
@@ -1787,14 +1814,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : Dimensions.get('window').width * 0.3,
         height: Dimensions.get('window').height,
         flexDirection: 'column',
-        backgroundColor: '#202025',
+        backgroundColor: '#2f2f3c',
         // borderRightColor: '#eeeeef',
         // borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 1
       }}>
         <TopBar
-          key={JSON.stringify(channelFilterChoice) + JSON.stringify(filteredCues) + JSON.stringify(modalType) + JSON.stringify(filterChoice)}
+          key={JSON.stringify(channelFilterChoice) + JSON.stringify(dateFilteredCues) + JSON.stringify(modalType) + JSON.stringify(filterChoice)}
           openChannels={() => openModal('Channels')}
-          cues={filteredCues}
+          cues={dateFilteredCues}
           filterChoice={filterChoice}
           channelId={channelId}
           channelFilterChoice={channelFilterChoice}
@@ -1813,14 +1840,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         />
         {
           reLoading ? <View style={[styles.activityContainer, styles.horizontal]}>
-            <ActivityIndicator color={'#a2a2aa'} />
+            <ActivityIndicator color={'#a2a2ac'} />
           </View>
             : <View style={[styles.activityContainer, styles.horizontal]}>
               <CardsList
                 pageNumber={pageNumber}
                 fadeAnimation={fadeAnimation}
-                key={JSON.stringify(filterChoice) + JSON.stringify(channelId) + JSON.stringify(filteredCues) + JSON.stringify(channelFilterChoice)}
-                cues={filteredCues}
+                key={JSON.stringify(filterChoice) + JSON.stringify(channelId) + JSON.stringify(dateFilteredCues) + JSON.stringify(channelFilterChoice)}
+                cues={dateFilteredCues}
                 channelId={channelId}
                 createdBy={channelCreatedBy}
                 filterChoice={filterChoice}
@@ -1831,7 +1858,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
         <BottomBar
           closeModal={() => closeModal("")}
-          cues={filteredCues}
+          cues={dateFilteredCues}
           openCreate={() => openModal('Create')}
           openChannels={() => openModal('Channels')}
           openProfile={() => openModal('Profile')}
@@ -1846,6 +1873,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           openWalkthrough={() => openModal('Walkthrough')}
           openCalendar={() => openModal('Calendar')}
           channelFilterChoice={channelFilterChoice}
+          filterStart={filterStart}
+          filterEnd={filterEnd}
+          setFilterStart={(s: any) => setFilterStart(s)}
+          setFilterEnd={(e: any) => setFilterEnd(e)}
+          displayedDate={displayedDate}
+          setDisplayedDate={(e: any) => setDisplayedDate(e)}
         />
       </View >
       {
@@ -1859,7 +1892,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             backgroundColor: '#fff',
             position: Dimensions.get('window').width < 1024 ? 'absolute' : 'relative'
           }}
-        /> :
+        >
+          <View style={{ flexDirection: 'column', flex: 1, width: '100%', justifyContent: 'center', backgroundColor: '#2f2f3c' }}>
+            <Text style={{ fontSize: 20, color: '#a2a2ac', textAlign: 'center', fontFamily: 'inter', backgroundColor: '#2F2F3C' }}>
+              Select Cue to view.
+            </Text>
+          </View>
+        </View> :
           <View style={{
             width: Dimensions.get('window').width < 1024 ? '100%' : Dimensions.get('window').width * 0.7,
             height: Dimensions.get('window').height,
@@ -1891,7 +1930,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 <TouchableOpacity
                   onPress={() => closeModal("")}
                   style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#eeeeef', width: '100%' }}>
-                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#202025' }}>
+                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#2f2f3c' }}>
                     <Ionicons name='chevron-back-outline' size={15} />{PreferredLanguageText('back')}
                   </Text>
                 </TouchableOpacity> :
@@ -1913,7 +1952,7 @@ const styles = StyleSheet.create({
   activityContainer: {
     borderTopWidth: 0,
     borderBottomWidth: 0,
-    backgroundColor: '#202025',
+    backgroundColor: '#2f2f3c',
     borderColor: '#f4f4f6',
     height: '66%',
     width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,

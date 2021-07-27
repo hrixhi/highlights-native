@@ -12,6 +12,8 @@ import {
     MenuOption,
     MenuTrigger,
 } from 'react-native-popup-menu';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -65,71 +67,35 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
     return (
         <View style={styles.bottombar}>
             <View style={styles.colorBar}>
-                <View style={{ flexDirection: 'row', flex: 1, backgroundColor: '#202025' }}>
-                    <View style={{ width: '50%', paddingLeft: 20, flexDirection: 'row', justifyContent: 'center', backgroundColor: '#202025' }}>
-                        <View style={{ backgroundColor: '#202025' }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: '#202025' }}>
+                <View style={{ flexDirection: 'row', flex: 1, backgroundColor: '#2f2f3c' }}>
+                    <View style={{ paddingLeft: 20, flexDirection: 'row', backgroundColor: '#2f2f3c' }}>
+                        <View style={{ backgroundColor: '#2f2f3c' }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', display: 'flex', backgroundColor: '#2f2f3c', paddingLeft: 5 }}>
                                 <Menu
                                     onSelect={(subscription: any) => {
-                                        if (subscription === 'My Cues') {
+                                        if (subscription === 'All') {
                                             props.handleFilterChange('All')
                                             props.setChannelFilterChoice('All')
                                             props.setChannelId('')
+                                            props.closeModal()
+                                            return
+                                        }
+                                        if (subscription === 'My Cues') {
+                                            props.handleFilterChange('MyCues')
+                                            props.setChannelFilterChoice('All')
+                                            props.setChannelId('')
+                                            props.closeModal()
                                             return
                                         }
                                         props.setChannelFilterChoice('All')
                                         props.handleFilterChange(subscription.channelName)
                                         props.setChannelId(subscription.channelId)
                                         props.setChannelCreatedBy(subscription.channelCreatedBy)
+                                        props.closeModal()
                                     }}>
                                     <MenuTrigger>
-                                        <Text style={{ fontFamily: 'inter', fontSize: 17, color: '#fff' }}>
-                                            {choice === 'All' ? 'My Cues' : choice}<Ionicons name='caret-down' size={17} />
-                                        </Text>
-                                    </MenuTrigger>
-                                    <MenuOptions customStyles={{
-                                        optionsContainer: {
-                                            padding: 10,
-                                            borderRadius: 15,
-                                            shadowOpacity: 0,
-                                            borderWidth: 1,
-                                            borderColor: '#f4f4f6'
-                                        }
-                                    }}>
-                                        <MenuOption
-                                            value={'My Cues'}>
-                                            <Text style={{ color: '#202025' }}>
-                                                My Cues
-                                            </Text>
-                                        </MenuOption>
-                                        {
-                                            props.subscriptions.map((subscription: any) => {
-                                                return <MenuOption
-                                                    value={subscription}>
-                                                    <Text style={{ color: '#202025' }}>
-                                                        {subscription.channelName}
-                                                    </Text>
-                                                </MenuOption>
-                                            })
-                                        }
-                                    </MenuOptions>
-                                </Menu>
-                            </View>
-                            <Text style={{ fontSize: 9, color: '#a2a2aa', paddingTop: 7, textAlign: 'center' }}>
-                                Channel
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={{ width: '50%', paddingRight: 20, flexDirection: 'row', justifyContent: 'center', backgroundColor: '#202025' }}>
-                        <View style={{ backgroundColor: '#202025' }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: '#202025' }}>
-                                <Menu
-                                    onSelect={(category: any) => {
-                                        props.setChannelFilterChoice(category)
-                                    }}>
-                                    <MenuTrigger>
-                                        <Text style={{ fontFamily: 'inter', fontSize: 17, color: '#a2a2aa' }}>
-                                            {filterChoice}<Ionicons name='caret-down' size={17} />
+                                        <Text style={{ fontFamily: 'inter', fontSize: 15, color: '#fff' }}>
+                                            {choice === 'MyCues' ? 'My Cues' : choice}<Ionicons name='caret-down' size={15} />
                                         </Text>
                                     </MenuTrigger>
                                     <MenuOptions customStyles={{
@@ -143,7 +109,58 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     }}>
                                         <MenuOption
                                             value={'All'}>
-                                            <Text style={{ color: '#202025' }}>
+                                            <Text style={{ color: '#2f2f3c' }}>
+                                                All
+                                            </Text>
+                                        </MenuOption>
+                                        <MenuOption
+                                            value={'My Cues'}>
+                                            <Text style={{ color: '#2f2f3c' }}>
+                                                My Cues
+                                            </Text>
+                                        </MenuOption>
+                                        {
+                                            props.subscriptions.map((subscription: any) => {
+                                                return <MenuOption
+                                                    value={subscription}>
+                                                    <Text style={{ color: '#2f2f3c' }}>
+                                                        {subscription.channelName}
+                                                    </Text>
+                                                </MenuOption>
+                                            })
+                                        }
+                                    </MenuOptions>
+                                </Menu>
+                            </View>
+                            <Text style={{ fontSize: 10, color: '#a2a2ac', paddingTop: 7, textAlign: 'center', paddingLeft: 0 }}>
+                                Channel
+                            </Text>
+                        </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', backgroundColor: '#2f2f3c', paddingLeft: 20 }}>
+                        <View style={{ backgroundColor: '#2f2f3c' }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: '#2f2f3c' }}>
+                                <Menu
+                                    onSelect={(category: any) => {
+                                        props.setChannelFilterChoice(category)
+                                    }}>
+                                    <MenuTrigger>
+                                        <Text style={{ fontFamily: 'inter', fontSize: 15, color: '#a2a2ac' }}>
+                                            {filterChoice}<Ionicons name='caret-down' size={15} />
+                                        </Text>
+                                    </MenuTrigger>
+                                    <MenuOptions customStyles={{
+                                        optionsContainer: {
+                                            padding: 10,
+                                            borderRadius: 15,
+                                            shadowOpacity: 0,
+                                            borderWidth: 1,
+                                            borderColor: '#f4f4f6'
+                                        }
+                                    }}>
+                                        <MenuOption
+                                            value={'All'}>
+                                            <Text style={{ color: '#2f2f3c' }}>
                                                 {PreferredLanguageText('myCues')}
                                             </Text>
                                         </MenuOption>
@@ -151,7 +168,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             channelCategories.map((category: any) => {
                                                 return <MenuOption
                                                     value={category}>
-                                                    <Text style={{ color: '#202025' }}>
+                                                    <Text style={{ color: '#2f2f3c' }}>
                                                         {category}
                                                     </Text>
                                                 </MenuOption>
@@ -160,84 +177,91 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     </MenuOptions>
                                 </Menu>
                             </View>
-                            <Text style={{ fontSize: 9, color: '#a2a2aa', paddingTop: 7, textAlign: 'center' }}>
+                            <Text style={{ fontSize: 10, color: '#a2a2ac', paddingTop: 7, textAlign: 'center' }}>
                                 Category
                             </Text>
                         </View>
                     </View>
-                </View>
-                {/* <View style={{ flexDirection: 'row', width: '100%' }}>
-                    <ScrollView
-                        horizontal={true}
-                        contentContainerStyle={{ paddingRight: 15 }}
-                        showsHorizontalScrollIndicator={false} style={{ paddingLeft: 15 }}>
-                        <TouchableOpacity
-                            style={choice === 'All' ? styles.subOutline : styles.sub}
-                            onPress={() => {
-                                props.handleFilterChange('All')
-                                props.setChannelFilterChoice('All')
-                                props.setChannelId('')
+                    {
+                        props.filterStart && props.filterEnd ?
+                            <View style={{
+                                // borderWidth: 1,
+                                flex: 1,
+                                flexDirection: 'row',
+                                justifyContent: 'flex-end',
+                                backgroundColor: '#2f2f3c',
+                                paddingRight: 5
                             }}>
-                            <Text
-                                style={{
-                                    color: colorScheme === 'light' ? (
-                                        choice === 'All' ? 'white' : '#202025'
-                                    ) : (
-                                        choice === 'All' ? '#202025' : 'white'
-                                    ),
-                                    lineHeight: 22,
-                                    fontSize: 13
-                                }}
-                            >
-                                {PreferredLanguageText('myCues')}
-                            </Text>
-                        </TouchableOpacity>
-                        {
-                            props.subscriptions.map((subscription: any) => {
-                                return <TouchableOpacity
-                                    key={Math.random()}
-                                    style={choice === subscription.channelName ? styles.subOutline : styles.sub}
+                                <View style={{ backgroundColor: '#2f2f3c' }}>
+                                    <DateTimePicker
+                                        value={props.filterStart}
+                                        mode={'date'}
+                                        style={{ width: 75 }}
+                                        textColor={'#fff'}
+                                        onChange={(event: any, selectedDate: any) => {
+                                            const currentDate: any = selectedDate;
+                                            props.setFilterStart(currentDate)
+                                            if (currentDate > props.filterEnd) {
+                                                props.setFilterEnd(currentDate)
+                                            }
+                                        }}
+                                    />
+                                </View>
+                                <View style={{ backgroundColor: '#2f2f3c' }}>
+                                    <DateTimePicker
+                                        style={{ width: 75 }}
+                                        value={props.filterEnd}
+                                        mode={'date'}
+                                        textColor={'#fff'}
+                                        onChange={(event: any, selectedDate: any) => {
+                                            const currentDate: any = selectedDate;
+                                            props.setFilterStart(currentDate)
+                                            if (currentDate < props.filterStart) {
+                                                props.setFilterStart(currentDate)
+                                            }
+                                        }}
+                                    />
+                                </View>
+                                <TouchableOpacity
+                                    style={{ backgroundColor: '#2f2f3c' }}
                                     onPress={() => {
-                                        if (subscription.inactive) {
-                                            Alert("Subscription inactivated by channel creator!", "Contact channel creator to gain access.")
-                                            return;
-                                        }
-                                        props.setChannelFilterChoice('All')
-                                        props.handleFilterChange(subscription.channelName)
-                                        props.setChannelId(subscription.channelId)
-                                        props.setChannelCreatedBy(subscription.channelCreatedBy)
-                                    }}>
-                                    <Text style={{
-                                        color: colorScheme === 'light' ? (
-                                            choice === subscription.channelName ? 'white' : '#202025'
-                                        ) : (
-                                            choice === subscription.channelName ? '#202025' : 'white'
-                                        ),
-                                        lineHeight: 22,
-                                        fontFamily: 'overpass',
-                                        fontSize: 13
-                                    }}>
-                                        {subscription.channelName}
+                                        props.setFilterStart(null)
+                                        props.setFilterEnd(null)
+                                    }}
+                                >
+                                    <Text style={{ color: '#fff', lineHeight: 35 }}>
+                                        <Ionicons name='close-outline' size={20} color={'#fff'} />
                                     </Text>
                                 </TouchableOpacity>
-                            })
-                        }
-                    </ScrollView>
+                            </View> :
+                            <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', backgroundColor: '#2f2f3c', paddingRight: 20 }}>
+                                <TouchableOpacity
+                                    style={{ backgroundColor: '#2f2f3c' }}
+                                    onPress={() => {
+                                        const prev = new Date()
+                                        prev.setDate(prev.getDate() - 7)
+                                        props.setFilterStart(prev)
+                                        props.setFilterEnd(new Date())
+                                    }}
+                                >
+                                    <Text style={{ color: '#fff', lineHeight: 30 }}>
+                                        Select Dates
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                    }
                 </View>
-                <Text style={{ fontSize: 9, color: '#a2a2aa', paddingTop: 7, paddingLeft: 25 }}>
-                    My Channels
-                </Text> */}
             </View>
-            <View style={{ display: 'flex', flexDirection: 'row', height: '50%', paddingHorizontal: 10, paddingTop: 7, backgroundColor: '#202025' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', height: '50%', paddingHorizontal: 10, paddingTop: 7, backgroundColor: '#2f2f3c' }}>
                 <View style={styles.icons}>
                     <TouchableOpacity
                         onPress={() => props.openChannels()}
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='radio-outline' size={21} color={iconColor} />
+                            <Ionicons name='school-outline' size={20} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: iconColor, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                             Channels
                         </Text>
                     </TouchableOpacity>
@@ -248,9 +272,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='calendar-outline' size={21} color={iconColor} />
+                            <Ionicons name='calendar-outline' size={19} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, textAlign: 'center', color: iconColor }}>
+                        <Text style={{ fontSize: 10, textAlign: 'center', color: '#a2a2ac' }}>
                             Planner
                         </Text>
                     </TouchableOpacity>
@@ -271,9 +295,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={21} color={iconColor} />
+                            <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={20} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: iconColor, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                             {
                                 !loggedIn && userLoaded ?
                                     'Sign Up' : 'Profile'
@@ -287,9 +311,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={styles.center}
                     >
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='help-circle-outline' size={21} color={iconColor} />
+                            <Ionicons name='help-circle-outline' size={20} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: iconColor, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                             Help
                         </Text>
                     </TouchableOpacity>
@@ -303,13 +327,13 @@ export default BottomBar
 
 const styleObject: any = (colorScheme: any) => StyleSheet.create({
     bottombar: {
-        height: "20%",
+        height: "21%",
         width: '100%',
         display: 'flex',
         paddingBottom: 10,
         borderTopWidth: 1,
-        borderColor: '#333333',
-        backgroundColor: '#202025'
+        borderColor: '#a2a2ac',
+        backgroundColor: '#2f2f3c'
     },
     icons: {
         width: '20%',
@@ -319,7 +343,7 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         flexDirection: 'row',
         overflow: 'hidden',
         textAlign: 'center', paddingTop: 5,
-        backgroundColor: '#202025'
+        backgroundColor: '#2f2f3c'
     },
     defaultFont: {
         fontFamily: 'system font'
@@ -330,14 +354,14 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         // display: 'flex',
         // flexDirection: 'column',
         textAlign: 'center',
-        backgroundColor: '#202025'
+        backgroundColor: '#2f2f3c'
     },
     colorBar: {
         width: '98.5%',
         height: '50%',
         // flexDirection: 'row',
         paddingTop: 18,
-        backgroundColor: '#202025'
+        backgroundColor: '#2f2f3c'
     },
     iconContainer: {
         width: '20%',
@@ -358,27 +382,27 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
     },
     outline: {
         borderRadius: 10,
-        backgroundColor: colorScheme === 'light' ? '#202025' : 'white',
-        color: colorScheme === 'light' ? 'white' : '#202025'
+        backgroundColor: colorScheme === 'light' ? '#2f2f3c' : 'white',
+        color: colorScheme === 'light' ? 'white' : '#2f2f3c'
     },
     cusCategory: {
         fontSize: 15,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         height: 22,
         paddingHorizontal: 10
     },
     sub: {
         fontSize: 15,
-        color: colorScheme === 'light' ? '#202025' : 'white',
+        color: colorScheme === 'light' ? '#2f2f3c' : 'white',
         height: 22,
         paddingHorizontal: 10
     },
     subOutline: {
         fontSize: 15,
-        color: colorScheme === 'light' ? '#202025' : 'white',
+        color: colorScheme === 'light' ? '#2f2f3c' : 'white',
         height: 22,
         paddingHorizontal: 10,
         borderRadius: 10,
-        backgroundColor: colorScheme === 'light' ? '#202025' : 'white',
+        backgroundColor: colorScheme === 'light' ? '#2f2f3c' : 'white',
     }
 });
