@@ -47,7 +47,7 @@ const MessageCard: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <Text style={{
                         fontSize: 11,
                         fontWeight: 'bold',
-                        color: props.user.displayName === props.message.displayName ? '#333333' : '#a2a2aa',
+                        color: props.user.displayName === props.message.displayName ? '#333333' : '#a2a2ac',
                         marginRight: 5,
                         flex: 1,
                         textAlign: 'right'
@@ -61,8 +61,8 @@ const MessageCard: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         <TouchableOpacity
                             onPress={() => Linking.openURL(url)}
                             style={{ backgroundColor: '#f4f4f6', flex: 1 }}>
-                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 16, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                <Ionicons name='document-outline' size={17} color='#a2a2aa' /> {title}.{type}
+                            <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 16, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                <Ionicons name='document-outline' size={17} color='#a2a2ac' /> {title}.{type}
                             </Text>
                         </TouchableOpacity>
                         // </a>
@@ -95,7 +95,7 @@ const styles: any = () => StyleSheet.create({
     },
     dateContainer: {
         fontSize: 10,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         backgroundColor: '#f4f4f6',
         display: 'flex',
         flexDirection: 'row',
@@ -103,7 +103,7 @@ const styles: any = () => StyleSheet.create({
     },
     date: {
         fontSize: 10,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         marginLeft: 5
     }
 });

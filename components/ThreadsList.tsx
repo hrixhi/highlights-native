@@ -185,7 +185,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 width: '100%',
                                 lineHeight: 23
                             }}>
-                                <Ionicons name='chevron-back-outline' size={23} color={'#202025'} />
+                                <Ionicons name='chevron-back-outline' size={23} color={'#2f2f3c'} />
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -196,7 +196,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 ? <Text
                                     ellipsizeMode="tail"
                                     style={{
-                                        color: '#202025',
+                                        color: '#2f2f3c',
                                         fontSize: 21,
                                         paddingBottom: 20,
                                         fontFamily: 'inter',
@@ -220,14 +220,14 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             //     <Text style={{
                             //         lineHeight: 23,
                             //         marginRight: 10,
-                            //         color: '#a2a2aa',
+                            //         color: '#a2a2ac',
                             //         fontSize: 11,
                             //         textTransform: 'uppercase'
                             //     }}>
                             //         {PreferredLanguageText('comments')}
                             //     </Text>
                             //     <Text style={{ lineHeight: 21 }}>
-                            //         <Ionicons size={14} name={showComments ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2aa' />
+                            //         <Ionicons size={14} name={showComments ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2ac' />
                             //     </Text>
                             // </TouchableOpacity>
                         }
@@ -249,7 +249,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         fontSize: 11,
                                     }}>
                                         NEW POST
-                                        {/* <Ionicons name='create-outline' size={20} color={'#202025'} /> */}
+                                        {/* <Ionicons name='create-outline' size={20} color={'#2f2f3c'} /> */}
                                     </Text>
                                 </TouchableOpacity> : null
                         }
@@ -259,7 +259,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 {
                     threads.length === 0 ?
                         <View style={{ backgroundColor: 'white', flex: 1 }}>
-                            <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                            <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                 {
                                     !props.cueId ? PreferredLanguageText('noPosts') : PreferredLanguageText('noComments')
                                 }
@@ -274,7 +274,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     flexDirection: 'column',
                                     backgroundColor: 'white'
                                 }}>
-                                    <ActivityIndicator color={'#a2a2aa'} />
+                                    <ActivityIndicator color={'#a2a2ac'} />
                                 </View> :
                                 <View style={{
                                     width: '100%',
@@ -354,7 +354,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                         <Menu
                                                             onSelect={(cat: any) => setFilterChoice(cat)}>
                                                             <MenuTrigger>
-                                                                <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2aa' }}>
+                                                                <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2ac' }}>
                                                                     {filterChoice === '' ? 'All' : filterChoice}<Ionicons name='caret-down' size={14} />
                                                                 </Text>
                                                             </MenuTrigger>
@@ -445,7 +445,7 @@ const styleObject = () => {
             height: 22,
             borderRadius: 10,
             borderWidth: 1,
-            borderColor: '#a2a2aa',
+            borderColor: '#a2a2ac',
             color: 'white'
         }
     })

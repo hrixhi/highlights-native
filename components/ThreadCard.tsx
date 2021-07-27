@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const [loading, setLoading] = useState(true)
-    const [color, setColor] = useState('#a2a2aa');
+    const [color, setColor] = useState('#a2a2ac');
     const [subtitle, setSubtitle] = useState('')
 
     const [imported, setImported] = useState(false)
@@ -42,7 +42,7 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
             if (props.channelCreatedBy.toString().trim() === props.thread.userId.toString().trim()) {
                 setColor('#3B64F8')
             } else if (unparsedUser._id.toString().trim() === props.thread.userId.toString().trim()) {
-                setColor('#a2a2aa')
+                setColor('#a2a2ac')
             }
         }
         setLoading(false)
@@ -78,7 +78,7 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         {
                             props.thread.isPrivate ?
                                 <Text style={styleObject.date}>
-                                    <Ionicons name='eye-off-outline' color={'#a2a2aa'} />
+                                    <Ionicons name='eye-off-outline' color={'#a2a2ac'} />
                                 </Text> : null
                         }
                         <Text style={{
@@ -95,13 +95,13 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     {
                         imported ?
                             <View style={{ backgroundColor: '#f4f4f6', flex: 1, flexDirection: 'row' }}>
-                                <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 16, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
-                                    <Ionicons name='document-outline' size={17} color='#a2a2aa' /> {title}.{type}
+                                <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 16, paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                    <Ionicons name='document-outline' size={17} color='#a2a2ac' /> {title}.{type}
                                 </Text>
                                 <Text ellipsizeMode={'tail'}
                                     numberOfLines={1}
                                     style={styleObject.titleArrow}>
-                                    <Ionicons name="chevron-forward-outline" color="#a2a2aa" size={20} style={{ marginTop: 4 }} />
+                                    <Ionicons name="chevron-forward-outline" color="#a2a2ac" size={20} style={{ marginTop: 4 }} />
                                 </Text>
                             </View>
                             : <View style={{ backgroundColor: '#f4f4f6', width: '100%', flexDirection: 'row', display: 'flex' }}>
@@ -130,7 +130,7 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 <Text ellipsizeMode={'tail'}
                                     numberOfLines={1}
                                     style={styleObject.titleArrow}>
-                                    <Ionicons name="chevron-forward-outline" color="#a2a2aa" size={20} style={{ marginTop: 4 }} />
+                                    <Ionicons name="chevron-forward-outline" color="#a2a2ac" size={20} style={{ marginTop: 4 }} />
                                 </Text>
                             </View>
                     }
@@ -189,26 +189,26 @@ const styles: any = () => StyleSheet.create({
     },
     date: {
         fontSize: 10,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         marginLeft: 5
     },
     title: {
         fontFamily: 'inter',
         fontSize: 13,
         paddingTop: 5,
-        color: '#202025',
+        color: '#2f2f3c',
         flex: 1
     },
     titleArrow: {
         fontFamily: 'inter',
         fontSize: 13,
         paddingTop: 5,
-        color: '#202025',
+        color: '#2f2f3c',
         marginLeft: 10
     },
     description: {
         fontSize: 13,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         height: '30%',
     },
     color: {

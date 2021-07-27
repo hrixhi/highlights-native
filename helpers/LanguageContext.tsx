@@ -124,7 +124,7 @@ const EnglishBank: { [key: string]: string } = {
     internetRequired: 'Internet connection required to initialise.',
     removeFromChannel: "REMOVE FROM CHANNEL", //
     inbox: 'Inbox',
-    noCuesCreated: 'No content in channel.',
+    noCuesCreated: 'No content.',
     present: 'Present',
     addChoice: 'Add Choice',
     addProblem: 'Add Problem',
@@ -132,9 +132,9 @@ const EnglishBank: { [key: string]: string } = {
     enterPoints: 'Enter points',
     no: 'No',
     inviteUser: 'Add User',
-    noContent: 'No Content',
+    noContent: 'No content.',
     existingUsers: 'Existing Users',
-    noExistingUsers: 'No Existing Users',
+    noExistingUsers: 'No existing users',
     sharing: 'Sharing...',
     meeting: "Lecture",
     // Alerts
@@ -642,7 +642,7 @@ export function LanguageSelect() {
 
     const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
     const colorScheme = useColorScheme();
-    const color = colorScheme === 'light' ? '#202025' : '#fff'
+    const color = colorScheme === 'light' ? '#2f2f3c' : '#fff'
 
     return <LanguageContext.Consumer>
         {context => {
@@ -670,7 +670,7 @@ export function LanguageSelect() {
                         {
                             languageOptions.map((item: any, index: number) => {
                                 return <Picker.Item
-                                    color={language === item.value ? '#3B64F8' : "#202025"}
+                                    color={language === item.value ? '#3B64F8' : "#2f2f3c"}
                                     label={item.label}
                                     value={item.value}
                                     key={index}
@@ -687,7 +687,7 @@ export function LanguageSelect() {
                 //         <Picker
                 //             selectedValue={language}
                 //             style={{ height: 28,  borderRadius: 10,
-                //                 // border: "1px solid #A2A2AA",
+                //                 // border: "1px solid #a2a2ac",
                 //                 fontSize: 11,
                 //                 flex: 1
                 //              }}
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 11,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         textAlign: 'left',
         paddingHorizontal: 10
     },

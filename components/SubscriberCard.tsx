@@ -49,7 +49,7 @@ const SubscriberCard: React.FunctionComponent<{ [label: string]: any }> = (props
                                         </Text> : null
                                 }
                                 {
-                                    props.hideChevron ? null : <Ionicons name="chevron-forward-outline" color="#a2a2aa" size={20} style={{ marginTop: 3, marginLeft: 10 }} />
+                                    props.hideChevron ? null : <Ionicons name="chevron-forward-outline" color="#a2a2ac" size={20} style={{ marginTop: 3, marginLeft: 10 }} />
                                 }
                             </View>
                             : null
@@ -96,7 +96,7 @@ const styles: any = (status: any) => StyleSheet.create({
         fontFamily: 'inter',
         fontSize: 13,
         paddingTop: 5,
-        color: '#202025',
+        color: '#2f2f3c',
         marginLeft: 10
     },
     title: {
@@ -105,10 +105,10 @@ const styles: any = (status: any) => StyleSheet.create({
         // width: '100%',
         flex: 1,
         paddingTop: 5,
-        color: '#202025'
+        color: '#2f2f3c'
     },
     description: {
         fontSize: 13,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
     }
 });

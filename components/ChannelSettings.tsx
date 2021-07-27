@@ -248,7 +248,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         // paddingLeft: 10,
                         flex: 1,
                         lineHeight: 25,
-                        color: '#202025',
+                        color: '#2f2f3c',
                         paddingBottom: 50
                     }}>
                     Settings
@@ -261,7 +261,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 >
                     <View style={{ flex: 1, paddingBottom: 50, backgroundColor: '#fff' }}>
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                                 {PreferredLanguageText('channel') + ' ' + PreferredLanguageText('name')}
                             </Text>
                             <TextInput
@@ -270,25 +270,25 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 onChangeText={val => {
                                     setName(val)
                                 }}
-                                placeholderTextColor={'#a2a2aa'}
+                                placeholderTextColor={'#a2a2ac'}
                                 required={true}
                                 footerMessage={'case sensitive'}
                             />
                         </View>
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                                 {PreferredLanguageText('enrolmentPassword')}
                             </Text>
                             <TextInput
                                 value={password}
                                 placeholder={`(${PreferredLanguageText('optional')})`}
                                 onChangeText={val => setPassword(val)}
-                                placeholderTextColor={'#a2a2aa'}
+                                placeholderTextColor={'#a2a2ac'}
                                 secureTextEntry={true}
                                 required={false}
                             />
                         </View>
-                        <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                             Subscribers
                         </Text>
                         <View
@@ -325,19 +325,19 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 selectText="Subscribers"
                                 searchInputPlaceholderText="Search..."
                                 altFontFamily="overpass"
-                                tagRemoveIconColor="#a2a2aa"
-                                tagBorderColor="#a2a2aa"
-                                tagTextColor="#a2a2aa"
-                                selectedItemTextColor="#202025"
-                                selectedItemIconColor="#202025"
-                                itemTextColor="#202025"
+                                tagRemoveIconColor="#a2a2ac"
+                                tagBorderColor="#a2a2ac"
+                                tagTextColor="#a2a2ac"
+                                selectedItemTextColor="#2f2f3c"
+                                selectedItemIconColor="#2f2f3c"
+                                itemTextColor="#2f2f3c"
                                 displayKey="label"
-                                textColor="#202025"
-                                submitButtonColor={'#202025'}
+                                textColor="#2f2f3c"
+                                submitButtonColor={'#2f2f3c'}
                                 submitButtonText="Done"
                             />
                         </View>
-                        <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                             Moderators
                         </Text>
                         <View
@@ -413,7 +413,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         <Text style={{
                                             textAlign: 'center',
                                             lineHeight: 35,
-                                            color: '#202025',
+                                            color: '#2f2f3c',
                                             fontSize: 11,
                                             backgroundColor: '#f4f4f6',
                                             paddingHorizontal: 25,
@@ -447,24 +447,24 @@ const styles = StyleSheet.create({
     outline: {
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#a2a2aa'
+        borderColor: '#a2a2ac'
     },
     all: {
         fontSize: 15,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         height: 22,
         paddingHorizontal: 10,
         backgroundColor: 'white'
     },
     allOutline: {
         fontSize: 15,
-        color: '#a2a2aa',
+        color: '#a2a2ac',
         height: 22,
         paddingHorizontal: 10,
         backgroundColor: 'white',
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#a2a2aa'
+        borderColor: '#a2a2ac'
     },
     colorBar: {
         width: '100%',

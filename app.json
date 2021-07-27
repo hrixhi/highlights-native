@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#202025"
+      "backgroundColor": "#2f2f3c"
     },
     "updates": {
       "fallbackToCacheTimeout": 30000
@@ -30,7 +30,7 @@
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#202025"
+        "backgroundColor": "#2f2f3c"
       },
       "package": "com.vora.cues",
       "googleServicesFile": "./google-services.json"

@@ -477,7 +477,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "white"
             }}
           >
-            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
               Filter by Channels
             </Text>
           </View>
@@ -518,7 +518,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                     style={{
                       lineHeight: 20,
                       fontSize: 11,
-                      color: filterChannels.includes('') ? "#fff" : "#202025"
+                      color: filterChannels.includes('') ? "#fff" : "#2f2f3c"
                     }}>
                     {PreferredLanguageText("myCues")}
                   </Text>
@@ -551,7 +551,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                           color:
                             filterChannels.includes(channel)
                               ? "#fff"
-                              : "#202025"
+                              : "#2f2f3c"
                         }}>
                         {channel}
                       </Text>
@@ -565,7 +565,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
         <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
           <View style={{ width: "100%", paddingTop: width < 768 ? 0 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>Lectures</Text>
+            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Lectures</Text>
           </View>
           <View
             style={{
@@ -597,7 +597,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={start}
             mode={"date"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               const currentDate: any = selectedDate;
               setStart(currentDate);
@@ -609,7 +609,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={start}
             mode={"date"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -650,7 +650,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 style={{
                   textAlign: "center",
                   lineHeight: 35,
-                  color: "#202025",
+                  color: "#2f2f3c",
                   overflow: "hidden",
                   fontSize: 10,
                   // backgroundColor: '#f4f4f6',
@@ -685,7 +685,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 style={{
                   textAlign: "center",
                   lineHeight: 35,
-                  color: "#202025",
+                  color: "#2f2f3c",
                   overflow: "hidden",
                   fontSize: 10,
                   // backgroundColor: '#f4f4f6',
@@ -707,7 +707,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={start}
             mode={"time"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -720,7 +720,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={start}
             mode={"time"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -741,7 +741,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={end}
             mode={"date"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -754,7 +754,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={end}
             mode={"date"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -795,7 +795,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 style={{
                   textAlign: "center",
                   lineHeight: 35,
-                  color: "#202025",
+                  color: "#2f2f3c",
                   overflow: "hidden",
                   fontSize: 10,
                   // backgroundColor: '#f4f4f6',
@@ -830,7 +830,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 style={{
                   textAlign: "center",
                   lineHeight: 35,
-                  color: "#202025",
+                  color: "#2f2f3c",
                   overflow: "hidden",
                   fontSize: 10,
                   // backgroundColor: '#f4f4f6',
@@ -853,7 +853,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={end}
             mode={"time"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -866,7 +866,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={end}
             mode={"time"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -887,7 +887,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={repeatTill}
             mode={"date"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -900,7 +900,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={repeatTill}
             mode={"date"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -939,7 +939,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 style={{
                   textAlign: "center",
                   lineHeight: 35,
-                  color: "#202025",
+                  color: "#2f2f3c",
                   overflow: "hidden",
                   fontSize: 10,
                   // backgroundColor: '#f4f4f6',
@@ -972,7 +972,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 style={{
                   textAlign: "center",
                   lineHeight: 35,
-                  color: "#202025",
+                  color: "#2f2f3c",
                   overflow: "hidden",
                   fontSize: 10,
                   // backgroundColor: '#f4f4f6',
@@ -994,7 +994,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={repeatTill}
             mode={"time"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -1007,7 +1007,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={styles.timePicker}
             value={repeatTill}
             mode={"time"}
-            textColor={"#202025"}
+            textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
@@ -1036,7 +1036,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             style={{
               lineHeight: 20,
               fontSize: 15,
-              color: "#a2a2aa"
+              color: "#a2a2ac"
             }}>
             Shared with {editChannelName}
           </Text>
@@ -1103,7 +1103,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           style={{
             textAlign: "center",
             lineHeight: 35,
-            color: "#202025",
+            color: "#2f2f3c",
             fontSize: 11,
             backgroundColor: "#f4f4f6",
             paddingHorizontal: 25,
@@ -1132,7 +1132,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           style={{
             textAlign: "center",
             lineHeight: 35,
-            color: "#202025",
+            color: "#2f2f3c",
             fontSize: 11,
             backgroundColor: "#f4f4f6",
             paddingHorizontal: 25,
@@ -1303,7 +1303,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     <View style={{ flexDirection: width < 768 ? "column" : "row", backgroundColor: "#fff" }}>
       <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
         <View style={{ width: "100%", paddingTop: width < 768 ? 0 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>Recurring</Text>
+          <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Recurring</Text>
         </View>
         <View
           style={{
@@ -1326,7 +1326,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
       {recurring ? <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex" }}>
         <View style={{ width: "100%", paddingTop: width < 768 ? 20 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>Repeat every</Text>
+          <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Repeat every</Text>
         </View>
         <View
           style={{
@@ -1347,7 +1347,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             {eventFrequencyOptions.map((item: any, index: number) => {
               return (
                 <Picker.Item
-                  color={frequency === item.value ? "#3B64F8" : "#202025"}
+                  color={frequency === item.value ? "#3B64F8" : "#2f2f3c"}
                   label={item.value === "" ? "Once" : item.label}
                   value={item.value}
                   key={index}
@@ -1401,7 +1401,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             width: "50%"
           }}>
           <View style={{ width: "100%", backgroundColor: "white", }}>
-            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingBottom: 15 }}>Lecture</Text>
+            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingBottom: 15 }}>Lecture</Text>
           </View>
 
           <View
@@ -1434,7 +1434,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               width: "50%"
             }}>
             <View style={{ width: "100%", backgroundColor: "white", }}>
-              <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingBottom: 15 }}>Record Lecture</Text>
+              <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingBottom: 15 }}>Record Lecture</Text>
             </View>
 
             <Switch
@@ -1445,7 +1445,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               style={{ height: 20 }}
               trackColor={{
                 false: "#f4f4f6",
-                true: "#a2a2aa"
+                true: "#a2a2ac"
               }}
               activeThumbColor="white"
             />
@@ -1496,7 +1496,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             paddingLeft: 20,
             flex: 1,
             // lineHeight: 25,
-            color: '#202025',
+            color: '#2f2f3c',
             width: '50%'
           }}
         >
@@ -1524,7 +1524,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
           {filterChannels.length === 0 && !filterByLectures ? null : <Text style={{
             // width: '50%',
-            color: '#a2a2aa',
+            color: '#a2a2ac',
             fontSize: 11,
             paddingTop: 5,
             textAlign: 'right',
@@ -1563,7 +1563,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           <Ionicons
             name="add-outline"
             size={25}
-            color={"#202025"}
+            color={"#2f2f3c"}
             style={{ paddingRight: 10 }}
             onPress={() => setShowAddEvent(true)}
           />
@@ -1571,7 +1571,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           <Ionicons
             name="close-outline"
             size={25}
-            color={"#202025"}
+            color={"#2f2f3c"}
             style={{ paddingRight: 10 }}
             onPress={() => setShowAddEvent(false)}
           />
@@ -1646,7 +1646,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                   value={title}
                   placeholder={PreferredLanguageText("new") + ' ' + PreferredLanguageText("event") + "/" + PreferredLanguageText("meeting")}
                   onChangeText={val => setTitle(val)}
-                  placeholderTextColor={"#a2a2aa"}
+                  placeholderTextColor={"#a2a2ac"}
                   required={true}
                 // style={styles.input}
                 />
@@ -1656,7 +1656,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                   value={description}
                   placeholder="Description"
                   onChangeText={val => setDescription(val)}
-                  placeholderTextColor={"#a2a2aa"}
+                  placeholderTextColor={"#a2a2ac"}
                   hasMultipleLines={true}
                 />
               </View>
@@ -1714,10 +1714,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                       backgroundColor: "white"
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                    <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                       Event for
                       {/* <Ionicons
-                                                name='school-outline' size={20} color={'#a2a2aa'} /> */}
+                                                name='school-outline' size={20} color={'#a2a2ac'} /> */}
                     </Text>
                   </View>
                   <View
@@ -1752,7 +1752,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                             style={{
                               lineHeight: 20,
                               fontSize: 11,
-                              color: channelId === "" ? "#fff" : "#202025"
+                              color: channelId === "" ? "#fff" : "#2f2f3c"
                             }}
                           >
                             {PreferredLanguageText("myCues")}
@@ -1776,7 +1776,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                                   lineHeight: 20,
                                   fontSize: 11,
                                   color:
-                                    channelId === channel._id ? "#fff" : "#202025"
+                                    channelId === channel._id ? "#fff" : "#2f2f3c"
                                 }}
                               >
                                 {channel.name}
@@ -1793,7 +1793,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
             {!editEvent && renderRecurringOptions()}
             {renderMeetingOptions()}
-            {channelId !== "" && <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', paddingTop: 20 }}>
+            {channelId !== "" && <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingTop: 20 }}>
               Attendances will only be captured for scheduled lectures.
             </Text>}
             {!editEvent ? <View
@@ -1860,7 +1860,7 @@ const styles: any = StyleSheet.create({
     height: "44%",
     width: "100%",
     paddingTop: 5,
-    color: "#202025"
+    color: "#2f2f3c"
   },
   input: {
     width: "100%",
@@ -1874,7 +1874,7 @@ const styles: any = StyleSheet.create({
   },
   text: {
     fontSize: 11,
-    color: "#a2a2aa",
+    color: "#a2a2ac",
     textAlign: "left",
     paddingHorizontal: 10
   },
@@ -1882,13 +1882,13 @@ const styles: any = StyleSheet.create({
     width: 125,
     fontSize: 16,
     height: 45,
-    color: "#202025",
+    color: "#2f2f3c",
     borderRadius: 10,
     marginLeft: 10
   },
   allBlack: {
     fontSize: 11,
-    color: "#202025",
+    color: "#2f2f3c",
     height: 22,
     paddingHorizontal: 10,
     backgroundColor: "white"
@@ -1899,6 +1899,6 @@ const styles: any = StyleSheet.create({
     height: 22,
     paddingHorizontal: 10,
     borderRadius: 10,
-    backgroundColor: "#202025"
+    backgroundColor: "#2f2f3c"
   }
 });
