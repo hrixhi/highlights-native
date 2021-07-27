@@ -1108,6 +1108,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       })
       if (sub) {
         setFilterChoice(sub.channelName)
+        setChannelCreatedBy(sub.channelCreatedBy)
       }
     }
     setChannelId(channId)

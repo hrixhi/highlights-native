@@ -132,7 +132,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     </MenuOptions>
                                 </Menu>
                             </View>
-                            <Text style={{ fontSize: 9, color: '#a2a2ac', paddingTop: 7, textAlign: 'center', paddingLeft: 0 }}>
+                            <Text style={{ fontSize: 10, color: '#a2a2ac', paddingTop: 7, textAlign: 'center', paddingLeft: 0 }}>
                                 Channel
                             </Text>
                         </View>
@@ -177,7 +177,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     </MenuOptions>
                                 </Menu>
                             </View>
-                            <Text style={{ fontSize: 9, color: '#a2a2ac', paddingTop: 7, textAlign: 'center' }}>
+                            <Text style={{ fontSize: 10, color: '#a2a2ac', paddingTop: 7, textAlign: 'center' }}>
                                 Category
                             </Text>
                         </View>
@@ -261,7 +261,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
                             <Ionicons name='school-outline' size={20} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: '#a2a2ac', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                             Channels
                         </Text>
                     </TouchableOpacity>
@@ -274,7 +274,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
                             <Ionicons name='calendar-outline' size={19} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, textAlign: 'center', color: '#a2a2ac' }}>
+                        <Text style={{ fontSize: 10, textAlign: 'center', color: '#a2a2ac' }}>
                             Planner
                         </Text>
                     </TouchableOpacity>
@@ -297,7 +297,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
                             <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={20} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: '#a2a2ac', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                             {
                                 !loggedIn && userLoaded ?
                                     'Sign Up' : 'Profile'
@@ -313,7 +313,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Text style={{ textAlign: 'center', lineHeight: 22 }}>
                             <Ionicons name='help-circle-outline' size={20} color={iconColor} />
                         </Text>
-                        <Text style={{ fontSize: 9, color: '#a2a2ac', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
                             Help
                         </Text>
                     </TouchableOpacity>

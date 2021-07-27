@@ -98,7 +98,7 @@ const EnglishBank: { [key: string]: string } = {
     options: 'Details', // Done
     option: 'Option', // Done
     comments: 'Comments', // Done
-    noComments: 'No comments.', // Done
+    noComments: 'No posts.', // Done
     noPosts: 'No posts.', // Done
     delete: 'DELETE', // Done
     deleteForEveryone: 'DELETE FOR ALL', // Done

@@ -1628,7 +1628,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           props.setShowOptions(false)
         }}>
         <Text style={props.showComments ? styles.allGrayFill : styles.all}>
-          Comments
+          FAQ
         </Text>
       </TouchableOpacity>
       {(isOwner && submission) || isQuiz ? null : (
@@ -3655,7 +3655,7 @@ const styles: any = StyleSheet.create({
     color: "#fff",
     paddingHorizontal: 10,
     borderRadius: 10,
-    backgroundColor: "#a2a2ac",
+    backgroundColor: "#2f2f3c",
     lineHeight: 20
   },
   allGrayOutline: {
