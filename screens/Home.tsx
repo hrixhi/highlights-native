@@ -1891,11 +1891,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             position: Dimensions.get('window').width < 1024 ? 'absolute' : 'relative'
           }}
         >
-          <View style={{ flexDirection: 'column', flex: 1, width: '100%', justifyContent: 'center', backgroundColor: '#2f2f3c' }}>
-            <Text style={{ fontSize: 20, color: '#a2a2ac', textAlign: 'center', fontFamily: 'inter', backgroundColor: '#2F2F3C' }}>
-              Select Cue to view.
-            </Text>
-          </View>
+          {
+            Dimensions.get('window').width < 1024 ? null : <View style={{ flexDirection: 'column', flex: 1, width: '100%', justifyContent: 'center', backgroundColor: '#2f2f3c' }}>
+              <Text style={{ fontSize: 20, color: '#a2a2ac', textAlign: 'center', fontFamily: 'inter', backgroundColor: '#2F2F3C' }}>
+                Select Cue to view.
+              </Text>
+            </View>
+          }
         </View> :
           <View style={{
             width: Dimensions.get('window').width < 1024 ? '100%' : Dimensions.get('window').width * 0.7,
