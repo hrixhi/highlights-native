@@ -78,25 +78,15 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                                             const { cue, releaseSubmission } = findCue;
 
-                                            if (cue[0] === '{' && cue[cue.length - 1] === '}') {
-
-                                            const parse = JSON.parse(cue);
-
-                                                if (parse.quizId) {
-                                                    if (!releaseSubmission) {
-                                                        // Update score 
-                                                        return {
-                                                            cueId,
-                                                            gradeWeight,
-                                                            graded: false,
-                                                            score: ""
-                                                        }
+                                            if (!releaseSubmission) {
+                                                return {
+                                                        cueId,
+                                                        gradeWeight,
+                                                        graded: false,
+                                                        score: ""
                                                     }
-                                                } 
-
-                                                return x;
                                             } else {
-                                                return x;
+                                                return x
                                             }
 
                                         })

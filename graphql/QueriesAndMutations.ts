@@ -480,6 +480,7 @@ export const getSubscriptions = gql`
         channelId
         channelCreatedBy
         inactive
+        colorCode
       }
     }
   }

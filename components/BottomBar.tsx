@@ -109,23 +109,50 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     }}>
                                         <MenuOption
                                             value={'All'}>
-                                            <Text style={{ color: '#2f2f3c' }}>
-                                                All
-                                            </Text>
+                                            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                                                <View style={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: 10,
+                                                    marginTop: 1,
+                                                    backgroundColor: "#fff"
+                                                }} />
+                                                <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                                                    All
+                                                </Text>
+                                            </View>
                                         </MenuOption>
                                         <MenuOption
                                             value={'My Cues'}>
-                                            <Text style={{ color: '#2f2f3c' }}>
-                                                My Cues
-                                            </Text>
+                                            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                                                <View style={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: 10,
+                                                    marginTop: 1,
+                                                    backgroundColor: "#000"
+                                                }} />
+                                                <Text style={{ marginLeft: 5, color: '#2f2f3c'}}>
+                                                    My Cues
+                                                </Text>
+                                            </View>
                                         </MenuOption>
                                         {
                                             props.subscriptions.map((subscription: any) => {
                                                 return <MenuOption
                                                     value={subscription}>
-                                                    <Text style={{ color: '#2f2f3c' }}>
-                                                        {subscription.channelName}
-                                                    </Text>
+                                                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff'  }}>
+                                                        <View style={{
+                                                            width: 8,
+                                                            height: 8,
+                                                            borderRadius: 10,
+                                                            marginTop: 1,
+                                                            backgroundColor: subscription.colorCode,
+                                                        }} />
+                                                        <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                                                            {subscription.channelName}
+                                                        </Text>
+                                                    </View>
                                                 </MenuOption>
                                             })
                                         }
