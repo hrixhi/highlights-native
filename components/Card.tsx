@@ -13,25 +13,27 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const starred = props.cue.starred;
     const { title, subtitle } = htmlStringParser(props.cue.channelId && props.cue.channelId !== '' ? props.cue.original : props.cue.cue)
     const [showScore, setShowScore] = useState(false);
+    const [colorCode, setColorCode] = useState('#202025');
 
     useEffect(() => {
         if (props.cue && props.cue.original) {
 
             // Hide scores if it's a quiz and !releaseSubmission
-            if (props.cue.original[0] === '{' && props.cue.original[props.cue.original.length - 1] === '}') {
-                const parsed = JSON.parse(props.cue.original);
 
-                if (parsed && parsed.quizId) {
-                    if (props.cue.releaseSubmission) {
-                        setShowScore(true)
-                    }
-                } else {
-                    setShowScore(true);
-                }
-
+            if (props.cue.graded && !props.cue.releaseSubmission) {
+                setShowScore(false)
             } else {
                 setShowScore(true);
             }
+        } 
+
+        // Set color code
+        const matchSubscription = props.subscriptions.find((sub: any) => {
+            return sub.channelName === props.cue.channelName
+        })
+
+        if (matchSubscription && matchSubscription !== undefined) {
+            setColorCode(matchSubscription.colorCode)
 
         }
     }, [props.cue])

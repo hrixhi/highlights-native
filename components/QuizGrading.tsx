@@ -296,7 +296,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     </Text>)
                         }
                         {
-                            !problem.questionType && problem.options.map((option: any, i: any) => {
+                            (!problem.questionType || problem.questionType === "trueFalse") && problem.options.map((option: any, i: any) => {
 
                                 let color = '#2f2f3c'
                                 if (option.isCorrect) {

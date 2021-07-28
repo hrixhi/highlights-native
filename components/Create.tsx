@@ -177,7 +177,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             }
 
             // If MCQ, check if any options repeat:
-            if (!problem.questionType) {
+            if (!problem.questionType || problem.questionType === "trueFalse") {
                 const keys: any = {};
 
                 problem.options.map((option: any) => {
@@ -206,6 +206,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
         })
         if (error) {
+            setIsSubmitting(false)
+            setCreatingQuiz(false)
             return
         }
         const server = fetchAPI('')
@@ -1576,7 +1578,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 }}>
                                                     <MenuOption
                                                         value={''}>
-                                                        <Text>
+                                                        <Text style={{ color: '#2f2f3c' }}>
                                                             {PreferredLanguageText('myCues')}
                                                         </Text>
                                                     </MenuOption>
@@ -1584,7 +1586,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         channels.map((channel: any) => {
                                                             return <MenuOption
                                                                 value={channel}>
-                                                                <Text>
+                                                                <Text style={{ color: '#2f2f3c' }}>
                                                                     {channel.name}
                                                                 </Text>
                                                             </MenuOption>
@@ -1821,7 +1823,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         }}>
                                                             <MenuOption
                                                                 value={''}>
-                                                                <Text>
+                                                                <Text style={{ color: '#2f2f3c' }}>
                                                                     None
                                                                 </Text>
                                                             </MenuOption>
@@ -1829,7 +1831,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 customCategories.map((category: any) => {
                                                                     return <MenuOption
                                                                         value={category}>
-                                                                        <Text>
+                                                                        <Text style={{ color: '#2f2f3c' }}>
                                                                             {category}
                                                                         </Text>
                                                                     </MenuOption>

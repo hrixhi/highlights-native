@@ -509,28 +509,55 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                     }
                   }}>
 
-                  <MenuOption
+                    <MenuOption
                       value={'All'}>
-                      <Text style={{ color: '#202025' }}>
-                          All
-                      </Text>
-                  </MenuOption>
-                  <MenuOption
+                      <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                          <View style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: 10,
+                            marginTop: 1,
+                            backgroundColor: "#fff"
+                        }} />
+                        <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                            All
+                        </Text>
+                    </View>
+                    </MenuOption>
+                    <MenuOption
                       value={'My Cues'}>
-                      <Text style={{ color: '#202025' }}>
+                      <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                        <View style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: 10,
+                            marginTop: 1,
+                            backgroundColor: "#000"
+                        }} />
+                        <Text style={{ marginLeft: 5, color: '#2f2f3c'}}>
                           My Cues
-                      </Text>
-                  </MenuOption>
-                  {
-                      eventChannels.map((channel: any) => {
-                        return <MenuOption
-                            value={channel}>
-                            <Text style={{ color: '#202025' }}>
-                                {channel}
-                            </Text>
-                        </MenuOption>
-                      })
-                  }
+                        </Text>
+                    </View>
+                    </MenuOption>
+                    {
+                      props.subscriptions.map((subscription: any) => {
+                          return <MenuOption
+                            value={subscription}>
+                            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff'  }}>
+                              <View style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: 10,
+                                  marginTop: 1,
+                                  backgroundColor: subscription.colorCode,
+                                }} />
+                                <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                                  {subscription.channelName}
+                                </Text>
+                            </View>
+                          </MenuOption>
+                        })
+                      }
                   </MenuOptions>
               </Menu>
             </View>
@@ -1162,6 +1189,17 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   const renderItem = (item: any) => {
     const { title } = htmlStringParser(item.title);
 
+    console.log(item);
+
+    let colorCode = "#202025";
+
+    const matchSubscription = props.subscriptions.find((sub: any) => {
+      return sub.channelName === item.channelName
+    })
+
+    if (matchSubscription && matchSubscription !== undefined) {
+      colorCode = matchSubscription.colorCode
+    }
 
     const displayDate =
       moment(new Date(item.start)).format("h:mm a") +
@@ -1183,7 +1221,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           onSelectEvent(item)
         }}
       >
-        <Text style={styles.eventTitle}>{item.title}</Text>
+        <Text style={{
+          fontFamily: "inter",
+          fontSize: 14,
+          height: "44%",
+          width: "100%",
+          paddingTop: 5,
+          color: colorCode,
+        }}>{item.title}</Text>
         <Text style={{ color: "black" }}>{displayDate}</Text>
       </TouchableOpacity>
     );
