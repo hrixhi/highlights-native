@@ -52,7 +52,7 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             width: 9,
                             height: 9,
                             borderRadius: 10,
-                            backgroundColor: '#3b64f8'
+                            backgroundColor: colorCode
                         }} />
 
                         <Text style={styleObject.date}>
