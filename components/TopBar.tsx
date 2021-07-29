@@ -214,7 +214,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 <View style={styles.badge} /> : null
                                         }
                                         <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
-                                            Lectures
+                                            Classroom
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
