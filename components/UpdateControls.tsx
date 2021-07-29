@@ -3050,7 +3050,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     </View>)
   }
 
-  console.log(props.cue)
+
 
   if (props.cue.submission && props.cue.submittedAt !== null && !props.cue.releaseSubmission && !isOwner) {
     return (<View style={{ minHeight: Dimensions.get('window').height }}>

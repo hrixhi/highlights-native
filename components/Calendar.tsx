@@ -1251,7 +1251,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     const uString: any = await AsyncStorage.getItem("user");
     // Only allow edit if event is not past
     if (uString) {
-
       const user = JSON.parse(uString);
 
       const timeString = datesEqual(event.start, event.end) ? moment(new Date(event.start)).format("MMMM Do YYYY, h:mm a") : moment(new Date(event.start)).format("MMMM Do YYYY, h:mm a") + " to " + moment(new Date(event.end)).format("MMMM Do YYYY, h:mm a")

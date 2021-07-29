@@ -781,7 +781,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
       // OPEN WALKTHROUGH IF FIRST TIME LOAD
       if (!init && Dimensions.get('window').width >= 1024) {
-        openModal('Create')
+        let lastOpened = await AsyncStorage.getItem('lastopened')
+        if (lastOpened) {
+          openModal(lastOpened)
+        }
+        else {
+          openModal('Create')
+        }
       }
       // HANDLE PROFILE
       if (u) {
@@ -1118,6 +1124,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const openModal = useCallback((type) => {
     setModalType(type)
+
+    AsyncStorage.setItem('lastopened', type)
   }, [sheetRef, cues])
 
   const openUpdate = useCallback((key, index, pageNumber, _id, by, channId) => {
