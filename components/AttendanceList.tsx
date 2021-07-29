@@ -168,7 +168,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={start}
                 mode={"date"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   const currentDate: any = selectedDate;
                   setStart(currentDate);
@@ -180,7 +180,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={start}
                 mode={"date"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   if (!selectedDate) return;
                   const currentDate: any = selectedDate;
@@ -221,7 +221,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                       textAlign: "center",
                       lineHeight: 35,
-                      color: "#202025",
+                      color: "#2f2f3c",
                       overflow: "hidden",
                       fontSize: 10,
                       // backgroundColor: '#f4f4f6',
@@ -256,7 +256,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                       textAlign: "center",
                       lineHeight: 35,
-                      color: "#202025",
+                      color: "#2f2f3c",
                       overflow: "hidden",
                       fontSize: 10,
                       // backgroundColor: '#f4f4f6',
@@ -278,7 +278,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={start}
                 mode={"time"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   if (!selectedDate) return;
                   const currentDate: any = selectedDate;
@@ -291,7 +291,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={start}
                 mode={"time"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   if (!selectedDate) return;
                   const currentDate: any = selectedDate;
@@ -312,7 +312,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={end}
                 mode={"date"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   if (!selectedDate) return;
                   const currentDate: any = selectedDate;
@@ -325,7 +325,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={end}
                 mode={"date"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   if (!selectedDate) return;
                   const currentDate: any = selectedDate;
@@ -366,7 +366,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                       textAlign: "center",
                       lineHeight: 35,
-                      color: "#202025",
+                      color: "#2f2f3c",
                       overflow: "hidden",
                       fontSize: 10,
                       // backgroundColor: '#f4f4f6',
@@ -401,7 +401,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                       textAlign: "center",
                       lineHeight: 35,
-                      color: "#202025",
+                      color: "#2f2f3c",
                       overflow: "hidden",
                       fontSize: 10,
                       // backgroundColor: '#f4f4f6',
@@ -424,7 +424,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={end}
                 mode={"time"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   if (!selectedDate) return;
                   const currentDate: any = selectedDate;
@@ -437,7 +437,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={styles.timePicker}
                 value={end}
                 mode={"time"}
-                textColor={"#202025"}
+                textColor={"#2f2f3c"}
                 onChange={(event, selectedDate) => {
                   if (!selectedDate) return;
                   const currentDate: any = selectedDate;
@@ -528,7 +528,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         }}
             key={JSON.stringify(pastMeetings)}
         >
-            {/* <Text style={{ textAlign: 'left', fontSize: 13, color: '#202025', fontFamily: 'inter', paddingBottom: 20 }}>
+            {/* <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter', paddingBottom: 20 }}>
                         Attendance By Lectures
             </Text> */}
             <ScrollView
@@ -593,15 +593,15 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         <Text style={{
                             width: '100%',
                             fontSize: 16,
-                            color: '#a2a2aa'
+                            color: '#a2a2ac'
                         }}>
-                            <Ionicons name='chevron-back-outline' size={17} color={'#202025'} style={{ marginRight: 20 }} /> 
+                            <Ionicons name='chevron-back-outline' size={17} color={'#2f2f3c'} style={{ marginRight: 20 }} /> 
                         </Text>
                 </TouchableOpacity>
                 
                 {pastMeetings.length === 0 || channelAttendances.length === 0 ?  null : <Text
                     style={{
-                        color: "#a2a2aa",
+                        color: "#a2a2ac",
                         fontSize: 11,
                         lineHeight: 25,
                         // paddingTop: 5,
@@ -671,7 +671,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
             {
                 channelAttendances.length === 0 || pastMeetings.length === 0 ?
                     <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2aa', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
                                 pastMeetings.length === 0  ? "No past meetings" : "No Students"
                                 // PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
@@ -702,10 +702,10 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                         pastMeetings.map((meeting: any, col: number) => {
                                             const { title, start } = meeting
                                             return <View style={styles.col} key={col.toString()}>
-                                                <Text style={{ textAlign: 'center', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
+                                                <Text style={{ textAlign: 'center', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter' }}>
                                                     {title}
                                                 </Text>
-                                                <Text style={{ textAlign: 'center', fontSize: 11, color: '#202025' }}>
+                                                <Text style={{ textAlign: 'center', fontSize: 11, color: '#2f2f3c' }}>
                                                     {moment(new Date(start)).format('MMMM Do YYYY, h:mm a')}
                                                 </Text>
                                             </View>
@@ -730,7 +730,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 
                                             return <View style={styles.row} key={row}>
                                                 <View style={styles.col} >
-                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#202025', fontFamily: 'inter' }}>
+                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter' }}>
                                                         {channelAttendance.fullName}
                                                     </Text>
                                                 </View>
@@ -740,12 +740,12 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                             return s.dateId.toString().trim() === meeting.dateId.toString().trim()
                                                         })
                                                         return <View style={styles.col} key={row.toString() + '-' + col.toString()}>
-                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                                                                 {
                                                                     attendanceObject ? "Present" : '-'
                                                                 }
                                                             </Text>
-                                                            {attendanceObject ? <Text style={{ textAlign: 'left', fontSize: 11, color: '#202025' }}>
+                                                            {attendanceObject ? <Text style={{ textAlign: 'left', fontSize: 11, color: '#2f2f3c' }}>
                                                                 {PreferredLanguageText('joinedAt') + ' ' + moment(new Date(attendanceObject.joinedAt)).format('h:mm a')}
                                                             </Text> : null}
                                                             
@@ -776,12 +776,12 @@ const styles = StyleSheet.create({
         color: "#fff",
         paddingHorizontal: 10,
         borderRadius: 10,
-        backgroundColor: "#a2a2aa",
+        backgroundColor: "#a2a2ac",
         lineHeight: 20
     },
     all: {
         fontSize: 11,
-        color: "#a2a2aa",
+        color: "#a2a2ac",
         height: 22,
         overflow: "hidden",
         paddingHorizontal: 10,
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 11,
-        color: "#a2a2aa",
+        color: "#a2a2ac",
         textAlign: "left",
         paddingHorizontal: 10,
         width: 100
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
         width: 125,
         fontSize: 16,
         height: 45,
-        color: "#202025",
+        color: "#2f2f3c",
         borderRadius: 10,
         marginLeft: 10
       },

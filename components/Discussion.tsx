@@ -129,7 +129,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "white"
             }}
           >
-            <ActivityIndicator color={"#a2a2aa"} />
+            <ActivityIndicator color={"#a2a2ac"} />
           </View>
         ) : (
           <ThreadsList

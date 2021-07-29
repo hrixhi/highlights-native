@@ -17,6 +17,10 @@ const questionTypeOptions = [
         label: "Free response",
         value: "freeResponse"
     },
+    {
+        label: "True/False",
+        value: "trueFalse"
+    }
 ]
 
 
@@ -115,7 +119,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 setHeaders(currentHeaders);
                                 props.setHeaders(currentHeaders)
                             }}
-                            placeholderTextColor={'#a2a2aa'}
+                            placeholderTextColor={'#a2a2ac'}
                             hasMultipleLines={false}
                         />
                     </View>
@@ -135,7 +139,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     style={{ width: 100, flexDirection: 'row', backgroundColor: '#fff' }} 
                     onPress={() => addHeader(index)}
                 >
-                    {/* <Ionicons name='add-circle' size={19} color={"#202025"} /> */}
+                    {/* <Ionicons name='add-circle' size={19} color={"#2f2f3c"} /> */}
                     <Text
                         style={{
                             marginLeft: 10,
@@ -145,7 +149,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             // paddingLeft: 20,
                             flex: 1,
                             lineHeight: 25,
-                            color: '#a2a2aa'
+                            color: '#a2a2ac'
                         }}>
                         Add HEADER
                     </Text>
@@ -173,7 +177,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     return <View style={{ borderBottomColor: '#f4f4f6', borderBottomWidth: index === (problems.length - 1) ? 0 : 1, marginBottom: 25, backgroundColor: 'white' }}>
                         <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
                             <View style={{ paddingTop: 15, backgroundColor: 'white' }}>
-                                <Text style={{ color: '#a2a2aa', fontSize: 16, paddingBottom: 25, marginRight: 10 }}>
+                                <Text style={{ color: '#a2a2ac', fontSize: 16, paddingBottom: 25, marginRight: 10 }}>
                                     {index + 1}.
                             </Text>
                             </View>
@@ -203,7 +207,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     setProblems(newProbs)
                                                     props.setProblems(newProbs)
                                                 }}
-                                                placeholderTextColor={'#a2a2aa'}
+                                                placeholderTextColor={'#a2a2ac'}
                                                 hasMultipleLines={true}
                                             />
                                     }
@@ -226,7 +230,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             style={{
                                                 paddingTop: problem.question && problem.question.includes("formula:")
                                                     ? 10 : 0,
-                                                color: '#a2a2aa',
+                                                color: '#a2a2ac',
                                                 fontFamily: 'Overpass',
                                                 fontSize: 10,
                                             }}
@@ -252,7 +256,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 setProblems(newProbs)
                                                 props.setProblems(newProbs)
                                             }}
-                                            placeholderTextColor={'#a2a2aa'}
+                                            placeholderTextColor={'#a2a2ac'}
                                         />
                                     </View>
                                     
@@ -284,7 +288,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     props.setProblems(updatedProblems)
                                 }}
                             />
-                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase'  }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase'  }}>
                                 Required
                             </Text>
                         </View>
@@ -315,7 +319,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 {questionTypeOptions.map((item: any, index: number) => {
                                     return (
                                         <Picker.Item
-                                            color={questionType === item.value ? "#3B64F8" : "#202025"}
+                                            color={questionType === item.value ? "#3B64F8" : "#2f2f3c"}
                                             label={item.value === "" ? "MCQ" : item.label}
                                             value={item.value}
                                             key={index}
@@ -329,7 +333,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         <View style={{ paddingTop: 25, paddingLeft: 10, paddingBottom: 25, flexDirection: 'row', alignItems: 'center', backgroundColor: "#fff"}}>
                             
                             <CheckBox
-                                style={{ paddingRight: 10 }}
+                                style={{ paddingRight: 5 }}
                                 isChecked={questionType === ""}
                                 onClick={() => {
                                     const updatedProblems = [...problems]
@@ -343,12 +347,12 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     props.setProblems(updatedProblems)
                                 }}
                             />
-                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase', marginRight: 50  }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', marginRight: 10  }}>
                                 MCQ
                             </Text>
 
                             <CheckBox
-                                style={{ paddingRight: 10 }}
+                                style={{ paddingRight: 5 }}
                                 isChecked={questionType === "freeResponse"}
                                 onClick={() => {
                                     const updatedProblems = [...problems]
@@ -362,8 +366,34 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     props.setProblems(updatedProblems)
                                 }}
                             />
-                            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase'  }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', marginRight: 10   }}>
                                 Free Response
+                            </Text>
+
+                            <CheckBox
+                                style={{ paddingRight: 5 }}
+                                isChecked={questionType === "trueFalse"}
+                                onClick={() => {
+                                    const updatedProblems = [...problems]
+                                    updatedProblems[index].questionType = "trueFalse";
+
+                                    // Clear Options 
+                                    updatedProblems[index].options = []
+                                    updatedProblems[index].options.push({
+                                        option: 'True',
+                                        isCorrect: false
+                                    })
+                                    updatedProblems[index].options.push({
+                                        option: 'False',
+                                        isCorrect: false
+                                    })
+                                    // }
+                                    setProblems(updatedProblems)
+                                    props.setProblems(updatedProblems)
+                                }}
+                            />
+                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase'  }}>
+                                True/False
                             </Text>
 
                         </View>
@@ -378,6 +408,10 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             isChecked={option.isCorrect}
                                             onClick={() => {
                                                 const updatedProblems = [...problems]
+                                                if (questionType === "trueFalse") {
+                                                    updatedProblems[index].options[0].isCorrect = false;
+                                                    updatedProblems[index].options[1].isCorrect = false;
+                                                }
                                                 updatedProblems[index].options[i].isCorrect = !updatedProblems[index].options[i].isCorrect;
                                                 setProblems(updatedProblems)
                                                 props.setProblems(updatedProblems)
@@ -407,10 +441,11 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         setProblems(newProbs)
                                                         props.setProblems(newProbs)
                                                     }}
-                                                    placeholderTextColor={'#a2a2aa'}
+                                                    editable={questionType === "trueFalse" ? false : true}
+                                                    placeholderTextColor={'#a2a2ac'}
                                                 />
                                         }
-                                        <TouchableOpacity
+                                        {questionType === "trueFalse" ? null : <TouchableOpacity
                                             style={{
                                                 backgroundColor: '#fff', paddingLeft: 10
                                             }}
@@ -429,7 +464,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 style={{
                                                     paddingTop: option.option && option.option.includes("formula:")
                                                         ? 10 : 0,
-                                                    color: '#a2a2aa',
+                                                    color: '#a2a2ac',
                                                     fontFamily: 'Overpass',
                                                     fontSize: 10
                                                 }}
@@ -439,9 +474,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         ? "Remove Image" : "Add Image"
                                                 }
                                             </Text>
-                                        </TouchableOpacity>
+                                        </TouchableOpacity>}
                                     </View>
-                                    <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff' }}>
+                                    {questionType === "trueFalse" ? null : <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff' }}>
                                         <Ionicons
                                             name='close-outline'
                                             onPress={() => {
@@ -451,7 +486,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 props.setProblems(updatedProblems)
                                             }}
                                         />
-                                    </View>
+                                    </View>}
                                 </View>
                             })
                         }
@@ -475,7 +510,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 textTransform: "uppercase",
                                 flex: 1,
                                 lineHeight: 25,
-                                color: "#a2a2aa",
+                                color: "#a2a2ac",
                                 paddingTop: 30
 
                             }}>
@@ -506,7 +541,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         textTransform: "uppercase",
                         flex: 1,
                         lineHeight: 25,
-                        color: "#a2a2aa"
+                        color: "#a2a2ac"
                     }}>
                         {PreferredLanguageText('addProblem')}
                     </Text>
