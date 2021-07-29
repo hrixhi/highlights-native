@@ -6,7 +6,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchAPI } from '../graphql/FetchAPI';
 // import Datetime from 'react-datetime';
 import Clipboard from 'expo-clipboard';
-import { editMeeting, getMeetingLink, getMeetingStatus, getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1, deleteRecording, getRecordings, getSharableLink } from '../graphql/QueriesAndMutations';
+import {
+    editMeeting, getMeetingLink, getMeetingStatus, meetingRequest,
+    getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1, deleteRecording, getRecordings, getSharableLink
+} from '../graphql/QueriesAndMutations';
 import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -21,7 +24,6 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [modalAnimation] = useState(new Animated.Value(0))
     const [name, setName] = useState('')
     const [isOwner, setIsOwner] = useState(false)
-    const [meetingOn, setMeetingOn] = useState(false)
     const [pastAttendances, setPastAttendances] = useState<any[]>([])
     const [pastMeetings, setPastMeetings] = useState<any[]>([])
     const [showAttendances, setShowAttendances] = useState(false)
@@ -29,6 +31,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [meetingLink, setMeetingLink] = useState('')
     const [reloadKey, setReloadKey] = useState(Math.random())
 
+    const [userId, setUserId] = useState()
     const [channelAttendances, setChannelAttendances] = useState<any[]>([])
     const [viewChannelAttendance, setViewChannelAttendance] = useState(false)
     const classroomNotInSession = PreferredLanguageText('classroomNotInSession')
@@ -103,7 +106,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 setPastMeetings(res.data.channel.getRecordings)
             }
         })
-    }, [props.channelId, meetingOn, reloadKey])
+    }, [props.channelId, reloadKey])
 
     useEffect(() => {
         loadChannelAttendances()
@@ -131,38 +134,68 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     }, [props.channelId]);
 
     const loadMeetingStatus = useCallback(() => {
-        const server = fetchAPI('')
-        server.query({
-            query: getMeetingStatus,
-            variables: {
-                channelId: props.channelId
-            }
-        }).then(async res => {
-            if (res.data && res.data.channel && res.data.channel.getMeetingStatus) {
-                setMeetingOn(true)
-                const u = await AsyncStorage.getItem('user')
-                if (u) {
-                    const user = JSON.parse(u)
+        // const server = fetchAPI('')
+        // server.query({
+        //     query: getMeetingStatus,
+        //     variables: {
+        //         channelId: props.channelId
+        //     }
+        // }).then(async res => {
+        //     if (res.data && res.data.channel && res.data.channel.getMeetingStatus) {
+        //         setMeetingOn(true)
+        //         const u = await AsyncStorage.getItem('user')
+        //         if (u) {
+        //             const user = JSON.parse(u)
 
-                    server.query({
-                        query: getMeetingLink,
+        //             server.query({
+        //                 query: getMeetingLink,
+        //                 variables: {
+        //                     userId: user._id,
+        //                     channelId: props.channelId
+        //                 }
+        //             }).then(res => {
+        //                 if (res && res.data.channel.getMeetingLink && res.data.channel.getMeetingLink !== 'error') {
+        //                     setMeetingLink(res.data.channel.getMeetingLink)
+        //                 }
+        //             })
+
+
+        //         }
+        //     } else {
+        //         setMeetingOn(false)
+        //     }
+        // }).catch(err => console.log(err))
+    }, [props.channelId])
+
+    const handleEnterClassroom = useCallback(() => {
+
+        const server = fetchAPI('')
+        server.mutate({
+            mutation: meetingRequest,
+            variables: {
+                userId,
+                channelId: props.channelId,
+                isOwner: isOwner
+            }
+        }).then(res => {
+            console.log(res)
+            if (res.data && res.data.channel.meetingRequest !== 'error') {
+                server
+                    .mutate({
+                        mutation: markAttendance,
                         variables: {
-                            userId: user._id,
+                            userId: userId,
                             channelId: props.channelId
                         }
-                    }).then(res => {
-                        if (res && res.data.channel.getMeetingLink && res.data.channel.getMeetingLink !== 'error') {
-                            setMeetingLink(res.data.channel.getMeetingLink)
-                        }
                     })
-
-
-                }
+                Linking.openURL(res.data.channel.meetingRequest);
             } else {
-                setMeetingOn(false)
+                Alert("Classroom not in session. Waiting for instructor.")
             }
-        }).catch(err => console.log(err))
-    }, [props.channelId])
+        }).catch(err => {
+            Alert("Something went wrong.")
+        })
+    }, [isOwner, userId, props.channelId])
 
     useEffect(() => {
         (
@@ -171,6 +204,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 if (u) {
                     const user = JSON.parse(u)
                     setName(user.displayName)
+                    setUserId(user._id)
                     if (user._id.toString().trim() === props.channelCreatedBy) {
                         setIsOwner(true)
                     }
@@ -187,19 +221,19 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height
 
     const updateMeetingStatus = useCallback(() => {
-        const server = fetchAPI('')
-        server.mutate({
-            mutation: editMeeting,
-            variables: {
-                channelId: props.channelId,
-                meetingOn: !meetingOn
-            }
-        }).then(res => {
-            if (res.data && res.data.channel && res.data.channel.editMeeting) {
-                loadMeetingStatus()
-            }
-        }).catch(e => console.log(e))
-    }, [meetingOn, props.channelId])
+        // const server = fetchAPI('')
+        // server.mutate({
+        //     mutation: editMeeting,
+        //     variables: {
+        //         channelId: props.channelId,
+        //         meetingOn: !meetingOn
+        //     }
+        // }).then(res => {
+        //     if (res.data && res.data.channel && res.data.channel.editMeeting) {
+        //         loadMeetingStatus()
+        //     }
+        // }).catch(e => console.log(e))
+    }, [props.channelId])
 
     const toolbarButtons = [
         'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
@@ -325,96 +359,25 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             >
                 {PreferredLanguageText('classroom')}
             </Text>
+            <Text
+                style={{
+                    color: "#3B64F8",
+                    fontSize: 11,
+                    lineHeight: 25,
+                    // paddingTop: 5,
+                    textAlign: "right",
+                    // paddingRight: 20,
+                    textTransform: "uppercase"
+                }}
+                onPress={() => {
+                    setViewChannelAttendance(true);
+                }}>
+                VIEW ATTENDANCE
+            </Text>
         </View>
         <View style={{ backgroundColor: 'white', flex: 1, marginBottom: 50 }}>
-            {
-                isOwner ?
-                    <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'column', width: '100%' }}>
-                        <View style={{ width: '100%', backgroundColor: 'white', flex: 1, justifyContent: 'flex-start', flexDirection: 'row' }}>
-                            <Text style={{ fontSize: 15, color: '#a2a2ac' }}>
-                                {PreferredLanguageText('initiateMeeting')}
-                            </Text>
-                        </View>
-                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-start', backgroundColor: 'white' }}>
-                            <Switch
-                                value={meetingOn}
-                                onValueChange={() => updateMeetingStatus()}
-                                style={{ height: 30, marginTop: 10 }}
-                                trackColor={{
-                                    false: '#f4f4f6',
-                                    true: '#3B64F8'
-                                }}
-                                thumbColor='white'
-                            />
-                        </View>
-                    </View> : null
-            }
-            {
-                isOwner ?
-                    <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingTop: 10 }}>
-                        Restart switch if you cannot join.
-                    </Text> : null
-            }
-            {
-                isOwner && meetingOn ?
-                    <View style={{ backgroundColor: '#fff', flexDirection: 'row' }}>
-                        <TouchableOpacity
-                            style={{ backgroundColor: '#fff', paddingVertical: 20, flex: 1 }}
-                            onPress={() => {
-                                Clipboard.setString(instructorLink);
-                                Alert('Link copied!')
-                            }}
-                        >
-                            <Text style={{
-                                fontSize: 11,
-                                color: '#2f2f3c', textAlign: 'left', textDecorationLine: 'underline'
-                            }}>
-                                Sharable Instructor Link
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                Clipboard.setString(guestLink);
-                                Alert('Link copied!')
-                            }}
-                            style={{ backgroundColor: '#fff', paddingVertical: 20, flex: 1 }}
-                        >
-                            <Text style={{
-                                fontSize: 11,
-                                color: '#2f2f3c', textAlign: 'left', textDecorationLine: 'underline'
-                            }}>
-                                Sharable Guest Link
-                            </Text>
-                        </TouchableOpacity>
-                    </View> : null
-            }
             <TouchableOpacity
-                onPress={async () => {
-                    if (meetingOn) {
-                        Linking.openURL(meetingLink);
-
-                        // Mark attendance her
-                        const u = await AsyncStorage.getItem('user')
-                        if (u) {
-                            const user = JSON.parse(u)
-
-                            const server = fetchAPI('')
-                            server.mutate({
-                                mutation: markAttendance,
-                                variables: {
-                                    userId: user._id,
-                                    channelId: props.channelId
-                                }
-                            }).then(res => {
-                                // do nothing...
-                                // attendance marked
-                            })
-                        }
-
-                    } else {
-                        Alert(classroomNotInSession)
-                    }
-                }}
+                onPress={handleEnterClassroom}
                 style={{
                     backgroundColor: 'white',
                     overflow: 'hidden',
@@ -427,9 +390,9 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     overflow: 'hidden',
                     textAlign: 'center',
                     lineHeight: 35,
-                    color: meetingOn ? '#fff' : '#2f2f3c',
+                    color: '#fff',
                     fontSize: 11,
-                    backgroundColor: meetingOn ? '#3B64F8' : '#f4f4f6',
+                    backgroundColor: '#3B64F8',
                     paddingHorizontal: 25,
                     fontFamily: 'inter',
                     height: 35,
@@ -440,72 +403,89 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     {PreferredLanguageText('enterClassroom')}
                 </Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', marginBottom: 10 }}>
-                Enabled only when classroom in session.
-            </Text>
-            <TouchableOpacity
-                onPress={async () => {
-                    setViewChannelAttendance(true)
-                }}
-                style={{
-                    backgroundColor: 'white',
-                    overflow: 'hidden',
-                    height: 35,
-                    marginTop: 30,
-                    width: '100%', justifyContent: 'flex-start', flexDirection: 'row',
-                    marginBottom: 20
-                }}>
-                <Text style={{
-                    overflow: 'hidden',
-                    textAlign: 'center',
-                    lineHeight: 35,
-                    color: '#2f2f3c',
-                    fontSize: 11,
-                    backgroundColor: '#f4f4f6',
-                    paddingHorizontal: 25,
-                    fontFamily: 'inter',
-                    height: 35,
-                    // width: 200,
-                    borderRadius: 15,
-                    textTransform: 'uppercase'
-                }}>
-                    {PreferredLanguageText('viewAttendance')}
-                </Text>
-            </TouchableOpacity>
-            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', marginBottom: 20 }}>
-                Attendances will only be captured for scheduled lectures.
-            </Text>
-
-
             {
-
+                isOwner ?
+                    <View style={{ backgroundColor: '#fff' }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                Clipboard.setString(instructorLink)
+                                Alert("Link copied! Users will only be able to join after you initiate the classroom.")
+                            }}
+                            style={{
+                                backgroundColor: "white",
+                                overflow: "hidden",
+                                height: 35,
+                                marginTop: 15,
+                                marginBottom: 20
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: "center",
+                                    lineHeight: 35,
+                                    color: "#2f2f3c",
+                                    fontSize: 12,
+                                    backgroundColor: "#f4f4f6",
+                                    paddingHorizontal: 25,
+                                    fontFamily: "inter",
+                                    height: 35,
+                                    width: 210,
+                                    overflow: 'hidden',
+                                    borderRadius: 15,
+                                    textTransform: "uppercase"
+                                }}>
+                                Copy Moderator Link
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                Clipboard.setString(guestLink)
+                                Alert("Link copied! Users will only be able to join after you initiate the classroom.")
+                            }}
+                            style={{
+                                backgroundColor: "white",
+                                overflow: "hidden",
+                                height: 35,
+                                marginTop: 15,
+                                marginBottom: 20,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: "center",
+                                    lineHeight: 35,
+                                    color: "#2f2f3c",
+                                    fontSize: 12,
+                                    overflow: 'hidden',
+                                    backgroundColor: "#f4f4f6",
+                                    paddingHorizontal: 25,
+                                    fontFamily: "inter",
+                                    height: 35,
+                                    width: 210,
+                                    borderRadius: 15,
+                                    textTransform: "uppercase"
+                                }}>
+                                Copy Guest Link
+                            </Text>
+                        </TouchableOpacity>
+                    </View> : null
+            }
+            {
                 <View style={{ borderTopColor: '#f4f4f6', borderTopWidth: 1, marginTop: 25, backgroundColor: 'white' }}>
                     <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25, backgroundColor: 'white' }}>
                         {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
                     </Text>
-                    <TouchableOpacity
-                        onPress={() => setShowPastMeetings(!showPastMeetings)}
-                        style={{
-                            flex: 1,
-                            flexDirection: 'row',
-                            // paddingTop: 10,
-                            paddingBottom: 40,
-                            backgroundColor: 'white'
-                        }}>
-                        <Text style={{
-                            lineHeight: 23,
-                            marginRight: 10,
-                            color: '#a2a2ac',
-                            fontSize: 11,
-                            textTransform: 'uppercase',
-                            backgroundColor: 'white'
-                        }}>
-                            RECORDINGS
-                        </Text>
-                        <Text style={{ lineHeight: 21 }}>
-                            <Ionicons size={14} name={showPastMeetings ? 'caret-down-outline' : 'caret-forward-outline'} color='#a2a2ac' />
-                        </Text>
-                    </TouchableOpacity>
+                    <Text style={{
+                        lineHeight: 23,
+                        marginRight: 10,
+                        color: '#a2a2ac',
+                        paddingBottom: 40,
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        backgroundColor: 'white'
+                    }}>
+                        RECORDINGS
+                    </Text>
                     {
 
                         showAttendances ?
@@ -534,7 +514,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         })
                                 }
                             </View>
-                            : (showPastMeetings ? renderPastMeetings() : null)
+                            : (renderPastMeetings())
                     }
                 </View>
             }

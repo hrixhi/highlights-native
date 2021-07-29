@@ -132,7 +132,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     marginTop: 1,
                                                     backgroundColor: "#000"
                                                 }} />
-                                                <Text style={{ marginLeft: 5, color: '#2f2f3c'}}>
+                                                <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
                                                     My Cues
                                                 </Text>
                                             </View>
@@ -141,7 +141,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             props.subscriptions.map((subscription: any) => {
                                                 return <MenuOption
                                                     value={subscription}>
-                                                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff'  }}>
+                                                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
                                                         <View style={{
                                                             width: 8,
                                                             height: 8,
@@ -159,7 +159,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     </MenuOptions>
                                 </Menu>
                             </View>
-                            <Text style={{ fontSize: 10, color: '#a2a2ac', paddingTop: 7, textAlign: 'center', paddingLeft: 0 }}>
+                            <Text style={{ fontSize: 10, color: '#fff', paddingTop: 7, textAlign: 'center', paddingLeft: 0 }}>
                                 Channel
                             </Text>
                         </View>
@@ -285,10 +285,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onPress={() => props.openChannels()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='school-outline' size={20} color={iconColor} />
+                        <Text style={{ textAlign: 'center', lineHeight: 24 }}>
+                            <Ionicons name='school-outline' size={24} color={'#fff'} />
                         </Text>
-                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                             Channels
                         </Text>
                     </TouchableOpacity>
@@ -298,10 +298,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onPress={() => props.openCalendar()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='calendar-outline' size={19} color={iconColor} />
+                        <Text style={{ textAlign: 'center', lineHeight: 24 }}>
+                            <Ionicons name='calendar-outline' size={24} color={'#fff'} />
                         </Text>
-                        <Text style={{ fontSize: 10, textAlign: 'center', color: '#a2a2ac' }}>
+                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                             Planner
                         </Text>
                     </TouchableOpacity>
@@ -311,8 +311,8 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onPress={() => props.openCreate()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 40, marginTop: -3 }}>
-                            <Ionicons name='add-circle' size={40} color={iconColor} />
+                        <Text style={{ textAlign: 'center', lineHeight: 40, marginTop: 0 }}>
+                            <Ionicons name='add-circle' size={40} color={'#fff'} />
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -321,14 +321,11 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onPress={() => props.openProfile()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={20} color={iconColor} />
+                        <Text style={{ textAlign: 'center', lineHeight: 26 }}>
+                            <Ionicons name={loggedIn ? 'person-circle-outline' : 'cloud-upload-outline'} size={26} color={'#fff'} />
                         </Text>
-                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
-                            {
-                                !loggedIn && userLoaded ?
-                                    'Sign Up' : 'Profile'
-                            }
+                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
+                            {!loggedIn && userLoaded ? 'Sign Up' : 'Profile'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -337,10 +334,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onPress={() => props.openWalkthrough()}
                         style={styles.center}
                     >
-                        <Text style={{ textAlign: 'center', lineHeight: 22 }}>
-                            <Ionicons name='help-circle-outline' size={20} color={iconColor} />
+                        <Text style={{ textAlign: 'center', lineHeight: 26 }}>
+                            <Ionicons name='help-circle-outline' size={26} color={'#fff'} />
                         </Text>
-                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
+                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                             Help
                         </Text>
                     </TouchableOpacity>

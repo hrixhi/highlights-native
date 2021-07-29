@@ -213,7 +213,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             meetingOn ?
                                                 <View style={styles.badge} /> : null
                                         }
-                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                                             Lectures
                                         </Text>
                                     </TouchableOpacity>
@@ -227,7 +227,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             unreadMessages !== 0 ?
                                                 <View style={styles.badge2} /> : null
                                         }
-                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                                             Inbox
                                         </Text>
                                     </TouchableOpacity>
@@ -241,7 +241,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             unreadDiscussionThreads !== 0 ?
                                                 <View style={styles.badge3} /> : null
                                         }
-                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                                             Discussion
                                         </Text>
                                     </TouchableOpacity>
@@ -251,7 +251,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         <Text style={styles.channelText}>
                                             <Ionicons name='stats-chart-outline' size={18} color={'#fff'} />
                                         </Text>
-                                        <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                                             Grades
                                         </Text>
                                     </TouchableOpacity>
@@ -263,29 +263,25 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 <Text style={styles.channelText}>
                                                     <Ionicons name='settings-outline' size={18} color={'#fff'} />
                                                 </Text>
-                                                <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'center' }}>
+                                                <Text style={{ fontSize: 10, color: '#fff', textAlign: 'center' }}>
                                                     Settings
                                                 </Text>
                                             </TouchableOpacity> : null
                                     }
-                                </View> : <View style={{ height: 34 }} />
-                            // <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end' }}>
-                            //     <TouchableOpacity
-                            //         style={{ marginRight: 15 }}
-                            //         onPress={() => props.openCalendar()}>
-                            //         <Text style={styles.channelText}>
-                            //             <Ionicons name='calendar-outline' size={20} color={'#a2a2ac'} />
-                            //         </Text>
-                            //     </TouchableOpacity>
-                            //     <TouchableOpacity
-                            //         onPress={() => props.openWalkthrough()}
-                            //         style={{ marginRight: 5 }}
-                            //     >
-                            //         <Text style={styles.channelText}>
-                            //             <Ionicons name='help-circle-outline' size={21} color={'#a2a2ac'} />
-                            //         </Text>
-                            //     </TouchableOpacity>
-                            // </View>
+                                </View> :
+                                (
+                                    props.filterChoice === 'All' ?
+                                        <View style={{ flexDirection: 'column', flex: 1, width: '100%', justifyContent: 'center', backgroundColor: '#2f2f3c' }}>
+                                            <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'right' }}>
+                                                Select channel to view options.
+                                            </Text>
+                                        </View> :
+                                        <View style={{ flexDirection: 'column', flex: 1, width: '100%', justifyContent: 'center', backgroundColor: '#2f2f3c' }}>
+                                            <Text style={{ fontSize: 10, color: '#a2a2ac', textAlign: 'right' }}>
+                                                Your personal space.
+                                            </Text>
+                                        </View>
+                                )
                         }
                     </View>
                 </View>
