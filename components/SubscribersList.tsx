@@ -77,6 +77,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [loading, setLoading] = useState(false);
     const [problems, setProblems] = useState<any[]>([]);
     const [submittedAt, setSubmittedAt] = useState('');
+    const [deadline, setDeadline] = useState('');
     const [isV0Quiz, setIsV0Quiz] = useState(false)
     const [headers, setHeaders] = useState({})
     const [exportAoa, setExportAoa] = useState<any[]>()
@@ -1204,6 +1205,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                             if (subscriber.fullName === 'submitted' || subscriber.fullName === 'graded') {
                                                                                 setSubmission(subscriber.submission)
                                                                                 setSubmittedAt(subscriber.submittedAt)
+                                                                                setDeadline(subscriber.deadline)
                                                                                 setShowSubmission(true)
                                                                                 setStatus(subscriber.fullName)
                                                                                 setScore(subscriber.score)
@@ -1223,16 +1225,30 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 </ScrollView>)
                                 ) :
                                 isQuiz && !isV0Quiz ?
-                                    <QuizGrading
-                                        loading={loading}
-                                        problems={problems}
-                                        solutions={quizSolutions}
-                                        partiallyGraded={!graded}
-                                        onGradeQuiz={onGradeQuiz}
-                                        comment={comment}
-                                        headers={headers}
-                                        isOwner={true}
-                                    />
+                                    <View style={{ width: '100%', paddingBottom: 100, backgroundColor: '#fff'}}>
+                                        {
+                                            submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
+                                                <View style={{ width: '100%',}}>
+                                                    <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', marginVertical: 10, width: 150, marginLeft: 'auto' }}>
+                                                        <Text style={{ color: '#D91D56',  fontSize: 13, textAlign: 'center' }}>
+                                                            LATE SUBMISSION
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                                :
+                                                null
+                                        }
+                                        <QuizGrading
+                                            loading={loading}
+                                            problems={problems}
+                                            solutions={quizSolutions}
+                                            partiallyGraded={!graded}
+                                            onGradeQuiz={onGradeQuiz}
+                                            comment={comment}
+                                            headers={headers}
+                                            isOwner={true}
+                                        />
+                                    </View>
                                     :
                                     <View>
                                         <ScrollView
@@ -1241,6 +1257,18 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             // style={{ flex: 1, paddingTop: 12 }}
                                             style={{ backgroundColor: 'white' }}
                                         >
+                                            {
+                                                submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
+                                                <View style={{ width: '100%', maxWidth: 800, marginBottom: 30, backgroundColor: '#fff' }}>
+                                                    <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', marginVertical: 10, width: 150, marginLeft: 'auto' }}>
+                                                        <Text style={{ color: '#D91D56',  fontSize: 13, textAlign: 'center' }}>
+                                                            LATE SUBMISSION
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                                :
+                                                null
+                                            }
                                             <View style={{
                                                 width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center',
                                                 backgroundColor: 'white'

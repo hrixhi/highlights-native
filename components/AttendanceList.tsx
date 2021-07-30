@@ -76,7 +76,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         let row1 = [""];
 
         pastMeetings.forEach(meeting => {
-            row1.push(moment(new Date(meeting.start)).format('MMMM Do YYYY, h:mm a'))
+            row1.push(moment(new Date(meeting.start)).format('MMMM Do, h:mm a'))
         })
 
         row1.push("Total")
@@ -96,7 +96,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 })
 
                 if (attendanceObject) {
-                    userRow.push(`Joined at ${moment(new Date(attendanceObject.joinedAt)).format('MMMM Do YYYY, h:mm a')}`)
+                    userRow.push(`Joined at ${moment(new Date(attendanceObject.joinedAt)).format('MMMM Do, h:mm a')}`)
                 } else {
                     userRow.push('-')
                 }
@@ -452,6 +452,9 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     
 
     const renderAttendanceStatsTabs = () => {
+
+        if (!props.isOwner) return null;
+        
         return (<View style={{ flexDirection: "row", backgroundColor: 'white', }}>
             <TouchableOpacity
                 style={{
@@ -491,7 +494,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 
             const { start, dateId } = meeting
 
-            meetingLabels.push(`${moment(new Date(start)).format('MMMM Do')}`)
+            meetingLabels.push(`${moment(new Date(start)).format('MMMM Do, h:mm a')}`)
 
             let count = 0;
 
@@ -687,51 +690,65 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         key={JSON.stringify(channelAttendances)}
                     >
                         <ScrollView
-                            showsHorizontalScrollIndicator={false}
+                            showsHorizontalScrollIndicator={true}
                             horizontal={true}
                             contentContainerStyle={{
-                                backgroundColor: 'white',
+                                height: '100%',
                                 flexDirection: 'column'
                             }}
                             nestedScrollEnabled={true}
                         >
+                            <View>
+                                    <View style={{ minHeight: 70, flexDirection: 'row', overflow: 'hidden', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'black', backgroundColor: '#fff'}} key={"-"}>
+                                        <View style={styles.col} key={'0,0'} />
+                                        <View style={styles.col} key={'0,0'} >
+                                            <Text style={{ fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
+                                                Total
+                                            </Text>
+                                        </View>
+                                        {
+                                            pastMeetings.map((meeting: any, col: number) => {
+                                                const { title, start, end } = meeting
+                                                return <View style={styles.col} key={col.toString()}>
+                                                    <Text style={{ textAlign: 'center', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
+                                                        {title}
+                                                    </Text>
+                                                    <Text style={{ textAlign: 'center', fontSize: 12, color: '#2F2F3C', marginBottom: 5 }}>
+                                                        {moment(new Date(start)).format('MMMM Do')}
+                                                    </Text>
+                                                    <Text style={{ textAlign: 'center', fontSize: 12, color: '#2F2F3C', marginBottom: 5 }}>
+                                                        {moment(new Date(start)).format('h:mm')} - {moment(new Date(end)).format('h:mm')}                              
+                                                    </Text>
+                                                </View>
+                                            })
+                                        }
+                                    </View>
+                            </View>
 
-                            <View style={styles.row} key={"-"}>
-                                <View style={styles.col} key={'0,0'} />
-                                    {
-                                        pastMeetings.map((meeting: any, col: number) => {
-                                            const { title, start } = meeting
-                                            return <View style={styles.col} key={col.toString()}>
-                                                <Text style={{ textAlign: 'center', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter' }}>
-                                                    {title}
-                                                </Text>
-                                                <Text style={{ textAlign: 'center', fontSize: 11, color: '#2f2f3c' }}>
-                                                    {moment(new Date(start)).format('MMMM Do YYYY, h:mm a')}
-                                                </Text>
-                                            </View>
-                                        })
-                                    }
-                                </View>
 
                             <ScrollView
                                 showsVerticalScrollIndicator={false}
                                 horizontal={false}
                                 contentContainerStyle={{
-                                    height: '100%',
-                                    backgroundColor: 'white',
+                                    height: '100%'
                                 }}
                                 nestedScrollEnabled={true}
                             >
-                                <View style={{
-                                    backgroundColor: 'white',
-                                }}>
+                                <View>
                                     {
                                         channelAttendances.map((channelAttendance: any, row: number) => {
 
+                                            const studentCount = attendanceTotalMap[channelAttendance.userId];
+
                                             return <View style={styles.row} key={row}>
                                                 <View style={styles.col} >
-                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter' }}>
+                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
                                                         {channelAttendance.fullName}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.col} >
+                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
+                                                        {studentCount} / {pastMeetings.length}
                                                     </Text>
                                                 </View>
                                                 {
@@ -740,19 +757,21 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                             return s.dateId.toString().trim() === meeting.dateId.toString().trim()
                                                         })
                                                         return <View style={styles.col} key={row.toString() + '-' + col.toString()}>
-                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                                                            <TouchableOpacity disabled={!props.isOwner} onPress={() => props.modifyAttendance(meeting.dateId, channelAttendance.userId, attendanceObject ? false : true)} style={{ marginBottom: 5, width: '100%', flexDirection: 'row', justifyContent: 'center' }}>
                                                                 {
-                                                                    attendanceObject ? "Present" : '-'
-                                                                }
-                                                            </Text>
-                                                            {attendanceObject ? <Text style={{ textAlign: 'left', fontSize: 11, color: '#2f2f3c' }}>
-                                                                {PreferredLanguageText('joinedAt') + ' ' + moment(new Date(attendanceObject.joinedAt)).format('h:mm a')}
+                                                                    attendanceObject ? 
+                                                                        <Ionicons name='checkmark-outline' size={20} color={'#3b64f8'} /> 
+                                                                        :
+                                                                        props.isOwner ? <Ionicons name='checkmark-outline' size={20} color={'#e0e0e0'} /> : '-'
+                                                                 }
+                                                            </TouchableOpacity>
+                                                            {attendanceObject ? <Text style={{ textAlign: 'center', fontSize: 12, color: '#2F2F3C', width: '100%',  }}>
+                                                                {attendanceObject.joinedAt ? moment(new Date(attendanceObject.joinedAt)).format('h:mm a') : ""}
                                                             </Text> : null}
-                                                            
                                                         </View>
                                                     })
                                                 }
-                                                
+
                                             </View>
                                         })
                                     }
@@ -768,8 +787,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 export default AttendanceList
 
 const styles = StyleSheet.create({
-    row: { height: 70, borderRadius: 15, marginBottom: 15, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#f4f4f6', },
-    col: { width: 100, justifyContent: 'center', display: 'flex', flexDirection: 'column', backgroundColor: '#f4f4f6', padding: 5 },
+    row: { minHeight: 70, flexDirection: 'row', overflow: 'hidden', borderBottomColor: '#e0e0e0', borderBottomWidth: 1, backgroundColor: '#fff'  },
+    col: { width: 120, justifyContent: 'center', display: 'flex', flexDirection: 'column', padding: 7, backgroundColor: '#fff'  },
     allGrayFill: {
         fontSize: 11,
         overflow: "hidden",
