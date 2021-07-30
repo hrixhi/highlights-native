@@ -220,8 +220,7 @@ const styles: any = (colorScheme: any, channelId: any, col: any) => StyleSheet.c
     },
     descriptionFlip: {
         color: '#fff',
-        fontSize: 13,
-        // height: '25%',
+        fontSize: 13
     },
     text: {
         height: '100%',

@@ -1225,12 +1225,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 </ScrollView>)
                                 ) :
                                 isQuiz && !isV0Quiz ?
-                                    <View style={{ width: '100%', paddingBottom: 100, backgroundColor: '#fff'}}>
+                                    <View style={{ width: '100%', paddingBottom: 100, backgroundColor: '#fff' }}>
                                         {
                                             submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
-                                                <View style={{ width: '100%',}}>
+                                                <View style={{ width: '100%', }}>
                                                     <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', marginVertical: 10, width: 150, marginLeft: 'auto' }}>
-                                                        <Text style={{ color: '#D91D56',  fontSize: 13, textAlign: 'center' }}>
+                                                        <Text style={{ color: '#D91D56', fontSize: 13, textAlign: 'center' }}>
                                                             LATE SUBMISSION
                                                         </Text>
                                                     </View>
@@ -1254,65 +1254,43 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         <ScrollView
                                             showsVerticalScrollIndicator={false}
                                             keyboardDismissMode={'on-drag'}
-                                            // style={{ flex: 1, paddingTop: 12 }}
                                             style={{ backgroundColor: 'white' }}
                                         >
                                             {
                                                 submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
-                                                <View style={{ width: '100%', maxWidth: 800, marginBottom: 30, backgroundColor: '#fff' }}>
-                                                    <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', marginVertical: 10, width: 150, marginLeft: 'auto' }}>
-                                                        <Text style={{ color: '#D91D56',  fontSize: 13, textAlign: 'center' }}>
-                                                            LATE SUBMISSION
-                                                        </Text>
+                                                    <View style={{ width: '100%', maxWidth: 800, marginBottom: 30, backgroundColor: '#fff' }}>
+                                                        <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', marginVertical: 10, width: 150, marginLeft: 'auto' }}>
+                                                            <Text style={{ color: '#D91D56', fontSize: 13, textAlign: 'center' }}>
+                                                                LATE SUBMISSION
+                                                            </Text>
+                                                        </View>
                                                     </View>
-                                                </View>
-                                                :
-                                                null
+                                                    :
+                                                    null
                                             }
-                                            <View style={{
-                                                width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center',
-                                                backgroundColor: 'white'
-                                            }}>
-                                                <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 10 }}>
-                                                    {PreferredLanguageText('score')}
-                                                </Text>
-                                                <TextInput
-                                                    value={score}
-                                                    style={styles.input}
-                                                    placeholder={'0-100'}
-                                                    onChangeText={val => setScore(val)}
-                                                    placeholderTextColor={'#a2a2ac'}
-                                                />
-                                                <Text style={{ color: '#2f2f3c', fontSize: 14, paddingVertical: 10, }}>
-                                                    {PreferredLanguageText('comment')}
-                                                </Text>
-                                                <TextInput
-                                                    value={comment}
-                                                    style={{
-                                                        height: 200,
-                                                        backgroundColor: '#f4f4f6',
-                                                        borderRadius: 10,
-                                                        fontSize: 15,
-                                                        padding: 15,
-                                                        paddingTop: 13,
-                                                        paddingBottom: 13,
-                                                        marginTop: 5,
-                                                        marginBottom: 20
-                                                    }}
-                                                    placeholder={'Optional'}
-                                                    onChangeText={val => setComment(val)}
-                                                    placeholderTextColor={'#a2a2ac'}
-                                                    multiline={true}
-                                                />
+                                            <View style={{ flexDirection: 'row', flex: 1, backgroundColor: '#fff' }}>
+                                                <View style={{
+                                                    flex: 1, alignSelf: 'center',
+                                                    backgroundColor: 'white'
+                                                }}>
+                                                    <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 10 }}>
+                                                        {PreferredLanguageText('score')}
+                                                    </Text>
+                                                    <TextInput
+                                                        value={score}
+                                                        style={styles.input}
+                                                        placeholder={'0-100'}
+                                                        onChangeText={val => setScore(val)}
+                                                        placeholderTextColor={'#a2a2ac'}
+                                                    />
+                                                </View>
                                                 <View
                                                     style={{
-                                                        flex: 1,
                                                         backgroundColor: 'white',
                                                         justifyContent: 'center',
                                                         display: 'flex',
                                                         flexDirection: 'row',
-                                                        marginTop: 25,
-                                                        marginBottom: 25
+                                                        paddingTop: 15
                                                     }}>
                                                     <TouchableOpacity
                                                         onPress={() => handleGradeSubmit()}
@@ -1332,17 +1310,14 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             fontFamily: 'inter',
                                                             height: 35,
                                                         }}>
-                                                            {status === 'graded' ? 'REGRADE' : 'ENTER GRADE'}
+                                                            SAVE
                                                         </Text>
                                                     </TouchableOpacity>
                                                 </View>
                                             </View>
-                                            <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 25, marginLeft: '5%' }}>
-                                                {PreferredLanguageText('viewSubmission')}
-                                            </Text>
                                             {
-                                                imported ?
-                                                    <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%', }}>
+                                                imported && !isQuiz ?
+                                                    <View style={{ alignSelf: 'flex-start', backgroundColor: '#fff' }}>
                                                         <TextInput
                                                             editable={false}
                                                             value={title}
@@ -1351,7 +1326,16 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             onChangeText={val => setTitle(val)}
                                                             placeholderTextColor={'#a2a2ac'}
                                                         />
-                                                    </View> : null
+                                                        <Text
+                                                            style={{ color: '#a2a2ac', height: 50 }}>
+                                                            Use mac/win/web platforms to add remarks.
+                                                        </Text>
+                                                    </View> : (
+                                                        !isQuiz ?
+                                                            <Text style={{ color: '#a2a2ac', height: 25 }}>
+                                                                Use mac/win/web platforms to add remarks.
+                                                            </Text> : null
+                                                    )
                                             }
                                             {
                                                 isQuiz && Object.keys(quizSolutions).length > 0 ?
@@ -1412,7 +1396,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             :
                                                             (!isQuiz ? <View
                                                                 key={url}
-                                                                style={{ flex: 1 }}
+                                                                style={{ height: 20000 }}
                                                             >
                                                                 <Webview
                                                                     key={url}
@@ -1603,7 +1587,6 @@ const styleObject = () => {
             overflow: 'hidden'
         },
         input: {
-            width: '100%',
             borderBottomColor: '#f4f4f6',
             borderBottomWidth: 1,
             fontSize: 15,
@@ -1611,7 +1594,8 @@ const styleObject = () => {
             paddingTop: 13,
             paddingBottom: 13,
             marginTop: 5,
-            marginBottom: 20
+            marginBottom: 20,
+            width: Dimensions.get('window').width < 1024 ? '100%' : '60%'
         },
         outline: {
             borderRadius: 10,

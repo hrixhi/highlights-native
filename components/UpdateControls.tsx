@@ -739,12 +739,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       Alert("A required question is missing a response.");
       return;
     }
-    
-      let now = new Date();
-      // one minute of extra time to submit            
-      now.setMinutes(now.getMinutes() - 1)
 
-      Alert(now >= deadline ? "Submit Late?" : "Submit?", now >= deadline ? "The deadline for this submission has already passed" : "", [
+    let now = new Date();
+    // one minute of extra time to submit            
+    now.setMinutes(now.getMinutes() - 1)
+
+    Alert(now >= deadline ? "Submit Late?" : "Submit?", now >= deadline ? "The deadline for this submission has already passed" : "", [
       {
         text: "Cancel",
         style: "cancel",
@@ -1034,78 +1034,78 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
   const updateQuiz = (instructions: string, problems: any, headers: any) => {
     Alert("Update Quiz?", "", [
-        {
-            text: "Cancel",
-            style: "cancel",
-            onPress: () => {
-                return;
-            }
-        },
-        {
-            text: "Okay",
-            onPress: async () => {
-                setLoadingAfterModifyingQuiz(true)
-                const server = fetchAPI("");
-
-                // Points should be a string not a number
-            
-                const sanitizeProblems = problems.map((prob: any) => {
-                    const { options } = prob;
-                    const sanitizeOptions = options.map((option: any) => {
-                        const clone = option;
-
-                        delete (clone.__typename)
-
-                        return clone;
-                    })
-
-                    delete (prob.__typename)
-                    delete (prob.problemIndex)
-                    return {
-                        ...prob,
-                        points: prob.points.toString(),
-                        options: sanitizeOptions
-                    }
-                })
-                    server
-                    .mutate({
-                        mutation: modifyQuiz,
-                        variables: {
-                            cueId: props.cue._id,
-                            quiz: {
-                                instructions,
-                                problems: sanitizeProblems,
-                                headers: JSON.stringify(headers)
-                            }
-                        }
-                    })
-                    .then((res: any) => {
-                        if (res.data && res.data.quiz.modifyQuiz) {
-                            const server = fetchAPI("");
-                            server
-                                .query({
-                                    query: getQuiz,
-                                    variables: {
-                                        quizId
-                                    }
-                                })
-                                .then(res => {
-                                    if (res.data && res.data.quiz.getQuiz) {
-                                        setProblems(res.data.quiz.getQuiz.problems);
-                                        setInstructions(res.data.quiz.getQuiz.instructions ? res.data.quiz.getQuiz.instructions : '')
-                                        setHeaders(res.data.quiz.getQuiz.headers ? JSON.parse(res.data.quiz.getQuiz.headers) : {})
-                                        setLoadingAfterModifyingQuiz(false);
-                                        alert('Quiz updated successfully')
-                                    }
-                                });
-
-                        }
-                    })
-                    .catch(err => console.log(err));
-            }
+      {
+        text: "Cancel",
+        style: "cancel",
+        onPress: () => {
+          return;
         }
+      },
+      {
+        text: "Okay",
+        onPress: async () => {
+          setLoadingAfterModifyingQuiz(true)
+          const server = fetchAPI("");
+
+          // Points should be a string not a number
+
+          const sanitizeProblems = problems.map((prob: any) => {
+            const { options } = prob;
+            const sanitizeOptions = options.map((option: any) => {
+              const clone = option;
+
+              delete (clone.__typename)
+
+              return clone;
+            })
+
+            delete (prob.__typename)
+            delete (prob.problemIndex)
+            return {
+              ...prob,
+              points: prob.points.toString(),
+              options: sanitizeOptions
+            }
+          })
+          server
+            .mutate({
+              mutation: modifyQuiz,
+              variables: {
+                cueId: props.cue._id,
+                quiz: {
+                  instructions,
+                  problems: sanitizeProblems,
+                  headers: JSON.stringify(headers)
+                }
+              }
+            })
+            .then((res: any) => {
+              if (res.data && res.data.quiz.modifyQuiz) {
+                const server = fetchAPI("");
+                server
+                  .query({
+                    query: getQuiz,
+                    variables: {
+                      quizId
+                    }
+                  })
+                  .then(res => {
+                    if (res.data && res.data.quiz.getQuiz) {
+                      setProblems(res.data.quiz.getQuiz.problems);
+                      setInstructions(res.data.quiz.getQuiz.instructions ? res.data.quiz.getQuiz.instructions : '')
+                      setHeaders(res.data.quiz.getQuiz.headers ? JSON.parse(res.data.quiz.getQuiz.headers) : {})
+                      setLoadingAfterModifyingQuiz(false);
+                      alert('Quiz updated successfully')
+                    }
+                  });
+
+              }
+            })
+            .catch(err => console.log(err));
+        }
+      }
     ]);
-}
+  }
 
 
   const onAddNew = useCallback(
@@ -1839,34 +1839,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
   const renderCueRemarks = () => {
     return !props.showOriginal && props.cue.graded && props.cue.comment ? (
-      <View>
+      <View style={{ backgroundColor: '#fff' }}>
         <Text
-          style={{
-            color: "#2f2f3c",
-            fontSize: 14,
-            paddingBottom: 25,
-            marginLeft: "5%"
-          }}>
-          {PreferredLanguageText("gradersRemarks")}
+          style={{ color: '#a2a2ac', height: 25, backgroundColor: '#fff' }}>
+          Use mac/win/web platforms to view remarks.
         </Text>
-        <TextInput
-          value={props.cue.comment}
-          style={{
-            height: 200,
-            backgroundColor: "#f4f4f6",
-            borderRadius: 10,
-            fontSize: 15,
-            padding: 15,
-            paddingTop: 13,
-            paddingBottom: 13,
-            marginTop: 5,
-            marginBottom: 20
-          }}
-          editable={false}
-          placeholder={"Optional"}
-          placeholderTextColor={"#a2a2ac"}
-          multiline={true}
-        />
       </View>
     ) : null;
   };
@@ -3072,51 +3049,51 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
   const renderDeleteButtons = () => {
     return (
-        <View style={styles.footer}>
-            <View
+      <View style={styles.footer}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "white",
+            justifyContent: "center",
+            display: "flex",
+            flexDirection: "row",
+            height: 50,
+            paddingTop: 10
+          }}>
+          {isOwner || !props.cue.channelId || props.cue.channelId === "" ? (
+            <TouchableOpacity
+              onPress={() => handleDelete()}
+              style={{
+                backgroundColor: "white",
+                borderRadius: 15
+              }}>
+              <Text
                 style={{
-                    flex: 1,
-                    backgroundColor: "white",
-                    justifyContent: "center",
-                    display: "flex",
-                    flexDirection: "row",
-                    height: 50,
-                    paddingTop: 10
+                  textAlign: "center",
+                  lineHeight: 35,
+                  color: "white",
+                  fontSize: 11,
+                  backgroundColor: "#3B64F8",
+                  borderRadius: 15,
+                  paddingHorizontal: 25,
+                  fontFamily: "inter",
+                  overflow: "hidden",
+                  height: 35,
+                  textTransform: "uppercase"
                 }}>
-                {isOwner || !props.cue.channelId || props.cue.channelId === "" ? (
-                  <TouchableOpacity
-                    onPress={() => handleDelete()}
-                    style={{
-                      backgroundColor: "white",
-                      borderRadius: 15
-                    }}>
-                    <Text
-                      style={{
-                        textAlign: "center",
-                        lineHeight: 35,
-                        color: "white",
-                        fontSize: 11,
-                        backgroundColor: "#3B64F8",
-                        borderRadius: 15,
-                        paddingHorizontal: 25,
-                        fontFamily: "inter",
-                        overflow: "hidden",
-                        height: 35,
-                        textTransform: "uppercase"
-                      }}>
-                      {isOwner
-                        ? props.cue.channelId && props.cue.channelId !== ""
-                          ? PreferredLanguageText("deleteForEveryone")
-                          : PreferredLanguageText("delete")
-                        : PreferredLanguageText("delete")}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
+                {isOwner
+                  ? props.cue.channelId && props.cue.channelId !== ""
+                    ? PreferredLanguageText("deleteForEveryone")
+                    : PreferredLanguageText("delete")
+                  : PreferredLanguageText("delete")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
 
-            </View>
         </View>
+      </View>
     );
-};
+  };
 
   const width = Dimensions.get("window").width;
 
@@ -3151,8 +3128,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   if ((props.cue.submission && props.cue.submittedAt !== null && !props.cue.releaseSubmission && !isOwner && currentDate > deadline) || (props.cue.graded && !props.cue.releaseSubmission)) {
     return (<View style={{ minHeight: Dimensions.get('window').height }}>
       <View style={{ backgroundColor: 'white', flex: 1, }}>
-          <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 20, paddingTop: 200, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1, textAlign: 'center' }}>
-            Your instructor has not made this submission  available.
+        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 20, paddingTop: 200, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1, textAlign: 'center' }}>
+          Your instructor has not made this submission  available.
         </Text>
       </View>
     </View>)
