@@ -25,9 +25,9 @@ export const createUser = gql`
 `;
 
 export const createChannel = gql`
-  mutation($name: String!, $password: String, $createdBy: String!, $temporary: Boolean) {
+  mutation($name: String!, $password: String, $createdBy: String!, $temporary: Boolean, $colorCode: String) {
     channel {
-      create(name: $name, password: $password, createdBy: $createdBy, temporary: $temporary)
+      create(name: $name, password: $password, createdBy: $createdBy, temporary: $temporary, colorCode: $colorCode)
     }
   }
 `;
@@ -312,6 +312,13 @@ export const markAttendance = gql`
     }
   }
 `;
+export const modifyAttendance = gql`
+mutation($dateId: String!, $userId: String!, $channelId: String!, $markPresent: Boolean!) {
+  attendance {
+    modifyAttendance(dateId: $dateId, userId: $userId, channelId: $channelId, markPresent: $markPresent)
+  }
+}
+`;
 export const createQuiz = gql`
   mutation($quiz: QuizInputObject!) {
     quiz {
@@ -319,6 +326,14 @@ export const createQuiz = gql`
     }
   }
 `;
+export const modifyQuiz = gql`
+  mutation($cueId: String!, $quiz: QuizInputObject!) {
+    quiz {
+      modifyQuiz(cueId: $cueId, quiz: $quiz)
+    }
+  }
+`;
+
 export const makeSubActive = gql`
   mutation($userId: String!, $channelId: String!) {
     subscription {
@@ -604,6 +619,7 @@ export const getStatuses = gql`
         submission
         score
         submittedAt
+        deadline
         graded
         comment
         releaseSubmission
@@ -663,6 +679,8 @@ export const getGrades = gql`
         cue
         gradeWeight
         releaseSubmission
+        deadline
+        submittedAt
       }
     }
   }
@@ -680,6 +698,7 @@ export const getGradesList = gql`
           score
           gradeWeight
           graded
+          submittedAt
         }
       }
     }

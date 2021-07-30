@@ -4,7 +4,7 @@ import Alert from '../components/Alert'
 import { View } from './Themed';
 // import { } from 'react-native-gesture-handler'
 import { fetchAPI } from '../graphql/FetchAPI';
-import { getGrades, getGradesList, getSubmissionStatistics } from '../graphql/QueriesAndMutations';
+import { getGrades, getGradesList, getSubmissionStatistics, submitGrade } from '../graphql/QueriesAndMutations';
 import GradesList from './GradesList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -172,6 +172,101 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         loadSubmissionStatistics()
     }, [props.channelId])
 
+    const modifyGrade = (cueId: string, userId: string, score: string) => {
+        if (Number.isNaN(Number(score))) {
+            Alert('Score should be a valid number')
+            return
+        }
+        const server = fetchAPI('')
+        server.mutate({
+            mutation: submitGrade,
+            variables: {
+                cueId,
+                userId,
+                score,
+            }
+        }).then(res => {
+            if (res.data.cue.submitGrade) {
+                // Fetch scores again and statistics again
+
+                server.query({
+                    query: getGradesList,
+                    variables: {
+                        channelId: props.channelId
+                    }
+                }).then(async (res2) => {
+                    if (res2.data.channel.getGrades) {
+                        const u = await AsyncStorage.getItem('user')
+                        if (u) {
+                            const user = JSON.parse(u)
+                            if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
+                                // all scores
+                                setScores(res2.data.channel.getGrades)
+                            } else {
+                                // only user's score
+                                const score = res2.data.channel.getGrades.find((u: any) => {
+                                    return u.userId.toString().trim() === user._id.toString().trim()
+                                })
+
+                                // if it is a quiz and not release submission then set Graded to false
+                               
+                                    const { scores } = score;
+
+                                    const updateScores = scores.map((x: any) => {
+
+                                        const { cueId, gradeWeight, graded, } = x;
+                                        const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
+                                            return u._id.toString() === cueId.toString()
+                                        });
+
+                                        const { cue, releaseSubmission } = findCue;
+
+                                        if (!releaseSubmission) {
+                                            return {
+                                                    cueId,
+                                                    gradeWeight,
+                                                    graded: false,
+                                                    score: ""
+                                                }
+                                        } else {
+                                            return x
+                                        }
+                                    })
+
+                                    score.scores = updateScores;
+
+                                const singleScoreArray = [{ ...score }]
+                                setScores(singleScoreArray)
+                            }
+
+                        }
+                        setLoading(false)
+                        modalAnimation.setValue(0)
+                        Animated.timing(modalAnimation, {
+                            toValue: 1,
+                            duration: 150,
+                            useNativeDriver: true
+                        }).start();
+                    }
+                    loadSubmissionStatistics()
+                }).catch(err => {
+                    Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
+                    setLoading(false)
+                    modalAnimation.setValue(0)
+                    Animated.timing(modalAnimation, {
+                        toValue: 1,
+                        duration: 150,
+                        useNativeDriver: true
+                    }).start();
+                })
+
+            }
+        }).catch((err) => {
+            alert('Something went wrong. Try Again.')
+        })
+
+    }
+
     const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
     return (
         <ScrollView style={{
@@ -227,6 +322,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                             reload={() => loadCuesAndScores()}
                             submissionStatistics={submissionStatistics}
+                            modifyGrade={modifyGrade}
                         />
                 }
             </Animated.View>

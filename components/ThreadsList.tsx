@@ -368,7 +368,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                 }
                                                             }}>
                                                                 <MenuOption
-                                                                    value={''}>
+                                                                    value={'All'}>
                                                                     <Text>
                                                                         All
                                                                     </Text>

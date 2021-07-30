@@ -4,11 +4,14 @@ import { Text, View, TouchableOpacity } from './Themed';
 import _ from 'lodash'
 import { Ionicons } from '@expo/vector-icons';
 
+
 const SubscriberCard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const styleObject = styles(props.status)
     const displayName = props.subscriber.displayName ? props.subscriber.displayName : ''
     const fullName = props.subscriber.fullName ? props.subscriber.fullName : ''
+    const submittedAt = props.subscriber.submittedAt ? props.subscriber.submittedAt : ''
+    const deadline = props.subscriber.deadline ? props.subscriber.deadline : ''
 
     return (
         <View
@@ -47,6 +50,16 @@ const SubscriberCard: React.FunctionComponent<{ [label: string]: any }> = (props
                                         }}>
                                             {props.subscriber.unreadMessages}
                                         </Text> : null
+                                }
+                                {
+                                    submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
+                                    <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', backgroundColor: 'white' }}>
+                                        <Text style={{ color: '#D91D56',  fontSize: 13 }}>
+                                            LATE
+                                        </Text>
+                                    </View>
+                                    :
+                                    null
                                 }
                                 {
                                     props.hideChevron ? null : <Ionicons name="chevron-forward-outline" color="#a2a2ac" size={20} style={{ marginTop: 3, marginLeft: 10 }} />
