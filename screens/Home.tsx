@@ -717,14 +717,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           })
             .then(async res => {
               if (res.data.subscription.findByUserId) {
-                const colorChoices: any[] = ['#d91d56', '#ED7D22', '#F8D41F', '#B8D41F', '#53BE6D']
+                const colorChoices: any[] = ['#d91d56', '#ED7D22', '#FFBA10', '#B8D41F', '#53BE6D']
 
                 const updateColorCodes = res.data.subscription.findByUserId.map((sub: any) => {
                   if (sub.colorCode === "") {
                     const randomColor = colorChoices[Math.floor(Math.random() * colorChoices.length)];
                     sub.colorCode = randomColor;
-                    
-                  } 
+
+                  }
                   return sub;
                 })
 
@@ -781,7 +781,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
       // OPEN WALKTHROUGH IF FIRST TIME LOAD
       if (!init && Dimensions.get('window').width >= 1024) {
-        openModal('Create')
+        let lastOpened = await AsyncStorage.getItem('lastopened')
+        if (lastOpened) {
+          openModal(lastOpened)
+        }
+        else {
+          openModal('Create')
+        }
       }
       // HANDLE PROFILE
       if (u) {
@@ -948,14 +954,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       })
         .then(async res => {
           if (res.data.subscription.findByUserId) {
-            const colorChoices: any[] = ['#d91d56', '#ED7D22', '#F8D41F', '#B8D41F', '#53BE6D']
+            const colorChoices: any[] = ['#d91d56', '#ED7D22', '#FFBA10', '#B8D41F', '#53BE6D']
 
             const updateColorCodes = res.data.subscription.findByUserId.map((sub: any) => {
               if (sub.colorCode === "") {
                 const randomColor = colorChoices[Math.floor(Math.random() * colorChoices.length)];
                 sub.colorCode = randomColor;
-                
-              } 
+
+              }
               return sub;
             })
 
@@ -1118,6 +1124,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const openModal = useCallback((type) => {
     setModalType(type)
+
+    AsyncStorage.setItem('lastopened', type)
   }, [sheetRef, cues])
 
   const openUpdate = useCallback((key, index, pageNumber, _id, by, channId) => {
@@ -1519,7 +1527,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }}
         resetCueUpdateCount={() => {
           console.log("Reset Cue count")
-          setUpdatedCueCount(0)}
+          setUpdatedCueCount(0)
+        }
         }
         handleReleaseSubmissionUpdate={handleReleaseSubmissionUpdate}
         markCueAsRead={markCueAsRead}
@@ -1882,7 +1891,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 filterChoice={filterChoice}
                 openUpdate={(index: any, key: any, pageNumber: any, _id: any, by: any, cId: any) => openUpdate(index, key, pageNumber, _id, by, cId)}
                 channelFilterChoice={channelFilterChoice}
-                subscriptions={subscriptions} 
+                subscriptions={subscriptions}
               />
             </View>
         }
@@ -1926,7 +1935,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           {
             Dimensions.get('window').width < 1024 ? null : <View style={{ flexDirection: 'column', flex: 1, width: '100%', justifyContent: 'center', backgroundColor: '#2f2f3c' }}>
               <Text style={{ fontSize: 20, color: '#a2a2ac', textAlign: 'center', fontFamily: 'inter', backgroundColor: '#2F2F3C' }}>
-                Select Cue to view.
+                Select cue to view.
               </Text>
             </View>
           }
@@ -1961,8 +1970,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
               Dimensions.get('window').width < 1024 ?
                 <TouchableOpacity
                   onPress={() => closeModal("")}
-                  style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#eeeeef', width: '100%' }}>
-                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#2f2f3c' }}>
+                  style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#a2a2ac', width: '100%' }}>
+                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#2f2f3c', fontWeight: 'bold' }}>
                     <Ionicons name='chevron-back-outline' size={15} />{PreferredLanguageText('back')}
                   </Text>
                 </TouchableOpacity> :

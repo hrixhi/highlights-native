@@ -86,7 +86,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const RichText: any = useRef();
   const [height, setHeight] = useState(100);
   const [showOriginal, setShowOriginal] = useState(props.cue.channelId && props.cue.channelId !== "" ? true : false);
-  const colorChoices: any[] = ["#d91d56", "#ED7D22", "#F8D41F", "#B8D41F", "#53BE6D"].reverse();
+  const colorChoices: any[] = ["#d91d56", "#ED7D22", "#FFBA10", "#B8D41F", "#53BE6D"].reverse();
   const [submission, setSubmission] = useState(props.cue.submission ? props.cue.submission : false);
   const dead =
     props.cue.deadline && props.cue.deadline !== ""
@@ -3135,7 +3135,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     </View>)
   }
 
-  console.log(props.cue)
+
 
   if (props.cue.submission && props.cue.submittedAt !== null && !props.cue.releaseSubmission && !isOwner) {
     return (<View style={{ minHeight: Dimensions.get('window').height }}>
@@ -3781,7 +3781,7 @@ const styles: any = StyleSheet.create({
     backgroundColor: "#ED7D22"
   },
   color3: {
-    backgroundColor: "#F8D41F"
+    backgroundColor: "#FFBA10"
   },
   color4: {
     backgroundColor: "#B8D41F"

@@ -485,83 +485,83 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             }}
           >
             <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
-              Filter 
+              Filter
             </Text>
           </View>
           <View style={{ backgroundColor: '#fff' }}>
             <View style={{ flexDirection: 'row', display: 'flex', backgroundColor: '#fff' }}>
-                <Menu
-                  onSelect={(channel: any) => {
-                      setFilterByChannel(channel);
-                  }}>
-                  <MenuTrigger>
-                    <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#202025' }}>
-                      {filterByChannel}<Ionicons name='caret-down' size={14} />
-                    </Text>
-                  </MenuTrigger>
-                  <MenuOptions customStyles={{
-                      optionsContainer: {
-                        padding: 10,
-                        borderRadius: 15,
-                        shadowOpacity: 0,
-                        borderWidth: 1,
-                        borderColor: '#f4f4f6'
-                    }
-                  }}>
+              <Menu
+                onSelect={(channel: any) => {
+                  setFilterByChannel(channel);
+                }}>
+                <MenuTrigger>
+                  <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#202025' }}>
+                    {filterByChannel}<Ionicons name='caret-down' size={14} />
+                  </Text>
+                </MenuTrigger>
+                <MenuOptions customStyles={{
+                  optionsContainer: {
+                    padding: 10,
+                    borderRadius: 15,
+                    shadowOpacity: 0,
+                    borderWidth: 1,
+                    borderColor: '#f4f4f6'
+                  }
+                }}>
 
-                    <MenuOption
-                      value={'All'}>
-                      <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                  <MenuOption
+                    value={'All'}>
+                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                      <View style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 10,
+                        marginTop: 1,
+                        backgroundColor: "#fff"
+                      }} />
+                      <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                        All
+                      </Text>
+                    </View>
+                  </MenuOption>
+                  <MenuOption
+                    value={'My Cues'}>
+                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                      <View style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 10,
+                        marginTop: 1,
+                        backgroundColor: "#000"
+                      }} />
+                      <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                        My Cues
+                      </Text>
+                    </View>
+                  </MenuOption>
+                  {
+                    props.subscriptions.map((subscription: any) => {
+                      return <MenuOption
+                        value={subscription}>
+                        <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
                           <View style={{
                             width: 8,
                             height: 8,
                             borderRadius: 10,
                             marginTop: 1,
-                            backgroundColor: "#fff"
-                        }} />
-                        <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
-                            All
-                        </Text>
-                    </View>
-                    </MenuOption>
-                    <MenuOption
-                      value={'My Cues'}>
-                      <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
-                        <View style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: 10,
-                            marginTop: 1,
-                            backgroundColor: "#000"
-                        }} />
-                        <Text style={{ marginLeft: 5, color: '#2f2f3c'}}>
-                          My Cues
-                        </Text>
-                    </View>
-                    </MenuOption>
-                    {
-                      props.subscriptions.map((subscription: any) => {
-                          return <MenuOption
-                            value={subscription}>
-                            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff'  }}>
-                              <View style={{
-                                  width: 8,
-                                  height: 8,
-                                  borderRadius: 10,
-                                  marginTop: 1,
-                                  backgroundColor: subscription.colorCode,
-                                }} />
-                                <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
-                                  {subscription.channelName}
-                                </Text>
-                            </View>
-                          </MenuOption>
-                        })
-                      }
-                  </MenuOptions>
+                            backgroundColor: subscription.colorCode,
+                          }} />
+                          <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                            {subscription.channelName}
+                          </Text>
+                        </View>
+                      </MenuOption>
+                    })
+                  }
+                </MenuOptions>
               </Menu>
             </View>
-          </View> 
+          </View>
         </View>
 
         <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
@@ -1251,7 +1251,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     const uString: any = await AsyncStorage.getItem("user");
     // Only allow edit if event is not past
     if (uString) {
-
       const user = JSON.parse(uString);
 
       const timeString = datesEqual(event.start, event.end) ? moment(new Date(event.start)).format("MMMM Do YYYY, h:mm a") : moment(new Date(event.start)).format("MMMM Do YYYY, h:mm a") + " to " + moment(new Date(event.end)).format("MMMM Do YYYY, h:mm a")
@@ -1523,7 +1522,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         </Text>
 
         <View style={{ flexDirection: 'row', width: '50%', backgroundColor: 'white', justifyContent: "flex-end" }}>
-        {filterByChannel === "All" && !filterByLectures ? null : <Text style={{
+          {filterByChannel === "All" && !filterByLectures ? null : <Text style={{
             // width: '50%',
             color: '#a2a2aa',
             fontSize: 11,
@@ -1664,7 +1663,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               >
                 <TextInput
                   value={title}
-                  placeholder={PreferredLanguageText("new") + ' ' + PreferredLanguageText("event") + "/" + PreferredLanguageText("meeting")}
+                  placeholder={
+                    'Event'
+                  }
                   onChangeText={val => setTitle(val)}
                   placeholderTextColor={"#a2a2ac"}
                   required={true}
@@ -1857,7 +1858,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                     borderRadius: 15,
                   }}
                 >
-                  {isCreatingEvents ? "SAVING" : "SAVE"}
+                  {isCreatingEvents ? "ADDING..." : "ADD"}
                 </Text>
               </TouchableOpacity>
             </View> : null}

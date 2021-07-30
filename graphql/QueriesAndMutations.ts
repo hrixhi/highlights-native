@@ -415,11 +415,24 @@ mutation($cueId: String!, $releaseSubmission: Boolean!) {
   }
 }
 `
-
 export const deleteRecording = gql`
 mutation($recordID: String!) {
   channel {
     deleteRecording(recordID: $recordID)
+  }
+}
+`
+export const meetingRequest = gql`
+mutation($userId: String!, $isOwner: Boolean!, $channelId: String!) {
+  channel {
+    meetingRequest(userId: $userId, isOwner: $isOwner, channelId: $channelId)
+  }
+}
+`
+export const personalMeetingRequest = gql`
+mutation($userId: String!, $users: [String!]!, $channelId: String!) {
+  channel {
+    personalMeetingRequest(userId: $userId, users: $users, channelId: $channelId)
   }
 }
 `

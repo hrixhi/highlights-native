@@ -58,7 +58,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [channelId, setChannelId] = useState<any>('')
     const [endPlayAt, setEndPlayAt] = useState(new Date(current.getTime() + 1000 * 60 * 60))
     const [playChannelCueIndef, setPlayChannelCueIndef] = useState(true)
-    const colorChoices: any[] = ['#d91d56', '#ED7D22', '#F8D41F', '#B8D41F', '#53BE6D'].reverse()
+    const colorChoices: any[] = ['#d91d56', '#ED7D22', '#FFBA10', '#B8D41F', '#53BE6D'].reverse()
     const [modalAnimation] = useState(new Animated.Value(0))
     // const now = new Date()
     const [reloadEditorKey, setReloadEditorKey] = useState(Math.random())
@@ -91,6 +91,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [shuffleQuiz, setShuffleQuiz] = useState(false);
     const [headers, setHeaders] = useState<any>({});
     const [quizInstructions, setQuizInstructions] = useState('');
+    const [initialDuration, setInitialDuration] = useState(null)
 
     const [equation, setEquation] = useState('y = x + 1')
     const [showEquationEditor, setShowEquationEditor] = useState(false)
@@ -605,7 +606,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 const quizDraft = await AsyncStorage.getItem('quizDraft')
                 if (quizDraft !== null) {
                     const { duration, timer, problems, title, headers, quizInstructions } = JSON.parse(quizDraft);
-
+                    setInitialDuration(duration)
                     setDuration(duration);
                     setTimer(timer);
                     setProblems(problems);

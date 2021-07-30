@@ -9,7 +9,7 @@ import {
     RichEditor
 } from "react-native-pell-rich-editor";
 import { fetchAPI } from '../graphql/FetchAPI';
-import { editPersonalMeeting, findUserById, getMessages, getPersonalMeetingLink, getPersonalMeetingLinkStatus, inviteByEmail, isSubInactive, makeSubActive, makeSubInactive, markMessagesAsRead, submitGrade, unsubscribe, getQuiz, gradeQuiz, editReleaseSubmission } from '../graphql/QueriesAndMutations';
+import { editPersonalMeeting, findUserById, getMessages, getPersonalMeetingLink, getPersonalMeetingLinkStatus, inviteByEmail, isSubInactive, makeSubActive, makeSubInactive, markMessagesAsRead, submitGrade, unsubscribe, getQuiz, gradeQuiz, editReleaseSubmission, personalMeetingRequest } from '../graphql/QueriesAndMutations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Alert from './Alert';
 import NewMessage from "./NewMessage";
@@ -403,6 +403,27 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             alert('Something went wrong')
         })
     }, [users, user])
+
+    const handleEnterMeeting = useCallback(() => {
+        const server = fetchAPI('')
+        server.mutate({
+            mutation: personalMeetingRequest,
+            variables: {
+                userId: user._id,
+                channelId: props.channelId,
+                users
+            }
+        }).then(res => {
+            console.log(res)
+            if (res.data && res.data.channel.personalMeetingRequest !== 'error') {
+                window.open(res.data.channel.personalMeetingRequest, "_blank");
+            } else {
+                Alert("Classroom not in session. Waiting for instructor.")
+            }
+        }).catch(err => {
+            Alert("Something went wrong.")
+        })
+    }, [users, userId, props.channelId, user])
 
     const updateMeetingStatus = useCallback(() => {
         const server = fetchAPI('')
@@ -853,147 +874,32 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             } */}
                             {
                                 showChat ? <View style={{ flexDirection: 'column', backgroundColor: 'white' }}>
-                                    {
-                                        isOwner ?
-                                            (
-                                                showMeetingOptions
-                                                    ?
-                                                    <View style={{
-                                                        backgroundColor: 'white'
-                                                    }}>
-                                                        <View>
-                                                            <View style={{
-                                                                backgroundColor: 'white',
-                                                                height: 52,
-                                                                paddingTop: 20,
-                                                                flexDirection: 'row'
-                                                            }}>
-                                                                <View style={{ width: '80%', backgroundColor: 'white', flexDirection: 'row', }}>
-                                                                    <Switch
-                                                                        value={meetingOn}
-                                                                        onValueChange={() => updateMeetingStatus()}
-                                                                        style={{ height: 40, marginRight: 20, }}
-                                                                        trackColor={{
-                                                                            false: '#f4f4f6',
-                                                                            true: '#3B64F8'
-                                                                        }}
-                                                                        activeThumbColor='white'
-                                                                    />
-                                                                    <View style={{ backgroundColor: 'white', paddingTop: 3, }}>
-                                                                        <Text style={{ fontSize: 15, color: '#a2a2ac', }}>
-                                                                            Meeting
-                                                                        </Text>
-                                                                    </View>
-                                                                </View>
-                                                                <Text style={{
-                                                                    width: '20%',
-                                                                    color: '#a2a2ac',
-                                                                    fontSize: 11,
-                                                                    lineHeight: 30,
-                                                                    paddingTop: 0,
-                                                                    textAlign: 'right',
-                                                                    paddingRight: 20,
-                                                                    textTransform: 'uppercase'
-                                                                }}
-                                                                    onPress={() => {
-                                                                        setShowMeetingOptions(!showMeetingOptions)
-                                                                    }}
-                                                                >
-                                                                    HIDE
-                                                                </Text>
-                                                            </View>
-                                                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingTop: 10, backgroundColor: 'white' }}>
-                                                                Restart switch if you are unable to join.
-                                                            </Text>
-                                                        </View>
-                                                    </View>
-
-                                                    :
-                                                    null
-                                            ) : null
-                                    }
-                                    {showMeetingOptions ? <View style={{ backgroundColor: 'white', marginTop: 25, }}>
-                                        <View style={{ backgroundColor: 'white', width: '100%', flexDirection: 'column' }}>
-                                            {!isOwner ?
-                                                <Text style={{
-                                                    width: '100%',
-                                                    color: '#a2a2ac',
-                                                    fontSize: 11,
-                                                    lineHeight: 30,
-                                                    paddingTop: 0,
-                                                    textAlign: 'right',
-                                                    paddingRight: 20,
-                                                    textTransform: 'uppercase'
-                                                }}
-                                                    onPress={() => {
-                                                        setShowMeetingOptions(!showMeetingOptions)
-                                                    }}
-                                                >
-                                                    HIDE
-                                                </Text>
-                                                :
-                                                null
-                                            }
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    if (meetingOn) {
-                                                        Linking.openURL(meetingLink);
-                                                    } else {
-                                                        showError()
-                                                    }
-                                                }}
-                                                style={{
-                                                    backgroundColor: 'white',
-                                                    overflow: 'hidden',
-                                                    height: 35,
-                                                    // marginTop: 15,
-
-                                                    marginBottom: 20
-                                                }}>
-                                                <Text style={{
-                                                    textAlign: 'center',
-                                                    lineHeight: 35,
-                                                    color: meetingOn ? '#fff' : '#2f2f3c',
-                                                    fontSize: 11,
-                                                    backgroundColor: meetingOn ? '#3B64F8' : '#f4f4f6',
-                                                    paddingHorizontal: 25,
-                                                    fontFamily: 'inter',
-                                                    height: 35,
-                                                    width: 175,
-                                                    borderRadius: 15,
-                                                    overflow: 'hidden',
-                                                    textTransform: 'uppercase'
-                                                }}>
-                                                    Join Meeting
-                                                </Text>
-                                            </TouchableOpacity>
-                                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', marginBottom: 10, backgroundColor: 'white' }}>
-                                                Enabled only when meeting in session.
-                                            </Text>
-                                        </View>
-
-                                    </View> : null}
-                                    {
-                                        !showMeetingOptions ?
-                                            <View style={{ backgroundColor: 'white' }}>
-                                                <Text style={{
-                                                    color: '#a2a2ac',
-                                                    fontSize: 11,
-                                                    lineHeight: 30,
-                                                    paddingTop: 10,
-                                                    paddingRight: 10,
-                                                    textAlign: 'right',
-                                                    textTransform: 'uppercase'
-                                                }}
-                                                    onPress={() => {
-                                                        setShowMeetingOptions(!showMeetingOptions)
-                                                    }}
-                                                >
-                                                    OPTIONS
-                                                </Text>
-                                            </View> :
-                                            null
-                                    }
+                                    <TouchableOpacity
+                                        onPress={handleEnterMeeting}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            overflow: 'hidden',
+                                            height: 35,
+                                            marginTop: 15,
+                                            marginBottom: 20
+                                        }}>
+                                        <Text style={{
+                                            textAlign: 'center',
+                                            lineHeight: 35,
+                                            color: '#fff',
+                                            fontSize: 12,
+                                            backgroundColor: '#3B64F8',
+                                            paddingHorizontal: 25,
+                                            fontFamily: 'inter',
+                                            height: 35,
+                                            width: 175,
+                                            borderRadius: 15,
+                                            textTransform: 'uppercase',
+                                            overflow: 'hidden'
+                                        }}>
+                                            Join Meeting
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                                     : null
                             }
