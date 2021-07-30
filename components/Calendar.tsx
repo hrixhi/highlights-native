@@ -393,7 +393,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             parsedEvents.push({
               eventId: e.eventId ? e.eventId : "",
               originalTitle: title,
-              title: e.channelName ? (e.channelName + ' - ' + title) : title,
+              title: e.channelName ? (title + ' - ' + e.channelName) : title,
               start: new Date(e.start),
               end: new Date(e.end),
               dateId: e.dateId,
