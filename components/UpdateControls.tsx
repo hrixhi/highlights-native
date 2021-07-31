@@ -2507,7 +2507,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   }}>
                     <MenuOption
                       value={''}>
-                      <Text>
+                      <Text style={{ color: '#2f2f3c' }}>
                         None
                       </Text>
                     </MenuOption>
@@ -2515,7 +2515,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       customCategories.map((category: any) => {
                         return <MenuOption
                           value={category}>
-                          <Text>
+                          <Text style={{ color: '#2f2f3c' }}>
                             {category}
                           </Text>
                         </MenuOption>
@@ -2690,7 +2690,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
                 <MenuOption
                   value={''}>
-                  <Text>
+                  <Text style={{ color: '#2f2f3c' }}>
                     None
                   </Text>
                 </MenuOption>
@@ -2698,7 +2698,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   channels.map((channel: any) => {
                     return <MenuOption
                       value={channel}>
-                      <Text>
+                      <Text style={{ color: '#2f2f3c' }}>
                         {channel.name}
                       </Text>
                     </MenuOption>
@@ -2876,7 +2876,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       timedFrequencyOptions.map((item: any) => {
                         return <MenuOption
                           value={item}>
-                          <Text>
+                          <Text style={{ color: '#2f2f3c' }}>
                             {item.value === '0' && channelId !== '' ? 'Once' : item.label}
                           </Text>
                         </MenuOption>
@@ -3118,18 +3118,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     return (<View style={{ minHeight: Dimensions.get('window').height }}>
       <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20 }}>
         <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
-          Your instructor has not made this submission available.
-        </Text>
-      </View>
-    </View>)
-  }
-
-  // If normal submission and deadline has past then check if submission released
-  if ((props.cue.submission && props.cue.submittedAt !== null && !props.cue.releaseSubmission && !isOwner && currentDate > deadline) || (props.cue.graded && !props.cue.releaseSubmission)) {
-    return (<View style={{ minHeight: Dimensions.get('window').height }}>
-      <View style={{ backgroundColor: 'white', flex: 1, }}>
-        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 20, paddingTop: 200, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1, textAlign: 'center' }}>
-          Your instructor has not made this submission  available.
+          Quiz submitted. You will be notified when scores are released.        
         </Text>
       </View>
     </View>)
@@ -3172,7 +3161,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               backgroundColor: "#fff"
             }}>
             <View style={{ backgroundColor: 'white', flex: 1, flexDirection: 'row', paddingBottom: 10 }}>
-              {props.cue.graded && props.cue.score !== undefined && props.cue.score !== null && !isQuiz ? (
+              {props.cue.graded && props.cue.score !== undefined && props.cue.score !== null && !isQuiz && props.cue.releaseSubmission ? (
                 <Text
                   style={{
                     fontSize: 11,

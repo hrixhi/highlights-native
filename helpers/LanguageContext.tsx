@@ -50,7 +50,7 @@ const EnglishBank: { [key: string]: string } = {
     percentageOverall: "% of total", // Done
     none: 'None', // Done
     viewShared: "Content", // Done
-    viewSubmission: "View Submission",
+    viewSubmission: "Submission",
     viewAttendance: "View Attendance",
     inviteByEmail: "Add by Email",
     myNotes: "Notes", // Done

@@ -11,6 +11,7 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { ScrollView, Switch } from 'react-native-gesture-handler';
+import ColorPicker from "./ColorPicker";
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -24,6 +25,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [temporary, setTemporary] = useState(false)
     const [channels, setChannels] = useState<any[]>([])
     const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+    const [colorCode, setColorCode] = useState('');
 
     // Alert messages
     const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
@@ -156,7 +158,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     name,
                     password,
                     createdBy: user._id,
-                    temporary
+                    temporary,
+                    colorCode
                 }
             })
                 .then(res => {
@@ -213,7 +216,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             }
         }
 
-    }, [option, name, password, props.closeModal, passwordRequired, displayName, fullName, temporary])
+    }, [option, name, password, props.closeModal, passwordRequired, displayName, fullName, temporary, colorCode])
 
     const loadUser = useCallback(async () => {
         const u = await AsyncStorage.getItem('user')
@@ -418,7 +421,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }
                         </View> :
                         <View style={{ backgroundColor: '#fff' }}>
-                            <View style={{ backgroundColor: 'white' }}>
+                            <View style={{ backgroundColor: 'white', marginBottom: 15 }}>
                                 <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                                     {PreferredLanguageText('channel') + ' Name'}
                                 </Text>
@@ -436,7 +439,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </View>
                             {
                                 (option === 'Subscribe' && passwordRequired) || option === 'Create' ?
-                                    <View style={{ backgroundColor: 'white' }}>
+                                    <View style={{ backgroundColor: 'white', marginBottom: 15 }}>
                                         <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
                                             {PreferredLanguageText('enrolmentPassword')}
                                         </Text>
@@ -462,7 +465,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     <View
                                         style={{
                                             width: "100%",
-                                            backgroundColor: '#fff'
+                                            backgroundColor: '#fff',
+                                            marginBottom: 30,
                                         }}>
                                         <View
                                             style={{
@@ -496,6 +500,35 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </View>
                                     : null
                             }
+
+                            {
+                                option === 'Create' ?
+                                    <View
+                                        style={{
+                                            width: "100%",
+                                            backgroundColor: '#fff'
+                                        }}>
+                                        <View
+                                            style={{
+                                                width: "100%",
+                                                paddingBottom: 15,
+                                                backgroundColor: "white"
+                                            }}>
+                                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Color</Text>
+                                        </View>
+                                        <View
+                                            style={{
+                                                backgroundColor: "white",
+                                                width: "100%",
+                                            }}>
+                                            <ColorPicker color={colorCode} onChange={(color: string) => setColorCode(color)} />
+                                        </View>
+                                    </View>
+                                    : null
+                            }
+
+
+
                             <View
                                 style={{
                                     // flex: 1,
