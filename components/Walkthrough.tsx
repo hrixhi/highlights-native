@@ -397,6 +397,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         <Ionicons
                                             name={item.isOpen ? 'chevron-up-outline' : 'chevron-down-outline'}
                                             size={17}
+                                            color={'#2f2f3c'}
                                         />
                                     </Text>
                                 </View>
