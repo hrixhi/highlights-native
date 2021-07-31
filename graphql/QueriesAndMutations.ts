@@ -395,9 +395,9 @@ export const deleteCue = gql`
   }
 `;
 export const updateChannel = gql`
-mutation($channelId: String!, $password: String, $name: String!, $temporary: Boolean, $owners: [String!]!, $unsubscribe: Boolean!) {
+mutation($channelId: String!, $password: String, $name: String!, $temporary: Boolean, $owners: [String!]!, $unsubscribe: Boolean!, $colorCode: String) {
   channel {
-    update(channelId: $channelId, password: $password, name: $name, temporary: $temporary, owners: $owners, unsubscribe: $unsubscribe)
+    update(channelId: $channelId, password: $password, name: $name, temporary: $temporary, owners: $owners, unsubscribe: $unsubscribe, colorCode: $colorCode)
   }
 }
 `
@@ -978,6 +978,13 @@ export const getUserCount = gql`
      }
  }
  `
+ export const getChannelColorCode = gql`
+ query($channelId: String!) {
+     channel {
+       getChannelColorCode(channelId: $channelId)
+     }
+ }
+`
 export const findBySchoolId = gql`
  query($schoolId: String!) {
      channel {

@@ -378,7 +378,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     }}>
                                                         <MenuOption
                                                             value={''}>
-                                                            <Text>
+                                                            <Text style={{ color: '#2f2f3c' }}>
                                                                 None
                                                             </Text>
                                                         </MenuOption>
@@ -386,7 +386,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             categories.map((category: any) => {
                                                                 return <MenuOption
                                                                     value={category}>
-                                                                    <Text>
+                                                                    <Text style={{ color: '#2f2f3c' }}>
                                                                         {category}
                                                                     </Text>
                                                                 </MenuOption>

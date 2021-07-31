@@ -146,7 +146,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             filteredSubscribers = subscribers
             break;
     }
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 120 : Dimensions.get('window').height;
+    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 150 : Dimensions.get('window').height;
     const key = JSON.stringify(filteredSubscribers)
     let options = filteredSubscribers.map((sub: any) => {
         return {
@@ -687,7 +687,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     }, [isLoadedUserInactive, loadedChatWithUser, props.channelId])
 
-
     const updateReleaseSubmission = useCallback(() => {
         const server = fetchAPI('')
         server.mutate({
@@ -971,48 +970,51 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         } */}
                     </View>
             }
-            {
-                !showAddUsers && !showSubmission && props.cue && props.cue.submission ?
-                    <View style={{
-                        backgroundColor: 'white',
-                        height: 40,
-                        marginBottom: 20,
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                    }}>
-                        <Switch
-                            value={releaseSubmission}
-                            onValueChange={() => updateReleaseSubmission()}
-                            style={{ height: 20, marginRight: 20 }}
-                            trackColor={{
-                                false: '#f4f4f6',
-                                true: '#3B64F8'
-                            }}
-                            activeThumbColor='white'
-                        />
-                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
-                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', }}>
-                                RELEASE GRADES
-                            </Text>
+            <View style={{ width: '100%', flexDirection: 'row', backgroundColor: 'white', alignItems: 'center', justifyContent: 'space-between' }}>
+                {
+                    !showAddUsers && !showSubmission && props.cue && props.cue.submission ?
+                        <View style={{
+                            backgroundColor: 'white',
+                            height: 40,
+                            marginBottom: 20,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            width: '70%'
+                        }}>
+                            <Switch
+                                value={releaseSubmission}
+                                onValueChange={() => updateReleaseSubmission()}
+                                style={{ height: 20, marginRight: 20 }}
+                                trackColor={{
+                                    false: '#f4f4f6',
+                                    true: '#3B64F8'
+                                }}
+                                activeThumbColor='white'
+                            />
+                            <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
+                                <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', }}>
+                                    RELEASE GRADES
+                                </Text>
+                            </View>
                         </View>
-                    </View>
-                    : null
-            }
-            {!isQuiz ? null : <Text
-                style={{
-                    color: "#3b64f8",
-                    fontSize: 11,
-                    lineHeight: 25,
-                    // textAlign: "right",
-                    marginBottom: 10,
-                    textTransform: "uppercase"
-                }}
-                onPress={() => {
-                    exportScore()
-                }}>
-                EXPORT
-            </Text>
-            }
+                        : null
+                }
+                {!isQuiz || showAddUsers || showSubmission ? null : <Text
+                    style={{
+                        color: "#3b64f8",
+                        fontSize: 11,
+                        lineHeight: 25,
+                        // textAlign: "right",
+                        marginBottom: 10,
+                        textTransform: "uppercase"
+                    }}
+                    onPress={() => {
+                        exportScore()
+                    }}>
+                    EXPORT
+                </Text>
+                }
+            </View>
             {
                 !showAddUsers ? (subscribers.length === 0 ?
                     <View style={{ backgroundColor: 'white', flex: 1 }}>
@@ -1296,10 +1298,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         padding: 15,
                                                         paddingTop: 13,
                                                         paddingBottom: 13,
-                                                        marginTop: 5,
+                                                        // marginTop: 5,
                                                         marginBottom: 20
                                                     }}
-                                                    placeholder={'Optional'}
+                                                    placeholder={'Overall Remarks'}
+                                                    
                                                     onChangeText={val => setComment(val)}
                                                     placeholderTextColor={'#a2a2ac'}
                                                     multiline={true}
@@ -1332,12 +1335,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             fontFamily: 'inter',
                                                             height: 35,
                                                         }}>
-                                                            {status === 'graded' ? 'REGRADE' : 'ENTER GRADE'}
+                                                            {status === 'graded' ? 'REGRADE' : 'SUBMIT GRADE'}
                                                         </Text>
                                                     </TouchableOpacity>
                                                 </View>
                                             </View>
-                                            <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 25, marginLeft: '5%' }}>
+                                            <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 25, marginLeft: '5%' , marginTop: 20}}>
                                                 {PreferredLanguageText('viewSubmission')}
                                             </Text>
                                             {
@@ -1450,17 +1453,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 borderColor: '#f4f4f6'
                                             }
                                         }}>
-                                            {/* <MenuOption
-                                                value={''}>
-                                                <Text>
-                                                    All
-                                                </Text>
-                                            </MenuOption> */}
                                             {
                                                 categories.map((category: any) => {
                                                     return <MenuOption
                                                         value={category}>
-                                                        <Text>
+                                                        <Text style={{ color: '#2f2f3c' }}>
                                                             {category}
                                                         </Text>
                                                     </MenuOption>
