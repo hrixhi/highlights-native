@@ -1360,9 +1360,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [updateCueData])
 
   const markCueAsRead = useCallback(async () => {
-
-    console.log("Calling Mark Cue as read")
-    console.log("Printing cues", cues);
     console.log(updateModalKey);
     console.log(updateModalIndex);
 

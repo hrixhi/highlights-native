@@ -2680,7 +2680,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   textAlign: "center",
                   lineHeight: 20,
                   width: "100%"
-                }}>
+                }}>show
                 <Ionicons
                   name={"arrow-redo-outline"}
                   size={20}
@@ -3066,8 +3066,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   if ((props.cue.submission && props.cue.submittedAt !== null && !props.cue.releaseSubmission && !isOwner && currentDate > deadline) || (props.cue.graded && !props.cue.releaseSubmission)) {
     return (<View style={{ minHeight: Dimensions.get('window').height }}>
       <View style={{ backgroundColor: 'white', flex: 1, }}>
-          <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 20, paddingTop: 200, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1, textAlign: 'center' }}>
-            Your instructor has not made this submission  available.
+        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 20, paddingTop: 200, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', flex: 1, textAlign: 'center' }}>
+          Your instructor has not made this submission  available.
         </Text>
       </View>
     </View>)
