@@ -393,7 +393,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             parsedEvents.push({
               eventId: e.eventId ? e.eventId : "",
               originalTitle: title,
-              title: e.channelName ? (e.channelName + ' - ' + title) : title,
+              title: e.channelName ? (title + ' - ' + e.channelName) : title,
               start: new Date(e.start),
               end: new Date(e.end),
               dateId: e.dateId,
@@ -418,7 +418,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             const modifiedItem = {
               eventId: item.eventId ? item.eventId : "",
               originalTitle: title,
-              title: item.channelName ? (item.channelName + ' - ' + title) : title,
+              title: item.channelName ? (title + ' - ' + item.channelName) : title,
               start: new Date(item.start),
               end: new Date(item.end),
               dateId: item.dateId,
@@ -471,6 +471,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         }).start();
       });
   }, [, modalAnimation]);
+
 
   const renderFilterEvents = () => {
 
@@ -1201,15 +1202,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       colorCode = matchSubscription.colorCode
     }
 
-    const displayDate =
-      moment(new Date(item.start)).format("h:mm a") +
-      " to " +
-      moment(new Date(item.end)).format("h:mm a");
+    const displayDate = datesEqual(item.start, item.end) ? moment(new Date(item.start)).format("h:mm a") : moment(new Date(item.start)).format("h:mm a") + " to " + moment(new Date(item.end)).format("h:mm a")
 
     return (
       <TouchableOpacity
         style={{
-          height: 70,
+          height: 80,
           backgroundColor: "white",
           marginTop: 10,
           marginBottom: 15,
@@ -1224,12 +1222,19 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         <Text style={{
           fontFamily: "inter",
           fontSize: 14,
-          height: "44%",
           width: "100%",
           paddingTop: 5,
           color: colorCode,
-        }}>{item.title}</Text>
-        <Text style={{ color: "black" }}>{displayDate}</Text>
+        }} numberOfLines={1}>{item.title}</Text>
+
+        <Text style={{ color: "black", marginTop: item.description !== "" ? 5 : 15, }} >{displayDate} </Text>
+
+        <Text style={{
+         paddingTop: 5,
+         color: '#a2a2ac'
+        }} numberOfLines={1}>
+        {item.description}
+        </Text>
       </TouchableOpacity>
     );
   };

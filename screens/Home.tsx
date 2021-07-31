@@ -1316,6 +1316,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         title
       }
       tempOriginal = JSON.stringify(obj)
+    }  else if (isQuiz) {
+      const parse = JSON.parse(original)
+      const obj = {
+          quizId: parse.quizId,
+          title
+      }
+      tempOriginal = JSON.stringify(obj)
     } else {
       tempOriginal = original
     }

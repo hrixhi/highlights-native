@@ -77,6 +77,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [loading, setLoading] = useState(false);
     const [problems, setProblems] = useState<any[]>([]);
     const [submittedAt, setSubmittedAt] = useState('');
+    const [deadline, setDeadline] = useState('');
     const [isV0Quiz, setIsV0Quiz] = useState(false)
     const [headers, setHeaders] = useState({})
     const [exportAoa, setExportAoa] = useState<any[]>()
@@ -145,7 +146,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             filteredSubscribers = subscribers
             break;
     }
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 120 : Dimensions.get('window').height;
+    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 150 : Dimensions.get('window').height;
     const key = JSON.stringify(filteredSubscribers)
     let options = filteredSubscribers.map((sub: any) => {
         return {
@@ -686,7 +687,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     }, [isLoadedUserInactive, loadedChatWithUser, props.channelId])
 
-
     const updateReleaseSubmission = useCallback(() => {
         const server = fetchAPI('')
         server.mutate({
@@ -970,48 +970,51 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         } */}
                     </View>
             }
-            {
-                !showAddUsers && !showSubmission && props.cue && props.cue.submission ?
-                    <View style={{
-                        backgroundColor: 'white',
-                        height: 40,
-                        marginBottom: 20,
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                    }}>
-                        <Switch
-                            value={releaseSubmission}
-                            onValueChange={() => updateReleaseSubmission()}
-                            style={{ height: 20, marginRight: 20 }}
-                            trackColor={{
-                                false: '#f4f4f6',
-                                true: '#3B64F8'
-                            }}
-                            activeThumbColor='white'
-                        />
-                        <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
-                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', }}>
-                                RELEASE GRADES
-                            </Text>
+            <View style={{ width: '100%', flexDirection: 'row', backgroundColor: 'white', alignItems: 'center', justifyContent: 'space-between' }}>
+                {
+                    !showAddUsers && !showSubmission && props.cue && props.cue.submission ?
+                        <View style={{
+                            backgroundColor: 'white',
+                            height: 40,
+                            marginBottom: 20,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            width: '70%'
+                        }}>
+                            <Switch
+                                value={releaseSubmission}
+                                onValueChange={() => updateReleaseSubmission()}
+                                style={{ height: 20, marginRight: 20 }}
+                                trackColor={{
+                                    false: '#f4f4f6',
+                                    true: '#3B64F8'
+                                }}
+                                activeThumbColor='white'
+                            />
+                            <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
+                                <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', }}>
+                                    RELEASE GRADES
+                                </Text>
+                            </View>
                         </View>
-                    </View>
-                    : null
-            }
-            {!isQuiz ? null : <Text
-                style={{
-                    color: "#3b64f8",
-                    fontSize: 11,
-                    lineHeight: 25,
-                    // textAlign: "right",
-                    marginBottom: 10,
-                    textTransform: "uppercase"
-                }}
-                onPress={() => {
-                    exportScore()
-                }}>
-                EXPORT
-            </Text>
-            }
+                        : null
+                }
+                {!isQuiz || showAddUsers || showSubmission ? null : <Text
+                    style={{
+                        color: "#3b64f8",
+                        fontSize: 11,
+                        lineHeight: 25,
+                        // textAlign: "right",
+                        marginBottom: 10,
+                        textTransform: "uppercase"
+                    }}
+                    onPress={() => {
+                        exportScore()
+                    }}>
+                    EXPORT
+                </Text>
+                }
+            </View>
             {
                 !showAddUsers ? (subscribers.length === 0 ?
                     <View style={{ backgroundColor: 'white', flex: 1 }}>
@@ -1204,6 +1207,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                             if (subscriber.fullName === 'submitted' || subscriber.fullName === 'graded') {
                                                                                 setSubmission(subscriber.submission)
                                                                                 setSubmittedAt(subscriber.submittedAt)
+                                                                                setDeadline(subscriber.deadline)
                                                                                 setShowSubmission(true)
                                                                                 setStatus(subscriber.fullName)
                                                                                 setScore(subscriber.score)
@@ -1223,68 +1227,72 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 </ScrollView>)
                                 ) :
                                 isQuiz && !isV0Quiz ?
-                                    <QuizGrading
-                                        loading={loading}
-                                        problems={problems}
-                                        solutions={quizSolutions}
-                                        partiallyGraded={!graded}
-                                        onGradeQuiz={onGradeQuiz}
-                                        comment={comment}
-                                        headers={headers}
-                                        isOwner={true}
-                                    />
+                                    <View style={{ width: '100%', paddingBottom: 100, backgroundColor: '#fff' }}>
+                                        {
+                                            submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
+                                                <View style={{ width: '100%', }}>
+                                                    <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', marginVertical: 10, width: 150, marginLeft: 'auto' }}>
+                                                        <Text style={{ color: '#D91D56', fontSize: 13, textAlign: 'center' }}>
+                                                            LATE SUBMISSION
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                                :
+                                                null
+                                        }
+                                        <QuizGrading
+                                            loading={loading}
+                                            problems={problems}
+                                            solutions={quizSolutions}
+                                            partiallyGraded={!graded}
+                                            onGradeQuiz={onGradeQuiz}
+                                            comment={comment}
+                                            headers={headers}
+                                            isOwner={true}
+                                        />
+                                    </View>
                                     :
                                     <View>
                                         <ScrollView
                                             showsVerticalScrollIndicator={false}
                                             keyboardDismissMode={'on-drag'}
-                                            // style={{ flex: 1, paddingTop: 12 }}
                                             style={{ backgroundColor: 'white' }}
                                         >
-                                            <View style={{
-                                                width: Dimensions.get('window').width < 1024 ? '100%' : '60%', alignSelf: 'center',
-                                                backgroundColor: 'white'
-                                            }}>
-                                                <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 10 }}>
-                                                    {PreferredLanguageText('score')}
-                                                </Text>
-                                                <TextInput
-                                                    value={score}
-                                                    style={styles.input}
-                                                    placeholder={'0-100'}
-                                                    onChangeText={val => setScore(val)}
-                                                    placeholderTextColor={'#a2a2ac'}
-                                                />
-                                                <Text style={{ color: '#2f2f3c', fontSize: 14, paddingVertical: 10, }}>
-                                                    {PreferredLanguageText('comment')}
-                                                </Text>
-                                                <TextInput
-                                                    value={comment}
-                                                    style={{
-                                                        height: 200,
-                                                        backgroundColor: '#f4f4f6',
-                                                        borderRadius: 10,
-                                                        fontSize: 15,
-                                                        padding: 15,
-                                                        paddingTop: 13,
-                                                        paddingBottom: 13,
-                                                        marginTop: 5,
-                                                        marginBottom: 20
-                                                    }}
-                                                    placeholder={'Optional'}
-                                                    onChangeText={val => setComment(val)}
-                                                    placeholderTextColor={'#a2a2ac'}
-                                                    multiline={true}
-                                                />
+                                            {
+                                                submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
+                                                    <View style={{ width: '100%', maxWidth: 800, marginBottom: 30, backgroundColor: '#fff' }}>
+                                                        <View style={{ borderRadius: 10, padding: 5, borderWidth: 1, borderColor: '#D91D56', marginVertical: 10, width: 150, marginLeft: 'auto' }}>
+                                                            <Text style={{ color: '#D91D56', fontSize: 13, textAlign: 'center' }}>
+                                                                LATE SUBMISSION
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                    :
+                                                    null
+                                            }
+                                            <View style={{ flexDirection: 'row', flex: 1, backgroundColor: '#fff' }}>
+                                                <View style={{
+                                                    flex: 1, alignSelf: 'center',
+                                                    backgroundColor: 'white'
+                                                }}>
+                                                    <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 10 }}>
+                                                        {PreferredLanguageText('score')}
+                                                    </Text>
+                                                    <TextInput
+                                                        value={score}
+                                                        style={styles.input}
+                                                        placeholder={'0-100'}
+                                                        onChangeText={val => setScore(val)}
+                                                        placeholderTextColor={'#a2a2ac'}
+                                                    />
+                                                </View>
                                                 <View
                                                     style={{
-                                                        flex: 1,
                                                         backgroundColor: 'white',
                                                         justifyContent: 'center',
                                                         display: 'flex',
                                                         flexDirection: 'row',
-                                                        marginTop: 25,
-                                                        marginBottom: 25
+                                                        paddingTop: 15
                                                     }}>
                                                     <TouchableOpacity
                                                         onPress={() => handleGradeSubmit()}
@@ -1304,17 +1312,14 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             fontFamily: 'inter',
                                                             height: 35,
                                                         }}>
-                                                            {status === 'graded' ? 'REGRADE' : 'ENTER GRADE'}
+                                                            SAVE
                                                         </Text>
                                                     </TouchableOpacity>
                                                 </View>
                                             </View>
-                                            <Text style={{ color: '#2f2f3c', fontSize: 14, paddingBottom: 25, marginLeft: '5%' }}>
-                                                {PreferredLanguageText('viewSubmission')}
-                                            </Text>
                                             {
-                                                imported ?
-                                                    <View style={{ width: '40%', alignSelf: 'flex-start', marginLeft: '10%', }}>
+                                                imported && !isQuiz ?
+                                                    <View style={{ alignSelf: 'flex-start', backgroundColor: '#fff' }}>
                                                         <TextInput
                                                             editable={false}
                                                             value={title}
@@ -1323,7 +1328,16 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             onChangeText={val => setTitle(val)}
                                                             placeholderTextColor={'#a2a2ac'}
                                                         />
-                                                    </View> : null
+                                                        <Text
+                                                            style={{ color: '#a2a2ac', height: 50 }}>
+                                                            Use mac/win/web platforms to add remarks.
+                                                        </Text>
+                                                    </View> : (
+                                                        !isQuiz ?
+                                                            <Text style={{ color: '#a2a2ac', height: 25 }}>
+                                                                Use mac/win/web platforms to add remarks.
+                                                            </Text> : null
+                                                    )
                                             }
                                             {
                                                 isQuiz && Object.keys(quizSolutions).length > 0 ?
@@ -1384,7 +1398,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             :
                                                             (!isQuiz ? <View
                                                                 key={url}
-                                                                style={{ flex: 1 }}
+                                                                style={{ height: 20000 }}
                                                             >
                                                                 <Webview
                                                                     key={url}
@@ -1422,17 +1436,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 borderColor: '#f4f4f6'
                                             }
                                         }}>
-                                            {/* <MenuOption
-                                                value={''}>
-                                                <Text>
-                                                    All
-                                                </Text>
-                                            </MenuOption> */}
                                             {
                                                 categories.map((category: any) => {
                                                     return <MenuOption
                                                         value={category}>
-                                                        <Text>
+                                                        <Text style={{ color: '#2f2f3c' }}>
                                                             {category}
                                                         </Text>
                                                     </MenuOption>
@@ -1575,7 +1583,6 @@ const styleObject = () => {
             overflow: 'hidden'
         },
         input: {
-            width: '100%',
             borderBottomColor: '#f4f4f6',
             borderBottomWidth: 1,
             fontSize: 15,
@@ -1583,7 +1590,8 @@ const styleObject = () => {
             paddingTop: 13,
             paddingBottom: 13,
             marginTop: 5,
-            marginBottom: 20
+            marginBottom: 20,
+            width: Dimensions.get('window').width < 1024 ? '100%' : '60%'
         },
         outline: {
             borderRadius: 10,

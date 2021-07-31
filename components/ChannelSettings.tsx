@@ -8,10 +8,11 @@ import { fetchAPI } from '../graphql/FetchAPI';
 import MultiSelect from 'react-native-multiple-select';
 import {
     doesChannelNameExist, findChannelById, getOrganisation, getSubscribers,
-    getUserCount, subscribe, unsubscribe, updateChannel
+    getUserCount, subscribe, unsubscribe, updateChannel, getChannelColorCode
 } from '../graphql/QueriesAndMutations';
 import Alert from './Alert';
 import MultiSelectComponent from './MultiSelect';
+import ColorPicker from "./ColorPicker";
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -25,6 +26,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [selected, setSelected] = useState<any[]>([])
     const [owner, setOwner] = useState<any>('')
     const [owners, setOwners] = useState<any[]>([])
+    const [colorCode, setColorCode] = useState("")
 
 
     const RichText: any = useRef()
@@ -61,7 +63,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         channelId: props.channelId,
                         temporary,
                         owners,
-                        unsubscribe: unsub
+                        unsubscribe: unsub,
+                        colorCode
                     }
                 }).then(res2 => {
                     if (res2.data && res2.data.channel.update) {
@@ -114,7 +117,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             Alert("Something went wrong.")
         })
     }, [name, password, props.channelId, options, originalSubs, owners,
-        temporary, selected, originalName])
+        temporary, selected, originalName, colorCode])
 
     const handleDelete = useCallback(() => {
         const server = fetchAPI('')
@@ -230,6 +233,17 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             setSelected(temp)
                         }
                     })
+
+                    server.query({
+                        query: getChannelColorCode,
+                        variables: {
+                            channelId: props.channelId
+                        }
+                    }).then(res => {
+                        if (res.data && res.data.channel.getChannelColorCode) {
+                            setColorCode(res.data.channel.getChannelColorCode)
+                        }
+                    })
                 }
             }
         )()
@@ -288,7 +302,22 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 required={false}
                             />
                         </View>
-                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+
+                        <View style={{ backgroundColor: 'white' }}>
+                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                                color
+                            </Text>
+                            <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white', marginTop: 20 }}>
+                                <View style={{ width: '100%', backgroundColor: 'white' }}>
+                                    <ColorPicker
+                                        color={colorCode}
+                                        onChange={(color: any) => setColorCode(color) }
+                                    />
+                                </View>
+                            </View>
+                        </View>
+
+                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase',  marginTop: 20  }}>
                             Subscribers
                         </Text>
                         <View

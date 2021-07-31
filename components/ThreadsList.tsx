@@ -368,8 +368,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                 }
                                                             }}>
                                                                 <MenuOption
-                                                                    value={''}>
-                                                                    <Text>
+                                                                    value={'All'}>
+                                                                    <Text style={{ color: '#2f2f3c' }}>
                                                                         All
                                                                     </Text>
                                                                 </MenuOption>
@@ -377,7 +377,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                     categories.map((category: any) => {
                                                                         return <MenuOption
                                                                             value={category}>
-                                                                            <Text>
+                                                                            <Text style={{ color: '#2f2f3c' }}>
                                                                                 {category}
                                                                             </Text>
                                                                         </MenuOption>

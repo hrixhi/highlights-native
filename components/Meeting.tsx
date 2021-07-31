@@ -6,9 +6,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchAPI } from '../graphql/FetchAPI';
 // import Datetime from 'react-datetime';
 import Clipboard from 'expo-clipboard';
+
 import {
     editMeeting, getMeetingLink, getMeetingStatus, meetingRequest,
-    getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1, deleteRecording, getRecordings, getSharableLink
+    getPastDates, getUpcomingDates, markAttendance, getAttendancesForChannel, deleteDateV1, deleteRecording, getRecordings, getSharableLink, modifyAttendance
 } from '../graphql/QueriesAndMutations';
 import { Ionicons } from '@expo/vector-icons';
 import SubscriberCard from './SubscriberCard';
@@ -196,6 +197,42 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             Alert("Something went wrong.")
         })
     }, [isOwner, userId, props.channelId])
+
+    const onChangeAttendance = (dateId: String, userId: String, markPresent: Boolean) => {
+
+        Alert(markPresent ? "Mark Present?" : "Mark Absent?", "", [
+            {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => {
+                    return;
+                }
+            },
+            {
+                text: "Yes",
+                onPress: async () => {
+                    const server = fetchAPI("");
+                    server
+                        .mutate({
+                            mutation: modifyAttendance,
+                            variables: {
+                                dateId,
+                                userId,
+                                channelId: props.channelId,
+                                markPresent
+                            }
+                        })
+                        .then(res => {
+                            if (res.data && res.data.attendance.modifyAttendance) {
+                                loadChannelAttendances()
+                            }
+                        });
+                }
+            }
+        ]);
+
+
+    }
 
     useEffect(() => {
         (
@@ -539,6 +576,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             setViewChannelAttendance(false)
         }}
         reload={() => loadChannelAttendances()}
+        modifyAttendance={onChangeAttendance}
     />)
 
     return !viewChannelAttendance ? mainClassroomView : attendanceListView

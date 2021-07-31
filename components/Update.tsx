@@ -142,7 +142,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                                 score: status.score,
                                                 graded: status.graded,
                                                 userId: status.userId,
-                                                submittedAt: status.submittedAt
+                                                submittedAt: status.submittedAt,
+                                                deadline: status.deadline,
 
                                             });
                                         });
@@ -412,7 +413,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                     setShowOptions(false)
                                 }}>
                                 <Text style={styles.all}>
-                                    FAQ
+                                    Q&A
                                 </Text>
                             </TouchableOpacity>
                             {
