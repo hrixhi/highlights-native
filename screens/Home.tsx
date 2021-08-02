@@ -1946,7 +1946,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             // paddingHorizontal: Dimensions.get('window').width < 1024 ? 0 : 30,
             paddingTop: 0,
             // backgroundColor: '#f4f4f6',
-            backgroundColor: '#fff',
+            backgroundColor: '#2f2f3c',
             position: Dimensions.get('window').width < 1024 ? 'absolute' : 'relative'
           }}>
             {
