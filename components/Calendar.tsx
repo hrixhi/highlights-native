@@ -493,7 +493,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             <View style={{ flexDirection: 'row', display: 'flex', backgroundColor: '#fff' }}>
               <Menu
                 onSelect={(channel: any) => {
-                  setFilterByChannel(channel);
+                  if (channel === "All") {
+                    setFilterByChannel("All")
+                } else if (channel === "My Cues") {
+                    setFilterByChannel("My Cues")
+                } else {
+                    setFilterByChannel(channel.channelName);
+                }
                 }}>
                 <MenuTrigger>
                   <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#202025' }}>
