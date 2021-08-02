@@ -1472,7 +1472,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
                                             <ReactPlayer url={url} controls={true} onContextMenu={(e: any) => e.preventDefault()} config={{ file: { attributes: { controlsList: 'nodownload' } } }} />
                                             :
-                                            <View
+                                              <View
                                                 // key={Math.random()}
                                                 key={url}
                                                 style={{ flex: 1 }}

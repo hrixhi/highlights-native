@@ -1190,7 +1190,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   const renderItem = (item: any) => {
     const { title } = htmlStringParser(item.title);
 
-    console.log(item);
+   
 
     let colorCode = "#202025";
 

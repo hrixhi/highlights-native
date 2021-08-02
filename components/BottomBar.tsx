@@ -52,7 +52,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
         const u = await AsyncStorage.getItem('user')
         if (u) {
             const parsedUser = JSON.parse(u)
-            console.log('parsedUser', parsedUser)
+
             if (parsedUser.email) {
                 setLoggedIn(true)
             }

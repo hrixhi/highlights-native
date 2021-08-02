@@ -396,7 +396,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [channelId, filterChoice])
 
   const notificationScheduler = useCallback(async (c) => {
-
+    console.log('notofications are working with', c)
     try {
 
       if (c === undefined || c === null) {
@@ -1316,11 +1316,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         title
       }
       tempOriginal = JSON.stringify(obj)
-    }  else if (isQuiz) {
+    } else if (isQuiz) {
       const parse = JSON.parse(original)
       const obj = {
-          quizId: parse.quizId,
-          title
+        quizId: parse.quizId,
+        title
       }
       tempOriginal = JSON.stringify(obj)
     } else {

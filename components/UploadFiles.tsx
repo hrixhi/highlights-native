@@ -16,13 +16,19 @@ const FileUpload: React.FC<any> = (props: any) => {
             setUploading(false)
             return;
         }
-        console.log('uploading image with,', props.action)
         // ImagePicker saves the taken photo to disk and returns a local URI to it
         let { name, size, uri } = result;
+
+
         let nameParts = name.split('.');
         let type = nameParts[nameParts.length - 1];
         if ((type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') && props.action !== 'message_send') {
             Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.')
+            setUploading(false)
+            return
+        }
+        if (size > 26214400) {
+            Alert('File size must be less than 25 mb')
             setUploading(false)
             return
         }
