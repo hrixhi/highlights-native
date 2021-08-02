@@ -3000,7 +3000,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               // if user has not signed up
               !userSetupComplete ||
               // deadline has passed & its not an initiated timed quiz
-              (currentDate >= deadline && !(isQuiz && isQuizTimed && initiatedAt)) ||
+              // (currentDate >= deadline && !(isQuiz && isQuizTimed && initiatedAt)) ||
               // graded
               props.cue.graded ||
               // if timed quiz not initiated
@@ -3029,17 +3029,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               {userSetupComplete
                 ? (props.cue.submittedAt && props.cue.submittedAt !== "") || submitted
-                  ? props.cue.graded
-                    ? PreferredLanguageText("graded")
-                    : isQuiz
+                    ? props.cue.graded
+                      ? PreferredLanguageText("graded")
+                      : isQuiz
                       ? PreferredLanguageText("submitted")
-                      : currentDate < deadline
-                        ? PreferredLanguageText("resubmit")
-                        : PreferredLanguageText("submissionEnded")
-                  : currentDate < deadline
-                    ? PreferredLanguageText("submit")
-                    : PreferredLanguageText("submissionEnded")
-                : PreferredLanguageText("signupToSubmit")}
+                      : PreferredLanguageText("submit")
+                        : PreferredLanguageText("submit")
+                        : PreferredLanguageText("signupToSubmit")}
             </Text>
           </TouchableOpacity>
         ) : null}
