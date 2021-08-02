@@ -30,6 +30,9 @@ import * as Notifications from 'expo-notifications';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText, LanguageSelect } from '../helpers/LanguageContext';
 import moment from 'moment'
+import * as ScreenOrientation from 'expo-screen-orientation';
+import * as Updates from 'expo-updates';
+
 
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -91,10 +94,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
   const enterTitleAlert = PreferredLanguageText("enterTitle");
 
-  const onDimensionsChange = useCallback(({ w, s }: any) => {
-    // window.location.reload()
-  }, []);
-
   useEffect(() => {
     if (email && !validateEmail(email.toString().toLowerCase())) {
       setEmailValidError(enterValidEmailError);
@@ -132,11 +131,21 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     emailValidError,
   ]);
 
+  const onOrientationChange = useCallback(async () => {
+    await Updates.reloadAsync()
+  }, [])
+
   useEffect(() => {
-    Dimensions.addEventListener("change", onDimensionsChange);
-    return () => {
-      Dimensions.removeEventListener("change", onDimensionsChange);
-    };
+    (
+      async () => {
+        console.log(Dimensions.get('window'))
+        if (Dimensions.get('window').width < 768) {
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        } else {
+          ScreenOrientation.addOrientationChangeListener(onOrientationChange)
+        }
+      }
+    )()
   }, [])
 
   useEffect(() => {
@@ -1316,11 +1325,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         title
       }
       tempOriginal = JSON.stringify(obj)
-    }  else if (isQuiz) {
+    } else if (isQuiz) {
       const parse = JSON.parse(original)
       const obj = {
-          quizId: parse.quizId,
-          title
+        quizId: parse.quizId,
+        title
       }
       tempOriginal = JSON.stringify(obj)
     } else {
@@ -1998,7 +2007,7 @@ const styles = StyleSheet.create({
   },
   horizontal: {
     flexDirection: "row",
-    justifyContent: "space-around"
+    justifyContent: "center"
   },
   input: {
     width: '100%',

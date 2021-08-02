@@ -341,7 +341,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             !cueId && !parentId ?
                                 <View style={{ width: '100%', backgroundColor: 'white' }}>
                                     <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                                        <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                             {PreferredLanguageText('category')}
                                         </Text>
                                     </View>
@@ -422,7 +422,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     parentId ? null :
                                         <View style={{ width: '100%', backgroundColor: 'white' }}>
                                             <View style={{ width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'white' }}>
-                                                <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                                                <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                                     {PreferredLanguageText('private')}
                                                 </Text>
                                             </View>

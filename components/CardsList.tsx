@@ -45,7 +45,9 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
     return (
         <View style={{
             height: ((Dimensions.get('window').height) * 0.66),
-            width: '100%',
+            width:  '100%',
+            maxWidth: 500,
+            alignSelf: Dimensions.get('window').width < 1024 ? 'center' : 'flex-start',
             paddingTop: 0,
             paddingHorizontal: 25,
             backgroundColor: '#2f2f3c'
@@ -60,7 +62,8 @@ const CardsList: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 horizontal={false}
                 contentContainerStyle={{
                     paddingBottom: 15,
-                    backgroundColor: '#2f2f3c'
+                    backgroundColor: '#2f2f3c',
+                    maxWidth: 500
                 }}
             >
                 <RefreshControl
