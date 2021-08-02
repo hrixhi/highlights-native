@@ -237,7 +237,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         headers])
 
     const loadChannelCategoriesAndSubscribers = useCallback(async () => {
-
+        const uString: any = await AsyncStorage.getItem("user");
+        const userId = JSON.parse(uString);
         if (channelId === '') {
             setCustomCategories(localCustomCategories)
             return
@@ -275,8 +276,17 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         })
                         ids.push(s.value)
                     })
-                    setSubscribers(shared)
-                    setSelected(ids)
+                    const withoutOwner: any = [];
+                    shared.map((i: any) => {
+                        if (userId._id !== i.value) {
+                            withoutOwner.push(i);
+                        }
+                    });
+                    setSubscribers(withoutOwner);
+                    // clear selected
+                    setSelected(withoutOwner);
+                    //setSubscribers(shared)
+                    //setSelected(ids)
                 }
             })
             .catch((err: any) => console.log(err))

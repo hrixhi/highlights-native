@@ -2723,7 +2723,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   textAlign: "center",
                   lineHeight: 20,
                   width: "100%"
-                }}>
+                }}>show
                 <Ionicons
                   name={"arrow-redo-outline"}
                   size={20}
@@ -3118,7 +3118,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     return (<View style={{ minHeight: Dimensions.get('window').height }}>
       <View style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 20 }}>
         <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingBottom: 100, paddingHorizontal: 5, fontFamily: 'inter', textAlign: 'center', }}>
-          Quiz submitted. You will be notified when scores are released.        
+          Quiz submitted. You will be notified when scores are released.
         </Text>
       </View>
     </View>)
