@@ -30,7 +30,10 @@ import {
   shareCueWithMoreIds,
   start,
   submit,
-  modifyQuiz
+  modifyQuiz,
+  getOrganisation,
+  getRole,
+  findBySchoolId
 } from "../graphql/QueriesAndMutations";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -174,6 +177,85 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   const cannotUndoAlert = PreferredLanguageText("cannotUndo");
   const sharedAlert = PreferredLanguageText("sharedAlert");
   const checkConnectionAlert = PreferredLanguageText("checkConnection");
+
+
+  const [role, setRole] = useState('')
+  const [school, setSchool] = useState<any>(null)
+  const [otherChannels, setOtherChannels] = useState<any[]>([])
+  const [channelOwners, setChannelOwners] = useState<any[]>([])
+  const [selectedChannelOwner, setSelectedChannelOwner] = useState<any>(undefined)
+  const [userId, setUserId] = useState('')
+
+  const loadUser = useCallback(async () => {
+    const u = await AsyncStorage.getItem('user')
+    if (u) {
+      const parsedUser = JSON.parse(u)
+      setUserId(parsedUser._id)
+      const server = fetchAPI('')
+      server.query({
+        query: getOrganisation,
+        variables: {
+          userId: parsedUser._id
+        }
+      }).then(res => {
+        if (res.data && res.data.school.findByUserId) {
+          setSchool(res.data.school.findByUserId)
+        }
+      })
+      server.query({
+        query: getRole,
+        variables: {
+          userId: parsedUser._id
+        }
+      }).then(res => {
+        if (res.data && res.data.user.getRole) {
+          setRole(res.data.user.getRole)
+        }
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    loadUser()
+  }, [])
+
+  useEffect(() => {
+    if (role === 'instructor' && school) {
+      const server = fetchAPI('')
+      server.query({
+        query: findBySchoolId,
+        variables: {
+          schoolId: school._id
+        }
+      }).then((res: any) => {
+        if (res.data && res.data.channel.findBySchoolId) {
+          res.data.channel.findBySchoolId.sort((a, b) => {
+            if (a.name < b.name) { return -1; }
+            if (a.name > b.name) { return 1; }
+            return 0;
+          })
+          const c = res.data.channel.findBySchoolId.filter((item: any) => {
+            return item.createdBy.toString().trim() !== userId.toString().trim()
+          })
+          setOtherChannels(c)
+          const otherChannelOwnersMap: any = {}
+          const otherChannelOwners: any[] = []
+          c.map((channel: any) => {
+            if (!otherChannelOwnersMap[channel.createdBy]) {
+              otherChannelOwnersMap[channel.createdBy] = channel.createdByUsername
+            }
+          })
+          Object.keys(otherChannelOwnersMap).map((key: any) => {
+            otherChannelOwners.push({
+              id: key,
+              name: otherChannelOwnersMap[key]
+            })
+          })
+          setChannelOwners(otherChannelOwners)
+        }
+      })
+    }
+  }, [role, school, userId])
 
   const insertEquation = useCallback(() => {
     const SVGEquation = TeXToSVG(equation, { width: 100 }); // returns svg in html format
@@ -995,7 +1077,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           frequency,
           customCategory,
           shuffle,
-          createdBy: props.cue.createdBy,
+          createdBy: selectedChannelOwner ? selectedChannelOwner.id : props.cue.createdBy,
           gradeWeight: gradeWeight.toString(),
           submission,
           deadline: submission ? deadline.toISOString() : "",
@@ -1013,6 +1095,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
   }, [
     submissionImported,
     submissionTitle,
+    selectedChannelOwner,
     submissionType,
     submissionUrl,
     title, url, imported, original, type,
@@ -2502,25 +2585,31 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       borderRadius: 15,
                       shadowOpacity: 0,
                       borderWidth: 1,
-                      borderColor: '#f4f4f6'
+                      borderColor: '#f4f4f6',
+                      // height: '100%',
+                      maxHeight: Dimensions.get('window').height - 150,
                     }
                   }}>
-                    <MenuOption
-                      value={''}>
-                      <Text style={{ color: '#2f2f3c' }}>
-                        None
-                      </Text>
-                    </MenuOption>
-                    {
-                      customCategories.map((category: any) => {
-                        return <MenuOption
-                          value={category}>
+                    <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                      <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                        <MenuOption
+                          value={''}>
                           <Text style={{ color: '#2f2f3c' }}>
-                            {category}
+                            None
                           </Text>
                         </MenuOption>
-                      })
-                    }
+                        {
+                          customCategories.map((category: any) => {
+                            return <MenuOption
+                              value={category}>
+                              <Text style={{ color: '#2f2f3c' }}>
+                                {category}
+                              </Text>
+                            </MenuOption>
+                          })
+                        }
+                      </ScrollView>
+                    </View>
                   </MenuOptions>
                 </Menu>
               )}
@@ -2659,11 +2748,67 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             flexDirection: "row",
             backgroundColor: "white"
           }}>
-          <View
-            style={{
-              width: "90%",
-              backgroundColor: "white"
-            }}>
+          <View style={{ width: "42.5%", backgroundColor: "white" }}>
+            <Menu
+              onSelect={(own: any) => {
+                setSelectedChannelOwner(own)
+                setShareWithChannelId('')
+                setShareWithChannelName('')
+              }}>
+              <MenuTrigger>
+                <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#2F2F3C' }}>
+                  {
+                    selectedChannelOwner === undefined ? 'All' :
+                      (selectedChannelOwner !== null ? (selectedChannelOwner.name)
+                        : 'Your Channels')
+                  }< Ionicons name='caret-down' size={14} />
+                </Text>
+              </MenuTrigger>
+              <MenuOptions customStyles={{
+                optionsContainer: {
+                  padding: 10,
+                  borderRadius: 15,
+                  shadowOpacity: 0,
+                  borderWidth: 1,
+                  borderColor: '#f4f4f6',
+                  // height: '100%',
+                  maxHeight: Dimensions.get('window').height - 150,
+                }
+              }}>
+                <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                  <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                    {
+                      role === 'instructor' ? <MenuOption
+                        value={undefined}
+                      >
+                        <Text>
+                          All channels
+                        </Text>
+                      </MenuOption> : null
+                    }
+                    <MenuOption
+                      value={null}
+                    >
+                      <Text>
+                        Your channels
+                      </Text>
+                    </MenuOption>
+                    {
+                      channelOwners.map((own: any) => {
+                        return <MenuOption
+                          value={own}>
+                          <Text>
+                            {own.name}
+                          </Text>
+                        </MenuOption>
+                      })
+                    }
+                  </ScrollView>
+                </View>
+              </MenuOptions>
+            </Menu>
+          </View>
+          <View style={{ width: "42.5%", backgroundColor: "white" }}>
             <Menu
               onSelect={(channel: any) => {
                 if (channel === '') {
@@ -2673,9 +2818,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   setShareWithChannelId(channel._id)
                   setShareWithChannelName(channel.name)
                 }
+                if (selectedChannelOwner === undefined) {
+                  if (userId.toString().trim() !== channel.createdBy.toString().trim()) {
+                    setSelectedChannelOwner({
+                      id: channel.createdBy,
+                      name: channel.createdByUsername
+                    })
+                  } else {
+                    setSelectedChannelOwner(null)
+                  }
+                }
               }}>
               <MenuTrigger>
-                <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#2f2f3c' }}>
+                <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#2F2F3C' }}>
                   {shareWithChannelName === '' ? 'None' : shareWithChannelName}<Ionicons name='caret-down' size={14} />
                 </Text>
               </MenuTrigger>
@@ -2685,25 +2840,42 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   borderRadius: 15,
                   shadowOpacity: 0,
                   borderWidth: 1,
-                  borderColor: '#f4f4f6'
+                  borderColor: '#f4f4f6',
+                  // height: '100%',
+                  maxHeight: Dimensions.get('window').height - 150,
                 }
               }}>
-                <MenuOption
-                  value={''}>
-                  <Text style={{ color: '#2f2f3c' }}>
-                    None
-                  </Text>
-                </MenuOption>
-                {
-                  channels.map((channel: any) => {
-                    return <MenuOption
-                      value={channel}>
-                      <Text style={{ color: '#2f2f3c' }}>
-                        {channel.name}
+                <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                  <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                    <MenuOption
+                      value={''}>
+                      <Text>
+                        None
                       </Text>
                     </MenuOption>
-                  })
-                }
+                    {
+                      selectedChannelOwner !== null ?
+                        otherChannels.map((channel: any) => {
+                          if (selectedChannelOwner === undefined || channel.createdBy === selectedChannelOwner.id) {
+                            return <MenuOption
+                              value={channel}>
+                              <Text>
+                                {channel.name}
+                              </Text>
+                            </MenuOption>
+                          }
+                        })
+                        : channels.map((channel: any) => {
+                          return <MenuOption
+                            value={channel}>
+                            <Text>
+                              {channel.name}
+                            </Text>
+                          </MenuOption>
+                        })
+                    }
+                  </ScrollView>
+                </View>
               </MenuOptions>
             </Menu>
           </View>
@@ -2869,19 +3041,25 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       borderRadius: 15,
                       shadowOpacity: 0,
                       borderWidth: 1,
-                      borderColor: '#f4f4f6'
+                      borderColor: '#f4f4f6',
+                      // height: '100%',
+                      maxHeight: Dimensions.get('window').height - 150,
                     }
                   }}>
-                    {
-                      timedFrequencyOptions.map((item: any) => {
-                        return <MenuOption
-                          value={item}>
-                          <Text style={{ color: '#2f2f3c' }}>
-                            {item.value === '0' && channelId !== '' ? 'Once' : item.label}
-                          </Text>
-                        </MenuOption>
-                      })
-                    }
+                    <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                      <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                        {
+                          timedFrequencyOptions.map((item: any) => {
+                            return <MenuOption
+                              value={item}>
+                              <Text style={{ color: '#2f2f3c' }}>
+                                {item.value === '0' && channelId !== '' ? 'Once' : item.label}
+                              </Text>
+                            </MenuOption>
+                          })
+                        }
+                      </ScrollView>
+                    </View>
                   </MenuOptions>
                 </Menu>
               </View>
@@ -3029,13 +3207,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               {userSetupComplete
                 ? (props.cue.submittedAt && props.cue.submittedAt !== "") || submitted
-                    ? props.cue.graded
-                      ? PreferredLanguageText("graded")
-                      : isQuiz
+                  ? props.cue.graded
+                    ? PreferredLanguageText("graded")
+                    : isQuiz
                       ? PreferredLanguageText("submitted")
                       : PreferredLanguageText("submit")
-                        : PreferredLanguageText("submit")
-                        : PreferredLanguageText("signupToSubmit")}
+                  : PreferredLanguageText("submit")
+                : PreferredLanguageText("signupToSubmit")}
             </Text>
           </TouchableOpacity>
         ) : null}

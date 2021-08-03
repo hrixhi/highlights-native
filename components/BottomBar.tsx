@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, Platform } from 'react-native';
+import { StyleSheet, ScrollView, Platform, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import useColorScheme from '../hooks/useColorScheme';
 import { Text, View, TouchableOpacity } from '../components/Themed';
@@ -109,58 +109,64 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             borderRadius: 15,
                                             shadowOpacity: 0,
                                             borderWidth: 1,
-                                            borderColor: '#f4f4f6'
+                                            borderColor: '#f4f4f6',
+                                            // height: '100%',
+                                            maxHeight: Dimensions.get('window').height - 150,
                                         }
                                     }}>
-                                        <MenuOption
-                                            value={'All'}>
-                                            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
-                                                <View style={{
-                                                    width: 8,
-                                                    height: 8,
-                                                    borderRadius: 10,
-                                                    marginTop: 1,
-                                                    backgroundColor: "#fff"
-                                                }} />
-                                                <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
-                                                    All
-                                                </Text>
-                                            </View>
-                                        </MenuOption>
-                                        <MenuOption
-                                            value={'My Cues'}>
-                                            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
-                                                <View style={{
-                                                    width: 8,
-                                                    height: 8,
-                                                    borderRadius: 10,
-                                                    marginTop: 1,
-                                                    backgroundColor: "#000"
-                                                }} />
-                                                <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
-                                                    My Cues
-                                                </Text>
-                                            </View>
-                                        </MenuOption>
-                                        {
-                                            props.subscriptions.map((subscription: any) => {
-                                                return <MenuOption
-                                                    value={subscription}>
+                                        <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                                            <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                                                <MenuOption
+                                                    value={'All'}>
                                                     <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
                                                         <View style={{
                                                             width: 8,
                                                             height: 8,
                                                             borderRadius: 10,
                                                             marginTop: 1,
-                                                            backgroundColor: subscription.colorCode,
+                                                            backgroundColor: "#fff"
                                                         }} />
                                                         <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
-                                                            {subscription.channelName}
+                                                            All
                                                         </Text>
                                                     </View>
                                                 </MenuOption>
-                                            })
-                                        }
+                                                <MenuOption
+                                                    value={'My Cues'}>
+                                                    <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                                                        <View style={{
+                                                            width: 8,
+                                                            height: 8,
+                                                            borderRadius: 10,
+                                                            marginTop: 1,
+                                                            backgroundColor: "#000"
+                                                        }} />
+                                                        <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                                                            My Cues
+                                                        </Text>
+                                                    </View>
+                                                </MenuOption>
+                                                {
+                                                    props.subscriptions.map((subscription: any) => {
+                                                        return <MenuOption
+                                                            value={subscription}>
+                                                            <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#fff' }}>
+                                                                <View style={{
+                                                                    width: 8,
+                                                                    height: 8,
+                                                                    borderRadius: 10,
+                                                                    marginTop: 1,
+                                                                    backgroundColor: subscription.colorCode,
+                                                                }} />
+                                                                <Text style={{ marginLeft: 5, color: '#2f2f3c' }}>
+                                                                    {subscription.channelName}
+                                                                </Text>
+                                                            </View>
+                                                        </MenuOption>
+                                                    })
+                                                }
+                                            </ScrollView>
+                                        </View>
                                     </MenuOptions>
                                 </Menu>
                             </View>
@@ -187,25 +193,31 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             borderRadius: 15,
                                             shadowOpacity: 0,
                                             borderWidth: 1,
-                                            borderColor: '#f4f4f6'
+                                            borderColor: '#f4f4f6',
+                                            // height: '100%',
+                                            maxHeight: Dimensions.get('window').height - 150,
                                         }
                                     }}>
-                                        <MenuOption
-                                            value={'All'}>
-                                            <Text style={{ color: '#2f2f3c' }}>
-                                                {PreferredLanguageText('myCues')}
-                                            </Text>
-                                        </MenuOption>
-                                        {
-                                            channelCategories.map((category: any) => {
-                                                return <MenuOption
-                                                    value={category}>
+                                        <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                                            <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                                                <MenuOption
+                                                    value={'All'}>
                                                     <Text style={{ color: '#2f2f3c' }}>
-                                                        {category}
+                                                        {PreferredLanguageText('myCues')}
                                                     </Text>
                                                 </MenuOption>
-                                            })
-                                        }
+                                                {
+                                                    channelCategories.map((category: any) => {
+                                                        return <MenuOption
+                                                            value={category}>
+                                                            <Text style={{ color: '#2f2f3c' }}>
+                                                                {category}
+                                                            </Text>
+                                                        </MenuOption>
+                                                    })
+                                                }
+                                            </ScrollView>
+                                        </View>
                                     </MenuOptions>
                                 </Menu>
                             </View>
