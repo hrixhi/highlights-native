@@ -1636,7 +1636,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             style={{
               flex: 1,
               fontSize: 11,
-              color: "#a2a2ac",
+              color: "#2f2f3c",
               textTransform: 'uppercase'
             }}>
             ^ → Superscript, _ → Subscript, int → Integral, sum → Summation, prod → Product, sqrt → Square root, bar →
@@ -2118,7 +2118,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <Text
             style={{
               fontSize: 11,
-              color: "#a2a2ac",
+              color: "#2f2f3c",
               textTransform: 'uppercase'
             }}>
             Shared with
@@ -2161,14 +2161,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         <View
           style={{
             width: "100%",
-            paddingTop: 60,
+            paddingTop: 40,
             paddingBottom: 15,
             backgroundColor: "white"
           }}>
           <Text
             style={{
               fontSize: 11,
-              color: "#a2a2ac",
+              color: "#2f2f3c",
               textTransform: 'uppercase'
             }}>
             {PreferredLanguageText("submissionRequired")}
@@ -2327,7 +2327,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <Text
             style={{
               fontSize: 11,
-              color: "#a2a2ac",
+              color: "#2f2f3c",
               textTransform: 'uppercase'
             }}>
             Grade Weight
@@ -2430,7 +2430,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <Text
             style={{
               fontSize: 11,
-              color: "#a2a2ac",
+              color: "#2f2f3c",
               textTransform: 'uppercase'
             }}>
             {PreferredLanguageText("category")}
@@ -2576,7 +2576,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         <Text
           style={{
             fontSize: 11,
-            color: "#a2a2ac",
+            color: "#2f2f3c",
             textTransform: 'uppercase'
           }}>
           {PreferredLanguageText("priority")}
@@ -2645,7 +2645,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <Text
             style={{
               fontSize: 11,
-              color: "#a2a2ac",
+              color: "#2f2f3c",
               textTransform: 'uppercase'
             }}>
             {/* {PreferredLanguageText("share")} */}
@@ -2723,7 +2723,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   textAlign: "center",
                   lineHeight: 20,
                   width: "100%"
-                }}>show
+                }}>
                 <Ionicons
                   name={"arrow-redo-outline"}
                   size={20}
@@ -2760,7 +2760,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <Text
             style={{
               fontSize: 11,
-              color: "#a2a2ac",
+              color: "#2f2f3c",
               textTransform: 'uppercase'
             }}>
             Reminder
@@ -2814,7 +2814,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             <Text
               style={{
                 fontSize: 11,
-                color: "#a2a2ac",
+                color: "#2f2f3c",
                 textTransform: 'uppercase'
               }}>
               Recurring
@@ -2921,7 +2921,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             <Text
               style={{
                 fontSize: 11,
-                color: "#a2a2ac",
+                color: "#2f2f3c",
                 textTransform: 'uppercase'
               }}>
               Indefinite
@@ -3000,7 +3000,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               // if user has not signed up
               !userSetupComplete ||
               // deadline has passed & its not an initiated timed quiz
-              (currentDate >= deadline && !(isQuiz && isQuizTimed && initiatedAt)) ||
+              // (currentDate >= deadline && !(isQuiz && isQuizTimed && initiatedAt)) ||
               // graded
               props.cue.graded ||
               // if timed quiz not initiated
@@ -3029,17 +3029,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               {userSetupComplete
                 ? (props.cue.submittedAt && props.cue.submittedAt !== "") || submitted
-                  ? props.cue.graded
-                    ? PreferredLanguageText("graded")
-                    : isQuiz
+                    ? props.cue.graded
+                      ? PreferredLanguageText("graded")
+                      : isQuiz
                       ? PreferredLanguageText("submitted")
-                      : currentDate < deadline
-                        ? PreferredLanguageText("resubmit")
-                        : PreferredLanguageText("submissionEnded")
-                  : currentDate < deadline
-                    ? PreferredLanguageText("submit")
-                    : PreferredLanguageText("submissionEnded")
-                : PreferredLanguageText("signupToSubmit")}
+                      : PreferredLanguageText("submit")
+                        : PreferredLanguageText("submit")
+                        : PreferredLanguageText("signupToSubmit")}
             </Text>
           </TouchableOpacity>
         ) : null}
@@ -3548,7 +3544,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             {renderReminderOptions()}
             {isQuiz && isOwner ? <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: 'white' }}>
               <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
-                <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                   Shuffle Questions
                 </Text>
               </View>

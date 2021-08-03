@@ -992,7 +992,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 activeThumbColor='white'
                             />
                             <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
-                                <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', }}>
+                                <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase', }}>
                                     RELEASE GRADES
                                 </Text>
                             </View>
@@ -1493,7 +1493,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             <Text style={{
                                 textAlign: 'center',
                                 lineHeight: 35,
-                                color: '#2f2f3cs',
+                                color: '#2f2f3c',
                                 fontSize: 11,
                                 backgroundColor: '#f4f4f6',
                                 paddingHorizontal: 25,

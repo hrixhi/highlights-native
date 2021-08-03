@@ -485,7 +485,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               backgroundColor: "white"
             }}
           >
-            <Text style={{ fontSize: 11, color: '#a2a2aa', textTransform: 'uppercase' }}>
+            <Text style={{ fontSize: 11, color: '#3b64f8', textTransform: 'uppercase' }}>
               Filter
             </Text>
           </View>
@@ -493,7 +493,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             <View style={{ flexDirection: 'row', display: 'flex', backgroundColor: '#fff' }}>
               <Menu
                 onSelect={(channel: any) => {
-                  setFilterByChannel(channel);
+                  if (channel === "All") {
+                    setFilterByChannel("All")
+                } else if (channel === "My Cues") {
+                    setFilterByChannel("My Cues")
+                } else {
+                    setFilterByChannel(channel.channelName);
+                }
                 }}>
                 <MenuTrigger>
                   <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#202025' }}>
@@ -567,7 +573,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
         <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
           <View style={{ width: "100%", paddingTop: width < 768 ? 0 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Lectures</Text>
+            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>Lectures</Text>
           </View>
           <View
             style={{
@@ -1326,7 +1332,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
     <View style={{ flexDirection: width < 768 ? "column" : "row", backgroundColor: "#fff" }}>
       <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex", backgroundColor: "#fff" }}>
         <View style={{ width: "100%", paddingTop: width < 768 ? 0 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Recurring</Text>
+          <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>Recurring</Text>
         </View>
         <View
           style={{
@@ -1349,7 +1355,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
       {recurring ? <View style={{ width: width < 768 ? "100%" : "33.33%", display: "flex" }}>
         <View style={{ width: "100%", paddingTop: width < 768 ? 20 : 40, paddingBottom: 15, backgroundColor: "white" }}>
-          <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Repeat every</Text>
+          <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>Repeat every</Text>
         </View>
         <View
           style={{
@@ -1424,7 +1430,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             width: "50%"
           }}>
           <View style={{ width: "100%", backgroundColor: "white", }}>
-            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingBottom: 15 }}>Lecture</Text>
+            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase', paddingBottom: 15 }}>Lecture</Text>
           </View>
 
           <View
@@ -1457,7 +1463,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               width: "50%"
             }}>
             <View style={{ width: "100%", backgroundColor: "white", }}>
-              <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingBottom: 15 }}>Record Lecture</Text>
+              <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase', paddingBottom: 15 }}>Record Lecture</Text>
             </View>
 
             <Switch
@@ -1529,7 +1535,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         <View style={{ flexDirection: 'row', width: '50%', backgroundColor: 'white', justifyContent: "flex-end" }}>
           {filterByChannel === "All" && !filterByLectures ? null : <Text style={{
             // width: '50%',
-            color: '#a2a2aa',
+            color: '#2f2f3c',
             fontSize: 11,
             paddingTop: 5,
             textAlign: 'right',
@@ -1546,7 +1552,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
           {showAddEvent ? null : <Text style={{
             // width: '50%',
-            color: '#a2a2ac',
+            color: '#2f2f3c',
             fontSize: 11,
             paddingTop: 5,
             textAlign: 'right',
@@ -1740,7 +1746,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                       backgroundColor: "white"
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                    <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                       Event for
                       {/* <Ionicons
                                                 name='school-outline' size={20} color={'#a2a2ac'} /> */}
@@ -1819,7 +1825,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
             {!editEvent && renderRecurringOptions()}
             {renderMeetingOptions()}
-            {channelId !== "" && <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase', paddingTop: 20 }}>
+            {channelId !== "" && <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase', paddingTop: 20 }}>
               Attendances will only be captured for scheduled lectures.
             </Text>}
             {!editEvent ? <View

@@ -604,7 +604,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 
                 {pastMeetings.length === 0 || channelAttendances.length === 0 ?  null : <Text
                     style={{
-                        color: "#a2a2ac",
+                        color: "#3b64f8",
                         fontSize: 11,
                         lineHeight: 25,
                         // paddingTop: 5,

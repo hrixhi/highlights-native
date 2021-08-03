@@ -422,7 +422,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View> :
                         <View style={{ backgroundColor: '#fff' }}>
                             <View style={{ backgroundColor: 'white', marginBottom: 15 }}>
-                                <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                                <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                     {PreferredLanguageText('channel') + ' Name'}
                                 </Text>
                                 <TextInput
@@ -440,7 +440,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             {
                                 (option === 'Subscribe' && passwordRequired) || option === 'Create' ?
                                     <View style={{ backgroundColor: 'white', marginBottom: 15 }}>
-                                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                                        <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                             {PreferredLanguageText('enrolmentPassword')}
                                         </Text>
                                         <TextInput
@@ -474,7 +474,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 paddingBottom: 15,
                                                 backgroundColor: "white"
                                             }}>
-                                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Temporary</Text>
+                                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>Temporary</Text>
                                         </View>
                                         <View
                                             style={{
@@ -514,7 +514,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 paddingBottom: 15,
                                                 backgroundColor: "white"
                                             }}>
-                                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>Color</Text>
+                                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>Color</Text>
                                         </View>
                                         <View
                                             style={{

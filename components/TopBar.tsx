@@ -172,6 +172,7 @@ const TopBar: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     // borderBottomWidth: 1
                 }}>
                     <TouchableOpacity
+                        disabled={true}
                         onPress={() => Linking.openURL('http://www.cuesapp.co')}
                         style={{ backgroundColor: '#2f2f3c' }}>
                         <Image
@@ -346,6 +347,7 @@ const styleObject: any = (channelId: any) => StyleSheet.create({
         borderTopLeftRadius: 0,
         paddingTop: 25,
         maxWidth: 550,
+        alignSelf: 'center',
         backgroundColor: '#2f2f3c'
     },
     badge: {

@@ -275,7 +275,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 >
                     <View style={{ flex: 1, paddingBottom: 50, backgroundColor: '#fff' }}>
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                 {PreferredLanguageText('channel') + ' ' + PreferredLanguageText('name')}
                             </Text>
                             <TextInput
@@ -290,7 +290,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             />
                         </View>
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                 {PreferredLanguageText('enrolmentPassword')}
                             </Text>
                             <TextInput
@@ -304,7 +304,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View>
 
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                 color
                             </Text>
                             <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white', marginTop: 20 }}>
@@ -317,7 +317,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </View>
                         </View>
 
-                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase',  marginTop: 20  }}>
+                        <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase',  marginTop: 20  }}>
                             Subscribers
                         </Text>
                         <View
@@ -366,7 +366,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 submitButtonText="Done"
                             />
                         </View>
-                        <Text style={{ fontSize: 11, color: '#a2a2ac', textTransform: 'uppercase' }}>
+                        <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                             Moderators
                         </Text>
                         <View
