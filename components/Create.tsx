@@ -285,8 +285,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     setSubscribers(withoutOwner);
                     // clear selected
                     setSelected(withoutOwner);
-                    //setSubscribers(shared)
-                    //setSelected(ids)
                 }
             })
             .catch((err: any) => console.log(err))
@@ -540,7 +538,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (!uString) {
                 return
             }
+            const userName = await JSON.parse(uString)
+            let ownerarray: any = selected
+            const userSubscriptions = await AsyncStorage.getItem('subscriptions')
+            if (userSubscriptions) {
+                const list = JSON.parse(userSubscriptions)
+                list.map((i: any) => {
+                    if (i.channelId === channelId) {
+                        ownerarray.push({
+                            id: i.channelCreatedBy,
+                            name: userName.fullName
+                        })
+                    }
+                })
+                console.log('owner aray is', ownerarray)
+                setSelected(ownerarray)
 
+            }
             if (selected.length === 0) {
                 Alert(noStudentSelectedAlert, selectWhoToShareAlert)
                 return;
@@ -1472,7 +1486,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
                                             <ReactPlayer url={url} controls={true} onContextMenu={(e: any) => e.preventDefault()} config={{ file: { attributes: { controlsList: 'nodownload' } } }} />
                                             :
-                                              <View
+                                            <View
                                                 // key={Math.random()}
                                                 key={url}
                                                 style={{ flex: 1 }}
