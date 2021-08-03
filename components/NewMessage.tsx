@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Keyboard, StyleSheet, Switch, TextInput, ScrollView } from 'react-native';
+import { Keyboard, StyleSheet, Switch, TextInput, ScrollView, Dimensions } from 'react-native';
 import Alert from '../components/Alert'
 import { Text, View, TouchableOpacity } from './Themed';
 import { Ionicons } from '@expo/vector-icons';
@@ -361,39 +361,45 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         />
                                                     </View> :
                                                     <Menu
-                                                    onSelect={(cat: any) => setCustomCategory(cat)}>
-                                                    <MenuTrigger>
-                                                        <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2ac' }}>
-                                                            {customCategory === '' ? 'None' : customCategory}<Ionicons name='caret-down' size={14} />
-                                                        </Text>
-                                                    </MenuTrigger>
-                                                    <MenuOptions customStyles={{
-                                                        optionsContainer: {
-                                                            padding: 10,
-                                                            borderRadius: 15,
-                                                            shadowOpacity: 0,
-                                                            borderWidth: 1,
-                                                            borderColor: '#f4f4f6'
-                                                        }
-                                                    }}>
-                                                        <MenuOption
-                                                            value={''}>
-                                                            <Text style={{ color: '#2f2f3c' }}>
-                                                                None
+                                                        onSelect={(cat: any) => setCustomCategory(cat)}>
+                                                        <MenuTrigger>
+                                                            <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#a2a2ac' }}>
+                                                                {customCategory === '' ? 'None' : customCategory}<Ionicons name='caret-down' size={14} />
                                                             </Text>
-                                                        </MenuOption>
-                                                        {
-                                                            categories.map((category: any) => {
-                                                                return <MenuOption
-                                                                    value={category}>
-                                                                    <Text style={{ color: '#2f2f3c' }}>
-                                                                        {category}
-                                                                    </Text>
-                                                                </MenuOption>
-                                                            })
-                                                        }
-                                                    </MenuOptions>
-                                                </Menu>}
+                                                        </MenuTrigger>
+                                                        <MenuOptions customStyles={{
+                                                            optionsContainer: {
+                                                                padding: 10,
+                                                                borderRadius: 15,
+                                                                shadowOpacity: 0,
+                                                                borderWidth: 1,
+                                                                borderColor: '#f4f4f6',
+                                                                // height: '100%',
+                                                                maxHeight: Dimensions.get('window').height - 150,
+                                                            }
+                                                        }}>
+                                                            <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                                                                <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                                                                    <MenuOption
+                                                                        value={''}>
+                                                                        <Text style={{ color: '#2f2f3c' }}>
+                                                                            None
+                                                                        </Text>
+                                                                    </MenuOption>
+                                                                    {
+                                                                        categories.map((category: any) => {
+                                                                            return <MenuOption
+                                                                                value={category}>
+                                                                                <Text style={{ color: '#2f2f3c' }}>
+                                                                                    {category}
+                                                                                </Text>
+                                                                            </MenuOption>
+                                                                        })
+                                                                    }
+                                                                </ScrollView>
+                                                            </View>
+                                                        </MenuOptions>
+                                                    </Menu>}
                                         </View>
                                         <View style={{ width: '15%', backgroundColor: 'white' }}>
                                             <TouchableOpacity

@@ -364,25 +364,31 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                                     borderRadius: 15,
                                                                     shadowOpacity: 0,
                                                                     borderWidth: 1,
-                                                                    borderColor: '#f4f4f6'
+                                                                    borderColor: '#f4f4f6',
+                                                                    // height: '100%',
+                                                                    maxHeight: Dimensions.get('window').height - 150,
                                                                 }
                                                             }}>
-                                                                <MenuOption
-                                                                    value={'All'}>
-                                                                    <Text style={{ color: '#2f2f3c' }}>
-                                                                        All
-                                                                    </Text>
-                                                                </MenuOption>
-                                                                {
-                                                                    categories.map((category: any) => {
-                                                                        return <MenuOption
-                                                                            value={category}>
+                                                                <View style={{ backgroundColor: '#fff', maxHeight: Dimensions.get('window').height - 150, }}>
+                                                                    <ScrollView contentContainerStyle={{ backgroundColor: '#fff' }}>
+                                                                        <MenuOption
+                                                                            value={'All'}>
                                                                             <Text style={{ color: '#2f2f3c' }}>
-                                                                                {category}
+                                                                                All
                                                                             </Text>
                                                                         </MenuOption>
-                                                                    })
-                                                                }
+                                                                        {
+                                                                            categories.map((category: any) => {
+                                                                                return <MenuOption
+                                                                                    value={category}>
+                                                                                    <Text style={{ color: '#2f2f3c' }}>
+                                                                                        {category}
+                                                                                    </Text>
+                                                                                </MenuOption>
+                                                                            })
+                                                                        }
+                                                                    </ScrollView>
+                                                                </View>
                                                             </MenuOptions>
                                                         </Menu> : null
                                                 }
