@@ -284,6 +284,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     onPress={() => {
                                         const prev = new Date()
                                         prev.setDate(prev.getDate() - 7)
+
                                         props.setFilterStart(prev)
                                         props.setFilterEnd(new Date())
                                     }}
