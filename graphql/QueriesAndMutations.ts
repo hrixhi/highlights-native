@@ -395,9 +395,9 @@ export const deleteCue = gql`
   }
 `;
 export const updateChannel = gql`
-mutation($channelId: String!, $password: String, $name: String!, $temporary: Boolean, $owners: [String!]!, $unsubscribe: Boolean!, $colorCode: String) {
+mutation($channelId: String!, $password: String, $name: String!, $temporary: Boolean, $owners: [String!]!, $colorCode: String) {
   channel {
-    update(channelId: $channelId, password: $password, name: $name, temporary: $temporary, owners: $owners, unsubscribe: $unsubscribe, colorCode: $colorCode)
+    update(channelId: $channelId, password: $password, name: $name, temporary: $temporary, owners: $owners, colorCode: $colorCode)
   }
 }
 `
@@ -495,6 +495,7 @@ export const getCues = gql`
         status
         submittedAt
         releaseSubmission
+        active
       }
     }
   }
@@ -667,6 +668,7 @@ export const getCuesFromCloud = gql`
         status
         submittedAt
         releaseSubmission
+        active
       }
     }
   }
@@ -957,6 +959,7 @@ query($channelId: String!) {
       password
       temporary
       owners
+      channelCreator
     }
   }
 }
