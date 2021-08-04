@@ -69,6 +69,13 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
         )()
     }, [props])
 
+    const roundSeconds = (time: Date) => {
+        time.setMinutes(time.getMinutes() + Math.round(time.getSeconds() / 60));
+        time.setSeconds(0, 0)
+
+        return time
+    }
+
     return (
         <View style={styles.bottombar}>
             <View style={styles.colorBar}>
@@ -244,9 +251,10 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         textColor={'#fff'}
                                         onChange={(event: any, selectedDate: any) => {
                                             const currentDate: any = selectedDate;
+                                            const roundedValue = roundSeconds(currentDate)
                                             props.setFilterStart(currentDate)
                                             if (currentDate > props.filterEnd) {
-                                                props.setFilterEnd(currentDate)
+                                                props.setFilterEnd(roundedValue)
                                             }
                                         }}
                                     />
@@ -260,8 +268,9 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         onChange={(event: any, selectedDate: any) => {
                                             const currentDate: any = selectedDate;
                                             props.setFilterStart(currentDate)
+                                            const roundedValue = roundSeconds(currentDate)
                                             if (currentDate < props.filterStart) {
-                                                props.setFilterStart(currentDate)
+                                                props.setFilterStart(roundedValue)
                                             }
                                         }}
                                     />

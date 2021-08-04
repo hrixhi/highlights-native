@@ -619,6 +619,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onChange={(event, selectedDate) => {
               const currentDate: any = selectedDate;
               const roundedValue = roundSeconds(currentDate)
+
               setStart(roundedValue);
             }}
           />
