@@ -726,19 +726,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           })
             .then(async res => {
               if (res.data.subscription.findByUserId) {
-                const colorChoices: any[] = ['#d91d56', '#ED7D22', '#FFBA10', '#B8D41F', '#53BE6D']
-
-                const updateColorCodes = res.data.subscription.findByUserId.map((sub: any) => {
-                  if (sub.colorCode === "") {
-                    const randomColor = colorChoices[Math.floor(Math.random() * colorChoices.length)];
-                    sub.colorCode = randomColor;
-
-                  }
-                  return sub;
-                })
-
-                setSubscriptions(updateColorCodes)
-                const stringSub = JSON.stringify(updateColorCodes)
+                setSubscriptions(res.data.subscription.findByUserId)
+                const stringSub = JSON.stringify(res.data.subscription.findByUserId)
                 await AsyncStorage.setItem('subscriptions', stringSub)
               } else {
                 setSubscriptions(parsedSubscriptions)
@@ -1612,7 +1601,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       })
     })
   }
-  const cuesCopy = cuesArray.sort((a: any, b: any) => {
+
+  // Filter if cues are inactive
+  const removeInactiveCues = cuesArray.filter((cue: any) => {
+    return cue.active
+  })
+
+  const cuesCopy = removeInactiveCues.sort((a: any, b: any) => {
     if (a.color < b.color) {
       return -1;
     }

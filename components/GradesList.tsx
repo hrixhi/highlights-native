@@ -453,7 +453,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             return s.cueId.toString().trim() === cue._id.toString().trim()
                                                         })
 
-                                                        if (activeCueId === scoreObject.cueId && activeUserId === score.userId) {
+                                                        if (scoreObject && activeCueId === scoreObject.cueId && activeUserId === score.userId) {
                                                             return <View style={styles.col}>
                                                                 <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', backgroundColor: '#fff' }}>
                                                                     <TextInput 
@@ -471,6 +471,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                         <Ionicons name='checkmark-circle-outline' size={24} style={{ marginRight: 5 }} color={'#8bc34a'}/>
                                                                     </TouchableOpacity>
                                                                     <TouchableOpacity style={{ backgroundColor: '#fff' }} onPress={() => { 
+                                                                        if (!scoreObject) return;
                                                                         setActiveCueId('')
                                                                         setActiveUserId('')
                                                                         setActiveScore('')
@@ -487,8 +488,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 setActiveUserId(score.userId);
                                                                 setActiveScore(scoreObject.score);
                                                             }}>
-                                                            {!scoreObject.submittedAt ? <Text style={{ textAlign: 'center', fontSize: 11, color: '#D91D56',  }}>
-                                                                { scoreObject && scoreObject.graded ? scoreObject.score : "Missing" }
+                                                            {!scoreObject || !scoreObject.submittedAt ? <Text style={{ textAlign: 'center', fontSize: 11, color: '#D91D56',  }}>
+                                                                { scoreObject && scoreObject.graded ? scoreObject.score :  (!scoreObject || !scoreObject.cueId ? "N/A" : "Missing" )}
                                                             </Text> 
                                                             : 
                                                             <Text style={{ textAlign: 'center', fontSize: 11, color: scoreObject && new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) ? '#ED7D22' : '#2f2f3c', }}>

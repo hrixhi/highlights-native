@@ -4,6 +4,7 @@ import { Text, View, TouchableOpacity } from '../components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash'
 import { htmlStringParser } from '../helpers/HTMLParser';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -14,6 +15,22 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const { title, subtitle } = htmlStringParser(props.cue.channelId && props.cue.channelId !== '' ? props.cue.original : props.cue.cue)
     const [showScore, setShowScore] = useState(false);
     const [colorCode, setColorCode] = useState('#2f2f3c');
+
+    const [isOwner, setIsOwner] = useState(false)
+
+    useEffect(() => {
+        (
+            async () => {
+                const u = await AsyncStorage.getItem('user')
+                if (u && props.cue.createdBy) {
+                    const parsedUser = JSON.parse(u)
+                    if (parsedUser._id.toString().trim() === props.cue.createdBy.toString().trim()) {
+                        setIsOwner(true)
+                    }
+                }
+            }
+        )()
+    }, [props.cue])
 
     useEffect(() => {
         if (props.cue && props.cue.original) {
@@ -77,7 +94,7 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 </Text> : null
                         } */}
                         {
-                            props.cue.graded && showScore ? <Text style={{
+                            props.cue.graded && showScore && !isOwner ? <Text style={{
                                 fontSize: 9,
                                 color: '#3B64F8',
                                 marginLeft: 10

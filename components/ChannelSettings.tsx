@@ -13,6 +13,13 @@ import {
 import Alert from './Alert';
 import MultiSelectComponent from './MultiSelect';
 import ColorPicker from "./ColorPicker";
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+} from 'react-native-popup-menu';
+import { Ionicons } from '@expo/vector-icons';
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -21,15 +28,295 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [password, setPassword] = useState('')
     const [temporary, setTemporary] = useState(false)
 
+    
+    // Use to subscribe and unsubscribe users
     const [originalSubs, setOriginalSubs] = useState<any[]>([])
-    const [options, setOptions] = useState<any[]>([])
-    const [selected, setSelected] = useState<any[]>([])
-    const [owner, setOwner] = useState<any>('')
-    const [owners, setOwners] = useState<any[]>([])
-    const [colorCode, setColorCode] = useState("")
 
+    // Dropdown options for subscribers
+    const [options, setOptions] = useState<any[]>([])
+
+    // Selected Subscribers
+    const [selected, setSelected] = useState<any[]>([])
+
+    const [owner, setOwner] = useState<any>({})
+
+    // Selected Moderators
+    const [owners, setOwners] = useState<any[]>([])
+
+    // The Main channel owner (Hide from all lists)
+    const [channelCreator, setChannelCreator] = useState('')
+
+    // Channel color
+    const [colorCode, setColorCode] = useState("")
+    const colorChoices = ["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#0d5d35", "#ffc107", "#ff9800", "#ff5722", "#795548", "#607db8"]
+    
+    // Filters
+    const grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+    const sections = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",]
+    const roles = ['student', 'instructor']
+    const [activeRole, setActiveRole] = useState('All');
+    const [activeGrade, setActiveGrade] = useState('All');
+    const [activeSection, setActiveSection] = useState('All');
+
+    // Used to find out if any moderators are removed
+    const [originalOwners, setOriginalOwners] = useState<any[]>([]);
+
+    // Used to keep all users to filter
+    const [allUsers, setAllUsers] = useState([]);
+
+    const [modOptions, setModOptions] = useState<any[]>([]);
 
     const RichText: any = useRef()
+
+    useEffect(() => {
+
+        let filteredUsers = [...allUsers];
+        
+        // First filter by role
+
+        if (activeRole !== "All") {
+            const filterRoles = filteredUsers.filter((user: any) => {
+                return user.role === activeRole
+            }) 
+
+            filteredUsers = filterRoles;
+        }
+
+        if (activeGrade !== "All") {
+            const filterGrades = filteredUsers.filter((user: any) => {
+                return user.grade === activeGrade
+            })
+
+            filteredUsers  = filterGrades
+        }
+
+        if (activeSection !== "All") {
+            const filterSections = filteredUsers.filter((user: any) => {
+                return user.section === activeSection
+            })
+
+            filteredUsers  = filterSections 
+        }
+
+        if (channelCreator !== "") {
+            const filterOutMainOwner = filteredUsers.filter((user: any) => {
+                return user._id !== channelCreator
+            })
+
+            filteredUsers = filterOutMainOwner
+        }
+
+        let filteredOptions = filteredUsers.map((user: any) => {
+            return {
+                label: (user.fullName + ', ' + user.displayName),
+                value: user._id
+            }
+        })
+
+        setOptions(filteredOptions)
+        
+    }, [activeRole, activeGrade, activeSection, channelCreator])
+
+    console.log("owners", owners)
+
+    useEffect(() => {
+        if (channelCreator !== "") {
+            const subscribers = [...selected]
+
+            const filterOutMainOwner = subscribers.filter((sub: any) => {
+              return sub !== channelCreator  
+            })
+
+            setSelected(filterOutMainOwner)
+
+        }
+    }, [channelCreator])
+
+    useEffect(() => {
+        const filterSubs = allUsers.filter((user: any) => {
+            return selected.includes(user._id)
+        })
+
+        const mods = filterSubs.map((user: any) => {
+            return {
+                label: (user.fullName + ', ' + user.displayName),
+                value: user._id
+            }
+        })
+        
+        setModOptions(mods)
+
+
+    }, [selected])
+
+    const renderSubscriberFilters = () => {
+        return (<View style={{ width: '100%', flexDirection: 'row', backgroundColor: 'white', marginTop: 15 }}>
+            <View style={{ backgroundColor: 'white', }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: 'white', paddingLeft: 10 }}>
+                                <Menu
+                                    onSelect={(role: any) => {
+                                        setActiveRole(role)
+                                    }}>
+                                    <MenuTrigger>
+                                        <Text style={{ fontFamily: 'inter', fontSize: 15, color: '#2f2f3c' }}>
+                                            {activeRole}<Ionicons name='caret-down' size={15} />
+                                        </Text>
+                                    </MenuTrigger>
+                                    <MenuOptions customStyles={{
+                                        optionsContainer: {
+                                            padding: 10,
+                                            borderRadius: 15,
+                                            shadowOpacity: 0,
+                                            borderWidth: 1,
+                                            borderColor: '#f4f4f6'
+                                        }
+                                    }}>
+                                        <MenuOption
+                                            value={'All'}>
+                                            <View style={{ display: 'flex', flexDirection: 'row',  }}>
+                                                <View style={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: 10,
+                                                    marginTop: 1,
+                                                    backgroundColor: "#fff"
+                                                }} />
+                                                <Text style={{ marginLeft: 5 }}>
+                                                    All
+                                                </Text>
+                                            </View>
+                                        </MenuOption>
+                                        {
+                                            roles.map((role: any) => {
+                                                return <MenuOption
+                                                    value={role}>
+                                                    <View style={{ display: 'flex', flexDirection: 'row',  }}>
+                                                        <Text style={{ marginLeft: 5 }}>
+                                                            {role}
+                                                        </Text>
+                                                    </View>
+                                                </MenuOption>
+                                            })
+                                        }
+                                    </MenuOptions>
+                                </Menu>
+                            </View>
+                            <Text style={{ fontSize: 10, color: '#2f2f3c', paddingTop: 7, textAlign: 'center', backgroundColor: 'white' }}>
+                                Roles
+                            </Text>
+                        </View>
+
+                        <View style={{ backgroundColor: 'white', }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: 'white', paddingLeft: 30 }}>
+                                <Menu
+                                    onSelect={(grade: any) => {
+                                        setActiveGrade(grade)
+                                    }}>
+                                    <MenuTrigger>
+                                        <Text style={{ fontFamily: 'inter', fontSize: 15, color: '#2f2f3c' }}>
+                                            {activeGrade}<Ionicons name='caret-down' size={15} />
+                                        </Text>
+                                    </MenuTrigger>
+                                    <MenuOptions customStyles={{
+                                        optionsContainer: {
+                                            padding: 10,
+                                            borderRadius: 15,
+                                            shadowOpacity: 0,
+                                            borderWidth: 1,
+                                            borderColor: '#f4f4f6'
+                                        }
+                                    }}>
+                                        <MenuOption
+                                            value={'All'}>
+                                            <View style={{ display: 'flex', flexDirection: 'row',  }}>
+                                                <View style={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: 10,
+                                                    marginTop: 1,
+                                                    backgroundColor: "#fff"
+                                                }} />
+                                                <Text style={{ marginLeft: 5 }}>
+                                                    All
+                                                </Text>
+                                            </View>
+                                        </MenuOption>
+                                        {
+                                            grades.map((role: any) => {
+                                                return <MenuOption
+                                                    value={role}>
+                                                    <View style={{ display: 'flex', flexDirection: 'row',  }}>
+                                                        <Text style={{ marginLeft: 5 }}>
+                                                            {role}
+                                                        </Text>
+                                                    </View>
+                                                </MenuOption>
+                                            })
+                                        }
+                                    </MenuOptions>
+                                </Menu>
+                            </View>
+                            <Text style={{ fontSize: 10, color: '#2f2f3c', paddingTop: 7, textAlign: 'center', backgroundColor: 'white', paddingLeft: 20 }}>
+                                Grades
+                            </Text>
+                        </View>
+
+                        <View style={{ backgroundColor: 'white', }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', display: 'flex', backgroundColor: 'white', paddingLeft: 30 }}>
+                                <Menu
+                                    onSelect={(grade: any) => {
+                                        setActiveSection(grade)
+                                    }}>
+                                    <MenuTrigger>
+                                        <Text style={{ fontFamily: 'inter', fontSize: 15, color: '#2f2f3c' }}>
+                                            {activeSection}<Ionicons name='caret-down' size={15} />
+                                        </Text>
+                                    </MenuTrigger>
+                                    <MenuOptions customStyles={{
+                                        optionsContainer: {
+                                            padding: 10,
+                                            borderRadius: 15,
+                                            shadowOpacity: 0,
+                                            borderWidth: 1,
+                                            borderColor: '#f4f4f6'
+                                        }
+                                    }}>
+                                        <MenuOption
+                                            value={'All'}>
+                                            <View style={{ display: 'flex', flexDirection: 'row',  }}>
+                                                <View style={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: 10,
+                                                    marginTop: 1,
+                                                    backgroundColor: "#fff"
+                                                }} />
+                                                <Text style={{ marginLeft: 5 }}>
+                                                    All
+                                                </Text>
+                                            </View>
+                                        </MenuOption>
+                                        {
+                                            sections.map((section: any) => {
+                                                return <MenuOption
+                                                    value={section}>
+                                                    <View style={{ display: 'flex', flexDirection: 'row',  }}>
+                                                        <Text style={{ marginLeft: 5 }}>
+                                                            {section}
+                                                        </Text>
+                                                    </View>
+                                                </MenuOption>
+                                            })
+                                        }
+                                    </MenuOptions>
+                                </Menu>
+                            </View>
+                            <Text style={{ fontSize: 10, color: '#2f2f3c', paddingTop: 7, textAlign: 'center', paddingLeft: 20 }}>
+                                Sections
+                            </Text>
+                        </View>
+        </View>)
+    }
 
     const handleSubmit = useCallback(() => {
         if (name.toString().trim() === '') {
@@ -37,23 +324,32 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             return
         }
 
-        if (selected.length === 0) {
-            Alert('Select subscribers.')
-            return
+        let moderatorsPresentAsSubscribers = true;
+
+        owners.map((owner: any) => {
+            const presentInSubscriber = selected.find((sub: any) => {
+                return owner === sub;
+            })
+
+            if (!presentInSubscriber) {
+                moderatorsPresentAsSubscribers = false
+            }
+        })
+
+        if (!moderatorsPresentAsSubscribers) {
+            alert("A moderator must be a subscriber");
+            return;
         }
+
+
         const server = fetchAPI('')
         server.query({
             query: doesChannelNameExist,
             variables: {
                 name: name.trim()
             }
-        }).then(res => {
+        }).then(async res => {
             if (res.data && (res.data.channel.doesChannelNameExist !== true || name.trim() === originalName.trim())) {
-
-                let unsub = false
-                // if (confirm('Unsubscribe removed moderators?')) {
-                //     unsubscribe = true
-                // }
 
                 server.mutate({
                     mutation: updateChannel,
@@ -63,7 +359,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         channelId: props.channelId,
                         temporary,
                         owners,
-                        unsubscribe: unsub,
                         colorCode
                     }
                 }).then(res2 => {
@@ -86,6 +381,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         })
                         // removed subs
                         originalSubs.map((o: any) => {
+
+                            if (o.value === channelCreator) return;
+
                             const og = selected.find((sub: any) => {
                                 return o.value === sub
                             })
@@ -164,12 +462,15 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         if (a.fullName > b.fullName) { return 1; }
                                         return 0;
                                     })
+
+                                    setAllUsers(res.data.user.getSchoolUsers);
+
                                     const tempUsers: any[] = []
                                     res.data.user.getSchoolUsers.map((item: any, index: any) => {
                                         const x = { ...item, selected: false, index }
                                         delete x.__typename
                                         tempUsers.push({
-                                            label: (item.fullName),
+                                            label: (item.fullName + ', ' + item.displayName),
                                             value: item._id
                                         })
                                         return x
@@ -186,6 +487,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             setOriginalName(res.data.channel.findById.name)
                                             setPassword(res.data.channel.findById.password ? res.data.channel.findById.password : '')
                                             setTemporary(res.data.channel.findById.temporary ? true : false)
+                                            setChannelCreator(res.data.channel.findById.channelCreator)
+
+                                            console.log("Owners", res.data.channel.findById.owners)
                                             if (res.data.channel.findById.owners) {
                                                 const ownerOptions: any[] = []
                                                 tempUsers.map((item: any) => {
@@ -196,6 +500,15 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                         ownerOptions.push(item.value)
                                                     }
                                                 })
+
+                                                // Filter out the main channel creator from the moderators list
+
+                                                const filterOutMainOwner = ownerOptions.filter((user: any) => {
+                                                    return user !== res.data.channel.findById.channelCreator
+                                                })
+
+                                                setOriginalOwners(filterOutMainOwner)
+
                                                 setOwners(ownerOptions)
                                             }
                                         }
@@ -205,7 +518,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }
                         }
                     })
-
+                    .catch((e: any) => {
+                        console.log("Error", e)
+                    })
                     // get subs
                     server.query({
                         query: getSubscribers,
@@ -218,16 +533,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             const temp: any[] = []
                             res.data.user.findByChannelId.map((item: any, index: any) => {
                                 const x = { ...item, selected: false, index }
-                                if (item._id.toString().trim() === user._id.toString().trim()) {
-                                    setOwner(item._id)
-                                } else {
+                                
                                     delete x.__typename
                                     tempUsers.push({
                                         label: (item.fullName + ', ' + item.displayName + ', ' + (item.email ? item.email : '')),
                                         value: item._id
                                     })
                                     temp.push(item._id)
-                                }
                             })
                             setOriginalSubs(tempUsers)
                             setSelected(temp)
@@ -320,6 +632,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase',  marginTop: 20  }}>
                             Subscribers
                         </Text>
+
+                        {renderSubscriberFilters()}
                         <View
                             style={{
                                 paddingTop: 25,
@@ -349,7 +663,14 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     height: 250,
                                     backgroundColor: '#fff'
                                 }}
-                                onSelectedItemsChange={(sel: any) => setSelected(sel)}
+                                onSelectedItemsChange={(sel: any) => {
+                                    setSelected(sel)
+                                    const filterOwners = owners.filter((owner: any) => {
+                                        return sel.includes(owner)
+                                    })
+
+                                    setOwners(filterOwners)
+                                }}
                                 selectedItems={selected}
                                 selectText="Subscribers"
                                 searchInputPlaceholderText="Search..."
@@ -366,21 +687,22 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 submitButtonText="Done"
                             />
                         </View>
-                        <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
+                        <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase', marginTop: 40 }}>
                             Moderators
                         </Text>
                         <View
                             style={{
-                                paddingTop: 25,
+                                paddingTop: 15,
                                 backgroundColor: "#fff",
                                 // borderWidth: 1,
                                 // flex: 1
                             }}>
                             <MultiSelectComponent
-                                subscribers={options}
+                                subscribers={modOptions}
                                 selected={owners}
                                 onAddNew={(e: any) => setOwners(e)}
                                 settings={true}
+                                selectText="Moderators"
                             />
                         </View>
                         <View
