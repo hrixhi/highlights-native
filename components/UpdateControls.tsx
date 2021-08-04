@@ -965,6 +965,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       playChannelCueIndef,
       notify,
       title,
+      gradeWeight,
       url,
       imported,
       type,
@@ -988,6 +989,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     deadline,
     initiateAt,
     solutions,
+    gradeWeight,
     initiatedAt,
     customCategory,
     props.cueKey,
@@ -1831,8 +1833,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
   const renderQuizTimerOrUploadOptions = () => {
     return isQuiz && !props.cue.graded ? (
-      isQuizTimed && (!props.cue.submittedAt || props.cue.submittedAt !== "") ? (
-        initiatedAt && initDuration !== 0 && props.cue.submittedAt === "" ? (
+      isQuizTimed && (!props.cue.submittedAt || props.cue.submittedAt === "") ? (
+        initiatedAt && initDuration !== 0 ? (
           <View
             style={{
               flex: 1,
@@ -3823,7 +3825,6 @@ const styles: any = StyleSheet.create({
     borderBottomColor: "#f4f4f6",
     borderBottomWidth: 1,
     fontSize: 15,
-    padding: 15,
     paddingTop: 12,
     paddingBottom: 12,
     marginTop: 5,

@@ -330,9 +330,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             setShowOptions={(o: any) => setShowOptions(o)}
                         />
                         {!Number.isNaN(Number(cueId)) ||
-                            !props.channelId ||
-                            (props.cue.original &&
-                                props.cue.original.includes("quizId")) ? (
+                            !props.channelId ? (
                             <View
                                 style={{
                                     flex: 1,
