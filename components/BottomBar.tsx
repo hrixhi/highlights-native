@@ -203,7 +203,7 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 <MenuOption
                                                     value={'All'}>
                                                     <Text style={{ color: '#2f2f3c' }}>
-                                                        {PreferredLanguageText('myCues')}
+                                                        All
                                                     </Text>
                                                 </MenuOption>
                                                 {

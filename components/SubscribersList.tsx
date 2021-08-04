@@ -795,7 +795,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <TouchableOpacity
                             key={Math.random()}
                             style={{
-                                backgroundColor: 'white'
+                                backgroundColor: 'white',
+                                marginLeft: showSubmission ? -7 : 0
                             }}
                             onPress={() => {
                                 if (showChat) {
@@ -833,44 +834,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         </Text>
                                     </View> : null
                             }
-                            {/* {
-                                isOwner && !props.cueId && !showAddUsers && !showNewGroup && !showSubmission && users.length < 3
-                                    ? <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
-                                        <TouchableOpacity
-                                            style={{ backgroundColor: '#fff' }}
-                                            onPress={() => handleSubStatusChange()}
-                                        >
-                                            <Text style={{
-                                                color: '#a2a2ac',
-                                                fontSize: 11,
-                                                lineHeight: 30,
-                                                textAlign: 'right',
-                                                paddingRight: 20,
-                                                textTransform: 'uppercase'
-                                            }}>
-                                                {
-                                                    isLoadedUserInactive ? PreferredLanguageText('makeActive') : PreferredLanguageText('makeInactive')
-                                                }
-                                            </Text>
-                                        </TouchableOpacity>
-                                        {/* <TouchableOpacity
-                                            style={{ backgroundColor: '#fff' }}
-                                            onPress={() => handleDelete()}
-                                        >
-                                            <Text style={{
-                                                color: '#a2a2ac',
-                                                fontSize: 11,
-                                                lineHeight: 30,
-                                                textAlign: 'right',
-                                                paddingRight: 10,
-                                                textTransform: 'uppercase'
-                                            }}>
-                                                {PreferredLanguageText('removeFromChannel')}
-                                            </Text>
-                                        </TouchableOpacity> 
-                                    </View>
-                                    : null
-                            } */}
                             {
                                 showChat ? <View style={{ flexDirection: 'column', backgroundColor: 'white' }}>
                                     <TouchableOpacity
@@ -1227,7 +1190,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 </ScrollView>)
                                 ) :
                                 isQuiz && !isV0Quiz ?
-                                    <View style={{ width: '100%', paddingBottom: 100, backgroundColor: '#fff' }}>
+                                    <View style={{ width: '100%', paddingBottom: 0, backgroundColor: '#fff' }}>
                                         {
                                             submittedAt !== "" && deadline !== "" && submittedAt >= deadline ?
                                                 <View style={{ width: '100%', }}>
@@ -1592,7 +1555,6 @@ const styleObject = () => {
             borderBottomColor: '#f4f4f6',
             borderBottomWidth: 1,
             fontSize: 15,
-            padding: 15,
             paddingTop: 13,
             paddingBottom: 13,
             marginTop: 5,

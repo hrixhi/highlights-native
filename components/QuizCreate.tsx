@@ -1,12 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { Dimensions, Image, StyleSheet } from 'react-native';
 import { TextInput } from "./CustomTextInput";
 import { Text, TouchableOpacity, View } from '../components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import CheckBox from 'react-native-check-box';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import * as ImagePicker from 'expo-image-picker';
-import { Picker } from "@react-native-picker/picker";
+
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+} from "react-native-popup-menu";
 
 const questionTypeOptions = [
     {
@@ -105,16 +111,16 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
     }
 
     const renderHeaderOption = (index: number) => {
-        return <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center', backgroundColor: '#fff'  }} >
-                { index in headers
-                ? 
-                <View style={{ flexDirection: 'row', width: '100%', marginTop: 50, backgroundColor: '#fff'  }}>
-                    <View style={{ width: '90%', backgroundColor: '#fff' }}>
+        return <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-start' }} >
+            {index in headers
+                ?
+                <View style={{ flexDirection: 'row', width: '95%', marginTop: 50, paddingLeft: 20 }}>
+                    <View style={{ width: Dimensions.get('window').width < 768 ? '95%' : '50%' }}>
                         <TextInput
                             value={headers[index]}
-                            placeholder={'Header'}
+                            placeholder={'Heading'}
                             onChangeText={val => {
-                                const currentHeaders = JSON.parse(JSON.stringify(headers)) 
+                                const currentHeaders = JSON.parse(JSON.stringify(headers))
                                 currentHeaders[index] = val
                                 setHeaders(currentHeaders);
                                 props.setHeaders(currentHeaders)
@@ -123,38 +129,39 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             hasMultipleLines={false}
                         />
                     </View>
-
-                    <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff'  }}>
+                    <View style={{ paddingTop: 20, paddingLeft: 20 }}>
                         <Ionicons
                             name='close-outline'
                             onPress={() => {
-                               removeHeader(index)
+                                removeHeader(index)
                             }}
+                            size={17}
                         />
                     </View>
                 </View>
-                : 
-                
-                <TouchableOpacity 
-                    style={{ width: 100, flexDirection: 'row', backgroundColor: '#fff' }} 
+                :
+                <TouchableOpacity
+                    style={{
+                        width: 100, flexDirection: 'row', marginLeft: 35
+                    }}
                     onPress={() => addHeader(index)}
                 >
-                    {/* <Ionicons name='add-circle' size={19} color={"#2f2f3c"} /> */}
+                    {/* <Ionicons name='add-circle' size={19} color={"#2F2F3C"} /> */}
                     <Text
                         style={{
-                            marginLeft: 10,
+                            // marginLeft: 10,
                             fontSize: 10,
                             paddingBottom: 20,
                             textTransform: "uppercase",
                             // paddingLeft: 20,
                             flex: 1,
                             lineHeight: 25,
-                            color: '#2f2f3c'
+                            color: '#2f2f3c',
                         }}>
-                        Add HEADER
+                        Add Header
                     </Text>
                 </TouchableOpacity>}
-            </View>
+        </View>
     }
 
 
@@ -165,24 +172,26 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
             borderTopRightRadius: 0,
             paddingTop: 15,
             flexDirection: 'column',
-            justifyContent: 'flex-start'
+            justifyContent: 'flex-start',
+            borderTopColor: '#f4f4f6',
+            borderTopWidth: 1,
         }}>
-             {/* Insert HEADER FOR INDEX 0 */}
-            {renderHeaderOption(0)}
+
             {
                 problems.map((problem: any, index: any) => {
 
                     const { questionType } = problem;
 
                     return <View style={{ borderBottomColor: '#f4f4f6', borderBottomWidth: index === (problems.length - 1) ? 0 : 1, marginBottom: 25, backgroundColor: 'white' }}>
+                        {renderHeaderOption(index)}
                         <View style={{ flexDirection: 'row', backgroundColor: 'white' }}>
-                            <View style={{ paddingTop: 15, backgroundColor: 'white' }}>
-                                <Text style={{ color: '#a2a2ac', fontSize: 16, paddingBottom: 25, marginRight: 10 }}>
+                            <View style={{ paddingTop: 15 }}>
+                                <Text style={{ color: '#2f2f3c', fontSize: 15, paddingBottom: 25, paddingRight: 20, paddingTop: 45 }}>
                                     {index + 1}.
-                            </Text>
+                                </Text>
                             </View>
-                            <View style={{ flexDirection: 'row', backgroundColor: 'white', }}>
-                                <View style={{ backgroundColor: '#fff', width: '50%' }}>
+                            <View style={{ flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', width: '95%' }}>
+                                <View style={{ width: Dimensions.get('window').width < 768 ? '95%' : '50%', paddingTop: 35 }}>
                                     {
                                         problem.question && problem.question.includes("image:") ?
                                             <Image
@@ -213,7 +222,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     }
                                     <TouchableOpacity
                                         style={{
-                                            backgroundColor: '#fff', paddingLeft: 10
+                                            backgroundColor: '#fff'
                                         }}
                                         onPress={() => {
                                             if (problem.question && problem.question.includes("image:")) {
@@ -237,19 +246,25 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                         >
                                             {
                                                 problem.question && problem.question.includes("image:")
-                                                    ? "Remove Image" : "Add Image"
+                                                    ? "REMOVE IMAGE" : "ADD IMAGE"
                                             }
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
-                                <View style={{ backgroundColor: '#fff', display: 'flex', flexDirection: 'row', width: '50%', maxWidth: '50%', paddingLeft: 10, }}>
-
-                                    <View style={{ width: '75%', backgroundColor: 'white' }}>
+                                <View style={{ flex: 1, flexDirection: 'row' }}>
+                                    <View style={{
+                                        // display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        paddingTop: 25,
+                                        // paddingHorizontal: 20,
+                                        paddingLeft: Dimensions.get('window').width < 768 ? 0 : 20,
+                                        maxWidth: '25%'
+                                    }}>
                                         <TextInput
                                             value={problem.points}
-                                            // style={{ width: '100%' }}
                                             // style={styles.input}
-                                            placeholder={PreferredLanguageText('enterPoints')}
+                                            placeholder={'Points'}
                                             onChangeText={val => {
                                                 const newProbs = [...problems];
                                                 newProbs[index].points = val;
@@ -259,150 +274,108 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             placeholderTextColor={'#a2a2ac'}
                                         />
                                     </View>
-                                    
-                                     <Ionicons
-                                        name='close-outline'
-                                        onPress={() => {
-                                            const updatedProblems = [...problems]
-                                            updatedProblems.splice(index, 1);
-                                            removeHeadersOnDeleteProblem(index + 1);
-                                            setProblems(updatedProblems)
-                                            props.setProblems(updatedProblems)
-                                        }}
-                                    />
+                                    <View
+                                        style={{
+                                            // display: 'flex',
+                                            alignItems: 'center',
+                                            flexDirection: 'row'
+                                        }}>
+                                        <Menu
+                                            onSelect={(questionType: any) => {
+                                                const updatedProblems = [...problems]
+                                                updatedProblems[index].questionType = questionType;
+                                                // Clear Options 
+                                                if (questionType === "freeResponse") {
+                                                    updatedProblems[index].options = []
+                                                } else if (questionType === "trueFalse") {
+                                                    updatedProblems[index].options = []
+                                                    updatedProblems[index].options.push({
+                                                        option: 'True',
+                                                        isCorrect: false
+                                                    })
+                                                    updatedProblems[index].options.push({
+                                                        option: 'False',
+                                                        isCorrect: false
+                                                    })
+                                                }
+                                                setProblems(updatedProblems)
+                                                props.setProblems(updatedProblems)
+                                            }}
+                                            style={{ paddingTop: 13, paddingRight: 20, paddingLeft: 20 }}
+                                        >
+                                            <MenuTrigger>
+                                                <Text
+                                                    style={{
+                                                        fontFamily: "inter",
+                                                        fontSize: 14,
+                                                        color: "#2F2F3C",
+                                                    }}
+                                                >
+                                                    {questionType === "" ? "MCQ" : questionType}
+                                                    <Ionicons name="caret-down" size={14} />
+                                                </Text>
+                                            </MenuTrigger>
+                                            <MenuOptions
+                                                customStyles={{
+                                                    optionsContainer: {
+                                                        padding: 10,
+                                                        borderRadius: 15,
+                                                        shadowOpacity: 0,
+                                                        borderWidth: 1,
+                                                        borderColor: "#f4f4f6",
+                                                        overflow: 'scroll',
+                                                        maxHeight: '100%'
+                                                    },
+                                                }}
+                                            >
+                                                {questionTypeOptions.map((item: any) => {
+                                                    return (
+                                                        <MenuOption value={item.value}>
+                                                            <Text>{item.value === "" ? "MCQ" : item.label}</Text>
+                                                        </MenuOption>
+                                                    );
+                                                })}
+                                            </MenuOptions>
+                                        </Menu>
+                                    </View>
+                                    <View style={{ paddingTop: 15, flexDirection: 'row', alignItems: 'center', }}>
+                                        <CheckBox
+                                            style={{ paddingRight: 20 }}
+                                            isChecked={problem.required}
+                                            onClick={() => {
+                                                const updatedProblems = [...problems]
+                                                updatedProblems[index].required = !updatedProblems[index].required;
+                                                setProblems(updatedProblems)
+                                                props.setProblems(updatedProblems)
+                                            }}
+                                        />
+                                        <Text style={{ fontSize: 10, textTransform: 'uppercase', marginLeft: 10 }}>
+                                            Required
+                                        </Text>
+                                    </View>
+                                    <View style={{ paddingTop: 15, paddingLeft: 20, flexDirection: 'row', alignItems: 'center' }}>
+                                        <Ionicons
+                                            name='close-outline'
+                                            onPress={() => {
+                                                const updatedProblems = [...problems]
+                                                updatedProblems.splice(index, 1);
+
+                                                removeHeadersOnDeleteProblem(index + 1);
+
+                                                setProblems(updatedProblems)
+                                                props.setProblems(updatedProblems)
+                                            }}
+                                            size={17}
+                                        />
+                                    </View>
                                 </View>
-                                
+
                             </View>
                         </View>
-
-                        {/* Required */}
-                        
-                        <View style={{ paddingTop: 25, paddingLeft: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: "#fff"}}>
-                            <CheckBox
-                                style={{ paddingRight: 10 }}
-                                isChecked={problem.required}
-                                onClick={() => {
-                                    const updatedProblems = [...problems]
-                                    updatedProblems[index].required = !updatedProblems[index].required;
-                                    setProblems(updatedProblems)
-                                    props.setProblems(updatedProblems)
-                                }}
-                            />
-                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase'  }}>
-                                Required
-                            </Text>
-                        </View>
-
-                        {/* <View
-                            style={{
-                                backgroundColor: "white",
-                                display: "flex",
-                                flexDirection: 'row',
-                            }}>
-                            <Picker
-                                style={styles.picker}
-                                itemStyle={{
-                                    fontSize: 15
-                                }}
-                                selectedValue={questionType}
-                                onValueChange={(questionType: any) => {
-                                    const updatedProblems = [...problems]
-                                    updatedProblems[index].questionType = questionType;
-
-                                    // Clear Options 
-                                    if (questionType !== "") {
-                                        updatedProblems[index].options = []
-                                    }
-                                    setProblems(updatedProblems)
-                                    props.setProblems(updatedProblems)
-                                }}>
-                                {questionTypeOptions.map((item: any, index: number) => {
-                                    return (
-                                        <Picker.Item
-                                            color={questionType === item.value ? "#3B64F8" : "#2f2f3c"}
-                                            label={item.value === "" ? "MCQ" : item.label}
-                                            value={item.value}
-                                            key={index}
-                                        />
-                                    );
-                                })}
-                            </Picker>
-                        </View> */}
-
-                        {/* Use Checkbox for Question Type */}
-                        <View style={{ paddingTop: 25, paddingLeft: 10, paddingBottom: 25, flexDirection: 'row', alignItems: 'center', backgroundColor: "#fff"}}>
-                            
-                            <CheckBox
-                                style={{ paddingRight: 5 }}
-                                isChecked={questionType === ""}
-                                onClick={() => {
-                                    const updatedProblems = [...problems]
-                                    updatedProblems[index].questionType = "";
-
-                                    // Clear Options 
-                                    // if (questionType !== "") {
-                                    updatedProblems[index].options = []
-                                    // }
-                                    setProblems(updatedProblems)
-                                    props.setProblems(updatedProblems)
-                                }}
-                            />
-                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase', marginRight: 10  }}>
-                                MCQ
-                            </Text>
-
-                            <CheckBox
-                                style={{ paddingRight: 5 }}
-                                isChecked={questionType === "freeResponse"}
-                                onClick={() => {
-                                    const updatedProblems = [...problems]
-                                    updatedProblems[index].questionType = "freeResponse";
-
-                                    // Clear Options 
-                                    // if (questionType !== "") {
-                                    updatedProblems[index].options = []
-                                    // }
-                                    setProblems(updatedProblems)
-                                    props.setProblems(updatedProblems)
-                                }}
-                            />
-                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase', marginRight: 10   }}>
-                                Free Response
-                            </Text>
-
-                            <CheckBox
-                                style={{ paddingRight: 5 }}
-                                isChecked={questionType === "trueFalse"}
-                                onClick={() => {
-                                    const updatedProblems = [...problems]
-                                    updatedProblems[index].questionType = "trueFalse";
-
-                                    // Clear Options 
-                                    updatedProblems[index].options = []
-                                    updatedProblems[index].options.push({
-                                        option: 'True',
-                                        isCorrect: false
-                                    })
-                                    updatedProblems[index].options.push({
-                                        option: 'False',
-                                        isCorrect: false
-                                    })
-                                    // }
-                                    setProblems(updatedProblems)
-                                    props.setProblems(updatedProblems)
-                                }}
-                            />
-                            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase'  }}>
-                                True/False
-                            </Text>
-
-                        </View>
-
-
                         {
                             problem.options.map((option: any, i: any) => {
-                                return <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
-                                    <View style={{ paddingTop: 15, backgroundColor: '#fff' }}>
+                                return <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                                    <View style={{ paddingTop: 25, paddingHorizontal: 25 }}>
                                         <CheckBox
                                             style={{ paddingRight: 20 }}
                                             isChecked={option.isCorrect}
@@ -418,7 +391,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             }}
                                         />
                                     </View>
-                                    <View style={{ backgroundColor: '#fff', width: '80%' }}>
+                                    <View style={{ width: '50%', paddingRight: 30 }}>
                                         {
                                             option.option && option.option.includes("image:") ?
                                                 <Image
@@ -445,48 +418,65 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     placeholderTextColor={'#a2a2ac'}
                                                 />
                                         }
-                                        {questionType === "trueFalse" ? null : <TouchableOpacity
-                                            style={{
-                                                backgroundColor: '#fff', paddingLeft: 10
-                                            }}
-                                            onPress={() => {
-                                                if (option.option && option.option.includes("image:")) {
-                                                    const newProbs = [...problems];
-                                                    newProbs[index].options[i].option = "";
-                                                    setProblems(newProbs)
-                                                    props.setProblems(newProbs)
-                                                } else {
-                                                    galleryCallback(index, i)
-                                                }
-                                            }}
-                                        >
-                                            <Text
+                                        <View style={{ flexDirection: 'row' }}>
+                                            {questionType === "trueFalse" ? null : <TouchableOpacity
                                                 style={{
-                                                    paddingTop: option.option && option.option.includes("formula:")
-                                                        ? 10 : 0,
-                                                    color: '#a2a2ac',
-                                                    fontFamily: 'Overpass',
-                                                    fontSize: 10
+                                                    backgroundColor: '#fff', paddingLeft: 10
+                                                }}
+                                                onPress={() => {
+                                                    if (option.option && option.option.includes("image:")) {
+                                                        const newProbs = [...problems];
+                                                        newProbs[index].options[i].option = "";
+                                                        setProblems(newProbs)
+                                                        props.setProblems(newProbs)
+                                                    } else {
+                                                        galleryCallback(index, i)
+                                                    }
                                                 }}
                                             >
-                                                {
-                                                    option.option && option.option.includes("image:")
-                                                        ? "Remove Image" : "Add Image"
-                                                }
-                                            </Text>
-                                        </TouchableOpacity>}
+                                                <Text
+                                                    style={{
+                                                        paddingTop: option.option && option.option.includes("formula:")
+                                                            ? 10 : 0,
+                                                        color: '#a2a2ac',
+                                                        fontFamily: 'Overpass',
+                                                        fontSize: 10
+                                                    }}
+                                                >
+                                                    {
+                                                        option.option && option.option.includes("image:")
+                                                            ? "REMOVE IMAGE" : "ADD IMAGE"
+                                                    }
+                                                </Text>
+                                            </TouchableOpacity>}
+                                            {questionType === "trueFalse" ? null :
+                                                <TouchableOpacity
+                                                    style={{
+                                                        backgroundColor: '#fff', paddingLeft: 10
+                                                    }}
+                                                    onPress={() => {
+                                                        const updatedProblems = [...problems]
+                                                        updatedProblems[index].options.splice(i, 1);
+                                                        setProblems(updatedProblems)
+                                                        props.setProblems(updatedProblems)
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            paddingTop: option.option && option.option.includes("formula:")
+                                                                ? 10 : 0,
+                                                            color: '#a2a2ac',
+                                                            fontFamily: 'Overpass',
+                                                            fontSize: 10
+                                                        }}
+                                                    >
+                                                        CLEAR
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            }
+                                        </View>
                                     </View>
-                                    {questionType === "trueFalse" ? null : <View style={{ paddingTop: 15, paddingLeft: 10, backgroundColor: '#fff' }}>
-                                        <Ionicons
-                                            name='close-outline'
-                                            onPress={() => {
-                                                const updatedProblems = [...problems]
-                                                updatedProblems[index].options.splice(i, 1);
-                                                setProblems(updatedProblems)
-                                                props.setProblems(updatedProblems)
-                                            }}
-                                        />
-                                    </View>}
+
                                 </View>
                             })
                         }
@@ -500,9 +490,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 setProblems(updatedProblems)
                                 props.setProblems(updatedProblems)
                             }}
-                            style={{
-                                width: 100, flexDirection: 'row', backgroundColor: 'white'
-                            }}>
+                            style={{ width: 100, flexDirection: 'row', marginLeft: 22, marginTop: 20 }}
+                        >
                             <Text style={{
                                 marginLeft: 10,
                                 fontSize: 10,
@@ -510,21 +499,23 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 textTransform: "uppercase",
                                 flex: 1,
                                 lineHeight: 25,
-                                color: "#2f2f3c",
+                                color: "#3b64f8",
                                 paddingTop: 30
 
                             }}>
                                 {PreferredLanguageText('addChoice')}
                             </Text>
-                        </TouchableOpacity> : <View style={{ height: 100, backgroundColor: 'white' }} />}
-                        {renderHeaderOption(index + 1)}
+                        </TouchableOpacity> :
+                            <View style={{ height: 100, backgroundColor: 'white' }} />}
                     </View>
                 })
             }
-
-            
-
-            <View style={{ backgroundColor: 'white', flexDirection: 'row', justifyContent: 'center' }}>
+            <View style={{
+                width: '100%', flexDirection: 'row',
+                justifyContent: 'flex-start', paddingLeft: 30,
+                paddingTop: 25, borderBottomColor: '#cccccc',
+                paddingBottom: 25, borderBottomWidth: 1
+            }}>
                 <TouchableOpacity
                     onPress={() => {
                         const updatedProblems = [...problems, { question: '', options: [], points: '', questionType: '', required: true }]
@@ -532,18 +523,25 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         props.setProblems(updatedProblems)
                     }}
                     style={{
-                        width: 100, flexDirection: 'row', backgroundColor: 'white'
-                    }}>
-                    <Text style={{
-                        marginLeft: 10,
-                        fontSize: 10,
-                        paddingBottom: 20,
-                        textTransform: "uppercase",
-                        flex: 1,
-                        lineHeight: 25,
-                        color: "#2f2f3c"
-                    }}>
-                        {PreferredLanguageText('addProblem')}
+                        borderRadius: 15,
+                        backgroundColor: "white",
+                    }}
+                >
+                    <Text
+                        style={{
+                            textAlign: "center",
+                            lineHeight: 35,
+                            color: "white",
+                            fontSize: 12,
+                            backgroundColor: "#3B64F8",
+                            borderRadius: 15,
+                            paddingHorizontal: 25,
+                            fontFamily: "inter",
+                            overflow: "hidden",
+                            height: 35,
+                            textTransform: "uppercase",
+                        }}>
+                        Add Problem
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -559,7 +557,6 @@ const styles = StyleSheet.create({
         borderBottomColor: '#f4f4f6',
         borderBottomWidth: 1,
         fontSize: 15,
-        padding: 15,
         paddingTop: 12,
         paddingBottom: 12,
         marginTop: 5,

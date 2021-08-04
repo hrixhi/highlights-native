@@ -7,7 +7,6 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 import XLSX from "xlsx";
 import {
-    LineChart,
     PieChart
 } from "react-native-chart-kit";
 // import RNFS from 'react-native-fs';

@@ -88,6 +88,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         hours: 1, minutes: 0, seconds: 0
     })
 
+    const hours: any[] = [0, 1, 2, 3, 4, 5, 6]
+    const minutes: any[] = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
+
     const [shuffleQuiz, setShuffleQuiz] = useState(false);
     const [headers, setHeaders] = useState<any>({});
     const [quizInstructions, setQuizInstructions] = useState('');
@@ -1298,6 +1301,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             textTransform: 'uppercase'
                         }}
                             onPress={() => {
+                                if (isQuiz) {
+                                    clearAll()
+                                    return
+                                }
                                 if (channelId !== '') {
                                     setIsQuiz(true)
                                     setSubmission(true)
@@ -1306,7 +1313,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 }
                             }}
                         >
-                            {PreferredLanguageText('quiz')}
+                            {isQuiz ? 'CANCEL' : PreferredLanguageText("quiz")}
                         </Text>
                     </View>
                 </View>
@@ -1346,7 +1353,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         </View> : null
                 }
                 <ScrollView
-                    style={{ paddingBottom: 100, marginTop: Platform.OS === "ios" ? 40 : 0 }}
+                    style={{ paddingBottom: 100, marginTop: Platform.OS === "ios" && Dimensions.get('window').width < 768 ? 40 : 0 }}
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={true}
                     scrollEventThrottle={1}
@@ -1356,8 +1363,22 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 >
                     {
                         imported || isQuiz ?
-                            <View style={{ display: 'flex', flexDirection: width < 768 ? 'column' : 'row', overflow: 'visible', backgroundColor: 'white' }}>
-                                <View style={{ width: width < 768 ? '100%' : '33.33%', borderRightWidth: 0, borderColor: '#f4f4f6', paddingRight: 15, display: 'flex', flexDirection: 'row', backgroundColor: 'white' }}>
+                            <View
+                                style={{
+                                    flexDirection: width < 768 ? "column" : "row",
+                                    overflow: "visible",
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        width: width < 768 ? "100%" : "50%",
+                                        maxWidth: 400,
+                                        borderRightWidth: 0,
+                                        borderColor: "#f4f4f6",
+                                        paddingLeft: isQuiz ? 20 : 0,
+                                        flexDirection: "row",
+                                    }}
+                                >
                                     <TextInput
                                         value={title}
                                         style={styles.input}
@@ -1365,62 +1386,182 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         onChangeText={val => setTitle(val)}
                                         placeholderTextColor={'#a2a2ac'}
                                     />
-                                    <TouchableOpacity
-                                        style={{
-                                            marginLeft: 15,
-                                            paddingTop: 15,
-                                            backgroundColor: '#fff'
-                                        }}
-                                        onPress={() => clearAll()}
-                                    >
-                                        <Ionicons name="trash-outline" color="#a2a2ac" size={20} style={{ alignSelf: 'center' }} />
-                                        <Text
-                                            style={{
-                                                fontSize: 9,
-                                                color: "#a2a2ac",
-                                                textAlign: "center"
-                                            }}>
-                                            Remove
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                                {
-                                    isQuiz ?
-                                        <View style={{ width: width < 768 ? '100%' : '31.67%', borderRightWidth: 0, borderColor: '#f4f4f6', paddingTop: 10, backgroundColor: '#fff' }}>
-                                            <View style={{ width: '100%', paddingBottom: 15, backgroundColor: 'white' }}>
-                                                <Text style={{ fontSize: 15, color: '#a2a2ac' }}>
-                                                    <Ionicons name='timer-outline' size={20} color={'#a2a2ac'} />
+                                    {
+                                        !isQuiz ?
+                                            <TouchableOpacity
+                                                style={{
+                                                    marginLeft: 15,
+                                                    paddingTop: 15,
+                                                    backgroundColor: '#fff'
+                                                }}
+                                                onPress={() => clearAll()}
+                                            >
+                                                <Ionicons name="trash-outline" color="#a2a2ac" size={20} style={{ alignSelf: 'center' }} />
+                                                <Text
+                                                    style={{
+                                                        fontSize: 9,
+                                                        color: "#a2a2ac",
+                                                        textAlign: "center"
+                                                    }}>
+                                                    Remove
                                                 </Text>
-                                            </View>
-                                            <View style={{
-                                                backgroundColor: 'white',
-                                                width: '100%',
-                                                height: 40,
-                                                marginRight: 10
+                                            </TouchableOpacity> : null
+                                    }
+                                </View>
+                                {isQuiz ? (
+                                    <View
+                                        style={{
+                                            width: width < 768 ? "100%" : "50%",
+                                            borderRightWidth: 0,
+                                            flex: 1,
+                                            paddingLeft: 20,
+                                            borderColor: "#f4f4f6",
+                                            paddingTop: 10,
+                                            paddingRight: 25
+                                        }}
+                                    >
+                                        <View
+                                            style={{
+                                                width: "100%",
+                                                paddingBottom: 15,
+                                                backgroundColor: "white",
+                                                flexDirection: 'row',
+                                                justifyContent: 'flex-start'
+                                            }}
+                                        >
+                                            <Text style={{
+                                                color: "#2f2f3c",
+                                                fontSize: 11,
+                                                lineHeight: 30,
+                                                // paddingRight: 20,
+                                                paddingTop: 20,
+                                                textTransform: "uppercase",
                                             }}>
-                                                <Switch
-                                                    value={timer}
-                                                    onValueChange={() => {
-                                                        if (timer) {
-                                                            setDuration({
-                                                                hours: 1,
-                                                                minutes: 0,
-                                                                seconds: 0
-                                                            })
-                                                        }
-                                                        setTimer(!timer)
-                                                    }}
-                                                    style={{ height: 20, marginRight: 'auto' }}
-                                                    trackColor={{
-                                                        false: '#f4f4f6',
-                                                        true: '#3B64F8'
-                                                    }}
-                                                    thumbColor='white'
-                                                />
+                                                TIMED
+                                            </Text>
+                                        </View>
+                                        <View
+                                            style={{
+                                                backgroundColor: "white",
+                                                width: "100%",
+                                                height: 40,
+                                                marginRight: 10,
+                                                flexDirection: 'row',
+                                                justifyContent: 'flex-start'
+                                            }}
+                                        >
+                                            <Switch
+                                                value={timer}
+                                                onValueChange={() => {
+                                                    if (timer) {
+                                                        setDuration({
+                                                            hours: 1,
+                                                            minutes: 0,
+                                                            seconds: 0,
+                                                        });
+                                                    }
+                                                    setTimer(!timer);
+                                                }}
+                                                style={{ height: 20 }}
+                                                trackColor={{
+                                                    false: "#f4f4f6",
+                                                    true: "#3B64F8",
+                                                }}
+                                                activeThumbColor="white"
+                                            />
+                                        </View>
+                                        {timer ? (
+                                            <View
+                                                style={{
+                                                    borderRightWidth: 0,
+                                                    paddingTop: 0,
+                                                    borderColor: "#f4f4f6",
+                                                    flexDirection: 'row'
+                                                }}
+                                            >
+                                                <View>
+                                                    <Menu onSelect={(hour: any) => setDuration({
+                                                        ...duration,
+                                                        hours: hour
+                                                    })}>
+                                                        <MenuTrigger>
+                                                            <Text
+                                                                style={{
+                                                                    fontFamily: "inter",
+                                                                    fontSize: 14,
+                                                                    color: "#2f2f3c",
+                                                                }}
+                                                            >
+                                                                {duration.hours} H <Ionicons name="caret-down" size={14} /> &nbsp;&nbsp;:&nbsp;&nbsp;
+                                                            </Text>
+                                                        </MenuTrigger>
+                                                        <MenuOptions
+                                                            customStyles={{
+                                                                optionsContainer: {
+                                                                    padding: 10,
+                                                                    borderRadius: 15,
+                                                                    shadowOpacity: 0,
+                                                                    borderWidth: 1,
+                                                                    borderColor: "#f4f4f6",
+                                                                    overflow: 'scroll',
+                                                                    maxHeight: '100%'
+                                                                },
+                                                            }}
+                                                        >
+                                                            {hours.map((hour: any) => {
+                                                                return (
+                                                                    <MenuOption value={hour}>
+                                                                        <Text>{hour}</Text>
+                                                                    </MenuOption>
+                                                                );
+                                                            })}
+                                                        </MenuOptions>
+                                                    </Menu>
+                                                </View>
+                                                <View>
+                                                    <Menu onSelect={(min: any) => setDuration({
+                                                        ...duration,
+                                                        minutes: min
+                                                    })}>
+                                                        <MenuTrigger>
+                                                            <Text
+                                                                style={{
+                                                                    fontFamily: "inter",
+                                                                    fontSize: 14,
+                                                                    color: "#2f2f3c",
+                                                                }}
+                                                            >
+                                                                {duration.minutes}  m  <Ionicons name="caret-down" size={14} />
+                                                            </Text>
+                                                        </MenuTrigger>
+                                                        <MenuOptions
+                                                            customStyles={{
+                                                                optionsContainer: {
+                                                                    padding: 10,
+                                                                    borderRadius: 15,
+                                                                    shadowOpacity: 0,
+                                                                    borderWidth: 1,
+                                                                    borderColor: "#f4f4f6",
+                                                                    overflow: 'scroll',
+                                                                    maxHeight: '100%'
+                                                                },
+                                                            }}
+                                                        >
+                                                            {minutes.map((min: any) => {
+                                                                return (
+                                                                    <MenuOption value={min}>
+                                                                        <Text>{min}</Text>
+                                                                    </MenuOption>
+                                                                );
+                                                            })}
+                                                        </MenuOptions>
+                                                    </Menu>
+                                                </View>
                                             </View>
-                                        </View> : null
-                                }
-                                {
+                                        ) : null}
+                                    </View>
+                                ) : null}
+                                {/* {
                                     isQuiz && timer ?
                                         <View style={{ width: width < 768 ? '100%' : '35%', borderRightWidth: 0, borderColor: '#f4f4f6', backgroundColor: '#fff' }}>
                                             <Text>
@@ -1434,7 +1575,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 onChange={onChangeDuration}
                                                 pickerShows={['hours', 'minutes', 'seconds']} />
                                         </View> : null
-                                }
+                                } */}
                             </View> : null
                     }
                     <View style={{
@@ -1445,25 +1586,34 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         {
                             isQuiz ?
                                 (
-                                    <View style={{
-                                        width: '100%',
-                                        flexDirection: 'column',
-                                        backgroundColor: 'white'
-                                    }}>
-                                        <CustomTextInput
-                                            value={quizInstructions}
-                                            placeholder="Instructions"
-                                            onChangeText={val => setQuizInstructions(val)}
-                                            placeholderTextColor={"#a2a2ac"}
-                                            required={false}
-                                            hasMultipleLines={true}
-                                        />
+                                    <View
+                                        style={{
+                                            width: "100%",
+                                            flexDirection: "column",
+                                        }}
+                                    >
+                                        <View style={{
+                                            backgroundColor: '#fff',
+                                            paddingLeft: 20,
+                                            flexDirection: 'row',
+                                            width: '100%'
+                                        }}>
+                                            <View style={{ width: '100%', maxWidth: 400, paddingRight: Dimensions.get('window').width < 768 ? 0 : 45 }}>
+                                                <CustomTextInput
+                                                    value={quizInstructions}
+                                                    placeholder="Instructions"
+                                                    onChangeText={(val) => setQuizInstructions(val)}
+                                                    placeholderTextColor={"#a2a2ac"}
+                                                    required={false}
+                                                    hasMultipleLines={true}
+                                                />
+                                            </View>
+                                        </View>
                                         <QuizCreate
                                             problems={problems}
                                             headers={headers}
                                             setProblems={(p: any) => setProblems(p)}
-                                            setHeaders={(h: any) =>
-                                                setHeaders(h)}
+                                            setHeaders={(h: any) => setHeaders(h)}
                                         />
                                     </View>
                                 )
@@ -1665,7 +1815,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 {
                                     channelId !== '' ?
                                         <View style={{ width: width < 768 ? '100%' : '33.33%', backgroundColor: 'white', }}>
-                                            <View style={{ width: '100%', paddingTop: 60, paddingBottom: 15, backgroundColor: 'white' }}>
+                                            <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                                 <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                                                     {PreferredLanguageText('submissionRequired')}
                                                 </Text>
@@ -2244,10 +2394,9 @@ const styles: any = StyleSheet.create({
     },
     input: {
         width: '100%',
-        borderBottomColor: '#f4f4f6',
+        borderBottomColor: '#cccccc',
         borderBottomWidth: 1,
         fontSize: 15,
-        padding: 15,
         paddingTop: 12,
         paddingBottom: 12,
         marginTop: 5,

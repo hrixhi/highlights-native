@@ -1557,7 +1557,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
           {showAddEvent ? null : <Text style={{
             // width: '50%',
-            color: '#2f2f3c',
+            color: '#3b64f8',
             fontSize: 11,
             paddingTop: 5,
             textAlign: 'right',
@@ -1904,7 +1904,6 @@ const styles: any = StyleSheet.create({
     borderBottomColor: "#f4f4f6",
     borderBottomWidth: 1,
     fontSize: 15,
-    padding: 15,
     paddingTop: 12,
     paddingBottom: 12,
     marginBottom: 20

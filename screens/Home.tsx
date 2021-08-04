@@ -1977,8 +1977,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 <TouchableOpacity
                   onPress={() => closeModal("")}
                   style={{ height: 60, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#a2a2ac', width: '100%' }}>
-                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 15, lineHeight: 15, marginTop: 12, color: '#2f2f3c', fontWeight: 'bold' }}>
-                    <Ionicons name='chevron-back-outline' size={15} />{PreferredLanguageText('back')}
+                  <Text style={{ flex: 1, textAlign: 'center', fontSize: 16, lineHeight: 16, marginTop: 12, color: '#2F2F3C', fontFamily: 'inter', fontWeight: 'bold' }}>
+                    <Ionicons name='chevron-back-outline' size={16} /> BACK
                   </Text>
                 </TouchableOpacity> :
                 <View style={{ backgroundColor: '#fff', height: 0 }} />
@@ -2014,7 +2014,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f4f4f6',
     borderBottomWidth: 1,
     fontSize: 15,
-    padding: 15,
     paddingTop: 13,
     paddingBottom: 13,
     marginTop: 5,
