@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   Switch,
+  Linking
 } from "react-native";
 import { TextInput } from "./CustomTextInput";
 import Alert from "./Alert";
@@ -17,7 +18,7 @@ import {
   deleteDate,
   getChannels,
   getEvents,
-  createDateV1, editDateV1, deleteDateV1
+  createDateV1, editDateV1, deleteDateV1, meetingRequest, markAttendance 
 } from "../graphql/QueriesAndMutations";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -401,7 +402,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               createdBy: e.createdBy,
               channelName: e.channelName,
               recurringId: e.recurringId,
-              recordMeeting: e.recordMeeting ? true : false
+              recordMeeting: e.recordMeeting ? true : false,
+              meeting: e.meeting,
+              channelId: e.channelId,
+              cueId: e.cueId
             });
           });
 
@@ -427,7 +431,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               channelName: item.channelName,
               recurringId: item.recurringId,
               recordMeeting: item.recordMeeting ? true : false,
-              meeting: item.meeting
+              meeting: item.meeting,
+              channelId: item.channelId,
+              cueId: item.cueId
             }
 
             allEvents.push(modifiedItem);
@@ -1061,7 +1067,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
 
   const renderEditEventOptions = () => {
 
-    const { recurringId } = editEvent;
+    const { recurringId, start, end, channelId } = editEvent;
+
+    const date = new Date();
+
     return (<View
       style={{
         width: Dimensions.get("window").width < 768 ? "100%" : "10%",
@@ -1073,12 +1082,65 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
         // paddingLeft: 7
         // justifyContent: 'center'
       }}>
+        {
+                (date > new Date(start) && date < new Date(end)) ?
+                    <TouchableOpacity
+                        style={{
+                          backgroundColor: "white",
+                          overflow: "hidden",
+                          height: 35,
+                          marginTop: 35,
+                          borderRadius: 15,
+                        }}
+                        onPress={async () => {
+
+                            const uString: any = await AsyncStorage.getItem("user");
+
+                            const user = JSON.parse(uString)
+
+                            const server = fetchAPI('')
+                            server.mutate({
+                                mutation: meetingRequest,
+                                variables: {
+                                    userId: user._id,
+                                    channelId,
+                                    isOwner: true
+                                }
+                            }).then(res => {
+                                if (res.data && res.data.channel.meetingRequest !== 'error') {
+                                  Linking.openURL(res.data.channel.meetingRequest);
+                                } else {
+                                    Alert("Classroom not in session. Waiting for instructor.")
+                                }
+                            }).catch(err => {
+                                Alert("Something went wrong.")
+                            })
+                        }}>
+                        <Text
+                            style={{
+                                textAlign: "center",
+                                lineHeight: 35,
+                                color: 'white',
+                                fontSize: 12,
+                                backgroundColor: '#3B64F8',
+                                paddingHorizontal: 25,
+                                fontFamily: "inter",
+                                height: 35,
+                                width: 200,
+                                borderRadius: 15,
+                                textTransform: "uppercase"
+                            }}>
+                            Enter Classroom
+                        </Text>
+                    </TouchableOpacity>
+                    : null
+            }
       <TouchableOpacity
         style={{
           backgroundColor: "white",
           overflow: "hidden",
           height: 35,
-          marginTop: 35,
+          marginTop: 25,
           borderRadius: 15,
           // marginBottom: 20
         }}
@@ -1308,10 +1370,64 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
           }
         ]);
       } else {
-        Alert(
-          event.title,
-          descriptionString
-        );
+        const date = new Date();
+
+                if (date > new Date(event.start) && date < new Date(event.end) && event.meeting) {
+                    Alert(
+                        event.title,
+                        "Enter classroom?",
+                        [
+                            {
+                                text: "No",
+                                style: "cancel",
+                                onPress: () => {
+                                    return;
+                                }
+                            },
+                            {
+                                text: "Yes",
+                                onPress: async () => {
+                                    const uString: any = await AsyncStorage.getItem("user");
+
+                                    const user = JSON.parse(uString)
+
+                                    const server = fetchAPI('')
+                                    server.mutate({
+                                        mutation: meetingRequest,
+                                        variables: {
+                                            userId: user._id,
+                                            channelId: event.channelId,
+                                            isOwner: false
+                                        }
+                                    }).then(res => {
+                                        if (res.data && res.data.channel.meetingRequest !== 'error') {
+                                            server
+                                                .mutate({
+                                                    mutation: markAttendance,
+                                                    variables: {
+                                                        userId: user._id,
+                                                        channelId: event.channelId
+                                                    }
+                                                })
+                                            Linking.openURL(res.data.channel.meetingRequest);
+                                        } else {
+                                            Alert("Classroom not in session. Waiting for instructor.")
+                                        }
+                                    }).catch(err => {
+                                        Alert("Something went wrong.")
+                                    })
+                                }
+                            }
+                        ]
+                    );
+                } else if (event.cueId !== "") {
+                    props.openCueFromCalendar(event.channelId, event.cueId, event.createdBy)
+                } else {
+                    Alert(
+                        event.title,
+                        descriptionString
+                    );
+                }
       }
 
     }
@@ -1488,6 +1604,19 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       </View>
     ) : null;
   };
+
+  let eventForChannelName = ''
+    
+    if (channelId === "") {
+        eventForChannelName = "My Cues"
+    } else {
+        const filter = channels.filter((channel: any) => {
+            return channel._id === channelId
+        })
+
+        eventForChannelName = filter[0].name
+    }
+
 
   return (
     <Animated.View
@@ -1688,7 +1817,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                 // style={styles.input}
                 />
               </View>
-              <View style={{ width: Dimensions.get("window").width < 768 ? "100%" : "30%", backgroundColor: '#fff' }}>
+              <View style={{ width: Dimensions.get("window").width < 768 ? "100%" : "30%", backgroundColor: '#fff', marginLeft: Dimensions.get("window").width < 768 ? 0 : 50 }}>
                 <TextInput
                   value={description}
                   placeholder="Description"
@@ -1697,7 +1826,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                   hasMultipleLines={true}
                 />
               </View>
-              <View
+            </View>
+            <View style={{ backgroundColor: '#fff', width: '100%', marginBottom: 50}}>
+            <View
                 style={{
                   width: Dimensions.get("window").width < 768 ? "100%" : "30%",
                   flexDirection: Platform.OS === "ios" ? "row" : "column",
@@ -1751,79 +1882,56 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
                       backgroundColor: "white"
                     }}
                   >
+
                     <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
                       Event for
                       {/* <Ionicons
                                                 name='school-outline' size={20} color={'#a2a2ac'} /> */}
                     </Text>
                   </View>
-                  <View
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      flexDirection: "row",
-                      backgroundColor: "white"
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: "85%",
-                        backgroundColor: "white",
-                        display: "flex"
-                      }}
-                    >
-                      <ScrollView
-                        style={styles.colorBar}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                      >
-                        <TouchableOpacity
-                          style={
-                            channelId === "" ? styles.allOutline : styles.allBlack
-                          }
-                          onPress={() => {
-                            setChannelId("");
-                          }}
-                        >
-                          <Text
-                            style={{
-                              lineHeight: 20,
-                              fontSize: 11,
-                              color: channelId === "" ? "#fff" : "#2f2f3c"
-                            }}
-                          >
-                            {PreferredLanguageText("myCues")}
-                          </Text>
-                        </TouchableOpacity>
-                        {channels.map(channel => {
-                          return (
-                            <TouchableOpacity
-                              key={Math.random()}
-                              style={
-                                channelId === channel._id
-                                  ? styles.allOutline
-                                  : styles.allBlack
-                              }
-                              onPress={() => {
-                                setChannelId(channel._id);
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  lineHeight: 20,
-                                  fontSize: 11,
-                                  color:
-                                    channelId === channel._id ? "#fff" : "#2f2f3c"
-                                }}
-                              >
-                                {channel.name}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </ScrollView>
-                    </View>
-                  </View>
+                  <View style={{ flexDirection: 'row', display: 'flex', backgroundColor: '#fff' }}>
+                                                <Menu
+                                                    onSelect={(channelId: any) => {
+                                                        setChannelId(channelId)
+                                                        
+                                                    }}>
+                                                    <MenuTrigger>
+                                                        <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#2f2f3c' }}>
+                                                            {eventForChannelName}<Ionicons name='caret-down' size={14} />
+                                                        </Text>
+                                                    </MenuTrigger>
+                                                    <MenuOptions customStyles={{
+                                                        optionsContainer: {
+                                                            padding: 10,
+                                                            borderRadius: 15,
+                                                            shadowOpacity: 0,
+                                                            borderWidth: 1,
+                                                            borderColor: '#f4f4f6'
+                                                        }
+                                                    }}>
+                                                        <MenuOption
+                                                            value={''}>
+                                                            <View style={{ display: 'flex', flexDirection: 'row', }}>
+                                                                <Text style={{ marginLeft: 5, color: 'black' }}>
+                                                                    My Cues
+                                                                </Text>
+                                                            </View>
+                                                        </MenuOption>
+                                                        {
+                                                            channels.map((channel: any) => {
+                                                                return <MenuOption
+                                                                    value={channel._id}>
+                                                                    <View style={{ display: 'flex', flexDirection: 'row', }}>
+                                                                        <Text style={{ marginLeft: 5, color: 'black' }}>
+                                                                            {channel.name}
+                                                                        </Text>
+                                                                    </View>
+                                                                </MenuOption>
+                                                            })
+                                                        }
+                                                    </MenuOptions>
+                                                </Menu>
+                                            </View>
                 </View> : null
             }
             {editEvent && renderEditChannelName()}

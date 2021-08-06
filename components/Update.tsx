@@ -53,19 +53,36 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
         }
     }, [props.cue])
 
-    useEffect(() => {
-        (
-            async () => {
-                const u = await AsyncStorage.getItem('user')
-                if (u && props.cue.createdBy) {
-                    const parsedUser = JSON.parse(u)
-                    if (parsedUser._id.toString().trim() === props.cue.createdBy.toString().trim()) {
-                        setIsOwner(true)
-                    }
-                }
+    const updateCueWithReleaseSubmission = async (releaseSubmission: boolean) => {
+
+        // Release Submission
+
+        let subCues: any = {};
+        try {
+            const value = await AsyncStorage.getItem("cues");
+            if (value) {
+                subCues = JSON.parse(value);
             }
-        )()
-    }, [props.cue])
+        } catch (e) { }
+        if (subCues[props.cueKey].length === 0) {
+            return;
+        }
+
+        const currCue = subCues[props.cueKey][props.cueIndex]
+
+        const saveCue = {
+            ...currCue,
+            releaseSubmission
+        }
+
+        subCues[props.cueKey][props.cueIndex] = saveCue
+
+        const stringifiedCues = JSON.stringify(subCues);
+        await AsyncStorage.setItem("cues", stringifiedCues);
+
+        props.reloadCueListAfterUpdate();
+
+    }
 
     const unableToLoadStatusesAlert = PreferredLanguageText(
         "unableToLoadStatuses"
@@ -415,7 +432,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 </Text>
                             </TouchableOpacity>
                             {
-                                (isOwner && submission) || isQuiz ? null :
+                                (channelOwner && submission) || isQuiz ? null :
                                     <TouchableOpacity
                                         style={{
                                             justifyContent: 'center',
@@ -438,7 +455,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             }
                             {/* Add Status button here */}
                             {
-                                !isOwner ? null :
+                                !channelOwner ? null :
                                     <TouchableOpacity
                                         style={{
                                             justifyContent: 'center',
@@ -519,6 +536,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                             reload={() => loadThreadsAndStatuses()}
                                             cue={props.cue}
                                             handleReleaseSubmissionUpdate={() => props.handleReleaseSubmissionUpdate()}
+                                            updateCueWithReleaseSubmission={updateCueWithReleaseSubmission}
                                         />
                                     </ScrollView>
                                 </View>
