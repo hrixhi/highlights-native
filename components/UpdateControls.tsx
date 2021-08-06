@@ -2338,7 +2338,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       color: "#a2a2ac",
                       textAlign: "left"
                     }}>
-                    {initiateAt.toLocaleString()}
+                    {moment(new Date(initiateAt)).format('MMMM Do, h:mm a')}
                   </Text>
                 )}
               </View>
@@ -2378,7 +2378,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                       color: "#a2a2ac",
                       textAlign: "left"
                     }}>
-                    {deadline.toLocaleString()}
+                    {moment(new Date(deadline)).format('MMMM Do, h:mm a')}
                   </Text>
                 )}
               </View>

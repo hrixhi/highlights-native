@@ -53,6 +53,37 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
         }
     }, [props.cue])
 
+    const updateCueWithReleaseSubmission = async (releaseSubmission: boolean) => {
+
+        // Release Submission
+
+        let subCues: any = {};
+        try {
+            const value = await AsyncStorage.getItem("cues");
+            if (value) {
+                subCues = JSON.parse(value);
+            }
+        } catch (e) { }
+        if (subCues[props.cueKey].length === 0) {
+            return;
+        }
+
+        const currCue = subCues[props.cueKey][props.cueIndex]
+
+        const saveCue = {
+            ...currCue,
+            releaseSubmission
+        }
+
+        subCues[props.cueKey][props.cueIndex] = saveCue
+
+        const stringifiedCues = JSON.stringify(subCues);
+        await AsyncStorage.setItem("cues", stringifiedCues);
+
+        props.reloadCueListAfterUpdate();
+
+    }
+
     const unableToLoadStatusesAlert = PreferredLanguageText(
         "unableToLoadStatuses"
     );
@@ -505,6 +536,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                             reload={() => loadThreadsAndStatuses()}
                                             cue={props.cue}
                                             handleReleaseSubmissionUpdate={() => props.handleReleaseSubmissionUpdate()}
+                                            updateCueWithReleaseSubmission={updateCueWithReleaseSubmission}
                                         />
                                     </ScrollView>
                                 </View>
