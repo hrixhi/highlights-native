@@ -795,7 +795,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           openModal(lastOpened)
         }
         else {
-          openModal('Create')
+          openModal('Calendar')
         }
       }
       // HANDLE PROFILE
