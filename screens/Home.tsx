@@ -405,7 +405,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [channelId, filterChoice])
 
   const notificationScheduler = useCallback(async (c) => {
-
+    console.log('notofications are working with', c)
     try {
 
       if (c === undefined || c === null) {
