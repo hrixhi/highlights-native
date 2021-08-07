@@ -726,19 +726,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           })
             .then(async res => {
               if (res.data.subscription.findByUserId) {
-                const colorChoices: any[] = ['#d91d56', '#ED7D22', '#FFBA10', '#B8D41F', '#53BE6D']
-
-                const updateColorCodes = res.data.subscription.findByUserId.map((sub: any) => {
-                  if (sub.colorCode === "") {
-                    const randomColor = colorChoices[Math.floor(Math.random() * colorChoices.length)];
-                    sub.colorCode = randomColor;
-
-                  }
-                  return sub;
-                })
-
-                setSubscriptions(updateColorCodes)
-                const stringSub = JSON.stringify(updateColorCodes)
+                setSubscriptions(res.data.subscription.findByUserId)
+                const stringSub = JSON.stringify(res.data.subscription.findByUserId)
                 await AsyncStorage.setItem('subscriptions', stringSub)
               } else {
                 setSubscriptions(parsedSubscriptions)
@@ -795,7 +784,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           openModal(lastOpened)
         }
         else {
-          openModal('Create')
+          openModal('Calendar')
         }
       }
       // HANDLE PROFILE
@@ -963,19 +952,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       })
         .then(async res => {
           if (res.data.subscription.findByUserId) {
-            const colorChoices: any[] = ['#d91d56', '#ED7D22', '#FFBA10', '#B8D41F', '#53BE6D']
+            setSubscriptions(res.data.subscription.findByUserId)
+            const stringSub = JSON.stringify(res.data.subscription.findByUserId)
 
-            const updateColorCodes = res.data.subscription.findByUserId.map((sub: any) => {
-              if (sub.colorCode === "") {
-                const randomColor = colorChoices[Math.floor(Math.random() * colorChoices.length)];
-                sub.colorCode = randomColor;
-
-              }
-              return sub;
-            })
-
-            setSubscriptions(updateColorCodes)
-            const stringSub = JSON.stringify(updateColorCodes)
             await AsyncStorage.setItem('subscriptions', stringSub)
           }
         })
@@ -1151,6 +1130,40 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       }
     }
     setChannelId(channId)
+    setCreatedBy(by)
+    setCueId(_id)
+    openModal('Update')
+  }, [subscriptions])
+
+  const openCueFromCalendar = useCallback((channelId, _id, by) => {
+    
+    let cueKey = '';
+    let cueIndex = 0;
+
+    if (cues !== {}) {
+      Object.keys(cues).map((key) => {
+        cues[key].map((cue: any, index: number) => {
+          if (cue._id === _id) {
+            cueKey = key;
+            cueIndex = index;
+          }
+        })
+      })
+    }
+
+    setUpdateModalKey(cueKey)
+    setUpdateModalIndex(cueIndex)
+    setPageNumber(pageNumber)
+    setChannelId(channelId)
+    if (channelId !== '') {
+      const sub = subscriptions.find((item: any) => {
+        return item.channelId === channelId
+      })
+      if (sub) {
+        setFilterChoice(sub.channelName)
+        setChannelCreatedBy(sub.channelCreatedBy)
+      }
+    }
     setCreatedBy(by)
     setCueId(_id)
     openModal('Update')
@@ -1580,7 +1593,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             filterChoice={filterChoice}
                           />
                             : (
-                              modalType === 'Calendar' ? <Calendar subscriptions={subscriptions} />
+                              modalType === 'Calendar' ? <Calendar subscriptions={subscriptions} openCueFromCalendar={openCueFromCalendar} />
                                 : (
                                   modalType === 'Meeting' ? <Meeting
                                     channelId={channelId}
@@ -1612,6 +1625,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       })
     })
   }
+
+  // Filter if cues are inactive
+  // const removeInactiveCues = cuesArray.filter((cue: any) => {
+  //   return cue.active
+  // })
+
   const cuesCopy = cuesArray.sort((a: any, b: any) => {
     if (a.color < b.color) {
       return -1;

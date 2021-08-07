@@ -285,9 +285,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             withoutOwner.push(i);
                         }
                     });
+
+                    const filterOutOwnerId = ids.filter((id: any) => {
+                        return id !== userId._id
+                    })
+
                     setSubscribers(withoutOwner);
-                    // clear selected
-                    setSelected(withoutOwner);
+
+                    setSelected(filterOutOwnerId);
                 }
             })
             .catch((err: any) => console.log(err))

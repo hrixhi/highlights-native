@@ -688,24 +688,41 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     }, [isLoadedUserInactive, loadedChatWithUser, props.channelId])
 
     const updateReleaseSubmission = useCallback(() => {
-        const server = fetchAPI('')
-        server.mutate({
-            mutation: editReleaseSubmission,
-            variables: {
-                cueId: props.cueId,
-                releaseSubmission: !releaseSubmission,
+
+        Alert(releaseSubmission ? "Hide scores?" : "Release Scores?", "", [
+            {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => {
+                    return;
+                }
+            },
+            {
+                text: "Yes",
+                onPress: async () => {
+                    const server = fetchAPI("");
+                    server.mutate({
+                        mutation: editReleaseSubmission,
+                        variables: {
+                            cueId: props.cueId,
+                            releaseSubmission: !releaseSubmission,
+                        }
+                    }).then((res: any) => {
+                        if (res.data && res.data.cue.editReleaseSubmission) {
+                            props.updateCueWithReleaseSubmission(!releaseSubmission)
+                            setReleaseSubmission(!releaseSubmission)
+                        } else {
+                            alert('Something went wrong')
+                        }
+                    }).catch(err => {
+                        console.log(err)
+                        alert('Something went wrong')
+                    })
+                }
             }
-        }).then((res: any) => {
-            if (res.data && res.data.cue.editReleaseSubmission) {
-                setReleaseSubmission(!releaseSubmission)
-            } else {
-                console.log(res)
-                alert('Something went wrong')
-            }
-        }).catch(err => {
-            console.log(err)
-            alert('Something went wrong')
-        })
+        ])
+
+        
     }, [releaseSubmission, props.cueId])
 
 
