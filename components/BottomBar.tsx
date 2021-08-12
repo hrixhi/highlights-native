@@ -373,7 +373,7 @@ const styleObject: any = (colorScheme: any) => StyleSheet.create({
         display: 'flex',
         paddingBottom: 10,
         borderTopWidth: 1,
-        borderColor: '#a2a2ac',
+        borderColor: '#555555',
         backgroundColor: '#2f2f3c'
     },
     icons: {

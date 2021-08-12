@@ -1136,7 +1136,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [subscriptions])
 
   const openCueFromCalendar = useCallback((channelId, _id, by) => {
-    
+
     let cueKey = '';
     let cueIndex = 0;
 
@@ -1983,10 +1983,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
               flex: 1,
               backgroundColor: 'white',
               paddingHorizontal: 5,
-              marginTop: Dimensions.get('window').width < 1024 ? 0 : 25,
-              marginRight: Dimensions.get('window').width < 1024 ? 0 : 25,
-              borderTopLeftRadius: Dimensions.get('window').width < 1024 ? 0 : 20,
-              borderTopRightRadius: Dimensions.get('window').width < 1024 ? 0 : 20,
+              marginTop: 0,
+              // dimensions.window.width < 1024 ? 0 : 25,
+              marginRight: 0,
+              // dimensions.window.width < 1024 ? 0 : 25,
+              borderTopLeftRadius: 0,
+              // dimensions.window.width < 1024 ? 0 : 20,
+              borderTopRightRadius: 0,
+              // dimensions.window.width < 1024 ? 0 : 20,
               overflow: 'hidden'
             }}>
               {modalContent}
