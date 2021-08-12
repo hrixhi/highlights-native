@@ -291,10 +291,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     })
 
                     setSubscribers(withoutOwner);
-                    // clear selected
+
                     setSelected(filterOutOwnerId);
-                    //setSubscribers(shared)
-                    //setSelected(ids)
                 }
             })
             .catch((err: any) => console.log(err))
@@ -548,7 +546,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (!uString) {
                 return
             }
+            const userName = await JSON.parse(uString)
+            let ownerarray: any = selected
+            const userSubscriptions = await AsyncStorage.getItem('subscriptions')
+            if (userSubscriptions) {
+                const list = JSON.parse(userSubscriptions)
+                list.map((i: any) => {
+                    if (i.channelId === channelId) {
+                        ownerarray.push({
+                            id: i.channelCreatedBy,
+                            name: userName.fullName
+                        })
+                    }
+                })
+                console.log('owner aray is', ownerarray)
+                setSelected(ownerarray)
 
+            }
             if (selected.length === 0) {
                 Alert(noStudentSelectedAlert, selectWhoToShareAlert)
                 return;
@@ -700,6 +714,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     //     RichText.current.scrollTo({ y: scrollY - 60, animated: true });
     // }
 
+    const roundSeconds = (time: Date) => {
+        time.setMinutes(time.getMinutes() + Math.round(time.getSeconds() / 60));
+        time.setSeconds(0, 0)
+        return time
+    }
+
     const renderInitiateAtDateTimePicker = () => {
         return (<View style={{ backgroundColor: '#fff' }}>
             {Platform.OS === "ios" ? <DateTimePicker
@@ -709,7 +729,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 textColor={'#2f2f3c'}
                 onChange={(event, selectedDate) => {
                     const currentDate: any = selectedDate;
-                    setInitiateAt(currentDate)
+                    const roundedValue = roundSeconds(currentDate)
+                    setInitiateAt(roundedValue)
                 }}
                 minimumDate={new Date()}
             /> : null}
@@ -719,10 +740,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 mode={'date'}
                 textColor={'#2f2f3c'}
                 onChange={(event, selectedDate) => {
+
                     if (!selectedDate) return;
                     const currentDate: any = selectedDate;
+                    const roundedValue = roundSeconds(currentDate)
                     setShowInitiateAtDateAndroid(false);
-                    setInitiateAt(currentDate)
+                    setInitiateAt(roundedValue)
                 }}
                 minimumDate={new Date()}
             /> : null}
@@ -834,7 +857,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 textColor={'#2f2f3c'}
                 onChange={(event, selectedDate) => {
                     const currentDate: any = selectedDate;
-                    setDeadline(currentDate)
+                    const roundedValue = roundSeconds(currentDate)
+                    setDeadline(roundedValue)
                 }}
                 minimumDate={new Date()}
             /> : null}
@@ -846,8 +870,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 onChange={(event, selectedDate) => {
                     if (!selectedDate) return;
                     const currentDate: any = selectedDate;
+                    const roundedValue = roundSeconds(currentDate)
                     setShowDeadlineDateAndroid(false);
-                    setDeadline(currentDate)
+                    setDeadline(roundedValue)
                 }}
                 minimumDate={new Date()}
             /> : null}

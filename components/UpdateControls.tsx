@@ -357,8 +357,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   ids.push(s.value);
                 }
               });
-              setSubscribers(shared);
-              setSelected(ids);
+              const sharedWithoutOwner: any = [];
+              shared.map((i: any) => {
+                if (user._id !== i.value) {
+                  sharedWithoutOwner.push(i);
+                }
+              });
+
+              const idswithoutOwner: any = [];
+              ids.map((i: any) => {
+                if (user._id !== i) {
+                  idswithoutOwner.push(i);
+                }
+              })
+              setSubscribers(sharedWithoutOwner);
+              setSelected(idswithoutOwner);
               setKey(key)
             }
           })
@@ -1377,6 +1390,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             mode={"date"}
             textColor={"#2f2f3c"}
             onChange={(event: any, selectedDate: any) => {
+
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
               setShowDeadlineDateAndroid(false);

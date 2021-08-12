@@ -478,7 +478,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
       });
   }, [, modalAnimation]);
 
+  const roundSeconds = (time: Date) => {
+    time.setMinutes(time.getMinutes() + Math.round(time.getSeconds() / 60));
+    time.setSeconds(0, 0)
 
+    return time
+  }
   const renderFilterEvents = () => {
 
     return (eventChannels.length > 0 ? (
@@ -619,7 +624,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             textColor={"#2f2f3c"}
             onChange={(event, selectedDate) => {
               const currentDate: any = selectedDate;
-              setStart(currentDate);
+              const roundedValue = roundSeconds(currentDate)
+
+              setStart(roundedValue);
             }}
           />
         ) : null}
@@ -632,8 +639,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
+              const roundedValue = roundSeconds(currentDate)
               setShowStartDateAndroid(false);
-              setStart(currentDate);
+              setStart(roundedValue);
             }}
           />
         ) : null}
@@ -764,7 +772,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
-              setEnd(currentDate);
+              const roundedValue = roundSeconds(currentDate)
+              setEnd(roundedValue);
             }}
           />
         )}
@@ -778,7 +787,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
               setShowEndDateAndroid(false);
-              setEnd(currentDate);
+
+              const roundedValue = roundSeconds(currentDate)
+
+              setEnd(roundedValue);
             }}
           />
         ) : null}
@@ -910,7 +922,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
-              setRepeatTill(currentDate);
+              const roundedValue = roundSeconds(currentDate)
+              setRepeatTill(roundedValue);
             }}
           />
         ) : null}
@@ -923,8 +936,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
             onChange={(event, selectedDate) => {
               if (!selectedDate) return;
               const currentDate: any = selectedDate;
+
+              const roundedValue = roundSeconds(currentDate)
+
               setShowRepeatTillDateAndroid(false);
-              setRepeatTill(currentDate);
+              setRepeatTill(roundedValue);
             }}
           />
         ) : null}
@@ -1263,7 +1279,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (
   const renderItem = (item: any) => {
     const { title } = htmlStringParser(item.title);
 
-    console.log(item);
+
 
     let colorCode = "#202025";
 
