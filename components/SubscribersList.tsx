@@ -1190,7 +1190,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                                 setDeadline(subscriber.deadline)
                                                                                 setShowSubmission(true)
                                                                                 setStatus(subscriber.fullName)
-                                                                                setScore(subscriber.score)
+                                                                                setScore(subscriber.score ? subscriber.score.toString() : '0')
                                                                                 setGraded(subscriber.graded)
                                                                                 setComment(subscriber.comment)
                                                                                 setUserId(subscriber.userId)

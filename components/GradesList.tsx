@@ -265,15 +265,16 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             },
             propsForLabels: {
                 fontFamily: 'overpass; Arial',
+                width: "200"
             },
         }
 
 
         return (<View style={{
-            width: '100%',
+            // width: '100%',
             backgroundColor: 'white',
             flex: 1,
-            paddingLeft: Dimensions.get("window").width < 768 ? 0 : 50,
+            // paddingLeft: Dimensions.get("window").width < 768 ? 0 : 50,
             paddingTop: 30
         }}
             key={JSON.stringify(props.scores)}
@@ -282,17 +283,26 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter', paddingBottom: 20, paddingLeft: 120 }}>
                 Grade Weightage
             </Text>
-            <PieChart
-                data={pieChartData}
-                width={Dimensions.get('window').width - 50}
-                height={200}
-                chartConfig={chartConfig}
-                accessor={"gradeWeight"}
-                backgroundColor={"transparent"}
-                paddingLeft={"10"}
-                // center={[10, 50]}
-                hasLegend={true}
-            />
+            <ScrollView
+                showsHorizontalScrollIndicator={false}
+                horizontal={true}
+                contentContainerStyle={{
+                    // height: '100%'
+                }}
+                nestedScrollEnabled={true}
+            >
+                <PieChart
+                    data={pieChartData}
+                    width={Dimensions.get("window").width < 768 ? 400 : 500}
+                    height={200}
+                    chartConfig={chartConfig}
+                    accessor={"gradeWeight"}
+                    backgroundColor={"transparent"}
+                    paddingLeft={"10"}
+                    // center={[10, 50]}
+                    hasLegend={true}
+                />
+            </ScrollView>
         </View>)
 
     }
@@ -383,7 +393,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                         cues.map((cue: any, col: number) => {
                                             const { title } = htmlStringParser(cue.cue)
                                             // console.log("CUE", cue)
-                                            return <TouchableOpacity style={styles.col} key={col.toString()}>
+                                            return <TouchableOpacity style={styles.col} key={col.toString()} onPress={() => props.openCueFromGrades(cue._id)}>
                                                 <Text style={{ textAlign: 'center', fontSize: 10, color: '#2f2f3c', marginBottom: 5 }}>
                                                     {
                                                         (new Date(cue.deadline)).toString().split(' ')[1] +
@@ -418,7 +428,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 showsVerticalScrollIndicator={false}
                                 horizontal={false}
                                 contentContainerStyle={{
-                                    height: '100%'
+                                    // height: '100%'
                                 }}
                                 nestedScrollEnabled={true}
                             >

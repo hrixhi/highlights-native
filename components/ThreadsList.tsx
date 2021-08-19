@@ -177,6 +177,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 backgroundColor: 'white'
                             }}
                             onPress={() => {
+                                if (props.cueId !== null) {
+                                    props.updateQAUnreadCount()
+                                }
                                 props.reload()
                                 setThreadWithReplies([])
                                 setShowThreadCues(false)

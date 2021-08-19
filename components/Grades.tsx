@@ -323,6 +323,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             reload={() => loadCuesAndScores()}
                             submissionStatistics={submissionStatistics}
                             modifyGrade={modifyGrade}
+                            openCueFromGrades={props.openCueFromGrades}
                         />
                 }
             </Animated.View>

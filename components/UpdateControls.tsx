@@ -106,7 +106,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       : new Date();
   const [deadline, setDeadline] = useState<Date>(dead);
   const [initiateAt, setInitiateAt] = useState<Date>(initiate)
-  const [gradeWeight, setGradeWeight] = useState<any>(props.cue.gradeWeight ? props.cue.gradeWeight : 0);
+  const [gradeWeight, setGradeWeight] = useState<any>(props.cue.gradeWeight ? props.cue.gradeWeight.toString() : 0);
   const [score] = useState<any>(props.cue.score ? props.cue.score : 0);
   const [graded, setGraded] = useState(props.cue.gradeWeight && props.cue.gradeWeight !== 0 ? true : false);
   const currentDate = new Date();
@@ -1793,6 +1793,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         <Text style={props.showComments ? styles.allGrayFill : styles.all}>
           Q&A
         </Text>
+        {props.cue.unreadThreads > 0 ? <View style={styles.badge} /> : null}
       </TouchableOpacity>
       {(isOwner && submission) || isQuiz ? null : (
         <TouchableOpacity
@@ -2438,7 +2439,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             flexDirection: "row",
             backgroundColor: "white"
           }}>
-          <View
+          {isOwner ? <View
             style={{
               backgroundColor: "white",
               height: 40,
@@ -2458,7 +2459,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}
               thumbColor="white"
             />
-          </View>
+          </View> : null }
           {graded ? (
             <View
               style={{
@@ -2476,7 +2477,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   paddingRight: 10,
                   paddingLeft: 10
                 }}>
-                {PreferredLanguageText("percentageOverall")}
+                {!isOwner ? gradeWeight : null} {PreferredLanguageText("percentageOverall")}
               </Text>
               {isOwner ? (
                 <TextInput
@@ -2486,16 +2487,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                   onChangeText={val => setGradeWeight(val)}
                   placeholderTextColor={"#a2a2ac"}
                 />
-              ) : (
-                <Text
-                  style={{
-                    color: "#a2a2ac",
-                    textAlign: "left",
-                    fontSize: 11
-                  }}>
-                  {gradeWeight}
-                </Text>
-              )}
+              ) : null}
             </View>
           ) : (
             <View
@@ -3959,5 +3951,18 @@ const styles: any = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#a2a2ac",
     fontSize: 11
-  }
+  },
+  badge: {
+    position: 'absolute',
+    alignSelf: 'flex-end',
+    width: 7,
+    height: 7,
+    marginLeft: 32,
+    top: 2,
+    right: 4,
+    borderRadius: 15,
+    backgroundColor: '#d91d56',
+    textAlign: 'center',
+    zIndex: 50
+  },
 });

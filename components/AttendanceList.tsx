@@ -730,7 +730,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 showsVerticalScrollIndicator={false}
                                 horizontal={false}
                                 contentContainerStyle={{
-                                    height: '100%'
+                                    // height: '100%'
                                 }}
                                 nestedScrollEnabled={true}
                             >
