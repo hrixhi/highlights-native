@@ -755,6 +755,13 @@ export const getEvents = gql`
     }
   }
 `;
+export const getUnreadQACount = gql`
+  query($userId: String!, $cueId: String!) {
+    threadStatus {
+      getUnreadQACount(userId: $userId, cueId: $cueId)
+    }
+  }
+`;
 export const totalUnreadDiscussionThreads = gql`
   query($userId: String!, $channelId: String!) {
     threadStatus {
