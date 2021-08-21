@@ -76,6 +76,21 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
         return time
     }
 
+    let activeColor;
+
+    if (choice === "All") {
+        activeColor = "";
+    } else if (choice === "MyCues") {
+        activeColor = "#000";
+    } else {
+        const activeChannel = props.subscriptions.filter((subscription: any) => {
+            return subscription.channelName === choice;
+        })
+
+        activeColor = activeChannel[0].colorCode;
+    }
+
+
     return (
         <View style={styles.bottombar}>
             <View style={styles.colorBar}>
@@ -107,7 +122,13 @@ const BottomBar: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     }}>
                                     <MenuTrigger>
                                         <Text style={{ fontFamily: 'inter', fontSize: 15, color: '#fff' }}>
-                                            {choice === 'MyCues' ? 'My Cues' : choice}<Ionicons name='caret-down' size={15} />
+                                            {activeColor !== "" ? <View style={{
+                                                width: 8,
+                                                height: 8,
+                                                borderRadius: 10,
+                                                marginTop: 1,
+                                                backgroundColor: activeColor
+                                            }} /> : null} {choice === 'MyCues' ? 'My Cues' : choice}<Ionicons name='caret-down' size={15} />
                                         </Text>
                                     </MenuTrigger>
                                     <MenuOptions customStyles={{

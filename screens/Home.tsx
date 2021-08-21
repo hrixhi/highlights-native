@@ -138,7 +138,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   useEffect(() => {
     (
       async () => {
-        console.log(Dimensions.get('window'))
         if (Dimensions.get('window').width < 768) {
           await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
         } else {
@@ -405,7 +404,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [channelId, filterChoice])
 
   const notificationScheduler = useCallback(async (c) => {
-    console.log('notofications are working with', c)
     try {
 
       if (c === undefined || c === null) {
@@ -1389,8 +1387,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
   }, [updateCueData])
 
   const markCueAsRead = useCallback(async () => {
-    console.log(updateModalKey);
-    console.log(updateModalIndex);
 
     let subCues: any = {};
     try {
@@ -1537,7 +1533,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
         reopenUpdateWindow={reopenUpdateWindow}
         updateCueData={(update: any) => {
-          console.log("Update Cue", update);
           const { cueFullyLoaded } = update;
           if (cueFullyLoaded) {
             setUpdatedCueCount(updatedCueCount + 1);
@@ -1545,10 +1540,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           setUpdateCueData(update);
         }}
         resetCueUpdateCount={() => {
-          console.log("Reset Cue count")
           setUpdatedCueCount(0)
         }
         }
+        subtractCueUpdateCount={() => {
+          setUpdatedCueCount(updatedCueCount - 1)
+        }}
         handleReleaseSubmissionUpdate={handleReleaseSubmissionUpdate}
         markCueAsRead={markCueAsRead}
       />
@@ -1668,7 +1665,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       const date = new Date(item.date)
       return date >= filterStart && date <= filterEnd
     })
-    console.log(dateFilteredCues)
   } else {
     dateFilteredCues = filteredCues
   }
@@ -1875,7 +1871,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         </View> : null
       }
       <View style={{
-        width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : Dimensions.get('window').width * 0.3,
+        width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : Dimensions.get('window').width * 0.33,
         height: Dimensions.get('window').height,
         flexDirection: 'column',
         backgroundColor: '#2f2f3c',
@@ -2026,7 +2022,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2f2f3c',
     borderColor: '#f4f4f6',
     height: '66%',
-    width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.3) - 5,
+    width: Dimensions.get('window').width < 1024 ? Dimensions.get('window').width : (Dimensions.get('window').width * 0.33) - 5,
     justifyContent: "center",
   },
   horizontal: {

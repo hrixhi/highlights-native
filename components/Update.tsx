@@ -469,6 +469,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 }}
                                 onPress={() => {
                                     setViewStatus(false)
+                                    props.subtractCueUpdateCount()
                                     setShowOriginal(true)
                                     setShowComments(false)
                                     setShowOptions(false)
@@ -486,6 +487,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 onPress={() => {
                                     // setShowOptions(true)
                                     setViewStatus(false)
+                                    props.subtractCueUpdateCount()
                                     setShowOriginal(true);
                                     setShowComments(false)
                                     setShowOptions(true)
@@ -503,6 +505,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 onPress={() => {
                                     // setShowOptions(true)
                                     setViewStatus(false)
+                                    props.subtractCueUpdateCount()
                                     setShowOriginal(true);
                                     setShowComments(true)
                                     setShowOptions(false)
@@ -522,7 +525,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                         }}
                                         onPress={() => {
                                             setViewStatus(false)
-                                            props.resetCueUpdateCount()
+                                            props.subtractCueUpdateCount()
                                             setShowOriginal(false)
                                             setShowComments(false)
                                             setShowOptions(false)

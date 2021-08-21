@@ -444,7 +444,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 setInstructions(res.data.quiz.getQuiz.instructions ? res.data.quiz.getQuiz.instructions : '')
                 setHeaders(res.data.quiz.getQuiz.headers ? JSON.parse(res.data.quiz.getQuiz.headers) : {})
                 setLoading(false);
-                props.resetCueUpdateCount()
+                setCueFullyLoaded(true);
+                // props.resetCueUpdateCount()
               }
             });
         } else {
@@ -455,12 +456,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             setTitle(obj.title);
           }
           setKey(Math.random());
+          setCueFullyLoaded(true);
         }
       } else {
         setType("");
         setTitle("");
         setImported(false);
         setUrl("");
+        setCueFullyLoaded(true);
       }
     } else {
       const data = cue;
@@ -476,9 +479,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         setSubmissionType("");
         setSubmissionTitle("");
       }
+      setCueFullyLoaded(true);
     }
     setLoading(false);
-    setCueFullyLoaded(true);
   }, [props.cue, cue, original, loading]);
 
   // Important for new Quiz version with problemScores and comments
@@ -2840,7 +2843,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               }}>
               <MenuTrigger>
                 <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#2F2F3C' }}>
-                  {shareWithChannelName === '' ? 'None' : shareWithChannelName}<Ionicons name='caret-down' size={14} />
+                  {shareWithChannelName === '' ? 'Select Channel' : shareWithChannelName}<Ionicons name='caret-down' size={14} />
                 </Text>
               </MenuTrigger>
               <MenuOptions customStyles={{
@@ -2859,7 +2862,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     <MenuOption
                       value={''}>
                       <Text>
-                        None
+                        Select Channel
                       </Text>
                     </MenuOption>
                     {
