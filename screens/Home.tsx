@@ -1945,7 +1945,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
       {
         modalType === '' ? <View
           style={{
-            width: Dimensions.get('window').width < 1024 ? 0 : Dimensions.get('window').width * 0.7,
+            width: Dimensions.get('window').width < 1024 ? 0 : Dimensions.get('window').width * 0.67,
             height: Dimensions.get('window').height,
             // paddingHorizontal: Dimensions.get('window').width < 1024 ? 0 : 30,
             paddingTop: 0,
@@ -1963,7 +1963,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
           }
         </View> :
           <View style={{
-            width: Dimensions.get('window').width < 1024 ? '100%' : Dimensions.get('window').width * 0.7,
+            width: Dimensions.get('window').width < 1024 ? '100%' : Dimensions.get('window').width * 0.67,
             height: Dimensions.get('window').height,
             // paddingHorizontal: Dimensions.get('window').width < 1024 ? 0 : 30,
             paddingTop: 0,

@@ -1810,7 +1810,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             props.setShowOptions(false)
             props.setShowComments(false)
           }}>
-          <Text style={!props.showOriginal && !props.viewStatus ? styles.allGrayFill : styles.all}>
+          <Text style={!props.showOriginal && !props.viewStatus && !props.showComments && !props.showOptions ? styles.allGrayFill : styles.all}>
             {submission ? PreferredLanguageText("mySubmission") : PreferredLanguageText("myNotes")}
           </Text>
         </TouchableOpacity>
@@ -2419,7 +2419,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
       <View
         style={{
           width: width < 768 ? "100%" : "33.33%",
-          backgroundColor: "white"
+          backgroundColor: "white",
+          paddingLeft: 15
         }}>
         <View
           style={{
@@ -2485,7 +2486,17 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               {isOwner ? (
                 <TextInput
                   value={gradeWeight}
-                  style={styles.input}
+                  style={{
+                    width: "25%",
+                    borderBottomColor: "#f4f4f6",
+                    borderBottomWidth: 1,
+                    fontSize: 15,
+                    // paddingTop: 12,
+                    paddingLeft: 10,
+                    paddingBottom: 12,
+                    // marginTop: 5,
+                    marginBottom: 20
+                  }}
                   placeholder={"0-100"}
                   onChangeText={val => setGradeWeight(val)}
                   placeholderTextColor={"#a2a2ac"}
@@ -2758,9 +2769,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             width: "100%",
             display: "flex",
             flexDirection: "row",
-            backgroundColor: "white"
+            backgroundColor: "white",
+            alignItems: 'center'
           }}>
-          <View style={{ width: "42.5%", backgroundColor: "white" }}>
+          <View style={{ width: "45%", backgroundColor: "white" }}>
             <Menu
               onSelect={(own: any) => {
                 setSelectedChannelOwner(own)
@@ -2770,9 +2782,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               <MenuTrigger>
                 <Text style={{ fontFamily: 'inter', fontSize: 14, color: '#2F2F3C' }}>
                   {
-                    selectedChannelOwner === undefined ? 'All' :
+                    selectedChannelOwner === undefined ? 'All channels' :
                       (selectedChannelOwner !== null ? (selectedChannelOwner.name)
-                        : 'Your Channels')
+                        : 'Your channels')
                   }< Ionicons name='caret-down' size={14} />
                 </Text>
               </MenuTrigger>
@@ -2820,7 +2832,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
               </MenuOptions>
             </Menu>
           </View>
-          <View style={{ width: "42.5%", backgroundColor: "white" }}>
+          <View style={{ width: "45%", backgroundColor: "white", paddingLeft: 10 }}>
             <Menu
               onSelect={(channel: any) => {
                 if (channel === '') {
@@ -2894,7 +2906,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
           <View
             style={{
               width: "10%",
-              backgroundColor: "white"
+              backgroundColor: "white",
+              paddingLeft: 5
             }}>
             <TouchableOpacity
               disabled={shareWithChannelId === ""}

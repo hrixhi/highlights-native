@@ -371,6 +371,35 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     }}
                         key={JSON.stringify(props.scores)}
                     >
+                         <View style={{ flexDirection: 'row', marginBottom: 10, }}>
+                                <View style={{ display: 'flex', flexDirection: 'row' }}>
+                                    <View 
+                                        style={{ 
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: 5,
+                                            backgroundColor: '#D91D56', 
+                                        }}
+                                    />
+                                    <Text style={{ paddingLeft: 10, fontSize: 11 }}>
+                                        No Submission
+                                    </Text>
+                                </View>
+
+                                <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 30 }}>
+                                    <View 
+                                        style={{ 
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: 5,
+                                            backgroundColor: '#ED7D22', 
+                                        }}
+                                    />
+                                    <Text style={{ paddingLeft: 10, fontSize: 11 }}>
+                                        Late Submission
+                                    </Text>
+                                </View>
+                            </View>
                         <ScrollView
                             showsHorizontalScrollIndicator={false}
                             horizontal={true}

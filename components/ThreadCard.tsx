@@ -89,7 +89,7 @@ const ThreadCard: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             flex: 1,
                             textAlign: 'right'
                         }}>
-                            {props.thread.anonymous ? 'Anonymous' : props.thread.displayName}
+                            {props.thread.anonymous ? 'Anonymous' : props.thread.fullName}
                         </Text>
                     </View>
                     {
