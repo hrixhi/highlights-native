@@ -230,7 +230,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                             res2.data.status.findByCueId;
                                         statuses.map((status: any) => {
                                             subs.push({
-                                                displayName: status.displayName,
+                                                displayName: status.fullName,
                                                 _id: status.userId,
                                                 fullName: status.status,
                                                 submission: status.submission,
@@ -459,7 +459,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                             flexDirection: 'row',
                             paddingLeft: 20,
                             backgroundColor: 'white',
-                            paddingTop: viewStatus ? 45 : 0
+                            paddingTop: viewStatus ? 55 : 0
                         }}>
                             <TouchableOpacity
                                 style={{
@@ -469,10 +469,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 }}
                                 onPress={() => {
                                     setViewStatus(false)
-                                    props.subtractCueUpdateCount()
                                     setShowOriginal(true)
                                     setShowComments(false)
                                     setShowOptions(false)
+                                    props.subtractCueUpdateCount()
                                 }}>
                                 <Text style={showOriginal ? styles.allGrayFill : styles.all}>
                                     {PreferredLanguageText('viewShared')}
@@ -485,12 +485,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                     backgroundColor: '#fff'
                                 }}
                                 onPress={() => {
-                                    // setShowOptions(true)
                                     setViewStatus(false)
-                                    props.subtractCueUpdateCount()
-                                    setShowOriginal(true);
+                                    setShowOriginal(false)
                                     setShowComments(false)
                                     setShowOptions(true)
+                                    props.subtractCueUpdateCount()
                                 }}>
                                 <Text style={styles.all}>
                                     Details
@@ -505,10 +504,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                 onPress={() => {
                                     // setShowOptions(true)
                                     setViewStatus(false)
-                                    props.subtractCueUpdateCount()
-                                    setShowOriginal(true);
+                                    setShowOriginal(false)
                                     setShowComments(true)
                                     setShowOptions(false)
+                                    props.subtractCueUpdateCount()
                                 }}>
                                 <Text style={styles.all}>
                                     Q&A
@@ -530,7 +529,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (
                                             setShowComments(false)
                                             setShowOptions(false)
                                         }}>
-                                        <Text style={!showOriginal && !viewStatus ? styles.allGrayFill : styles.all}>
+                                        <Text style={!showOriginal && !viewStatus && !showOptions && !showComments ? styles.allGrayFill : styles.all}>
                                             {
                                                 submission ? PreferredLanguageText('mySubmission') : PreferredLanguageText('myNotes')
                                             }

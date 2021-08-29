@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, Dimensions, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, TouchableOpacity, View } from './Themed';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { TextInput } from './CustomTextInput';
@@ -22,6 +22,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+
+    const [loadingOrg, setLoadingOrg] = useState(true);
+    const [loadingUsers, setLoadingUsers] = useState(true);
+    const [loadingChannelColor, setLoadingChannelColor] = useState(true);
 
     const [name, setName] = useState('')
     const [originalName, setOriginalName] = useState('')
@@ -489,7 +493,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             setTemporary(res.data.channel.findById.temporary ? true : false)
                                             setChannelCreator(res.data.channel.findById.channelCreator)
 
-                                            console.log("Owners", res.data.channel.findById.owners)
                                             if (res.data.channel.findById.owners) {
                                                 const ownerOptions: any[] = []
                                                 tempUsers.map((item: any) => {
@@ -510,6 +513,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 setOriginalOwners(filterOutMainOwner)
 
                                                 setOwners(ownerOptions)
+
+                                                setLoadingOrg(false)
+
                                             }
                                         }
                                     })
@@ -518,9 +524,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }
                         }
                     })
-                    .catch((e: any) => {
-                        console.log("Error", e)
+                    .catch(e => {
+                        alert("Could not Channel data. Check connection.")
                     })
+
                     // get subs
                     server.query({
                         query: getSubscribers,
@@ -543,6 +550,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             })
                             setOriginalSubs(tempUsers)
                             setSelected(temp)
+                            setLoadingUsers(false)
+
                         }
                     })
 
@@ -554,6 +563,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                     }).then(res => {
                         if (res.data && res.data.channel.getChannelColorCode) {
                             setColorCode(res.data.channel.getChannelColorCode)
+                            setLoadingChannelColor(false)
                         }
                     })
                 }
@@ -561,6 +571,20 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         )()
 
     }, [props.channelId, props.user])
+
+    if (loadingOrg || loadingUsers || loadingChannelColor) {
+        return  <View
+            style={{
+                width: "100%",
+                flex: 1,
+                justifyContent: "center",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "white"
+            }}>
+            <ActivityIndicator color={"#a2a2ac"} />
+        </View>
+    }
 
     return (
         <View style={styles.screen} key={1}>

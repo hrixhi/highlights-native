@@ -39,6 +39,9 @@ import {
     MenuOption,
     MenuTrigger,
 } from 'react-native-popup-menu';
+import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
+// import Video from 'react-native-video';
+import { Audio, Video, AVPlaybackStatus } from 'expo-av';
 
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -124,6 +127,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
     const enterContentAlert = PreferredLanguageText('enterContent');
     const enterTitleAlert = PreferredLanguageText('enterTitle');
+
+    const videoRef = useRef();
 
     const insertEquation = useCallback(() => {
         const SVGEquation = TeXToSVG(equation, { width: 100 }); // returns svg in html format
@@ -463,6 +468,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         await AsyncStorage.setItem(type, value)
     }, [])
 
+    console.log("selected", selected)
+
     const handleCreate = useCallback(async (quizId?: string) => {
 
         setIsSubmitting(true)
@@ -553,13 +560,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 const list = JSON.parse(userSubscriptions)
                 list.map((i: any) => {
                     if (i.channelId === channelId) {
-                        ownerarray.push({
-                            id: i.channelCreatedBy,
-                            name: userName.fullName
-                        })
+                        ownerarray.push(i.channelCreatedBy)
                     }
                 })
-                console.log('owner aray is', ownerarray)
                 setSelected(ownerarray)
 
             }
@@ -581,6 +584,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             //         userIds.push(item.value)
             //     })
             // }
+
+            console.log("selected", selected)
 
             const variables = {
                 cue: saveCue,
@@ -1224,6 +1229,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }
                         {
                             imported || !showImportOptions ? null :
+                            <View style={{ width: '100%' }}>
                                 <FileUpload
                                     back={() => setShowImportOptions(false)}
                                     onUpload={(u: any, t: any) => {
@@ -1233,6 +1239,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         setShowImportOptions(false)
                                     }}
                                 />
+                            </View>
                         }
                     </View> :
                         <View
@@ -1409,11 +1416,20 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         flexDirection: "row",
                                     }}
                                 >
-                                    <TextInput
+                                    <AutoGrowingTextInput
                                         value={title}
-                                        style={styles.input}
+                                        style={{
+                                            width: '80%',
+                                            borderBottomColor: '#cccccc',
+                                            borderBottomWidth: 1,
+                                            fontSize: 15,
+                                            paddingTop: 12,
+                                            paddingBottom: 12,
+                                            marginTop: 5,
+                                            marginBottom: 20
+                                        }}
                                         placeholder={PreferredLanguageText('title')}
-                                        onChangeText={val => setTitle(val)}
+                                        onChange={(e: any) => setTitle(e.nativeEvent.text || '')}
                                         placeholderTextColor={'#a2a2ac'}
                                     />
                                     {
@@ -1477,7 +1493,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 height: 40,
                                                 marginRight: 10,
                                                 flexDirection: 'row',
-                                                justifyContent: 'flex-start'
+                                                justifyContent: 'flex-start',
+                                                marginBottom: 10
                                             }}
                                         >
                                             <Switch
@@ -1492,19 +1509,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     }
                                                     setTimer(!timer);
                                                 }}
-                                                style={{ height: 20 }}
+                                                style={{ height: 20, marginRight: 20 }}
                                                 trackColor={{
                                                     false: "#f4f4f6",
                                                     true: "#3B64F8",
                                                 }}
                                                 activeThumbColor="white"
                                             />
-                                        </View>
-                                        {timer ? (
+                                            {timer ? (
                                             <View
                                                 style={{
                                                     borderRightWidth: 0,
-                                                    paddingTop: 0,
+                                                    paddingTop: 7,
                                                     borderColor: "#f4f4f6",
                                                     flexDirection: 'row'
                                                 }}
@@ -1589,6 +1605,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 </View>
                                             </View>
                                         ) : null}
+                                        </View>
                                     </View>
                                 ) : null}
                                 {/* {
@@ -1629,13 +1646,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             width: '100%'
                                         }}>
                                             <View style={{ width: '100%', maxWidth: 400, paddingRight: Dimensions.get('window').width < 768 ? 0 : 45 }}>
-                                                <CustomTextInput
+                                                <AutoGrowingTextInput
                                                     value={quizInstructions}
+                                                    style={styles.input}
                                                     placeholder="Instructions"
-                                                    onChangeText={(val) => setQuizInstructions(val)}
-                                                    placeholderTextColor={"#a2a2ac"}
-                                                    required={false}
-                                                    hasMultipleLines={true}
+                                                    onChange={(e: any) => setQuizInstructions(e.nativeEvent.text || '')}
+                                                    placeholderTextColor={'#a2a2ac'}
+                                                    minHeight={100}
                                                 />
                                             </View>
                                         </View>
@@ -1650,7 +1667,20 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 : (imported ?
                                     (
                                         type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav' ?
-                                            <ReactPlayer url={url} controls={true} onContextMenu={(e: any) => e.preventDefault()} config={{ file: { attributes: { controlsList: 'nodownload' } } }} />
+                                        <Video
+                                            ref={videoRef}
+                                            style={{
+                                                width: 400,
+                                                height: 400
+                                            }}
+                                            source={{
+                                            uri: url,
+                                            }}
+                                            useNativeControls
+                                            resizeMode="contain"
+                                            isLooping
+                                            // onPlaybackStatusUpdate={status => setStatus(() => status)}
+                                        />
                                             :
                                             <View
                                                 // key={Math.random()}
@@ -2277,6 +2307,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     </View> : null
                             }
 
+                        </View>
+                        <View>
                             {isQuiz ? <View style={{ width: width < 768 ? '100%' : '33.33%' }}>
                                 <View style={{ width: '100%', paddingTop: 40, paddingBottom: 15, backgroundColor: 'white' }}>
                                     <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>

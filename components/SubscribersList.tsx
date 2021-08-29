@@ -70,6 +70,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [webviewKey, setWebviewKey] = useState(Math.random())
     const [isQuiz, setIsQuiz] = useState(false);
     const [quizSolutions, setQuizSolutions] = useState<any>({});
+    const [initiatedAt, setInitiatedAt] = useState<any>({});
     const [meetingOn, setMeetingOn] = useState(false)
     const [meetingLink, setMeetingLink] = useState('')
     const [showMeetingOptions, setShowMeetingOptions] = useState(false);
@@ -146,17 +147,18 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             filteredSubscribers = subscribers
             break;
     }
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 150 : Dimensions.get('window').height;
+    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 150 : Dimensions.get('window').height - 70;
     const key = JSON.stringify(filteredSubscribers)
     let options = filteredSubscribers.map((sub: any) => {
         return {
-            value: sub._id, label: sub.displayName
+            value: sub._id, label: sub.fullName
         }
     })
     const group = selected.map(s => {
         return s.value
     })
 
+    // PREPARE EXPORT DATA 
     useEffect(() => {
 
         if (problems.length === 0 || subscribers.length === 0) {
@@ -181,7 +183,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         row1.push("Submission Date")
 
-        row1.push("Overall Remarks")
 
         exportAoa.push(row1);
 
@@ -230,7 +231,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
             const obj = JSON.parse(submission);
 
-            const { solutions, problemScores, problemComments, initiatedAt, } = obj;
+            const { solutions, problemScores, problemComments } = obj;
 
             solutions.forEach((sol: any, i: number) => {
                 let response = ''
@@ -245,12 +246,12 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 }
 
                 subscriberRow.push(`${response}`);
-                subscriberRow.push(`${problemScores[i]} - Remark: ${problemComments ? problemComments[i] : ''}`)
+                subscriberRow.push(`${problemScores ? problemScores[i] : ""} - Remark: ${problemComments ? problemComments[i] : ''}`)
 
 
             })
 
-            subscriberRow.push(moment(new Date(submittedAt)).format("MMMM Do YYYY, h:mm a"))
+            subscriberRow.push(moment(new Date(Number(submittedAt))).format("MMMM Do YYYY, h:mm a"))
 
             subscriberRow.push(comment)
 
@@ -260,7 +261,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         setExportAoa(exportAoa)
 
+
     }, [problems, subscribers])
+
 
     useEffect(() => {
 
@@ -297,6 +300,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 setUrl(obj.url)
                 setType(obj.type)
                 setTitle(obj.title)
+            }
+
+            if (obj.initiatedAt) {
+                setInitiatedAt(obj.initiatedAt)
             }
         } else {
             setImported(false)
@@ -803,12 +810,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             borderTopRightRadius: 0,
             borderTopLeftRadius: 0
         }}>
-            <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25 }}>
-                {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
-            </Text>
+            
             {
                 showSubmission || showChat || showAddUsers || showNewGroup ?
-                    <View style={{ backgroundColor: 'white', paddingBottom: 15 }}>
+                    <View style={{ backgroundColor: 'white', paddingBottom: 15, paddingTop: 20 }}>
                         <TouchableOpacity
                             key={Math.random()}
                             style={{
@@ -845,8 +850,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             numberOfLines={1}
                                             ellipsizeMode={'tail'}
                                             style={{ color: '#2f2f3c', marginBottom: 10, marginTop: -20, paddingLeft: 15 }}>
-                                            {loadedChatWithUser.displayName}
-                                            {showNewGroup || showSubmission ? '' : ', '}
                                             {loadedChatWithUser.fullName} {loadedChatWithUser.email ? ("(" + loadedChatWithUser.email + ")") : ''}
                                         </Text>
                                     </View> : null
@@ -885,7 +888,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View>
                     </View>
                     :
-                    <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
+                    <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25, paddingTop: !props.cueId ? 25 : 0 }}>
                         {
                             props.cueId ?
                                 null :
@@ -904,6 +907,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     {PreferredLanguageText('inbox')}
                                 </Text>
                         }
+
                         {
                             isOwner && !props.cueId ?
                                 <TouchableOpacity
@@ -918,7 +922,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         lineHeight: 23,
                                         marginRight: 20,
                                         marginTop: -1,
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         color: '#3b64f8',
                                         textTransform: 'uppercase'
                                     }}>
@@ -926,28 +930,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </Text>
                                 </TouchableOpacity> : null
                         }
-                        {/* {
-                            isOwner && !props.cueId ?
-                                <TouchableOpacity
-                                    key={Math.random()}
-                                    style={{
-                                        backgroundColor: 'white'
-                                    }}
-                                    onPress={() => setShowAddUsers(true)}>
-                                    <Text style={{
-                                        width: '100%',
-                                        textAlign: 'right',
-                                        lineHeight: 23,
-                                        marginRight: 20,
-                                        marginTop: -1,
-                                        fontSize: 10,
-                                        color: '#a2a2ac',
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {PreferredLanguageText('inviteUser')}
-                                    </Text>
-                                </TouchableOpacity> : null
-                        } */}
                     </View>
             }
             <View style={{ width: '100%', flexDirection: 'row', backgroundColor: 'white', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -955,7 +937,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     !showAddUsers && !showSubmission && props.cue && props.cue.submission ?
                         <View style={{
                             backgroundColor: 'white',
-                            height: 40,
+                            height: 30,
                             marginBottom: 20,
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -1229,6 +1211,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             comment={comment}
                                             headers={headers}
                                             isOwner={true}
+                                            initiatedAt={initiatedAt}
+                                            submittedAt={submittedAt}
                                         />
                                     </View>
                                     :
@@ -1518,7 +1502,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         marginBottom: 10
                                     }}>
                                         <Text style={{ color: '#2f2f3c', }}>
-                                            {sub.displayName}
+                                            {sub.fullName}
                                         </Text>
                                         <Text style={{ color: '#2f2f3c', }}>
                                             {sub.email}

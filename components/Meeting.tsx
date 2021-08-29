@@ -376,10 +376,8 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
         padding: 20,
+        paddingTop: 25
     }}>
-        <Text style={{ width: '100%', textAlign: 'center', paddingTop: 5 }}>
-            {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
-        </Text>
         <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
             <Text
                 ellipsizeMode="tail"
