@@ -327,9 +327,9 @@ export const createQuiz = gql`
   }
 `;
 export const modifyQuiz = gql`
-  mutation($cueId: String!, $quiz: QuizInputObject!) {
+  mutation($cueId: String!, $quiz: QuizInputObject!, $modifiedCorrectAnswers: [String!]!, $regradeChoices: [String!]!) {
     quiz {
-      modifyQuiz(cueId: $cueId, quiz: $quiz)
+      modifyQuiz(cueId: $cueId, quiz: $quiz, modifiedCorrectAnswers: $modifiedCorrectAnswers, regradeChoices: $regradeChoices)
     }
   }
 `;

@@ -27,6 +27,18 @@ const FileUpload: React.FC<any> = (props: any) => {
             setUploading(false)
             return
         }
+
+        if (props.action === "audio/video" && !(type === "mp4" ||
+            type === "mp3" ||
+            type === "mov" ||
+            type === "mpeg" ||
+            type === "mp2" ||
+            type === "wav")) {
+            alert('Error! Only audio/video files can be uploaded')
+            setUploading(false)
+            return
+        }
+
         if (size > 26214400) {
             Alert('File size must be less than 25 mb')
             setUploading(false)
@@ -41,7 +53,7 @@ const FileUpload: React.FC<any> = (props: any) => {
 
         fileUpload(file, type).then(response => {
             const { data } = response;
-            if (data.status === "success") {
+            if (data && data.status === "success") {
                 props.onUpload(data.url, type);
                 setUploading(false)
             } else {
@@ -63,6 +75,8 @@ const FileUpload: React.FC<any> = (props: any) => {
         return axios.post(url, formData, config);
     }, [])
 
+    console.log("Uploading", uploading)
+
     return <View style={{
         backgroundColor: '#fff',
         paddingTop: 3.5,
@@ -73,11 +87,11 @@ const FileUpload: React.FC<any> = (props: any) => {
                 Importing...
             </Text> :
                 <View style={{ flexDirection: 'row', width: 220, backgroundColor: 'white' }}>
-                    <Ionicons
-                        name="arrow-back"
-                        color="#a2a2ac"
-                        size={17} style={{ marginRight: 20 }}
-                        onPress={() => props.back()} />
+                        <Ionicons
+                            name="arrow-back-outline"
+                            color="#a2a2ac"
+                            size={17} style={{ marginRight: 20 }}
+                            onPress={() => props.back()} />
                     <TouchableOpacity
                         onPress={() => onClick()}
                         style={{ backgroundColor: 'white', borderRadius: 15, }}>

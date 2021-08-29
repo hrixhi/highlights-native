@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Image, StyleSheet, TextInput, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { TextInput as CustomTextInput } from './CustomTextInput'
 import { ScrollView } from "react-native-gesture-handler";
@@ -7,6 +7,11 @@ import { Text, View } from './Themed';
 import CheckBox from 'react-native-check-box';
 import Latex from 'react-native-latex';
 import MathJax from 'react-native-mathjax-svg';
+import { Video } from 'expo-av';
+import RenderHtml from 'react-native-render-html';
+import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
+import { RadioButton } from "./RadioButton";
+
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -20,6 +25,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [percentage, setPercentage] = useState("");
     const [comment, setComment] = useState(props.comment ? props.comment : "");
     const [headers, setHeaders] = useState<any>(props.headers)
+    const [attemptDuration, setAttemptDuration] = useState<any>("")
+
+    let videoRef: any = useRef();
 
     useEffect(() => {
 
@@ -68,6 +76,52 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     }, [problemScores, totalPossible])
 
+    const diff_seconds = (dt2: any, dt1: any) => {
+        console.log("dt2", dt2);
+        console.log("dt1", dt1);
+
+        const diff = dt2.getTime() - dt1.getTime();
+
+        const Seconds_from_T1_to_T2 = diff / 1000;
+        return Math.abs(Seconds_from_T1_to_T2);
+    };
+
+    useEffect(() => {
+        if (props.initiatedAt && props.initiatedAt !== null) {
+            const difference = diff_seconds(new Date(parseInt(props.submittedAt)), new Date(props.initiatedAt));
+
+            console.log("Difference", difference);
+
+            if (Number.isNaN(difference)) {
+                setAttemptDuration("");
+                return;
+            }
+
+            let hours = Math.floor(difference / 3600); 
+            let minutes = Math.floor((difference - hours * 3600) / 60); 
+            let seconds = difference - hours * 3600 - minutes * 60;
+            
+            setAttemptDuration(`${hours === 0 ? "" : Math.round(hours)} ${hours === 0 ? "" : "H"}  ${Math.round(minutes)} min  ${Math.round(seconds)} s `)
+        }
+    }, [props.submittedAt, props.initiatedAt])
+
+    const renderAudioVideoPlayer = (url: string, type: string) => {
+        return <Video
+            ref={videoRef}
+            style={{
+                width: 400,
+                height: 400
+            }}
+            source={{
+            uri: url,
+            }}
+            useNativeControls
+            resizeMode="contain"
+            isLooping
+            // onPlaybackStatusUpdate={status => setStatus(() => status)}
+        />
+    }
+
 
     const renderHeader = (index: number) => {
 
@@ -81,6 +135,13 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
         return null;
     }
+
+    let totalPoints = 0;
+
+    problems.map((problem: any) => {
+        totalPoints += Number(problem.points)
+    })
+
 
     if (props.loading) return (<View
         style={{
@@ -119,44 +180,70 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 justifyContent: 'flex-start'
             }}
             >
-                <View style={{ width: '100%', flexDirection: 'row' }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 10 }}>
-                        <Text
-                            style={{
-                                fontSize: 12,
-                                color: "white",
-                                height: 22,
-                                paddingHorizontal: 10,
-                                borderRadius: 10,
-                                backgroundColor: "#3B64F8",
-                                lineHeight: 20,
-                                paddingTop: 1,
-                                overflow: 'hidden'
-                            }}>
-                            {percentage}%
+                {
+                <View style={{ display: 'flex', flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', justifyContent: 'space-between', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: "#cccccc", width: '100%' }}>
+                    <View style={{ display: 'flex', flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 20 : 0,  }}>
+                        <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 15 }}>
+                            {problems.length} {problems.length === 1 ? "Question" : "Questions"}
                         </Text>
-                        <Text
-                            style={{
-                                fontSize: 12,
-                                color: "white",
-                                height: 22,
-                                // textAlign: 'right',
-                                paddingHorizontal: 10,
-                                marginLeft: 10,
-                                borderRadius: 10,
-                                backgroundColor: "#3B64F8",
-                                lineHeight: 20,
-                                paddingTop: 1,
-                                overflow: 'hidden'
-                            }}>
-                            {currentScore}/{totalPossible}
+                        <Text style={{ marginRight: 10, fontSize: 15 }}>
+                            |
                         </Text>
-                        <Text style={{ fontSize: 11, color: "#2f2f3c", marginBottom: 10, paddingLeft: 20, lineHeight: 22, textTransform: 'uppercase' }}>
-                            {props.partiallyGraded ? "In progress" : "Graded"}
+                        <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 15 }}>
+                            {totalPoints} Points 
                         </Text>
+                        {props.initiatedAt && attemptDuration !== "" ? <Text style={{ marginRight: 10, fontSize: 15}}>
+                            |
+                        </Text> : null}
+                        {props.initiatedAt && attemptDuration !== "" ? <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 15 }}>
+                            Attempt Duration: {attemptDuration}
+                        </Text> : null}
                     </View>
+                    
 
+                    <View style={{ }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 10 }}>
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    color: "white",
+                                    height: 22,
+                                    // textAlign: 'right',
+                                    paddingHorizontal: 10,
+                                    marginLeft: 10,
+                                    borderRadius: 10,
+                                    backgroundColor: "#3B64F8",
+                                    lineHeight: 20,
+                                    paddingTop: 1,
+                                    overflow: 'hidden'
+                                }}>
+                                {percentage}%
+                            </Text>
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    color: "white",
+                                    height: 22,
+                                    // textAlign: 'right',
+                                    paddingHorizontal: 10,
+                                    marginLeft: 10,
+                                    borderRadius: 10,
+                                    backgroundColor: "#3B64F8",
+                                    lineHeight: 20,
+                                    paddingTop: 1,
+                                    overflow: 'hidden'
+                                }}>
+                                {currentScore}/{totalPossible}
+                            </Text>
+                            {props.isOwner ? <Text style={{ fontSize: 15, color: "#2f2f3c", marginBottom: 10, paddingLeft: 20, lineHeight: 22, textTransform: 'uppercase' }}>
+                                {props.partiallyGraded ? "In progress" : "Graded"}
+                            </Text> : null}
+                        </View>
+
+                    </View>
                 </View>
+            }
+            
 
                 {
                     props.problems.map((problem: any, index: any) => {
@@ -173,10 +260,32 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             if (noOfCorrect > 1) onlyOneCorrect = false;
                         }
 
+                        let audioVideoQuestion = problem.question[0] === "{"  && problem.question[problem.question.length - 1] === "}";
+
+                        let url = "";
+                        let content = "";
+                        let type = "";
+    
+                        if (audioVideoQuestion) {
+                            const parse = JSON.parse(problem.question);
+    
+                            url = parse.url;
+                            content = parse.content;
+                            type = parse.type;
+                        }
+
+                        const tagsStyles = {
+                            body: {
+                              fontSize: 15,
+                              lineHeight: 25
+                            },
+                        };
+    
+
                         return <View style={{ borderBottomColor: '#f4f4f6', borderBottomWidth: index === (props.problems.length - 1) ? 0 : 1, marginBottom: 25 }} key={index}>
                             {renderHeader(index)}
                             <View style={{ flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', flex: 1 }}>
-                                <View style={{ flexDirection: 'row', flex: 1 }}>
+                                <View style={{ flexDirection: 'row', flex: 1, }}>
                                     <View style={{ paddingTop: 15 }}>
                                         <Text style={{ color: '#a2a2ac', fontSize: 15, paddingBottom: 25, marginRight: 10, paddingTop: 10 }}>
                                             {index + 1}.
@@ -214,24 +323,35 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         </MathJax>
                                                     </View>
                                                 ) :
-                                                    <TextInput
-                                                        editable={false}
-                                                        value={problem.question}
-                                                        style={{
-                                                            width: '50%',
-                                                            fontSize: 15,
-                                                            padding: 15,
-                                                            paddingTop: 12,
-                                                            paddingBottom: 12,
-                                                            marginTop: 5,
-                                                            marginBottom: 20
+                                                (audioVideoQuestion ? <View style={{ width: '80%', marginBottom: 10 }}>
+                                                {renderAudioVideoPlayer(url, type)}
+                                                <Text style={{ marginVertical: 20, marginLeft: 20, fontSize: 15, lineHeight: 25 }}>
+                                                    <RenderHtml
+                                                        contentWidth={Dimensions.get('window').width < 768 ? Dimensions.get('window').width * 0.8 : Dimensions.get('window').width }
+                                                        source={{
+                                                            html: content
                                                         }}
-                                                        multiline={true}
-                                                        placeholder={'Problem ' + (index + 1).toString()}
-                                                        placeholderTextColor={'#a2a2ac'}
-                                                    />
+                                                        enableExperimentalMarginCollapsing={true}
+                                                        tagsStyles={tagsStyles}
+                                                    /> 
+                                                </Text>
+                                            </View> : <Text style={{ marginVertical: 20, marginLeft: 20, fontSize: 15, width: '80%', marginBottom: 10, lineHeight: 25 }}>
+                                                <RenderHtml
+                                                    // contentWidth={"100%"}
+                                                    contentWidth={Dimensions.get('window').width < 768 ? Dimensions.get('window').width : Dimensions.get('window').width }
+                                                    source={{
+                                                        html: problem.question
+                                                    }}
+                                                    enableExperimentalMarginCollapsing={true}
+                                                    tagsStyles={tagsStyles}
+                                                />
+                                            </Text>)
                                             )
                                     }
+
+                                </View>
+
+                                <View style={{ flexDirection: 'row', paddingLeft: Dimensions.get('window').width > 768 ? 20 : 0, height: 80, alignItems: 'center' }}>
                                     {!props.isOwner ? null : <TextInput
                                         editable={true}
                                         value={problemScores[index]}
@@ -242,7 +362,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             setProblemScores(updateProblemScores)
                                         }}
                                         style={{
-                                            width: '25%',
+                                            width: 100,
                                             borderBottomColor: '#f4f4f6',
                                             borderBottomWidth: 1,
                                             fontSize: 15,
@@ -260,7 +380,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         editable={false}
                                         value={"/ " + problem.points}
                                         style={{
-                                            width: '25%',
+                                            width: 60,
                                             fontSize: 15,
                                             padding: 15,
                                             paddingTop: 12,
@@ -273,39 +393,28 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         placeholderTextColor={'#a2a2ac'}
                                     />}
                                     {
-                                        !props.isOwner ? <Text style={{ fontSize: 15, width: '40%', marginTop: 5, marginBottom: 20, paddingTop: 12, textAlign: 'right', color: 'black' }}>
+                                        !props.isOwner ? <Text style={{ fontSize: 15, width: 150, marginTop: 5, marginBottom: 20, paddingTop: 12, textAlign: 'right', color: 'black' }}>
                                             {Number(problemScores[index]).toFixed(1)} / {Number(problem.points).toFixed(1)}
                                         </Text> : null
                                     }
+
+                                    <View style={{ flexDirection: 'row' }}>
+                                        {
+                                            !problem.required ?
+                                                (<Text style={{
+                                                    fontSize: 11, color: '#a2a2ac', marginBottom: 20, textAlign: 'left', paddingLeft: 35,
+                                                }}>
+                                                    optional
+                                                </Text>)
+                                                : (<Text style={{
+                                                    fontSize: 11, color: '#a2a2ac', marginBottom: 20, textAlign: 'left', paddingLeft: 35,
+                                                }}>
+                                                    required
+                                                </Text>)
+                                        }
+                                    </View>
                                 </View>
-                                <View style={{ flexDirection: 'row' }}>
-                                    {
-                                        !problem.questionType && !onlyOneCorrect ?
-                                            (<Text style={{
-                                                fontSize: 11, color: '#a2a2ac', marginBottom: 20, textAlign: 'left',
-                                                paddingTop: Dimensions.get('window').width < 768 ? 25 : 15,
-                                                paddingLeft: 35
-                                            }}>
-                                                more than one correct answer
-                                            </Text>)
-                                            : null
-                                    }
-                                    {
-                                        !problem.required ?
-                                            (<Text style={{
-                                                fontSize: 11, color: '#a2a2ac', marginBottom: 20, textAlign: 'left', paddingLeft: 35,
-                                                paddingTop: Dimensions.get('window').width < 768 ? 25 : 15
-                                            }}>
-                                                optional
-                                            </Text>)
-                                            : (<Text style={{
-                                                fontSize: 11, color: '#a2a2ac', marginBottom: 20, textAlign: 'left', paddingLeft: 35,
-                                                paddingTop: Dimensions.get('window').width < 768 ? 25 : 15
-                                            }}>
-                                                required
-                                            </Text>)
-                                    }
-                                </View>
+                                
                             </View>
                             {
                                 (!problem.questionType || problem.questionType === "trueFalse") && problem.options.map((option: any, i: any) => {
@@ -356,22 +465,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             >
                                                                 {option.option.split("formula:")[1]}</MathJax>
                                                         </View> :
-                                                        <TextInput
-                                                            editable={false}
-                                                            value={option.option}
+                                                         <Text
                                                             style={{
-                                                                width: '50%',
+                                                                width: Dimensions.get('window').width < 768 ? '80%' : '50%',
                                                                 fontSize: 15,
                                                                 padding: 15,
                                                                 paddingTop: 12,
                                                                 paddingBottom: 12,
                                                                 marginTop: 5,
                                                                 marginBottom: 20,
-                                                                color
+                                                                color,
+                                                                lineHeight: 25
                                                             }}
-                                                            placeholder={'Option ' + (i + 1).toString()}
-                                                            placeholderTextColor={'#a2a2ac'}
-                                                        />
+                                                        >
+                                                            {option.option}
+                                                        </Text>
                                                 )
                                         }
                                     </View>
@@ -392,15 +500,27 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     null
                             }
                             {!props.isOwner && problemComments[index] === '' ? null : <View style={{ width: '80%', maxWidth: 400, marginLeft: 40 }}>
-                                {props.isOwner ? <CustomTextInput
+                                {props.isOwner ? <AutoGrowingTextInput
                                     editable={props.isOwner ? true : false}
                                     value={problemComments[index]}
                                     placeholder='Remark'
                                     hasMultipleLines={true}
+                                    minHeight={80}
                                     onChangeText={(val: any) => {
                                         const updateProblemComments = [...problemComments];
                                         updateProblemComments[index] = val;
                                         setProblemComments(updateProblemComments)
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        fontSize: 15,
+                                        padding: 15,
+                                        paddingTop: 12,
+                                        paddingBottom: 12,
+                                        marginTop: 5,
+                                        marginBottom: 20,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: '#cccccc'
                                     }}
                                 /> :
                                     <View style={{ flexDirection: 'row', width: '100%', marginTop: 20, marginBottom: 40, backgroundColor: 'white' }}>
@@ -418,11 +538,23 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         Feedback
                     </Text>
                     {props.isOwner ? <View style={{ width: '80%', maxWidth: 400 }}>
-                        <CustomTextInput
+                        <AutoGrowingTextInput
                             editable={props.isOwner ? true : false}
                             value={comment}
                             onChangeText={(val: any) => setComment(val)}
                             hasMultipleLines={true}
+                            minHeight={80}
+                            style={{
+                                width: '100%',
+                                fontSize: 15,
+                                padding: 15,
+                                paddingTop: 12,
+                                paddingBottom: 12,
+                                marginTop: 5,
+                                marginBottom: 20,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#cccccc'
+                            }}
                         />
                     </View> :
                         <Text style={{ color: '#3b64f8', fontSize: 15, width: '100%', textAlign: 'left', marginTop: 40 }}>

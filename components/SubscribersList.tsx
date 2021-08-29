@@ -70,6 +70,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [webviewKey, setWebviewKey] = useState(Math.random())
     const [isQuiz, setIsQuiz] = useState(false);
     const [quizSolutions, setQuizSolutions] = useState<any>({});
+    const [initiatedAt, setInitiatedAt] = useState<any>({});
     const [meetingOn, setMeetingOn] = useState(false)
     const [meetingLink, setMeetingLink] = useState('')
     const [showMeetingOptions, setShowMeetingOptions] = useState(false);
@@ -157,6 +158,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         return s.value
     })
 
+    // PREPARE EXPORT DATA 
     useEffect(() => {
 
         if (problems.length === 0 || subscribers.length === 0) {
@@ -181,7 +183,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         row1.push("Submission Date")
 
-        row1.push("Overall Remarks")
 
         exportAoa.push(row1);
 
@@ -230,7 +231,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
             const obj = JSON.parse(submission);
 
-            const { solutions, problemScores, problemComments, initiatedAt, } = obj;
+            const { solutions, problemScores, problemComments } = obj;
 
             solutions.forEach((sol: any, i: number) => {
                 let response = ''
@@ -245,7 +246,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 }
 
                 subscriberRow.push(`${response}`);
-                subscriberRow.push(`${problemScores[i]} - Remark: ${problemComments ? problemComments[i] : ''}`)
+                subscriberRow.push(`${problemScores ? problemScores[i] : ""} - Remark: ${problemComments ? problemComments[i] : ''}`)
 
 
             })
@@ -260,7 +261,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         setExportAoa(exportAoa)
 
+
     }, [problems, subscribers])
+
 
     useEffect(() => {
 
@@ -297,6 +300,10 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 setUrl(obj.url)
                 setType(obj.type)
                 setTitle(obj.title)
+            }
+
+            if (obj.initiatedAt) {
+                setInitiatedAt(obj.initiatedAt)
             }
         } else {
             setImported(false)
@@ -1204,6 +1211,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             comment={comment}
                                             headers={headers}
                                             isOwner={true}
+                                            initiatedAt={initiatedAt}
+                                            submittedAt={submittedAt}
                                         />
                                     </View>
                                     :
