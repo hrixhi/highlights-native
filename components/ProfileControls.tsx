@@ -1,716 +1,783 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Dimensions, Platform, StyleSheet } from "react-native";
-import { Text, View, TouchableOpacity } from "./Themed";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ScrollView } from "react-native-gesture-handler";
-import { fetchAPI } from "../graphql/FetchAPI";
+// REACT
+import React, { useState, useEffect, useCallback } from 'react';
+import { Image, Linking, Platform, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+
+// API
+import { fetchAPI } from '../graphql/FetchAPI';
 import {
-  findUserById,
-  signup,
-  updateNotificationId,
-  updatePassword,
-  updateUser
-} from "../graphql/QueriesAndMutations";
-import { validateEmail } from "../helpers/emailCheck";
-import Alert from "../components/Alert";
-import * as Updates from "expo-updates";
-import { TextInput } from "./CustomTextInput";
-import {
-  PreferredLanguageText,
-  LanguageSelect
-} from "../helpers/LanguageContext";
+    updatePassword,
+    updateUser,
+    removeZoom,
+    findUserById,
+    updateNotificationId
+} from '../graphql/QueriesAndMutations';
+import * as Updates from 'expo-updates';
+
+// COMPONENTS
+import { Text, View, TouchableOpacity } from './Themed';
+// import { ScrollView } from "react-native-gesture-handler";
+import Alert from '../components/Alert';
+import { TextInput } from './CustomTextInput';
+import FileUpload from './UploadFiles';
+
+// HELPERS
+import { PreferredLanguageText } from '../helpers/LanguageContext';
+// import { LanguageSelect } from '../helpers/LanguageContext';
+import { zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
-const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (
-  props: any
-) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [userFound, setUserFound] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [showSavePassword, setShowSavePassword] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const [email, setEmail] = useState('');
+    const [userId, setUserId] = useState('');
+    const [avatar, setAvatar] = useState<any>(undefined);
+    const [zoomInfo, setZoomInfo] = useState<any>(undefined);
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [displayName, setDisplayName] = useState('');
+    const [fullName, setFullName] = useState('');
+    const [userFound, setUserFound] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+    const [passwordValidError, setPasswordValidError] = useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
+    const [newPasswordValidError, setNewPasswordValidError] = useState('');
+    const [confirmNewPasswordError, setConfirmNewPasswordError] = useState('');
+    const [currentFullName, setCurrentFullName] = useState('');
+    const [currentDisplayName, setCurrentDisplayName] = useState('');
+    const [currentAvatar, setCurrentAvatar] = useState<any>(undefined);
+    // Alerts
+    const passwordUpdatedAlert = PreferredLanguageText('passwordUpdated');
+    const incorrectCurrentPasswordAlert = PreferredLanguageText('incorrectCurrentPassword');
+    const passwordDoesNotMatchAlert = PreferredLanguageText('passwordDoesNotMatch');
+    const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
+    const profileUpdatedAlert = PreferredLanguageText('profileUpdated');
+    const passwordInvalidError = PreferredLanguageText('atleast8char');
 
-  // Signup Validation
-  const [emailValidError, setEmailValidError] = useState("");
-  const [passwordValidError, setPasswordValidError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+    // HOOKS
 
-  // Change Password Validation
-  const [newPasswordValidError, setNewPasswordValidError] = useState("");
-  const [confirmNewPasswordError, setConfirmNewPasswordError] = useState("");
+    /**
+     * @description Fetch user on Init
+     */
+    useEffect(() => {
+        getUser();
+    }, []);
 
-  // Current Profile Change Validation
-  // Store existing fullname and displayname to see if anything has changed when updating profile
-  const [currentFullName, setCurrentFullName] = useState("");
-  const [currentDisplayName, setCurrentDisplayName] = useState("");
-
-  // Alerts
-  const passwordUpdatedAlert = PreferredLanguageText("passwordUpdated");
-  const incorrectCurrentPasswordAlert = PreferredLanguageText(
-    "incorrectCurrentPassword"
-  );
-  const passwordDoesNotMatchAlert = PreferredLanguageText(
-    "passwordDoesNotMatch"
-  );
-  const somethingWentWrongAlert = PreferredLanguageText("somethingWentWrong");
-  const profileUpdatedAlert = PreferredLanguageText("profileUpdated");
-  const enterValidEmailError = PreferredLanguageText("enterValidEmail");
-  const passwordInvalidError = PreferredLanguageText("atleast8char");
-
-  const handleSubmit = useCallback(async () => {
-    const u = await AsyncStorage.getItem("user");
-    if (!u) {
-      return;
-    }
-    const user = JSON.parse(u);
-    const server = fetchAPI("");
-
-    if (showSavePassword) {
-      // reset password
-      server
-        .mutate({
-          mutation: updatePassword,
-          variables: {
-            userId: user._id,
-            currentPassword,
-            newPassword
-          }
-        })
-        .then(res => {
-          if (res.data && res.data.user.updatePassword) {
-            Alert(passwordUpdatedAlert);
-            props.reOpenProfile();
-          } else {
-            Alert(incorrectCurrentPasswordAlert);
-          }
-        })
-        .catch(err => {
-          Alert(somethingWentWrongAlert);
-        });
-      return;
-    }
-
-    if (!loggedIn) {
-      server
-        .mutate({
-          mutation: signup,
-          variables: {
-            email: email
-              .toString()
-              .trim()
-              .toLowerCase(),
-            password: password.toString(),
-            fullName: fullName.toString().trim(),
-            displayName: displayName.toString().trim(),
-            userId: user._id
-          }
-        })
-        .then(async res => {
-          if (res.data.user.signup === "") {
-            const user = JSON.parse(u);
-            user.email = email;
-            user.fullName = fullName;
-            user.displayName = displayName;
-            const updatedUser = JSON.stringify(user);
-
-            await AsyncStorage.setItem("user", updatedUser);
-
-            props.saveDataInCloud();
-            props.reOpenProfile();
-          } else {
-            // Error
-            Alert(res.data.user.signup || somethingWentWrongAlert);
-          }
-        });
-    } else {
-      // save data
-      server
-        .mutate({
-          mutation: updateUser,
-          variables: {
-            displayName,
-            fullName,
-            userId: user._id
-          }
-        })
-        .then(async res => {
-          if (res.data && res.data.user.update) {
-            user.fullName = fullName;
-            user.displayName = displayName;
-            const updatedUser = JSON.stringify(user);
-            await AsyncStorage.setItem("user", updatedUser);
-            Alert(profileUpdatedAlert);
-            props.reOpenProfile();
-          } else {
-            Alert(somethingWentWrongAlert);
-          }
-        })
-        .catch(e => Alert(somethingWentWrongAlert));
-    }
-  }, [
-    loggedIn,
-    email,
-    password,
-    displayName,
-    fullName,
-    confirmPassword,
-    showSavePassword,
-    newPassword,
-    currentPassword
-  ]);
-
-  const getUser = useCallback(async () => {
-    const u = await AsyncStorage.getItem("user");
-    if (u) {
-      const parsedUser = JSON.parse(u);
-      if (parsedUser.email) {
-        setLoggedIn(true);
-        setEmail(parsedUser.email);
-        setDisplayName(parsedUser.displayName);
-        setFullName(parsedUser.fullName);
-        setCurrentDisplayName(parsedUser.displayName);
-        setCurrentFullName(parsedUser.fullName);
-      }
-      setUserFound(true);
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-
-    const u = await AsyncStorage.getItem("user");
-    if (u) {
-      const parsedUser = JSON.parse(u);
-      const server = fetchAPI('')
-      server.query({
-        query: findUserById,
-        variables: {
-          id: parsedUser._id
+    /**
+     * @description Validate if submit is enabled after every state change
+     */
+    useEffect(() => {
+        // Reset Password state
+        if (
+            props.showSavePassword &&
+            currentPassword &&
+            newPassword &&
+            confirmNewPassword &&
+            !newPasswordValidError &&
+            !confirmNewPasswordError
+        ) {
+            setIsSubmitDisabled(false);
+            return;
         }
-      }).then(async r => {
-        if (r.data && r.data.user.findById) {
-          const user = r.data.user.findById;
-          const LoadedNotificationId = user.notificationId;
-          let experienceId = undefined;
-          if (!Constants.manifest) {
-            // Absence of the manifest means we're in bare workflow
-            experienceId = parsedUser._id + Platform.OS;
-          }
-          const expoToken = await Notifications.getExpoPushTokenAsync({
-            experienceId,
-          });
-          const notificationId = expoToken.data
-          if (LoadedNotificationId && LoadedNotificationId.includes(notificationId)) {
-            const notificationIds = LoadedNotificationId.split('-BREAK-')
-            const newNotifIds: any[] = []
-            notificationIds.map((notif: any) => {
-              if (notif !== notificationId) {
-                newNotifIds.push(notif)
-              }
+
+        // Logged in
+        if (
+            !props.showSavePassword &&
+            fullName &&
+            displayName &&
+            (fullName !== currentFullName || displayName !== currentDisplayName || avatar !== currentAvatar)
+        ) {
+            setIsSubmitDisabled(false);
+            return;
+        }
+
+        setIsSubmitDisabled(true);
+    }, [
+        email,
+        fullName,
+        displayName,
+        avatar,
+        currentAvatar,
+        confirmPassword,
+        passwordValidError,
+        confirmPasswordError,
+        props.showSavePassword,
+        currentPassword,
+        newPassword,
+        confirmNewPassword,
+        newPasswordValidError,
+        confirmNewPasswordError,
+        currentDisplayName,
+        currentFullName
+    ]);
+
+    /**
+     * @description Validates new password
+     */
+    useEffect(() => {
+        const validPasswrdRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
+        if (newPassword && !validPasswrdRegex.test(newPassword)) {
+            setNewPasswordValidError(passwordInvalidError);
+            return;
+        }
+
+        setNewPasswordValidError('');
+    }, [newPassword]);
+
+    /**
+     * @description Verifies if confirm new password matches new password
+     */
+    useEffect(() => {
+        if (newPassword && confirmNewPassword && newPassword !== confirmNewPassword) {
+            setConfirmNewPasswordError(passwordDoesNotMatchAlert);
+            return;
+        }
+
+        setConfirmNewPasswordError('');
+    }, [newPassword, confirmNewPassword]);
+
+    /**
+     * @description Handles submit new password or Update user profile
+     */
+    const handleSubmit = useCallback(async () => {
+        const u = await AsyncStorage.getItem('user');
+        if (!u) {
+            return;
+        }
+        const user = JSON.parse(u);
+        const server = fetchAPI('');
+
+        if (props.showSavePassword) {
+            // reset password
+            server
+                .mutate({
+                    mutation: updatePassword,
+                    variables: {
+                        userId: user._id,
+                        currentPassword,
+                        newPassword
+                    }
+                })
+                .then(res => {
+                    if (res.data && res.data.user.updatePassword) {
+                        Alert(passwordUpdatedAlert);
+                        props.reOpenProfile();
+                    } else {
+                        Alert(incorrectCurrentPasswordAlert);
+                    }
+                })
+                .catch(err => {
+                    Alert(somethingWentWrongAlert);
+                });
+            return;
+        }
+
+        server
+            .mutate({
+                mutation: updateUser,
+                variables: {
+                    displayName,
+                    fullName,
+                    userId: user._id,
+                    avatar
+                }
             })
-            server.mutate({
-              mutation: updateNotificationId,
-              variables: {
-                userId: parsedUser._id,
-                notificationId: newNotifIds.join('-BREAK-') === '' ? 'NOT_SET' : newNotifIds.join('-BREAK-')
-              }
-            }).then(async res => {
-              handleClean()
-            }).catch(err => {
-              console.log(err)
-              handleClean()
+            .then(async res => {
+                if (res.data && res.data.user.update) {
+                    user.fullName = fullName;
+                    user.displayName = displayName;
+                    user.avatar = avatar;
+                    const updatedUser = JSON.stringify(user);
+                    await AsyncStorage.setItem('user', updatedUser);
+                    Alert(profileUpdatedAlert);
+                    props.reOpenProfile();
+                } else {
+                    Alert(somethingWentWrongAlert);
+                }
             })
-          } else {
-            handleClean()
-          }
+            .catch(e => Alert(somethingWentWrongAlert));
+        //}
+    }, [email, avatar, displayName, fullName, confirmPassword, props.showSavePassword, newPassword, currentPassword]);
+
+    /**
+     * @description Loads User profile
+     */
+    const getUser = useCallback(async () => {
+        const u = await AsyncStorage.getItem('user');
+        if (u) {
+            const parsedUser = JSON.parse(u);
+            if (parsedUser.email) {
+                setEmail(parsedUser.email);
+                setDisplayName(parsedUser.displayName);
+                setFullName(parsedUser.fullName);
+                setAvatar(parsedUser.avatar ? parsedUser.avatar : undefined);
+                setCurrentAvatar(parsedUser.avatar ? parsedUser.avatar : undefined);
+                setUserId(parsedUser._id);
+                setZoomInfo(parsedUser.zoomInfo ? parsedUser.zoomInfo : undefined);
+                setCurrentDisplayName(parsedUser.displayName);
+                setCurrentFullName(parsedUser.fullName);
+            }
+            setUserFound(true);
+        }
+    }, []);
+
+    const logout = useCallback(async () => {
+        const u = await AsyncStorage.getItem('user');
+        if (u) {
+            const parsedUser = JSON.parse(u);
+            const server = fetchAPI('');
+            server
+                .query({
+                    query: findUserById,
+                    variables: {
+                        id: parsedUser._id
+                    }
+                })
+                .then(async r => {
+                    if (r.data && r.data.user.findById) {
+                        const user = r.data.user.findById;
+                        const LoadedNotificationId = user.notificationId;
+                        let experienceId = undefined;
+                        if (!Constants.manifest) {
+                            // Absence of the manifest means we're in bare workflow
+                            experienceId = parsedUser._id + Platform.OS;
+                        }
+                        const expoToken = await Notifications.getExpoPushTokenAsync({
+                            experienceId
+                        });
+                        const notificationId = expoToken.data;
+                        if (LoadedNotificationId && LoadedNotificationId.includes(notificationId)) {
+                            const notificationIds = LoadedNotificationId.split('-BREAK-');
+                            const newNotifIds: any[] = [];
+                            notificationIds.map((notif: any) => {
+                                if (notif !== notificationId) {
+                                    newNotifIds.push(notif);
+                                }
+                            });
+                            server
+                                .mutate({
+                                    mutation: updateNotificationId,
+                                    variables: {
+                                        userId: parsedUser._id,
+                                        notificationId:
+                                            newNotifIds.join('-BREAK-') === '' ? 'NOT_SET' : newNotifIds.join('-BREAK-')
+                                    }
+                                })
+                                .then(async res => {
+                                    handleClean();
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                    handleClean();
+                                });
+                        } else {
+                            handleClean();
+                        }
+                    } else {
+                        handleClean();
+                    }
+                })
+                .catch(err => {
+                    handleClean();
+                });
         } else {
-          handleClean()
+            handleClean();
         }
-      }).catch(err => {
-        handleClean()
-      })
-    } else {
-      handleClean()
-    }
+    }, []);
 
-  }, []);
+    const handleClean = useCallback(async () => {
+        await AsyncStorage.clear();
+        await Updates.reloadAsync();
+        await Notifications.cancelAllScheduledNotificationsAsync();
+    }, []);
+    /**
+     * @description Handles Zoom Auth => Connect user's zoom profile to Cues
+     */
+    const handleZoomAuth = useCallback(async () => {
+        let url = '';
 
-  const handleClean = useCallback(async () => {
-    await AsyncStorage.clear();
-    await Updates.reloadAsync();
-    await Notifications.cancelAllScheduledNotificationsAsync();
-  }, [])
+        if (zoomInfo) {
+            // de-auth
+            // TBD
+            url = '';
+        } else {
+            // auth
+            url = `https://zoom.us/oauth/authorize?response_type=code&client_id=${zoomClientId}&redirect_uri=${encodeURIComponent(
+                zoomRedirectUri
+            )}&state=${userId}`;
+        }
 
-  useEffect(() => {
-    getUser();
-  }, []);
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+            Linking.openURL(url);
+        } else {
+            window.open(url);
+        }
+    }, [zoomInfo, userId]);
 
-  //   Validate if submit is enabled after every state change
-  useEffect(() => {
-    // Reset Password state
-    if (
-      showSavePassword &&
-      currentPassword &&
-      newPassword &&
-      confirmNewPassword &&
-      !newPasswordValidError &&
-      !confirmNewPasswordError
-    ) {
-      setIsSubmitDisabled(false);
-      return;
-    }
+    const handleZoomRemove = useCallback(async () => {
+        const u = await AsyncStorage.getItem('user');
+        if (!u) {
+            return;
+        }
+        const user = JSON.parse(u);
+        const server = fetchAPI('');
 
-    // Logged in
-    if (
-      !showSavePassword &&
-      loggedIn &&
-      fullName &&
-      displayName &&
-      (fullName !== currentFullName || displayName !== currentDisplayName)
-    ) {
-      setIsSubmitDisabled(false);
-      return;
-    }
+        if (zoomInfo) {
+            // reset password
+            server
+                .mutate({
+                    mutation: removeZoom,
+                    variables: {
+                        userId: user._id
+                    }
+                })
+                .then(async res => {
+                    if (res.data && res.data.user.removeZoom) {
+                        const user = JSON.parse(u);
+                        user.zoomInfo = undefined;
+                        const updatedUser = JSON.stringify(user);
+                        await AsyncStorage.setItem('user', updatedUser);
+                        Alert('Zoom account disconnected!');
+                        setZoomInfo(null);
+                    } else {
+                        Alert('Failed to disconnect Zoom. Try again.');
+                    }
+                })
+                .catch(err => {
+                    Alert(somethingWentWrongAlert);
+                });
+            return;
+        }
+    }, [zoomInfo, userId]);
 
-    // Not logged in
-    if (
-      !loggedIn &&
-      email &&
-      fullName &&
-      displayName &&
-      password &&
-      confirmPassword &&
-      !emailValidError &&
-      !passwordValidError &&
-      !confirmPasswordError
-    ) {
-      setIsSubmitDisabled(false);
-      return;
-    }
+    // MAIN RETURN
 
-    setIsSubmitDisabled(true);
-  }, [
-    loggedIn,
-    email,
-    fullName,
-    displayName,
-    password,
-    confirmPassword,
-    emailValidError,
-    passwordValidError,
-    confirmPasswordError,
-    showSavePassword,
-    currentPassword,
-    newPassword,
-    confirmNewPassword,
-    newPasswordValidError,
-    confirmNewPasswordError,
-    currentDisplayName,
-    currentFullName
-  ]);
-
-  useEffect(() => {
-    if (email && !validateEmail(email.toString().toLowerCase())) {
-      setEmailValidError(enterValidEmailError);
-      return;
-    }
-
-    setEmailValidError("");
-  }, [email]);
-
-  useEffect(() => {
-    const validPasswrdRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-
-    if (password && !validPasswrdRegex.test(password)) {
-      setPasswordValidError(passwordInvalidError);
-      return;
-    }
-
-    setPasswordValidError("");
-  }, [password]);
-
-  useEffect(() => {
-    if (password && confirmPassword && password !== confirmPassword) {
-      setConfirmPasswordError(passwordDoesNotMatchAlert);
-      return;
-    }
-
-    setConfirmPasswordError("");
-  }, [password, confirmPassword]);
-
-  useEffect(() => {
-    const validPasswrdRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-
-    if (newPassword && !validPasswrdRegex.test(newPassword)) {
-      setNewPasswordValidError(passwordInvalidError);
-      return;
-    }
-
-    setNewPasswordValidError("");
-  }, [newPassword]);
-
-  useEffect(() => {
-    if (
-      newPassword &&
-      confirmNewPassword &&
-      newPassword !== confirmNewPassword
-    ) {
-      setConfirmNewPasswordError(passwordDoesNotMatchAlert);
-      return;
-    }
-
-    setConfirmNewPasswordError("");
-  }, [newPassword, confirmNewPassword]);
-
-  if (!userFound) {
     return (
-      <View style={styles.screen} key={1}>
-        <View style={{ width: "100%", backgroundColor: "white" }}>
-          <View style={styles.colorBar}>
-            <Text style={{ fontSize: 21, color: "#a2a2ac" }}>
-              {PreferredLanguageText("internetRequiried")}
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.screen} key={1}>
-      <ScrollView
-        style={{ width: "100%", backgroundColor: "white" }}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text
-          style={{
-            fontSize: 21,
-            paddingBottom: 20,
-            fontFamily: 'inter',
-            // textTransform: "uppercase",
-            // paddingLeft: 10,
-            flex: 1,
-            lineHeight: 25,
-            color: '#2f2f3c',
-          }}
-        >
-          {!loggedIn
-            ? PreferredLanguageText("backUp")
-            : PreferredLanguageText("profile")}
-        </Text>
-        <Text
-          style={{
-            fontSize: 11,
-            color: "#a2a2ac",
-            fontFamily: "overpass",
-            paddingBottom: 25,
-            paddingTop: 10
-            // textAlign: "center"
-          }}
-        >
-          {!loggedIn ? PreferredLanguageText("createAccount") : ""}
-        </Text>
-        {showSavePassword ? (
-          <View
-            style={{
-              width: "100%",
-              backgroundColor: "white",
-              paddingTop: 20,
-              paddingBottom: 20
-            }}
-          >
-            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
-              {PreferredLanguageText("currentPassword")}
-            </Text>
-
-            <TextInput
-              secureTextEntry={true}
-              editable={true}
-              value={currentPassword}
-              placeholder={""}
-              onChangeText={val => setCurrentPassword(val)}
-              placeholderTextColor={"#a2a2ac"}
-            />
-            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
-              {PreferredLanguageText("newPassword")}
-            </Text>
-            <TextInput
-              secureTextEntry={true}
-              value={newPassword}
-              placeholder={""}
-              onChangeText={val => setNewPassword(val)}
-              placeholderTextColor={"#a2a2ac"}
-              errorText={newPasswordValidError}
-              footerMessage={PreferredLanguageText("atleast8char")}
-            />
-            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
-              {PreferredLanguageText("confirmNewPassword")}
-            </Text>
-            <TextInput
-              secureTextEntry={true}
-              value={confirmNewPassword}
-              placeholder={""}
-              onChangeText={val => setConfirmNewPassword(val)}
-              placeholderTextColor={"#a2a2ac"}
-              errorText={confirmNewPasswordError}
-            />
-          </View>
-        ) : (
-          <View
-            style={{
-              width: "100%",
-              backgroundColor: "white",
-              paddingTop: 20,
-              paddingBottom: 20
-            }}
-          >
-            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
-              {PreferredLanguageText("email")}
-            </Text>
-            <TextInput
-              secureTextEntry={false}
-              editable={!loggedIn}
-              value={email}
-              placeholder={""}
-              onChangeText={val => setEmail(val)}
-              placeholderTextColor={"#a2a2ac"}
-              required={true}
-            />
-            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
-              {PreferredLanguageText("fullName")}
-            </Text>
-            <TextInput
-              secureTextEntry={false}
-              value={fullName}
-              placeholder={""}
-              onChangeText={val => setFullName(val)}
-              placeholderTextColor={"#a2a2ac"}
-              required={true}
-            />
-            <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
-              {PreferredLanguageText("displayName")}
-            </Text>
-            <TextInput
-              secureTextEntry={false}
-              value={displayName}
-              placeholder={""}
-              onChangeText={val => setDisplayName(val)}
-              placeholderTextColor={"#a2a2ac"}
-              required={true}
-            />
-            {loggedIn ? null : (
-              <View style={{ backgroundColor: "#fff" }}>
-                <Text
-                  style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}
-                >
-                  {PreferredLanguageText("password")}
-                </Text>
-                <TextInput
-                  value={password}
-                  placeholder={""}
-                  onChangeText={val => setPassword(val)}
-                  placeholderTextColor={"#a2a2ac"}
-                  secureTextEntry={true}
-                  required={true}
-                  footerMessage={PreferredLanguageText("atleast8char")}
-                  errorText={passwordValidError}
-                />
-                <Text
-                  style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}
-                >
-                  {PreferredLanguageText("confirmPassword")}
-                </Text>
-                <TextInput
-                  value={confirmPassword}
-                  placeholder={""}
-                  onChangeText={val => setConfirmPassword(val)}
-                  placeholderTextColor={"#a2a2ac"}
-                  secureTextEntry={true}
-                  required={true}
-                  errorText={confirmPasswordError}
-                />
-              </View>
-            )}
-          </View>
-        )}
-        <View
-          style={{
-            // flex: 1,
-            backgroundColor: "white",
-            justifyContent: "center",
-            // display: 'flex',
-            // height: 50,
-            marginTop: 0,
-            marginBottom: 200
-          }}
-        >
-          {loggedIn ? (
-            <TouchableOpacity
-              onPress={() => setShowSavePassword(!showSavePassword)}
-              style={{
-                backgroundColor: "white",
-                overflow: "hidden",
-                height: 35,
-                marginTop: 15,
-                borderRadius: 15,
-                width: "100%",
-                justifyContent: "center",
-                flexDirection: "row"
-              }}
-            >
-              <Text
+        <View style={styles.screen} key={1}>
+            <ScrollView
                 style={{
-                  textAlign: "center",
-                  lineHeight: 35,
-                  color: "#2f2f3c",
-                  overflow: "hidden",
-                  fontSize: 11,
-                  backgroundColor: "#f4f4f6",
-                  paddingHorizontal: 25,
-                  fontFamily: "inter",
-                  height: 35,
-                  width: 150,
-                  borderRadius: 15,
-                  textTransform: "uppercase"
+                    backgroundColor: 'white',
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row'
+                    // paddingHorizontal: 20
                 }}
-              >
-                {showSavePassword
-                  ? PreferredLanguageText("back")
-                  : PreferredLanguageText("password")}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={{ height: 20, backgroundColor: "#fff" }} />
-          )}
-          <TouchableOpacity
-            onPress={() => handleSubmit()}
-            style={{
-              backgroundColor: "white",
-              overflow: "hidden",
-              height: 35,
-              borderRadius: 15,
-              marginTop: 15,
-              width: "100%",
-              justifyContent: "center",
-              flexDirection: "row"
-            }}
-            disabled={isSubmitDisabled}
-          >
-            <Text
-              style={{
-                textAlign: "center",
-                lineHeight: 35,
-                color: "white",
-                fontSize: 11,
-                backgroundColor: "#3B64F8",
-                paddingHorizontal: 25,
-                fontFamily: "inter",
-                overflow: "hidden",
-                height: 35,
-                borderRadius: 15,
-                width: 150,
-                textTransform: "uppercase"
-              }}
-            >
-              {loggedIn
-                ? showSavePassword
-                  ? PreferredLanguageText("update")
-                  : PreferredLanguageText("save")
-                : PreferredLanguageText("signUp")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={async () => {
-              if (loggedIn) {
-                logout();
-              } else {
-                await Updates.reloadAsync();
-              }
-            }}
-            style={{
-              backgroundColor: "white",
-              overflow: "hidden",
-              height: 35,
-              borderRadius: 15,
-              marginTop: 15,
-              width: "100%",
-              justifyContent: "center",
-              flexDirection: "row",
-              marginBottom: 50
-            }}
-          >
-            <Text
-              style={{
-                textAlign: "center",
-                lineHeight: 35,
-                color: "#2f2f3c",
-                overflow: "hidden",
-                fontSize: 11,
-                backgroundColor: "#f4f4f6",
-                paddingHorizontal: 25,
-                fontFamily: "inter",
-                height: 35,
-                width: 150,
-                borderRadius: 15,
-                textTransform: "uppercase"
-              }}
-            >
-              {loggedIn
-                ? PreferredLanguageText("logout")
-                : PreferredLanguageText("login")}
-            </Text>
-          </TouchableOpacity>
-          <LanguageSelect />
+                contentContainerStyle={{
+                    // height: '100%',
+                    paddingHorizontal: 20,
+                    flex: 1,
+                    flexDirection: 'column',
+                    maxHeight:
+                        Dimensions.get('window').width < 1024
+                            ? Dimensions.get('window').height - 104
+                            : Dimensions.get('window').height - 52
+                }}
+                showsVerticalScrollIndicator={true}>
+                {/* <View style={{ overflow: 'scroll', width: '100%', flexDirection: 'row', flex: 1, justifyContent: 'center' }}> */}
+                {/* <View style={{ overflow: 'scroll', maxWidth: 400, width: '100%' }}> */}
+                {props.showSavePassword ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            backgroundColor: 'white',
+                            paddingTop: Dimensions.get('window').width < 768 ? 25 : 50,
+                            paddingBottom: 20,
+                            flex: 1,
+                            maxWidth: 400,
+                            alignSelf: 'center'
+                        }}>
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                color: '#000000'
+                            }}>
+                            {PreferredLanguageText('currentPassword')}
+                        </Text>
+                        <TextInput
+                            secureTextEntry={true}
+                            autoCompleteType="password"
+                            textContentType="password"
+                            value={currentPassword}
+                            placeholder={''}
+                            onChangeText={val => setCurrentPassword(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                        />
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                color: '#000000'
+                            }}>
+                            {PreferredLanguageText('newPassword')}
+                        </Text>
+                        <TextInput
+                            secureTextEntry={true}
+                            autoCompleteType="off"
+                            textContentType="newPassword"
+                            value={newPassword}
+                            placeholder={''}
+                            onChangeText={val => setNewPassword(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                            errorText={newPasswordValidError}
+                            footerMessage={PreferredLanguageText('atleast8char')}
+                        />
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                color: '#000000'
+                            }}>
+                            {PreferredLanguageText('confirmNewPassword')}
+                        </Text>
+                        <TextInput
+                            secureTextEntry={true}
+                            value={confirmNewPassword}
+                            placeholder={''}
+                            onChangeText={val => setConfirmNewPassword(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                            errorText={confirmNewPasswordError}
+                        />
+                    </View>
+                ) : (
+                    <View
+                        style={{
+                            width: '100%',
+                            backgroundColor: 'white',
+                            paddingTop: Dimensions.get('window').width < 768 ? 25 : 50,
+                            paddingBottom: 20,
+                            maxWidth: 400,
+                            alignSelf: 'center'
+                            // flex: 1
+                        }}>
+                        <Image
+                            style={{
+                                height: 100,
+                                width: 100,
+                                borderRadius: 75,
+                                // marginTop: 20,
+                                alignSelf: 'center'
+                            }}
+                            source={{ uri: avatar ? avatar : 'https://cues-files.s3.amazonaws.com/images/default.png' }}
+                        />
+                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', paddingTop: 15 }}>
+                            {avatar ? (
+                                <TouchableOpacity
+                                    onPress={() => setAvatar(undefined)}
+                                    style={{
+                                        backgroundColor: 'white',
+                                        overflow: 'hidden',
+                                        height: 35,
+                                        // marginLeft: 20,
+                                        // marginTop: 15,
+                                        justifyContent: 'center',
+                                        flexDirection: 'row'
+                                    }}>
+                                    <Text>
+                                        <Ionicons name={'close-circle-outline'} size={18} color={'#1F1F1F'} />
+                                    </Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <FileUpload
+                                    onUpload={(u: any, t: any) => {
+                                        setAvatar(u);
+                                    }}
+                                />
+                            )}
+                        </View>
+                        <Text
+                            style={{
+                                marginTop: 20,
+                                fontSize: 14,
+                                color: '#000000'
+                            }}>
+                            {PreferredLanguageText('email')}
+                        </Text>
+                        <TextInput
+                            editable={false}
+                            value={email}
+                            placeholder={''}
+                            onChangeText={val => setEmail(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                            required={true}
+                            style={{
+                                borderBottomWidth: 0
+                            }}
+                        />
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                color: '#000000'
+                            }}>
+                            {PreferredLanguageText('fullName')}
+                        </Text>
+                        <TextInput
+                            textContentType="name"
+                            autoCompleteType="off"
+                            value={fullName}
+                            placeholder={''}
+                            onChangeText={val => setFullName(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                            required={true}
+                        />
+                        {/* <Text style={{
+                  fontSize: 14,
+                  fontFamily: 'inter',
+                  color: '#000000'
+                }}>
+                  {PreferredLanguageText('displayName')}
+                </Text>
+                <TextInput
+                  value={displayName}
+                  placeholder={""}
+                  onChangeText={val => setDisplayName(val)}
+                  placeholderTextColor={"#1F1F1F"}
+                  required={true}
+                /> */}
+
+                        {/* {!props.showSavePassword && zoomInfo ? (
+                            // <TouchableOpacity
+                            //     // onPress={() => handleZoomAuth()}
+                            //     disabled={true}
+                            //     style={{
+                            //         backgroundColor: 'white',
+                            //         overflow: 'hidden',
+                            //         height: 35,
+                            //         marginTop: 20,
+                            //         width: '100%',
+                            //         justifyContent: 'center',
+                            //         flexDirection: 'row',
+                            //         alignItems: 'center'
+                            //     }}>
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    marginBottom: 10
+                                    // color: '#006AFF'
+                                }}>
+                                Zoom account linked
+                            </Text>
+                        ) : // </TouchableOpacity>
+                        null} */}
+                    </View>
+                )}
+                <View
+                    style={{
+                        // flex: 1,
+                        backgroundColor: 'white',
+                        justifyContent: 'center',
+                        maxWidth: 400,
+                        alignSelf: 'center'
+                    }}>
+                    <TouchableOpacity
+                        onPress={() => handleSubmit()}
+                        style={{
+                            backgroundColor: 'white',
+                            overflow: 'hidden',
+                            height: 35,
+                            marginTop: 15,
+                            justifyContent: 'center',
+                            flexDirection: 'row'
+                        }}
+                        disabled={isSubmitDisabled}>
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                lineHeight: 34,
+                                color: 'white',
+                                fontSize: 12,
+                                backgroundColor: '#006AFF',
+                                paddingHorizontal: 20,
+                                fontFamily: 'inter',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 175,
+                                textTransform: 'uppercase'
+                            }}>
+                            {props.showSavePassword ? PreferredLanguageText('update') : PreferredLanguageText('save')}
+                        </Text>
+                    </TouchableOpacity>
+                    {!props.showSavePassword ? (
+                        <TouchableOpacity
+                            onPress={() => props.setShowSavePassword(!props.showSavePassword)}
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                marginTop: 20,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}>
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 34,
+                                    color: '#006AFF',
+                                    borderWidth: 1,
+                                    borderRadius: 15,
+                                    borderColor: '#006AFF',
+                                    backgroundColor: '#fff',
+                                    fontSize: 12,
+                                    paddingHorizontal: 20,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 175,
+                                    textTransform: 'uppercase'
+                                }}>
+                                {props.showSavePassword
+                                    ? PreferredLanguageText('back')
+                                    : PreferredLanguageText('password')}
+                            </Text>
+                        </TouchableOpacity>
+                    ) : null}
+                    {props.showSavePassword ? null : !zoomInfo ? (
+                        <TouchableOpacity
+                            onPress={() => handleZoomAuth()}
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                marginTop: 20,
+                                // width: "100%",
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}>
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 34,
+                                    paddingHorizontal: 20,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    color: '#006AFF',
+                                    borderWidth: 1,
+                                    borderRadius: 15,
+                                    borderColor: '#006AFF',
+                                    backgroundColor: '#fff',
+                                    fontSize: 12,
+                                    width: 175,
+                                    textTransform: 'uppercase'
+                                }}>
+                                Connect Zoom
+                            </Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            onPress={() => handleZoomRemove()}
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                marginTop: 20,
+                                // width: "100%",
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}>
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 34,
+                                    paddingHorizontal: 20,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    color: '#006AFF',
+                                    borderWidth: 1,
+                                    borderRadius: 15,
+                                    borderColor: '#006AFF',
+                                    backgroundColor: '#fff',
+                                    fontSize: 12,
+                                    width: 175,
+                                    textTransform: 'uppercase'
+                                }}>
+                                Disconnect Zoom
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {props.showSavePassword ? null : (
+                        <TouchableOpacity
+                            onPress={() => logout()}
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                marginTop: 20,
+                                marginBottom: 30,
+                                width: '100%',
+                                justifyContent: 'center',
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }}>
+                            <Ionicons name="log-out-outline" color="#006AFF" style={{ marginRight: 10 }} size={18} />
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    color: '#006AFF'
+                                }}>
+                                Log Out
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                    {/* {props.showHelp || props.showSaveCue ? null : (
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                paddingBottom: 20,
+                                width: '100%',
+                                marginTop: 30,
+                                marginBottom: 100
+                            }}>
+                            <LanguageSelect />
+                        </View>
+                    )} */}
+                </View>
+                {/* </View> */}
+                {/* </View> */}
+            </ScrollView>
         </View>
-      </ScrollView>
-    </View>
-  );
+    );
 };
 
 export default ProfileControls;
 
 const styles = StyleSheet.create({
-  screen: {
-    paddingHorizontal: 5,
-    width: "100%",
-    height: Dimensions.get("window").height - 85,
-    backgroundColor: "white"
-  },
-  outline: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#a2a2ac"
-  },
-  all: {
-    fontSize: 15,
-    color: "#a2a2ac",
-    height: 22,
-    paddingHorizontal: 10,
-    backgroundColor: "white"
-  },
-  allOutline: {
-    fontSize: 15,
-    color: "#a2a2ac",
-    height: 22,
-    paddingHorizontal: 10,
-    backgroundColor: "white",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#a2a2ac"
-  },
-  colorBar: {
-    width: "100%",
-    flexDirection: "row",
-    backgroundColor: "white",
-    marginBottom: "15%",
-    lineHeight: 18,
-    paddingTop: 15
-  }
+    screen: {
+        width: '100%',
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        flex: 1
+    },
+    outline: {
+        borderRadius: 1,
+        borderWidth: 1,
+        borderColor: '#1F1F1F'
+    },
+    all: {
+        fontSize: 14,
+        color: '#1F1F1F',
+        height: 22,
+        paddingHorizontal: 10,
+        backgroundColor: 'white'
+    },
+    allOutline: {
+        fontSize: 14,
+        color: '#1F1F1F',
+        height: 22,
+        paddingHorizontal: 10,
+        backgroundColor: 'white',
+        borderRadius: 1,
+        borderWidth: 1,
+        borderColor: '#1F1F1F'
+    },
+    colorBar: {
+        width: '100%',
+        flexDirection: 'row',
+        backgroundColor: 'white',
+        marginBottom: '15%',
+        lineHeight: 18,
+        paddingTop: 15
+    }
 });

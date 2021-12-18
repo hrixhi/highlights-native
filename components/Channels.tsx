@@ -1,47 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Animated, Keyboard, Dimensions } from 'react-native';
-import { Text, View } from './Themed';
-import { Ionicons } from '@expo/vector-icons';
+// REACT
+import React from 'react';
+import { ScrollView, Keyboard } from 'react-native';
+
+// COMPONENTS
+import { View } from './Themed';
 import ChannelControls from './ChannelControls';
 
 const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
-
-    const [modalAnimation] = useState(new Animated.Value(0))
-
-    useEffect(() => {
-        Animated.timing(modalAnimation, {
-            toValue: 1,
-            duration: 150,
-            useNativeDriver: true
-        }).start();
-    }, [])
-
     return (
-        <View style={{
-            width: '100%',
-            backgroundColor: 'white',
-            borderTopRightRadius: 0,
-            borderTopLeftRadius: 0,
-            height: Dimensions.get('window').width < 1024 ? (Dimensions.get('window').height - 85) : Dimensions.get('window').height,
-        }}
-            onTouchMove={() => Keyboard.dismiss()}
-        >
-            <View style={{
-                width: Dimensions.get('window').width < 1024 ? '100%' : '60%',
-                // paddingHorizontal: Dimensions.get('window').width < 1024 ? 20 : 0,
-                minHeight: '100%',
+        <View
+            style={{
+                width: '100%',
                 backgroundColor: 'white',
-                alignSelf: 'center'
-            }}>
-                <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 20 }}>
-                    {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
-                </Text>
+                borderTopRightRadius: 0,
+                borderTopLeftRadius: 0
+            }}
+            onTouchMove={() => Keyboard.dismiss()}>
+            <ScrollView
+                style={{
+                    width: '100%',
+                    paddingHorizontal: 0,
+                    backgroundColor: 'white'
+                }}>
                 <ChannelControls
+                    subscriptions={props.subscriptions}
                     closeModal={() => props.closeModal()}
+                    refreshSubscriptions={props.refreshSubscriptions}
+                    setShowCreate={(val: any) => props.setShowCreate(val)}
+                    showCreate={props.showCreate}
                 />
-            </View>
-        </View >
+            </ScrollView>
+        </View>
     );
-}
+};
 
 export default Channels;

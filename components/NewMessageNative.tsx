@@ -171,7 +171,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
                 {
                     imported ?
-                        <View style={{ backgroundColor: 'white', flex: 1, width: '80%', }}>
+                        <View style={{ backgroundColor: 'white', flex: 1, width: window.screen.width < 1024 ? '100%' : '80%' , }}>
                             <View style={{ width: '100%', alignSelf: 'flex-start', marginLeft: '10%', backgroundColor: '#fff', flexDirection: 'column' }}>
                                 <TextInput
                                     value={title}
@@ -188,7 +188,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             </View>
                         </View>
                         : <View style={{
-                            width: '80%',
+                            width: window.screen.width < 1024 ? '100%' : '80%' ,
                             // minHeight: 100,
                             maxWidth: 500,
                             backgroundColor: 'white',

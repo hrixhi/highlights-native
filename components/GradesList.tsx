@@ -1,34 +1,41 @@
+// REACT
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, ScrollView, Dimensions, TextInput } from 'react-native';
-import { View, Text, TouchableOpacity } from './Themed';
+import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash'
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import XLSX from "xlsx"
+
+// COMPONENTS
+import { View, Text, TouchableOpacity } from './Themed';
+import { TextInput as CustomTextInput } from "../components/CustomTextInput"
+
+// HELPERS
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 
-import XLSX from "xlsx";
-import {
-    PieChart
-} from "react-native-chart-kit";
-// import RNFS from 'react-native-fs';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import { Ionicons } from '@expo/vector-icons';
-import {TextInput as CustomTextInput} from "../components/CustomTextInput"
 
 const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
     const unparsedScores: any[] = JSON.parse(JSON.stringify(props.scores))
     const unparsedCues: any[] = JSON.parse(JSON.stringify(props.cues))
-    const unparsedSubmissionStatistics: any[] = JSON.parse(JSON.stringify(props.submissionStatistics))
     const [scores, setScores] = useState<any[]>(unparsedScores)
-    const [cues] = useState<any[]>(unparsedCues)
-    const [submissionStatistics, setSubmissionStatistics] = useState<any[]>(unparsedSubmissionStatistics)
+    const [cues] = useState<any[]>(unparsedCues.sort((a: any, b: any) => {
+        return a.deadline < b.deadline ? -1 : 1
+    }))
+    const styles = stylesObject(props.isOwner)
     const [exportAoa, setExportAoa] = useState<any[]>()
     const [activeCueId, setActiveCueId] = useState("")
     const [activeUserId, setActiveUserId] = useState("")
     const [activeScore, setActiveScore] = useState("");
     const [studentSearch, setStudentSearch] = useState("");
 
+    // HOOKS 
+
+    /**
+     * @description Filter users by search
+     */
     useEffect(() => {
         if (studentSearch === "") {
             setScores(JSON.parse(JSON.stringify(props.scores)))
@@ -45,33 +52,9 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
         }
     }, [studentSearch])
 
-    useEffect(() => {
-
-        const filterUnreleased = submissionStatistics.filter((stat: any) => {
-            const { cueId } = stat;
-
-            const findCue = cues.find((u: any) => {
-                return u._id.toString() === cueId.toString();
-            }) 
-
-            const { cue, releaseSubmission } = findCue; 
-
-            if (!releaseSubmission) {
-                return false;
-            }
-
-            return true
-
-        })
-
-        setSubmissionStatistics(filterUnreleased)
-
-    }, [cues, props.submissionStatistics])
-
-    
-    // Statistics
-    const [showStatistics, setShowStatistics] = useState(false);
-
+    /**
+     * @description Prepare export data for Grades
+     */
     useEffect(() => {
 
         if (props.scores.length === 0 || cues.length === 0) {
@@ -123,7 +106,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
             })
 
-            const pointsToAdd = totalScore !== 0 ? (totalPoints / totalScore).toFixed(2) + "%" : '0'
+            const pointsToAdd = totalScore !== 0 ? (totalPoints / totalScore).toFixed(2).replace(/\.0+$/,'') + "%" : '0'
+
             // Add Total here
             userRow.push(pointsToAdd)
 
@@ -133,8 +117,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
         setExportAoa(exportAoa)
 
+
     }, [scores, cues])
 
+    /**
+     * @description Handles exporting of grades into Spreadsheet
+     */
     const exportGrades = async () => {
         const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
         const fileExtension = '.xlsx';
@@ -157,6 +145,9 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
     }
 
+    /**
+     * @description Handles modifying grade
+     */
     const modifyGrade = () => {
         props.modifyGrade(activeCueId, activeUserId, activeScore);
         setActiveCueId('')
@@ -164,300 +155,298 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
         setActiveScore('')
     }
 
-
-    const renderGradeStatsTabs = () => {
-        return (<View style={{ flexDirection: "row", backgroundColor: 'white', paddingBottom: 30 }}>
-            <TouchableOpacity
-                style={{
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    backgroundColor: 'white'
-                }}
-                onPress={() => {
-                    setShowStatistics(false);
-                }}>
-                <Text style={!showStatistics ? styles.allGrayFill : styles.all}>
-                    Scores
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    backgroundColor: 'white'
-                }}
-                onPress={() => {
-                    setShowStatistics(true);
-                }}>
-                <Text style={showStatistics ? styles.allGrayFill : styles.all}>Statistics</Text>
-            </TouchableOpacity>
+    /**
+     * @description Renders export button
+     */
+    const renderExportButton = () => {
+        return (<View style={{ flexDirection: "row", backgroundColor: '#efefef' }}>
+            <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'flex-end', width: '100%', backgroundColor: '#efefef', marginBottom: 20 }}>
+                {(scores.length === 0 || cues.length === 0 || !props.isOwner) ? null :
+                    <TouchableOpacity
+                        onPress={() => {
+                            exportGrades()
+                        }}
+                        style={{
+                            backgroundColor: '#efefef',
+                            overflow: 'hidden',
+                            height: 35,
+                            justifyContent: 'center',
+                            flexDirection: 'row'
+                        }}>
+                        <Text style={{
+                            textAlign: 'center',
+                            lineHeight: 34,
+                            color: '#006AFF',
+                            fontSize: 12,
+                            borderColor: '#006AFF',
+                            paddingHorizontal: 20,
+                            fontFamily: 'inter',
+                            height: 35,
+                            borderWidth: 1,
+                            borderRadius: 15,
+                            textTransform: 'uppercase'
+                        }}>
+                            EXPORT
+                        </Text>
+                    </TouchableOpacity>
+                }
+            </View>
         </View>)
     }
 
-    const renderStatistics = () => {
-
-
-        const mapCuesData: any = {};
-
-        const mapCuesCounts: any = {};
-
-        const mapCuesStatistics: any = {};
-
-
-        cues.map((cue: any) => {
-
-            const filteredStatistic = submissionStatistics.filter((stat: any) => stat.cueId === cue._id)
-
-            if (filteredStatistic.length === 0) return;
-
-            const { min, max, mean, median, std, submissionCount } = filteredStatistic[0];
-
-            mapCuesStatistics[cue._id] = filteredStatistic[0]
-            mapCuesData[cue._id] = [max, min, mean, median, std]
-            mapCuesCounts[cue._id] = submissionCount
-
-        })
-
-
-        const statisticsLabels = ["Max", "Min", "Mean", "Median", "Std Dev"]
-
-
-        const randomColor = () => ('#' + ((Math.random() * 0xffffff) << 0).toString(16) + '000000').slice(0, 7)
-
-        // PIE CHART FOR GRADE WEIGHTS
-
-        // ADD MORE COLORS HERE LATER
-        const colors = ["#d91d56", "#ed7d22", "#FFBA10", "#b8d41f", "#53be6d", "#f95d6a", "#ff7c43", "#ffa600"]
-
-        const nonZeroGradeWeight = cues.filter((cue: any) => cue.gradeWeight > 0)
-
-        const pieChartData = nonZeroGradeWeight.map((cue: any, index: number) => {
-
-            const { title } = htmlStringParser(cue.cue)
-
-            let color = "";
-
-            if (index < colors.length) {
-                color = colors[index]
-            } else {
-                // Fallack
-                color = randomColor()
-            }
-
-            return {
-                gradeWeight: cue.gradeWeight,
-                name: title,
-                color,
-                legendFontColor: "#7F7F7F",
-                legendFontSize: 15,
-
-            }
-        })
-
-        const chartConfig = {
-            backgroundColor: '#000000',
-            backgroundGradientFrom: '#1E2923',
-            backgroundGradientTo: '#08130D',
-            fontFamily: "inter",
-            color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-            style: {
-                borderRadius: 16,
-            },
-            propsForLabels: {
-                fontFamily: 'overpass; Arial',
-                width: "200"
-            },
-        }
-
-
-        return (<View style={{
-            // width: '100%',
-            backgroundColor: 'white',
-            flex: 1,
-            // paddingLeft: Dimensions.get("window").width < 768 ? 0 : 50,
-            paddingTop: 30
-        }}
-            key={JSON.stringify(props.scores)}
-        >
-
-            <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter', paddingBottom: 20, paddingLeft: 120 }}>
-                Grade Weightage
-            </Text>
-            <ScrollView
-                showsHorizontalScrollIndicator={false}
-                horizontal={true}
-                contentContainerStyle={{
-                    // height: '100%'
-                }}
-                nestedScrollEnabled={true}
-            >
-                <PieChart
-                    data={pieChartData}
-                    width={Dimensions.get("window").width < 768 ? 400 : 500}
-                    height={200}
-                    chartConfig={chartConfig}
-                    accessor={"gradeWeight"}
-                    backgroundColor={"transparent"}
-                    paddingLeft={"10"}
-                    // center={[10, 50]}
-                    hasLegend={true}
-                />
-            </ScrollView>
-        </View>)
-
-    }
-
-
+    // MAIN RETURN
     return (
         <View style={{
-            backgroundColor: 'white',
+            backgroundColor: '#efefef',
             width: '100%',
             height: '100%',
-            paddingHorizontal: 25,
-            borderTopRightRadius: 0,
-            borderTopLeftRadius: 0
         }}>
-            <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25 }}>
-                {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
-            </Text>
-            <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 15 }}>
-                <Text
-                    ellipsizeMode="tail"
-                    style={{
-                        fontSize: 21,
-                        paddingBottom: 20,
-                        fontFamily: 'inter',
-                        // textTransform: "uppercase",
-                        // paddingLeft: 10,
-                        flex: 1,
-                        lineHeight: 25,
-                        color: '#2f2f3c',
-                    }}>
-                    {PreferredLanguageText('grades')}
-                </Text>
-                {(scores.length === 0 || cues.length === 0 || !props.isOwner) ? null : <Text
-                    style={{
-                        color: "#3b64f8",
-                        fontSize: 11,
-                        lineHeight: 25,
-                        // paddingTop: 5,
-                        textAlign: "right",
-                        // paddingRight: 20,
-                        textTransform: "uppercase"
-                    }}
-                    onPress={() => {
-                        exportGrades()
-                    }}>
-                    EXPORT
-                </Text>}
-            </View>
-
-            {renderGradeStatsTabs()}
-
+            {renderExportButton()}
             {
                 props.scores.length === 0 || cues.length === 0 ?
-                    <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                    <View style={{ backgroundColor: '#efefef' }}>
+                        <Text style={{ width: '100%', color: '#1F1F1F', fontSize: 20, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter' }}>
                             {
                                 cues.length === 0 ? PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
                             }
                         </Text>
                     </View>
                     :
-                    (!showStatistics ? <View style={{
+                    (props.activeTab === "scores" ? <View style={{
                         width: '100%',
                         backgroundColor: 'white',
-                        flex: 1
+                        paddingTop: 10,
+                        maxHeight: 650,
+                        paddingHorizontal: 10,
+                        borderRadius: 1,
+                        borderLeftColor: props.channelColor,
+                        borderLeftWidth: 3,
+                        shadowOffset: {
+                            width: 2,
+                            height: 2,
+                        },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 10,
+                        zIndex: 5000000,
+                        flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                        justifyContent: props.isOwner ? 'flex-start' : 'center',
+                        overflow:  props.isOwner ? 'scroll' : 'visible',
                     }}
                         key={JSON.stringify(props.scores)}
                     >
-                         <View style={{ flexDirection: 'row', marginBottom: 10, }}>
-                                <View style={{ display: 'flex', flexDirection: 'row' }}>
-                                    <View 
-                                        style={{ 
-                                            width: 10,
-                                            height: 10,
-                                            borderRadius: 5,
-                                            backgroundColor: '#D91D56', 
-                                        }}
-                                    />
-                                    <Text style={{ paddingLeft: 10, fontSize: 11 }}>
-                                        No Submission
+                        {/* Performance report */}
+                        {props.isOwner ? null : <View style={{ display: 'flex', flexDirection: 'column', maxWidth: 300, width: Dimensions.get('window').width < 768 ? '100%' : '50%', alignSelf: 'center', paddingTop: 0, paddingBottom: 25 }}>
+                            <View style={{ flexDirection: 'row', flex: 1, paddingTop: 20, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 17, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Meetings
                                     </Text>
                                 </View>
-
-                                <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 30 }}>
-                                    <View 
-                                        style={{ 
-                                            width: 10,
-                                            height: 10,
-                                            borderRadius: 5,
-                                            backgroundColor: '#ED7D22', 
-                                        }}
-                                    />
-                                    <Text style={{ paddingLeft: 10, fontSize: 11 }}>
-                                        Late Submission
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{ fontSize: 18, lineHeight: 25, textAlign: 'right', fontFamily: 'inter' }} ellipsizeMode='tail'>
+                                        {props.attendance[props.channelId] ? props.attendance[props.channelId].length : 0} / {props.date[props.channelId] ? props.date[props.channelId].length : 0}
                                     </Text>
                                 </View>
                             </View>
+                            <View style={{ flexDirection: 'row', flex: 1, paddingTop: 10, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 17, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Posts
+                                    </Text>
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{ fontSize: 18, lineHeight: 25, textAlign: 'right', fontFamily: 'inter' }} ellipsizeMode='tail'>
+                                        {props.thread[props.channelId] ? props.thread[props.channelId].length : 0}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', flex: 1, marginTop: 10, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 17, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Assessments
+                                    </Text>
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{ fontSize: 18, lineHeight: 25, textAlign: 'right', fontFamily: 'inter' }} ellipsizeMode='tail'>
+                                        {props.report[props.channelId] ? props.report[props.channelId].totalAssessments : 0}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', flex: 1, paddingTop: 10, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 25 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 14, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Late
+                                    </Text>
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{ fontSize: 17, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
+                                        {props.report[props.channelId] ? props.report[props.channelId].lateAssessments : 0}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', flex: 1, paddingTop: 10, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 25 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 14, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Graded
+                                    </Text>
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{ fontSize: 17, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
+                                        {props.report[props.channelId] ? props.report[props.channelId].gradedAssessments : 0}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', flex: 1, paddingTop: 10, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 25 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 14, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Submitted
+                                    </Text>
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10, }}>
+                                    <Text style={{ fontSize: 17, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
+                                        {props.report[props.channelId] ? props.report[props.channelId].submittedAssessments : 0}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', flex: 1, paddingTop: 10, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 17, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Grade
+                                    </Text>
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{ fontSize: 18, lineHeight: 25, textAlign: 'right', fontFamily: 'inter' }} ellipsizeMode='tail'>
+                                        {props.report[props.channelId] ? props.report[props.channelId].score : 0}%
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', flex: 1, paddingTop: 10, paddingBottom: 20, backgroundColor: 'white', }}>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{
+                                        flex: 1, flexDirection: 'row',
+                                        color: '#1F1F1F',
+                                        fontSize: 17, lineHeight: 25,
+                                        fontFamily: 'inter'
+                                    }} ellipsizeMode='tail'>
+                                        Progress
+                                    </Text>
+                                </View>
+                                <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 10 }}>
+                                    <Text style={{ fontSize: 18, lineHeight: 25, textAlign: 'right', fontFamily: 'inter' }} ellipsizeMode='tail'>
+                                        {props.report[props.channelId] ? props.report[props.channelId].total : 0}%
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>}
+
+                        <View style={{ 
+                            height: props.isOwner ? '100%' : 'auto' ,
+                            maxHeight: 450,
+                            marginLeft: props.isOwner || Dimensions.get('window').width < 768 ? 0 : 100,
+                        }}>
                         <ScrollView
-                            showsHorizontalScrollIndicator={false}
-                            horizontal={true}
+                            showsHorizontalScrollIndicator={props.isOwner || Dimensions.get('window').width < 768 ? true : false}
+                            horizontal={props.isOwner || Dimensions.get('window').width < 768 ? true : false}
+                            showsVerticalScrollIndicator={props.isOwner || Dimensions.get('window').width < 768 ? false : true}
                             contentContainerStyle={{
-                                backgroundColor: 'white',
-                                flexDirection: 'column'
+                                flexDirection: props.isOwner || Dimensions.get('window').width < 768 ? 'column' : 'row'
                             }}
                             nestedScrollEnabled={true}
                         >
-                            <View style={{ minHeight: 70, flexDirection: 'row', overflow: 'hidden', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'black',  backgroundColor: '#fff'}} key={"-"}>
-                                    <View style={styles.col} key={'0,0'}>
-                                        {props.isOwner ? <CustomTextInput 
-                                            value={studentSearch}
-                                            onChangeText={(val: string) => setStudentSearch(val)}
-                                            placeholder={"Search"}
-                                            placeholderTextColor={'#a2a2ac'}
-                                        /> : null}
-                                    </View>
-                                    {
-                                        cues.map((cue: any, col: number) => {
-                                            const { title } = htmlStringParser(cue.cue)
-                                            // console.log("CUE", cue)
-                                            return <TouchableOpacity style={styles.col} key={col.toString()} onPress={() => props.openCueFromGrades(cue._id)}>
-                                                <Text style={{ textAlign: 'center', fontSize: 10, color: '#2f2f3c', marginBottom: 5 }}>
-                                                    {
-                                                        (new Date(cue.deadline)).toString().split(' ')[1] +
-                                                        ' ' +
-                                                        (new Date(cue.deadline)).toString().split(' ')[2]
-                                                    }
-                                                </Text>
-                                                <Text style={{ textAlign: 'center', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter', marginBottom: 5, height: 30, textAlignVertical: 'center'}} numberOfLines={2}>
-                                                    {title}
-                                                </Text>
-                                                <Text style={{ textAlign: 'center', fontSize: 10, color: '#2f2f3c' }}>
-                                                    {cue.gradeWeight}%
-                                                </Text>
-                                            </TouchableOpacity>
-                                        })
-                                    }
-                                    {
-                                        cues.length === 0 ? null :
-                                            <View style={styles.col} key={'total'}>
-                                                <View style={{ height: 10, marginBottom: 5, backgroundColor: 'white' }} />
-                                                <Text style={{ textAlign: 'center', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter', marginBottom: 5, height: 30,  }}>
-                                                    {PreferredLanguageText('total')}
-                                                </Text>
-                                                <Text style={{ textAlign: 'center', fontSize: 10, color: '#2F2F3C' }}>
-                                                    100%
-                                                </Text>
-                                            </View>
-                                    }
-                                </View>
+                            <View style={{ minHeight: 70, flexDirection: props.isOwner || Dimensions.get('window').width < 768 ? 'row' : 'column', overflow: 'hidden', paddingBottom: 10, borderBottomWidth: (!props.isOwner && Dimensions.get('window').width) || props.isOwner < 768 ? 1 : 0, borderBottomColor: '#efefef' }} key={"-"}>
+                                {props.isOwner ? <View style={styles.col} key={'0,0'}>
+                                    <CustomTextInput
+                                        value={studentSearch}
+                                        onChangeText={(val: string) => setStudentSearch(val)}
+                                        placeholder={"Search"}
+                                        placeholderTextColor={'#1F1F1F'}
+                                    /> 
+                                </View> : null}
+                                {
+                                    cues.length === 0 ? null :
+                                        <View style={styles.col} key={'total'}>
+                                            <View style={{ height: 10, marginBottom: 5 }} />
+                                            <Text style={{ textAlign: 'center', fontSize: 13, color: '#000000', fontFamily: 'inter', marginBottom: 5,  }}>
+                                                {PreferredLanguageText('total')}
+                                            </Text>
+                                            {/* <Text style={{ textAlign: 'center', fontSize: 10, color: '#000000' }}>
+                                                100%
+                                            </Text> */}
+                                        </View>
+                                }
+                                {
+                                    cues.map((cue: any, col: number) => {
+                                        const { title } = htmlStringParser(cue.cue)
+                                        return <TouchableOpacity style={styles.col} key={col.toString()} onPress={() => props.openCueFromGrades(cue._id)}>
+                                            <Text style={{ textAlign: 'center', fontSize: 10, color: '#000000', marginBottom: 5 }}>
+                                                {
+                                                    (new Date(cue.deadline)).toString().split(' ')[1] +
+                                                    ' ' +
+                                                    (new Date(cue.deadline)).toString().split(' ')[2]
+                                                }
+                                            </Text>
+                                            <Text style={{ textAlign: 'center', fontSize: 13, color: '#000000', fontFamily: 'inter', marginBottom: 5, textAlignVertical: 'center' }} numberOfLines={2} ellipsizeMode="tail">
+                                                {title}
+                                            </Text>
+                                            <Text style={{ textAlign: 'center', fontSize: 10, color: '#000000' }}>
+                                                {cue.gradeWeight}%
+                                            </Text>
+                                        </TouchableOpacity>
+                                    })
+                                }
+                                
+                            </View>
+
+                            {/* Search results empty */}
+                            {
+                                scores.length === 0 ? <View>
+                                    <Text style={{ width: '100%', color: '#1F1F1F', fontSize: 20, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                                        No Students.
+                                    </Text>
+                                </View> : null
+                            }
 
                             <ScrollView
-                                showsVerticalScrollIndicator={false}
-                                horizontal={false}
+                                showsVerticalScrollIndicator={true}
+                                horizontal={props.isOwner || Dimensions.get('window').width < 768 ? false : true}
                                 contentContainerStyle={{
-                                    // height: '100%'
+                                    height: '100%',
+                                    width: '100%'
                                 }}
                                 nestedScrollEnabled={true}
                             >
@@ -474,17 +463,20 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 }
                                             })
 
-                                            console.log(score);
-
                                             return <View style={styles.row} key={row}>
-                                                <View style={styles.col} >
-                                                    <Text style={{ textAlign: 'left', fontSize: 12, color: '#2F2F3C', fontFamily: 'inter' }}>
+                                                {props.isOwner ? <View style={styles.col} >
+                                                    <Text style={{ textAlign: 'center', fontSize: 12, color: '#000000', fontFamily: 'inter' }}>
                                                         {score.fullName}
                                                     </Text>
-                                                    {/* <Text style={{ textAlign: 'left', fontSize: 12, color: '#2F2F3C' }}>
-                                                        {score.displayName}
-                                                    </Text> */}
-                                                </View>
+                                                </View> : null}
+                                                {
+                                                    cues.length === 0 ? null :
+                                                        <View style={styles.col} key={'total'}>
+                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#000000', textTransform: 'uppercase' }}>
+                                                                {totalScore !== 0 ? (totalPoints / totalScore).toFixed(2) : '0'}%
+                                                            </Text>
+                                                        </View>
+                                                }
                                                 {
                                                     cues.map((cue: any, col: number) => {
 
@@ -494,66 +486,71 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
                                                         if (scoreObject && activeCueId === scoreObject.cueId && activeUserId === score.userId) {
                                                             return <View style={styles.col}>
-                                                                <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', backgroundColor: '#fff' }}>
-                                                                    <TextInput 
-                                                                        value={activeScore} 
+                                                                <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                                                    <TextInput
+                                                                        value={activeScore}
                                                                         placeholder={' / 100'}
                                                                         onChangeText={val => {
                                                                             setActiveScore(val)
                                                                         }}
-                                                                        style={{ width: '50%', marginRight: 5, padding: 8, borderBottomColor: "#cccccc", borderBottomWidth: 1, fontSize: 12, backgroundColor: '#fff' }}
-                                                                        placeholderTextColor={'#a2a2ac'}
+                                                                        style={{ width: '50%', marginRight: 5, padding: 8, borderBottomColor: "#efefef", borderBottomWidth: 1, fontSize: 12 }}
+                                                                        placeholderTextColor={'#1F1F1F'}
                                                                     />
-                                                                    <TouchableOpacity style={{ backgroundColor: '#fff' }} onPress={() => {
+                                                                    <TouchableOpacity onPress={() => {
                                                                         modifyGrade()
                                                                     }}>
-                                                                        <Ionicons name='checkmark-circle-outline' size={24} style={{ marginRight: 5 }} color={'#8bc34a'}/>
+                                                                        <Ionicons name='checkmark-circle-outline' size={15} style={{ marginRight: 5 }} color={'#8bc34a'} />
                                                                     </TouchableOpacity>
-                                                                    <TouchableOpacity style={{ backgroundColor: '#fff' }} onPress={() => { 
-                                                                        if (!scoreObject) return;
+                                                                    <TouchableOpacity onPress={() => {
                                                                         setActiveCueId('')
                                                                         setActiveUserId('')
                                                                         setActiveScore('')
                                                                     }}>
-                                                                        <Ionicons name='close-circle-outline' size={24} color={'#d91d56'} />
+                                                                        <Ionicons name='close-circle-outline' size={15} color={'#f94144'} />
                                                                     </TouchableOpacity>
                                                                 </View>
 
                                                             </View>
                                                         }
 
-                                                        return <TouchableOpacity disabled={!props.isOwner} style={styles.col} key={row.toString() + '-' + col.toString()} onPress={() => { 
-                                                                setActiveCueId(scoreObject.cueId);
-                                                                setActiveUserId(score.userId);
-                                                                setActiveScore(scoreObject.score);
-                                                            }}>
-                                                            {!scoreObject || !scoreObject.submittedAt ? <Text style={{ textAlign: 'center', fontSize: 11, color: '#D91D56',  }}>
-                                                                { scoreObject && scoreObject.graded ? scoreObject.score :  (!scoreObject || !scoreObject.cueId ? "N/A" : "Missing" )}
-                                                            </Text> 
-                                                            : 
-                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: scoreObject && new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) ? '#ED7D22' : '#2f2f3c', }}>
-                                                                {
-                                                                    scoreObject && scoreObject.graded ? scoreObject.score : (scoreObject && new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) ? "Late" : '-')
-                                                                }
-                                                            </Text>}
+                                                        console.log("Score object", scoreObject)
+
+                                                        return <TouchableOpacity disabled={!props.isOwner} style={styles.col} key={row.toString() + '-' + col.toString()} onPress={() => {
+
+                                                            if (!scoreObject) return;
+
+                                                            setActiveCueId(scoreObject.cueId);
+                                                            setActiveUserId(score.userId);
+                                                            setActiveScore(scoreObject.score);
+                                                        }}>
+                                                            {!scoreObject || !scoreObject.submittedAt ? <Text style={{ textAlign: 'center', fontSize: 11, color: '#f94144', }}>
+                                                                {scoreObject && scoreObject !== undefined && scoreObject.graded && scoreObject.score ? scoreObject.score : (!scoreObject || !scoreObject.cueId ? "N/A" : "Missing")}
+                                                            </Text>
+                                                                :
+                                                                <Text style={{ textAlign: 'center', fontSize: 11, color: scoreObject && new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) ? '#f3722c' : '#000000', }}>
+                                                                    {
+                                                                        scoreObject && scoreObject !== undefined && scoreObject.graded && scoreObject.score ? scoreObject.score : (scoreObject && (new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline))) ? "Late" : '-')
+                                                                    }
+                                                                </Text>}
+
+                                                            {
+                                                                scoreObject && scoreObject !== undefined && scoreObject.score && scoreObject.graded && ((new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) || !scoreObject.submittedAt)) ? <Text style={{ textAlign: 'center', fontSize: 10, color: !scoreObject.submittedAt ? '#f94144' : '#f3722c', marginTop: 5, borderWidth: 0, borderColor: !scoreObject.submittedAt ? '#f94144' : '#f3722c', borderRadius: 10, width: 60, alignSelf: 'center' }}>
+                                                                    {!scoreObject.submittedAt ? "(Missing)" : "(Late)"}
+                                                                </Text> : null
+                                                            }
                                                         </TouchableOpacity>
                                                     })
                                                 }
-                                                {
-                                                    cues.length === 0 ? null :
-                                                        <View style={styles.col} key={'total'}>
-                                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>
-                                                                {totalScore !== 0 ? (totalPoints / totalScore).toFixed(2) : '0'}%
-                                                            </Text>
-                                                        </View>
-                                                }
+                                                
                                             </View>
                                         })
                                     }
                                 </View>
                             </ScrollView>
                         </ScrollView>
-                    </View> : renderStatistics())
+                        </View>
+                    </View> : null
+                	)
             }
         </View >
     );
@@ -564,25 +561,7 @@ export default React.memo(GradesList, (prev, next) => {
 })
 
 
-const styles = StyleSheet.create({
-    row: { minHeight: 70, flexDirection: 'row', overflow: 'hidden', borderBottomColor: '#e0e0e0', borderBottomWidth: 1, backgroundColor: '#fff'  },
-    col: { width: 120, justifyContent: 'center', display: 'flex', flexDirection: 'column', padding: 7, backgroundColor: '#fff'  },
-    allGrayFill: {
-        fontSize: 11,
-        overflow: "hidden",
-        color: "#fff",
-        paddingHorizontal: 10,
-        borderRadius: 10,
-        backgroundColor: "#a2a2ac",
-        lineHeight: 20
-    },
-    all: {
-        fontSize: 11,
-        color: "#a2a2ac",
-        height: 22,
-        overflow: "hidden",
-        paddingHorizontal: 10,
-        backgroundColor: "white",
-        lineHeight: 20
-    },
+const stylesObject: any = (isOwner: any) => StyleSheet.create({
+    row: { minHeight: 70, flexDirection: isOwner || Dimensions.get('window').width < 768 ? 'row' : 'column',  borderBottomColor: '#efefef', borderBottomWidth: (!isOwner && Dimensions.get('window').width < 768) || isOwner ? 1 : 0 },
+    col: { height: isOwner || Dimensions.get('window').width < 768 ? 'auto' : 80, paddingBottom: isOwner ? 0 : 10, width: isOwner || Dimensions.get('window').width < 768 ? (Dimensions.get('window').width < 768 ? 90 : 120) : 180, justifyContent: 'center', display: 'flex', flexDirection: 'column', padding: 7, borderBottomColor: '#efefef', borderBottomWidth: isOwner || (Dimensions.get('window').width < 768) ? 0 : 1,  },
 })

@@ -1,48 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, Platform, Dimensions } from 'react-native';
+// REACT
+import React, { useState, useEffect, useCallback } from 'react';
+import { ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text } from './Themed';
-import _ from 'lodash'
-import moment from 'moment'
-import { PreferredLanguageText } from '../helpers/LanguageContext';
-import DateTimePicker from "@react-native-community/datetimepicker";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import _ from 'lodash';
 
-import XLSX from "xlsx";
-import {
-    LineChart,
-  } from "react-native-chart-kit";
-// import RNFS from 'react-native-fs';
+// GRAPHQL
+import { fetchAPI } from '../graphql/FetchAPI';
+import { getAttendancesForChannel, getPastDates, modifyAttendance } from '../graphql/QueriesAndMutations';
+
+// COMPONENTS
+import { View, Text } from './Themed';
+import moment from 'moment';
+import XLSX from 'xlsx';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import Alert from './Alert';
+// import { Datepicker } from '@mobiscroll/react';
 
 const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
-
-    const unparsedPastMeetings: any[] = JSON.parse(JSON.stringify(props.pastMeetings))
-    const unparsedChannelAttendances: any[] = JSON.parse(JSON.stringify(props.channelAttendances))
-    const [pastMeetings, setPastMeetings] = useState<any[]>(unparsedPastMeetings)
-    const [channelAttendances] = useState<any[]>(unparsedChannelAttendances)    
-
-    const [enableFilter, setEnableFilter] = useState(false);
-    const [end, setEnd] = useState(new Date());
-    const [start, setStart] = useState(new Date(end.getTime() - (2630000 * 60 * 10)));
-
+    const [fixedPastMeetings, setFixedPastMeetings] = useState<any[]>([]);
+    const [pastMeetings, setPastMeetings] = useState<any[]>([]);
+    const [channelAttendances, setChannelAttendances] = useState<any[]>([]);
+    const [loadingMeetings, setLoadingMeetings] = useState(false);
+    const [loadingAttendances, setLoadingAttendances] = useState(false);
+    const [isOwner, setIsOwner] = useState(false);
+    const [end, setEnd] = useState<any>(null);
+    const [start, setStart] = useState<any>(null);
     const [attendanceTotalMap, setAttendanceTotalMap] = useState<any>({});
+    const [exportAoa, setExportAoa] = useState<any[]>();
 
-    const [showAttendanceStats, setShowAttendanceStats] = useState(false);
+    // HOOKS
 
-    const [exportAoa, setExportAoa] = useState<any[]>()
-
-    // Time pickers IOS AND ANDROID
-
-    const [showStartTimeAndroid, setShowStartTimeAndroid] = useState(false);
-    const [showStartDateAndroid, setShowStartDateAndroid] = useState(false);
-  
-    const [showEndTimeAndroid, setShowEndTimeAndroid] = useState(false);
-    const [showEndDateAndroid, setShowEndDateAndroid] = useState(false);
-  
-
+    /**
+     * @description Load data on init
+     */
     useEffect(() => {
+        loadChannelAttendances();
+        setPastMeetings([]);
+        loadPastSchedule();
+    }, [props.channelId]);
 
+    /**
+     * @description Set if user is owner
+     */
+    useEffect(() => {
+        (async () => {
+            const u = await AsyncStorage.getItem('user');
+            if (u) {
+                const user = JSON.parse(u);
+                if (user._id.toString().trim() === props.channelCreatedBy) {
+                    setIsOwner(true);
+                }
+            }
+        })();
+    }, [props.channelCreatedBy, props.channelId]);
+
+    /**
+     * @description Create Structure for exporting attendance data in Spreadsheet
+     */
+    useEffect(() => {
         if (channelAttendances.length === 0 || pastMeetings.length === 0) {
             return;
         }
@@ -51,775 +68,529 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         const studentTotalMap: any = {};
 
         channelAttendances.forEach(att => {
-
-            let count = 0
+            let count = 0;
             pastMeetings.forEach(meeting => {
-
                 const attendanceObject = att.attendances.find((s: any) => {
-                    return s.dateId.toString().trim() === meeting.dateId.toString().trim()
-                })
+                    return s.dateId.toString().trim() === meeting.dateId.toString().trim();
+                });
 
                 if (attendanceObject) count++;
+            });
 
-            })
+            studentTotalMap[att.userId] = count;
+        });
 
-            studentTotalMap[att.userId] = count; 
-        
-        })
+        setAttendanceTotalMap(studentTotalMap);
 
-        // console.log(studentTotalMap)
-        setAttendanceTotalMap(studentTotalMap)
-        
         const exportAoa = [];
 
         // Add row 1 with past meetings and total
-        let row1 = [""];
+        let row1 = [''];
 
         pastMeetings.forEach(meeting => {
-            row1.push(moment(new Date(meeting.start)).format('MMMM Do, h:mm a'))
-        })
+            row1.push(moment(new Date(meeting.start)).format('MMMM Do, h:mm a'));
+        });
 
-        row1.push("Total")
+        row1.push('Total');
 
         exportAoa.push(row1);
 
         channelAttendances.forEach(att => {
-
             let userRow = [];
 
-            userRow.push(att.fullName)
+            userRow.push(att.fullName);
 
             pastMeetings.forEach(meeting => {
-
                 const attendanceObject = att.attendances.find((s: any) => {
-                    return s.dateId.toString().trim() === meeting.dateId.toString().trim()
-                })
+                    return s.dateId.toString().trim() === meeting.dateId.toString().trim();
+                });
 
                 if (attendanceObject) {
-                    userRow.push(`Joined at ${moment(new Date(attendanceObject.joinedAt)).format('MMMM Do, h:mm a')}`)
+                    userRow.push(`Joined at ${moment(new Date(attendanceObject.joinedAt)).format('MMMM Do, h:mm a')}`);
                 } else {
-                    userRow.push('-')
+                    userRow.push('-');
                 }
+            });
 
-            })
+            userRow.push(`${studentTotalMap[att.userId]} / ${pastMeetings.length}`);
 
-            userRow.push(`${studentTotalMap[att.userId]} / ${pastMeetings.length}`)
+            exportAoa.push(userRow);
+        });
 
-            exportAoa.push(userRow)
-        
-        })
+        setExportAoa(exportAoa);
+    }, [channelAttendances, pastMeetings]);
 
-        setExportAoa(exportAoa)
-
-       
-    }, [channelAttendances, pastMeetings])
-
-
-
-
-
-     // Update past meetings to consider
-     useEffect(() => {
-        if (enableFilter) {
-
-            const filteredPastMeetings = unparsedPastMeetings.filter(meeting => {
-                return (new Date(meeting.start) > start && new Date(meeting.end) < end) 
-            })
+    /**
+     * @description Filter meetings with start and end
+     */
+    useEffect(() => {
+        if (start && end) {
+            const filteredPastMeetings = fixedPastMeetings.filter(meeting => {
+                return new Date(meeting.start) > start && new Date(meeting.end) < end;
+            });
 
             setPastMeetings(filteredPastMeetings);
-            
         } else {
-
-            setPastMeetings(unparsedPastMeetings)
+            setPastMeetings(fixedPastMeetings);
         }
+    }, [start, end]);
 
-    }, [enableFilter, start, end])
+    /**
+     * @description API call to fetch user attendances
+     */
+    const loadChannelAttendances = useCallback(() => {
+        setLoadingAttendances(true);
+        const server = fetchAPI('');
+        server
+            .query({
+                query: getAttendancesForChannel,
+                variables: {
+                    channelId: props.channelId
+                }
+            })
+            .then(async res => {
+                if (res.data && res.data.attendance.getAttendancesForChannel) {
+                    const u = await AsyncStorage.getItem('user');
+                    if (u) {
+                        const user = JSON.parse(u);
+                        if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
+                            // all attendances
+                            setChannelAttendances(res.data.attendance.getAttendancesForChannel);
+                        } else {
+                            // only user's attendances
+                            const attendances = res.data.attendance.getAttendancesForChannel.find((u: any) => {
+                                return u.userId.toString().trim() === user._id.toString().trim();
+                            });
+                            const userAttendances = [{ ...attendances }];
+                            setChannelAttendances(userAttendances);
+                        }
+                        setLoadingAttendances(false);
+                    }
+                }
+            })
+            .catch((e: any) => {
+                setLoadingAttendances(false);
+            });
+    }, [props.channelId]);
 
+    /**
+     * @description API call to fetch past meetings
+     */
+    const loadPastSchedule = useCallback(() => {
+        setLoadingMeetings(true);
+        const server = fetchAPI('');
+        server
+            .query({
+                query: getPastDates,
+                variables: {
+                    channelId: props.channelId
+                }
+            })
+            .then(res => {
+                if (res.data && res.data.attendance.getPastDates) {
+                    setFixedPastMeetings(res.data.attendance.getPastDates);
+                    setPastMeetings(res.data.attendance.getPastDates);
+                }
+                setLoadingMeetings(false);
+            })
+            .catch((e: any) => {
+                setLoadingMeetings(false);
+            });
+    }, [props.channelId]);
+
+    // FUNCTIONS
+
+    /**
+     * @description Mark as present/absent
+     */
+    const onChangeAttendance = (dateId: String, userId: String, markPresent: Boolean) => {
+        Alert(markPresent ? 'Mark Present?' : 'Mark Absent?', '', [
+            {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => {
+                    return;
+                }
+            },
+            {
+                text: 'Yes',
+                onPress: async () => {
+                    const server = fetchAPI('');
+                    server
+                        .mutate({
+                            mutation: modifyAttendance,
+                            variables: {
+                                dateId,
+                                userId,
+                                channelId: props.channelId,
+                                markPresent
+                            }
+                        })
+                        .then(res => {
+                            if (res.data && res.data.attendance.modifyAttendance) {
+                                loadChannelAttendances();
+                            }
+                        });
+                }
+            }
+        ]);
+    };
+
+    /**
+     * @description Export attendance data into spreadsheet
+     */
     const exportAttendance = async () => {
         const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
         const fileExtension = '.xlsx';
 
         const ws = XLSX.utils.aoa_to_sheet(exportAoa);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Attendance ");
-		    /* generate XLSX file and send to client */
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
-        
+        XLSX.utils.book_append_sheet(wb, ws, 'Attendance ');
+        /* generate XLSX file and send to client */
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+
         const uri = FileSystem.cacheDirectory + 'attendance.xlsx';
         await FileSystem.writeAsStringAsync(uri, wbout, {
-        encoding: FileSystem.EncodingType.Base64
+            encoding: FileSystem.EncodingType.Base64
         });
 
         await Sharing.shareAsync(uri, {
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        dialogTitle: 'MyWater data',
-        UTI: 'com.microsoft.excel.xlsx'
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            dialogTitle: 'MyWater data',
+            UTI: 'com.microsoft.excel.xlsx'
         });
-    }
+    };
 
-
-    // Filter Date time pickers
-
-    const renderStartDateTimePicker = () => {
-        return (
-          <View style={{ backgroundColor: "#fff" }}>
-            {Platform.OS === "ios" ? (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={"date"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  const currentDate: any = selectedDate;
-                  setStart(currentDate);
-                }}
-              />
-            ) : null}
-            {Platform.OS === "android" && showStartDateAndroid ? (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={"date"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  if (!selectedDate) return;
-                  const currentDate: any = selectedDate;
-                  setShowStartDateAndroid(false);
-                  setStart(currentDate);
-                }}
-              />
-            ) : null}
-            {Platform.OS === "android" ? (
-              <View
-                style={{
-                  width: "100%",
-                  flexDirection: "row",
-                  marginTop: 12,
-                  backgroundColor: "#fff",
-                  marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
-                }}
-              >
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "white",
-                    overflow: "hidden",
-                    height: 35,
-                    borderRadius: 15,
-                    marginBottom: 10,
-                    width: 150,
-                    justifyContent: "center",
-                    flexDirection: "row"
-                  }}
-                  onPress={() => {
-                    setShowStartDateAndroid(true);
-                    setShowStartTimeAndroid(false);
-                    setShowEndDateAndroid(false);
-                    setShowEndTimeAndroid(false);
-                  }}
-                >
-                  <Text
-                    style={{
-                      textAlign: "center",
-                      lineHeight: 35,
-                      color: "#2f2f3c",
-                      overflow: "hidden",
-                      fontSize: 10,
-                      // backgroundColor: '#f4f4f6',
-                      paddingHorizontal: 25,
-                      fontFamily: "inter",
-                      height: 35,
-                      width: 150,
-                      borderRadius: 15
-                    }}
-                  >
-                    Set Date
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "white",
-                    overflow: "hidden",
-                    height: 35,
-                    borderRadius: 15,
-                    width: 150,
-                    justifyContent: "center",
-                    flexDirection: "row"
-                  }}
-                  onPress={() => {
-                    setShowStartDateAndroid(false);
-                    setShowStartTimeAndroid(true);
-                    setShowEndDateAndroid(false);
-                    setShowEndTimeAndroid(false);
-                  }}
-                >
-                  <Text
-                    style={{
-                      textAlign: "center",
-                      lineHeight: 35,
-                      color: "#2f2f3c",
-                      overflow: "hidden",
-                      fontSize: 10,
-                      // backgroundColor: '#f4f4f6',
-                      paddingHorizontal: 25,
-                      fontFamily: "inter",
-                      height: 35,
-                      width: 150,
-                      borderRadius: 15
-                    }}
-                  >
-                    Set Time
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
-            <View style={{ height: 10, backgroundColor: "white" }} />
-            {Platform.OS === "ios" && (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={"time"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  if (!selectedDate) return;
-                  const currentDate: any = selectedDate;
-                  setStart(currentDate);
-                }}
-              />
-            )}
-            {Platform.OS === "android" && showStartTimeAndroid && (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={start}
-                mode={"time"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  if (!selectedDate) return;
-                  const currentDate: any = selectedDate;
-                  setShowStartTimeAndroid(false);
-                  setStart(currentDate);
-                }}
-              />
-            )}
-          </View>
-        );
-      };
-    
-      const renderEndDateTimePicker = () => {
-        return (
-          <View style={{ backgroundColor: "#fff" }}>
-            {Platform.OS === "ios" && (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={"date"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  if (!selectedDate) return;
-                  const currentDate: any = selectedDate;
-                  setEnd(currentDate);
-                }}
-              />
-            )}
-            {Platform.OS === "android" && showEndDateAndroid ? (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={"date"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  if (!selectedDate) return;
-                  const currentDate: any = selectedDate;
-                  setShowEndDateAndroid(false);
-                  setEnd(currentDate);
-                }}
-              />
-            ) : null}
-            {Platform.OS === "android" ? (
-              <View
-                style={{
-                  width: "100%",
-                  flexDirection: "row",
-                  marginTop: 12,
-                  backgroundColor: "#fff",
-                  marginLeft: Dimensions.get("window").width < 768 ? 0 : 10
-                }}
-              >
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "white",
-                    overflow: "hidden",
-                    height: 35,
-                    width: 150,
-                    borderRadius: 15,
-                    marginBottom: 10,
-                    justifyContent: "center",
-                    flexDirection: "row"
-                  }}
-                  onPress={() => {
-                    setShowStartDateAndroid(false);
-                    setShowStartTimeAndroid(false);
-                    setShowEndDateAndroid(true);
-                    setShowEndTimeAndroid(false);
-                  }}
-                >
-                  <Text
-                    style={{
-                      textAlign: "center",
-                      lineHeight: 35,
-                      color: "#2f2f3c",
-                      overflow: "hidden",
-                      fontSize: 10,
-                      // backgroundColor: '#f4f4f6',
-                      paddingHorizontal: 25,
-                      fontFamily: "inter",
-                      height: 35,
-                      width: 150,
-                      borderRadius: 15
-                    }}
-                  >
-                    Set Date
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "white",
-                    overflow: "hidden",
-                    height: 35,
-                    borderRadius: 15,
-                    width: 150,
-                    justifyContent: "center",
-                    flexDirection: "row"
-                  }}
-                  onPress={() => {
-                    setShowStartDateAndroid(false);
-                    setShowStartTimeAndroid(false);
-                    setShowEndDateAndroid(false);
-                    setShowEndTimeAndroid(true);
-                  }}
-                >
-                  <Text
-                    style={{
-                      textAlign: "center",
-                      lineHeight: 35,
-                      color: "#2f2f3c",
-                      overflow: "hidden",
-                      fontSize: 10,
-                      // backgroundColor: '#f4f4f6',
-                      paddingHorizontal: 25,
-                      fontFamily: "inter",
-                      height: 35,
-                      width: 150,
-                      borderRadius: 15
-                    }}
-                  >
-                    Set Time
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
-    
-            <View style={{ height: 10, backgroundColor: "white" }} />
-            {Platform.OS === "ios" && (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={"time"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  if (!selectedDate) return;
-                  const currentDate: any = selectedDate;
-                  setEnd(currentDate);
-                }}
-              />
-            )}
-            {Platform.OS === "android" && showEndTimeAndroid && (
-              <DateTimePicker
-                style={styles.timePicker}
-                value={end}
-                mode={"time"}
-                textColor={"#2f2f3c"}
-                onChange={(event, selectedDate) => {
-                  if (!selectedDate) return;
-                  const currentDate: any = selectedDate;
-                  setShowEndTimeAndroid(false);
-                  setEnd(currentDate);
-                }}
-              />
-            )}
-          </View>
-        );
-      };
-    
-
-    const renderAttendanceStatsTabs = () => {
-
-        if (!props.isOwner) return null;
-        
-        return (<View style={{ flexDirection: "row", backgroundColor: 'white', }}>
-            <TouchableOpacity
-                style={{
-                    justifyContent: "center",
-                    flexDirection: "column"
-                }}
-                onPress={() => {
-                    setShowAttendanceStats(false);
-                }}>
-                <Text style={!showAttendanceStats ? styles.allGrayFill : styles.all}>
-                    Students
+    // MAIN RETURN
+    return (
+        <View
+            style={{
+                backgroundColor: '#efefef',
+                width: '100%'
+            }}>
+            {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
+                <Text style={{ color: '#1f1f1f', fontSize: 15, fontFamily: 'inter', marginBottom: 20 }}>
+                    Past meetings
                 </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            )}
+            <Text style={{ width: '100%', textAlign: 'center' }}>
+                {/* <Ionicons name='chevron-down' size={15} color={'#e0e0e0'} /> */}
+            </Text>
+            <View
                 style={{
-                    justifyContent: "center",
-                    flexDirection: "column"
-                }}
-                onPress={() => {
-                    setShowAttendanceStats(true);
+                    backgroundColor: '#efefef',
+                    flexDirection: 'row',
+                    paddingBottom: 20,
+                    width: '100%',
+                    justifyContent: 'flex-end'
                 }}>
-                <Text style={showAttendanceStats ? styles.allGrayFill : styles.all}>Lectures</Text>
-            </TouchableOpacity>
-    </View>)
-    }
+                {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
+                    <View style={{ backgroundColor: '#efefef' }}>
+                        <View
+                            style={{
+                                display: 'flex',
+                                width: '100%',
+                                flexDirection: 'row',
+                                backgroundColor: '#efefef',
+                                alignItems: 'center',
+                                borderBottomColor: '#d9dcdf',
+                                borderBottomWidth: 1
+                            }}>
+                            {/* <Datepicker
+                                themeVariant="light"
+                                controls={['calendar']}
+                                select="range"
+                                touchUi={true}
+                                inputProps={{
+                                    placeholder: 'Filter'
+                                }}
+                                responsive={{
+                                    small: {
+                                        display: 'bubble'
+                                    },
+                                    medium: {
+                                        touchUi: false
+                                    }
+                                }}
+                                value={[start, end]}
+                                onChange={(val: any) => {
+                                    setStart(val.value[0]);
+                                    setEnd(val.value[1]);
+                                }}
+                            /> */}
+                        </View>
+                    </View>
+                )}
+                <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#efefef' }} />
+                {pastMeetings.length === 0 || channelAttendances.length === 0 || !isOwner ? null : (
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: '#efefef',
+                            overflow: 'hidden',
+                            height: 35,
+                            justifyContent: 'center',
+                            flexDirection: 'row'
+                        }}
+                        onPress={() => {
+                            exportAttendance();
+                        }}>
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                lineHeight: 34,
+                                color: '#006AFF',
+                                fontSize: 12,
+                                borderColor: '#006AFF',
+                                borderWidth: 1,
+                                paddingHorizontal: 20,
+                                fontFamily: 'inter',
+                                height: 35,
+                                borderRadius: 15,
+                                textTransform: 'uppercase'
+                            }}>
+                            EXPORT
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
 
-
-    const renderAttendanceChart = () => {
-
-        const studentCount = channelAttendances.length;
-
-        const meetingLabels: any[] = [];
-
-        const attendanceCounts:any[] = [];
-
-        pastMeetings.map((meeting: any) => {
-
-            const { start, dateId } = meeting
-
-            meetingLabels.push(`${moment(new Date(start)).format('MMMM Do, h:mm a')}`)
-
-            let count = 0;
-
-            // Total count map
-            channelAttendances.forEach((att: any) => {
-                const filteredDateId = att.attendances.filter((x: any) => x.dateId === dateId)
-                if (filteredDateId.length > 0) count++;
-            })
-
-            let percentage = (count/studentCount) * 100
-
-            attendanceCounts.push(percentage)
-            
-        })
-
-        const data = {
-            labels: meetingLabels,
-            datasets: [
-              {
-                data: attendanceCounts,
-                color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
-                strokeWidth: 2 // optional
-              }
-            ],
-            // legend: ["Rainy Days"] // optional
-          };
-
-
-
-        return (<View style={{
-            width: '100%',
-            backgroundColor: 'white',
-            flex: 1
-        }}
-            key={JSON.stringify(pastMeetings)}
-        >
-            {/* <Text style={{ textAlign: 'left', fontSize: 13, color: '#2f2f3c', fontFamily: 'inter', paddingBottom: 20 }}>
-                        Attendance By Lectures
-            </Text> */}
-            <ScrollView
-                            showsHorizontalScrollIndicator={false}
-                            horizontal={true}
+            {channelAttendances.length === 0 || pastMeetings.length === 0 || loadingAttendances || loadingMeetings ? (
+                loadingAttendances || loadingMeetings ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flex: 1,
+                            justifyContent: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            backgroundColor: '#efefef',
+                            borderTopRightRadius: 0,
+                            borderTopLeftRadius: 0,
+                            paddingVertical: 100
+                        }}>
+                        <ActivityIndicator color={'#1F1F1F'} />
+                    </View>
+                ) : (
+                    <View style={{ backgroundColor: '#efefef' }}>
+                        <Text
+                            style={{
+                                width: '100%',
+                                color: '#1F1F1F',
+                                fontSize: 20,
+                                paddingVertical: 50,
+                                paddingHorizontal: 5,
+                                fontFamily: 'inter'
+                            }}>
+                            {pastMeetings.length === 0 ? 'No past meetings.' : 'No Students.'}
+                        </Text>
+                    </View>
+                )
+            ) : (
+                <View
+                    style={{
+                        width: '100%',
+                        backgroundColor: 'white',
+                        paddingTop: 10,
+                        maxHeight: 500,
+                        paddingHorizontal: 10,
+                        borderRadius: 1,
+                        borderLeftColor: props.channelColor,
+                        borderLeftWidth: 3,
+                        shadowOffset: {
+                            width: 2,
+                            height: 2
+                        },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 10,
+                        zIndex: 5000000
+                    }}
+                    key={JSON.stringify(channelAttendances)}>
+                    <ScrollView
+                        showsHorizontalScrollIndicator={true}
+                        horizontal={true}
+                        contentContainerStyle={{
+                            height: '100%',
+                            maxHeight: 450,
+                            flexDirection: 'column'
+                        }}
+                        nestedScrollEnabled={true}>
+                        <View>
+                            <View
+                                style={{
+                                    minHeight: 70,
+                                    flexDirection: 'row',
+                                    overflow: 'hidden',
+                                    paddingBottom: 10,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: '#efefef'
+                                }}
+                                key={'-'}>
+                                {isOwner ? <View style={styles.col} key={'0,0'} /> : null}
+                                <View style={styles.col} key={'0,0'}>
+                                    <Text
+                                        style={{
+                                            fontSize: 13,
+                                            color: '#000000',
+                                            fontFamily: 'inter',
+                                            textAlign: 'center'
+                                        }}>
+                                        Total
+                                    </Text>
+                                </View>
+                                {pastMeetings.map((meeting: any, col: number) => {
+                                    const { title, start, end } = meeting;
+                                    return (
+                                        <View style={styles.col} key={col.toString()}>
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 13,
+                                                    color: '#000000',
+                                                    fontFamily: 'inter'
+                                                }}>
+                                                {title}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 12,
+                                                    color: '#000000',
+                                                    marginBottom: 5
+                                                }}>
+                                                {moment(new Date(start)).format('MMMM Do')}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 12,
+                                                    color: '#000000',
+                                                    marginBottom: 5
+                                                }}>
+                                                {moment(new Date(start)).format('h:mm')} -{' '}
+                                                {moment(new Date(end)).format('h:mm')}
+                                            </Text>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        </View>
+                        <ScrollView
+                            showsVerticalScrollIndicator={true}
+                            horizontal={false}
                             contentContainerStyle={{
                                 height: '100%'
                             }}
-                            nestedScrollEnabled={true}
-                        >
-                    <LineChart 
-                        data={data}
-                        width={width}
-                        height={500}
-                        // chartConfig={chartConfig}
-                        chartConfig={{
-                            backgroundGradientFrom: "#fff",
-                            backgroundGradientFromOpacity: 0,
-                            backgroundGradientTo: "#fff",
-                            backgroundGradientToOpacity: 0,
-                            color: (opacity = 1) => `rgba(1, 122, 205, 1)`,
-                            labelColor: (opacity = 1) => `rgba(0, 0, 0, 1)`,
-                            strokeWidth: 2, // optional, default 3
-                            barPercentage: 0.5,
-                            useShadowColorFromDataset: false, // optional
-                            propsForBackgroundLines: {
-                                strokeWidth: 1,
-                                stroke: '#efefef',
-                                strokeDasharray: '0',
-                              },
-                          }}
-                    />
-                </ScrollView>
-        </View>)
-    }
+                            nestedScrollEnabled={true}>
+                            {channelAttendances.map((channelAttendance: any, row: number) => {
+                                const studentCount = attendanceTotalMap[channelAttendance.userId];
 
-    const width = Dimensions.get("window").width;
-
-
-    return (
-        <View style={{
-            backgroundColor: 'white',
-            width: '100%',
-            height: '100%',
-            paddingHorizontal: 20,
-            borderTopRightRadius: 0,
-            borderTopLeftRadius: 0
-        }}>
-            <Text style={{ width: '100%', textAlign: 'center', height: 15, paddingBottom: 25 }}>
-                {/* <Ionicons name='chevron-down' size={20} color={'#e0e0e0'} /> */}
-            </Text>
-            <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
-                <TouchableOpacity
-                    key={Math.random()}
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'white',
-                    }}
-                    onPress={() => {
-                        props.hideChannelAttendance()                  
-                    }}>
-                        <Text style={{
-                            width: '100%',
-                            fontSize: 16,
-                            color: '#a2a2ac'
-                        }}>
-                            <Ionicons name='chevron-back-outline' size={17} color={'#2f2f3c'} style={{ marginRight: 20 }} /> 
-                        </Text>
-                </TouchableOpacity>
-                
-                {pastMeetings.length === 0 || channelAttendances.length === 0 ?  null : <Text
-                    style={{
-                        color: "#3b64f8",
-                        fontSize: 11,
-                        lineHeight: 25,
-                        // paddingTop: 5,
-                        textAlign: "right",
-                        // paddingRight: 20,
-                        textTransform: "uppercase",
-                        marginRight: 20
-                    }}
-                    onPress={() => {
-                        setEnableFilter(!enableFilter)
-                    }}>
-                    {!enableFilter ? "FILTER" : "HIDE"}
-                </Text>}
-                {(pastMeetings.length === 0 || channelAttendances.length === 0 || !props.isOwner) ?  null : <Text
-                    style={{
-                        color: "#3b64f8",
-                        fontSize: 11,
-                        lineHeight: 25,
-                        // paddingTop: 5,
-                        textAlign: "right",
-                        // paddingRight: 20,
-                        textTransform: "uppercase"
-                    }}
-                    onPress={() => {
-                        exportAttendance()
-                    }}>
-                    EXPORT
-                </Text>}
-            </View>
-
-            {renderAttendanceStatsTabs()}
-        
-
-            {/* Filters Start and End */}
-            {unparsedPastMeetings.length === 0 || channelAttendances.length === 0 ?  null : <View style={{ paddingTop: 30, backgroundColor: 'white' }}>
-
-                <View style={{ display: 'flex', width: "100%", flexDirection: width < 768 ? "column" : "row", marginBottom: 30, backgroundColor: 'white' }} >
-
-
-                        {!enableFilter ? null : <View
-                            style={{
-                                width: width < 768 ? "100%" : "30%",
-                                flexDirection: "row",
-                                marginTop: 12,
-                                marginLeft: 0,
-                                backgroundColor: 'white'
-                            }}>
-                                <Text style={styles.text}>{PreferredLanguageText("start")} Date</Text>
-
-                            {renderStartDateTimePicker()}
-                        </View>}
-                        {!enableFilter ? null : <View
-                            style={{
-                                width: width < 768 ? "100%" : "30%",
-                                flexDirection: "row",
-                                marginTop: 12,
-                                marginLeft: width < 768 ? 0 : 10,
-                                backgroundColor: 'white'
-                            }}>
-                            <Text style={styles.text}>{PreferredLanguageText("end")} Date</Text>
-                            {renderEndDateTimePicker()}
-                        </View>}
-                    </View>
-
-            </View>}
-
-            {
-                channelAttendances.length === 0 || pastMeetings.length === 0 ?
-                    <View style={{ backgroundColor: 'white' }}>
-                        <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 21, paddingTop: 100, paddingHorizontal: 5, fontFamily: 'inter' }}>
-                            {
-                                pastMeetings.length === 0  ? "No past meetings" : "No Students"
-                                // PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
-                            }
-                        </Text>
-                    </View>
-                    :
-                    (!showAttendanceStats ? <View style={{
-                        width: '100%',
-                        backgroundColor: 'white',
-                        flex: 1
-                    }}
-                        key={JSON.stringify(channelAttendances)}
-                    >
-                        <ScrollView
-                            showsHorizontalScrollIndicator={true}
-                            horizontal={true}
-                            contentContainerStyle={{
-                                height: '100%',
-                                flexDirection: 'column'
-                            }}
-                            nestedScrollEnabled={true}
-                        >
-                            <View>
-                                    <View style={{ minHeight: 70, flexDirection: 'row', overflow: 'hidden', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'black', backgroundColor: '#fff'}} key={"-"}>
-                                        <View style={styles.col} key={'0,0'} />
-                                        <View style={styles.col} key={'0,0'} >
-                                            <Text style={{ fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
-                                                Total
+                                return (
+                                    <View style={styles.row} key={row}>
+                                        {isOwner ? (
+                                            <View style={styles.col}>
+                                                <Text
+                                                    style={{
+                                                        textAlign: 'center',
+                                                        fontSize: 13,
+                                                        color: '#000000',
+                                                        fontFamily: 'inter'
+                                                    }}>
+                                                    {channelAttendance.fullName}
+                                                </Text>
+                                            </View>
+                                        ) : null}
+                                        <View style={styles.col}>
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 13,
+                                                    color: '#000000',
+                                                    fontFamily: 'inter'
+                                                }}>
+                                                {studentCount} / {pastMeetings.length}
                                             </Text>
                                         </View>
-                                        {
-                                            pastMeetings.map((meeting: any, col: number) => {
-                                                const { title, start, end } = meeting
-                                                return <View style={styles.col} key={col.toString()}>
-                                                    <Text style={{ textAlign: 'center', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
-                                                        {title}
-                                                    </Text>
-                                                    <Text style={{ textAlign: 'center', fontSize: 12, color: '#2F2F3C', marginBottom: 5 }}>
-                                                        {moment(new Date(start)).format('MMMM Do')}
-                                                    </Text>
-                                                    <Text style={{ textAlign: 'center', fontSize: 12, color: '#2F2F3C', marginBottom: 5 }}>
-                                                        {moment(new Date(start)).format('h:mm')} - {moment(new Date(end)).format('h:mm')}                              
-                                                    </Text>
+                                        {pastMeetings.map((meeting: any, col: number) => {
+                                            const attendanceObject = channelAttendance.attendances.find((s: any) => {
+                                                return s.dateId.toString().trim() === meeting.dateId.toString().trim();
+                                            });
+                                            return (
+                                                <View style={styles.col} key={row.toString() + '-' + col.toString()}>
+                                                    <TouchableOpacity
+                                                        disabled={!isOwner}
+                                                        onPress={() =>
+                                                            onChangeAttendance(
+                                                                meeting.dateId,
+                                                                channelAttendance.userId,
+                                                                attendanceObject ? false : true
+                                                            )
+                                                        }
+                                                        style={{
+                                                            marginBottom: 5,
+                                                            width: '100%',
+                                                            flexDirection: 'row',
+                                                            justifyContent: 'center'
+                                                        }}>
+                                                        {attendanceObject ? (
+                                                            <Ionicons
+                                                                name="checkmark-outline"
+                                                                size={15}
+                                                                color={'#006AFF'}
+                                                            />
+                                                        ) : isOwner ? (
+                                                            <Ionicons
+                                                                name="checkmark-outline"
+                                                                size={15}
+                                                                color={'#e0e0e0'}
+                                                            />
+                                                        ) : (
+                                                            '-'
+                                                        )}
+                                                    </TouchableOpacity>
+                                                    {attendanceObject ? (
+                                                        <Text
+                                                            style={{
+                                                                textAlign: 'center',
+                                                                fontSize: 12,
+                                                                color: '#000000',
+                                                                width: '100%'
+                                                            }}>
+                                                            {attendanceObject.joinedAt
+                                                                ? moment(new Date(attendanceObject.joinedAt)).format(
+                                                                      'h:mm a'
+                                                                  )
+                                                                : ''}
+                                                        </Text>
+                                                    ) : null}
                                                 </View>
-                                            })
-                                        }
+                                            );
+                                        })}
                                     </View>
-                            </View>
-
-
-                            <ScrollView
-                                showsVerticalScrollIndicator={false}
-                                horizontal={false}
-                                contentContainerStyle={{
-                                    // height: '100%'
-                                }}
-                                nestedScrollEnabled={true}
-                            >
-                                <View>
-                                    {
-                                        channelAttendances.map((channelAttendance: any, row: number) => {
-
-                                            const studentCount = attendanceTotalMap[channelAttendance.userId];
-
-                                            return <View style={styles.row} key={row}>
-                                                <View style={styles.col} >
-                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
-                                                        {channelAttendance.fullName}
-                                                    </Text>
-                                                </View>
-                                                <View style={styles.col} >
-                                                    <Text style={{ textAlign: 'left', fontSize: 13, color: '#2F2F3C', fontFamily: 'inter' }}>
-                                                        {studentCount} / {pastMeetings.length}
-                                                    </Text>
-                                                </View>
-                                                {
-                                                    pastMeetings.map((meeting: any, col: number) => {
-                                                        const attendanceObject = channelAttendance.attendances.find((s: any) => {
-                                                            return s.dateId.toString().trim() === meeting.dateId.toString().trim()
-                                                        })
-                                                        return <View style={styles.col} key={row.toString() + '-' + col.toString()}>
-                                                            <TouchableOpacity disabled={!props.isOwner} onPress={() => props.modifyAttendance(meeting.dateId, channelAttendance.userId, attendanceObject ? false : true)} style={{ marginBottom: 5, width: '100%', flexDirection: 'row', justifyContent: 'center' }}>
-                                                                {
-                                                                    attendanceObject ? 
-                                                                        <Ionicons name='checkmark-outline' size={20} color={'#3b64f8'} /> 
-                                                                        :
-                                                                        props.isOwner ? <Ionicons name='checkmark-outline' size={20} color={'#e0e0e0'} /> : '-'
-                                                                 }
-                                                            </TouchableOpacity>
-                                                            {attendanceObject ? <Text style={{ textAlign: 'center', fontSize: 12, color: '#2F2F3C', width: '100%',  }}>
-                                                                {attendanceObject.joinedAt ? moment(new Date(attendanceObject.joinedAt)).format('h:mm a') : ""}
-                                                            </Text> : null}
-                                                        </View>
-                                                    })
-                                                }
-
-                                            </View>
-                                        })
-                                    }
-                                </View>
-                            </ScrollView>
+                                );
+                            })}
                         </ScrollView>
-                    </View> : renderAttendanceChart())
-            }
-        </View >
+                    </ScrollView>
+                </View>
+            )}
+        </View>
     );
-}
+};
 
-export default AttendanceList
+export default AttendanceList;
 
 const styles = StyleSheet.create({
-    row: { minHeight: 70, flexDirection: 'row', overflow: 'hidden', borderBottomColor: '#e0e0e0', borderBottomWidth: 1, backgroundColor: '#fff'  },
-    col: { width: 120, justifyContent: 'center', display: 'flex', flexDirection: 'column', padding: 7, backgroundColor: '#fff'  },
-    allGrayFill: {
-        fontSize: 11,
-        overflow: "hidden",
-        color: "#fff",
-        paddingHorizontal: 10,
-        borderRadius: 10,
-        backgroundColor: "#a2a2ac",
-        lineHeight: 20
+    row: {
+        minHeight: 70,
+        flexDirection: 'row',
+        overflow: 'hidden',
+        borderBottomColor: '#e0e0e0',
+        borderBottomWidth: 1
     },
-    all: {
-        fontSize: 11,
-        color: "#a2a2ac",
-        height: 22,
-        overflow: "hidden",
-        paddingHorizontal: 10,
-        backgroundColor: "white",
-        lineHeight: 20
-    },
-    text: {
-        fontSize: 11,
-        color: "#a2a2ac",
-        textAlign: "left",
-        paddingHorizontal: 10,
-        width: 100
-      },
-      timePicker: {
-        width: 125,
-        fontSize: 16,
-        height: 45,
-        color: "#2f2f3c",
-        borderRadius: 10,
-        marginLeft: 10
-      },
-})
+    col: {
+        width: Dimensions.get('window').width < 768 ? 90 : 120,
+        justifyContent: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 7
+    }
+});

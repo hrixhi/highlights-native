@@ -1,29 +1,41 @@
+// REACT
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, ScrollView } from 'react-native';
-import Alert from '../components/Alert'
-import { View } from './Themed';
-// import { } from 'react-native-gesture-handler'
+import { ActivityIndicator } from 'react-native';
+
+// API
 import { fetchAPI } from '../graphql/FetchAPI';
-import { getGrades, getGradesList, getSubmissionStatistics, submitGrade } from '../graphql/QueriesAndMutations';
+import { getGrades, getGradesList, submitGrade } from '../graphql/QueriesAndMutations';
+
+// COMPONENTS
+import Alert from '../components/Alert';
+import { View } from './Themed';
 import GradesList from './GradesList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
-
-    const [modalAnimation] = useState(new Animated.Value(1))
-    const [loading, setLoading] = useState(true)
-    const [cues, setCues] = useState<any[]>([])
-    const [scores, setScores] = useState<any[]>([])
-    const [submissionStatistics, setSubmissionStatistics] = useState<any[]>([])
+    const [loading, setLoading] = useState(true);
+    const [cues, setCues] = useState<any[]>([]);
+    const [scores, setScores] = useState<any[]>([]);
     const [isOwner, setIsOwner] = useState(false);
-
     const couldNotLoadSubscribersAlert = PreferredLanguageText('couldNotLoadSubscribers');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
 
+    // HOOKS
+
+    /**
+     * @description Loads Cues and User grades on Init
+     */
+    useEffect(() => {
+        loadCuesAndScores();
+    }, [props.channelId]);
+
+    /**
+     * @description Sets if user is owner
+     */
     useEffect(() => {
         (async () => {
-            const u = await AsyncStorage.getItem("user");
+            const u = await AsyncStorage.getItem('user');
             if (u) {
                 const user = JSON.parse(u);
                 if (user._id.toString().trim() === props.channelCreatedBy) {
@@ -33,302 +45,222 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         })();
     }, [props.channelCreatedBy, props.channelId]);
 
+    /**
+     * @description Fetches all assignments and user grades for each
+     */
     const loadCuesAndScores = useCallback(() => {
-        setLoading(true)
+        setLoading(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('')
-            server.query({
-                query: getGrades,
-                variables: {
-                    channelId: props.channelId
-                }
-            })
+            const server = fetchAPI('');
+            server
+                .query({
+                    query: getGrades,
+                    variables: {
+                        channelId: props.channelId
+                    }
+                })
                 .then(res => {
                     if (res.data.channel && res.data.channel.getSubmissionCues) {
-                        setCues(res.data.channel.getSubmissionCues)
-                        server.query({
+                        setCues(res.data.channel.getSubmissionCues);
+                        server
+                            .query({
+                                query: getGradesList,
+                                variables: {
+                                    channelId: props.channelId
+                                }
+                            })
+                            .then(async res2 => {
+                                if (res2.data.channel.getGrades) {
+                                    const u = await AsyncStorage.getItem('user');
+                                    if (u) {
+                                        const user = JSON.parse(u);
+                                        if (
+                                            user._id.toString().trim() === props.channelCreatedBy.toString().trim() ||
+                                            res2.data.channel.getGrades.length === 0
+                                        ) {
+                                            // all scores
+                                            setScores(res2.data.channel.getGrades);
+                                        } else {
+                                            // only user's score
+                                            const score = res2.data.channel.getGrades.find((u: any) => {
+                                                return u.userId.toString().trim() === user._id.toString().trim();
+                                            });
+
+                                            const { scores } = score;
+
+                                            const updateScores = scores.map((x: any) => {
+                                                const { cueId, gradeWeight, graded } = x;
+                                                const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
+                                                    return u._id.toString() === cueId.toString();
+                                                });
+
+                                                const { releaseSubmission } = findCue;
+
+                                                if (!releaseSubmission) {
+                                                    return {
+                                                        cueId,
+                                                        gradeWeight,
+                                                        graded: false,
+                                                        score: ''
+                                                    };
+                                                } else {
+                                                    return x;
+                                                }
+                                            });
+
+                                            score.scores = updateScores;
+
+                                            const singleScoreArray = [{ ...score }];
+                                            setScores(singleScoreArray);
+                                        }
+                                    }
+                                    setLoading(false);
+                                }
+                            })
+                            .catch(err => {
+                                console.log('Error', err);
+                                Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
+                                setLoading(false);
+                            });
+                    } else {
+                        setLoading(false);
+                    }
+                })
+                .catch(err => {
+                    console.log('Error', err);
+                    Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
+                    setLoading(false);
+                });
+        } else {
+            setLoading(false);
+        }
+    }, [props.channelId, props.channelCreatedBy]);
+
+    /**
+     * @description Used to modify an assignment score directly
+     */
+    const modifyGrade = (cueId: string, userId: string, score: string) => {
+        if (Number.isNaN(Number(score))) {
+            Alert('Score should be a valid number');
+            return;
+        }
+        const server = fetchAPI('');
+        server
+            .mutate({
+                mutation: submitGrade,
+                variables: {
+                    cueId,
+                    userId,
+                    score
+                }
+            })
+            .then(res => {
+                if (res.data.cue.submitGrade) {
+                    server
+                        .query({
                             query: getGradesList,
                             variables: {
                                 channelId: props.channelId
                             }
-                        }).then(async (res2) => {
+                        })
+                        .then(async res2 => {
                             if (res2.data.channel.getGrades) {
-                                const u = await AsyncStorage.getItem('user')
+                                const u = await AsyncStorage.getItem('user');
                                 if (u) {
-                                    const user = JSON.parse(u)
+                                    const user = JSON.parse(u);
                                     if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
                                         // all scores
-                                        setScores(res2.data.channel.getGrades)
+                                        setScores(res2.data.channel.getGrades);
                                     } else {
                                         // only user's score
                                         const score = res2.data.channel.getGrades.find((u: any) => {
-                                            return u.userId.toString().trim() === user._id.toString().trim()
-                                        })
+                                            return u.userId.toString().trim() === user._id.toString().trim();
+                                        });
 
                                         // if it is a quiz and not release submission then set Graded to false
-                                       
                                         const { scores } = score;
 
                                         const updateScores = scores.map((x: any) => {
-
-                                            const { cueId, gradeWeight, graded, } = x;
+                                            const { cueId, gradeWeight, graded } = x;
                                             const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
-                                                return u._id.toString() === cueId.toString()
+                                                return u._id.toString() === cueId.toString();
                                             });
 
-                                            const { cue, releaseSubmission } = findCue;
+                                            const { releaseSubmission } = findCue;
 
                                             if (!releaseSubmission) {
                                                 return {
-                                                        cueId,
-                                                        gradeWeight,
-                                                        graded: false,
-                                                        score: ""
-                                                    }
-                                            } else {
-                                                return x
-                                            }
-
-                                        })
-
-                                        score.scores = updateScores;
-
-                                        const singleScoreArray = [{ ...score }]
-                                        setScores(singleScoreArray)
-                                    }
-
-                                }
-                                setLoading(false)
-                                modalAnimation.setValue(0)
-                                Animated.timing(modalAnimation, {
-                                    toValue: 1,
-                                    duration: 150,
-                                    useNativeDriver: true
-                                }).start();
-                            }
-                        }).catch(err => {
-                            Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
-                            setLoading(false)
-                            modalAnimation.setValue(0)
-                            Animated.timing(modalAnimation, {
-                                toValue: 1,
-                                duration: 150,
-                                useNativeDriver: true
-                            }).start();
-                        })
-                    } else {
-                        setLoading(false)
-                        modalAnimation.setValue(0)
-                        Animated.timing(modalAnimation, {
-                            toValue: 1,
-                            duration: 150,
-                            useNativeDriver: true
-                        }).start();
-                    }
-                })
-                .catch((err) => {
-                    Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
-                    setLoading(false)
-                    modalAnimation.setValue(0)
-                    Animated.timing(modalAnimation, {
-                        toValue: 1,
-                        duration: 150,
-                        useNativeDriver: true
-                    }).start();
-                })
-        } else {
-            setLoading(false)
-            modalAnimation.setValue(0)
-            Animated.timing(modalAnimation, {
-                toValue: 1,
-                duration: 150,
-                useNativeDriver: true
-            }).start();
-        }
-    }, [props.channelId, modalAnimation, props.channelCreatedBy])
-
-    const loadSubmissionStatistics = useCallback(() => {
-
-        if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('')
-            server.query({
-                query: getSubmissionStatistics,
-                variables: {
-                    channelId: props.channelId
-                }
-            }).then(res => {
-                if (res.data.channel && res.data.channel.getSubmissionCuesStatistics) {
-                    setSubmissionStatistics(res.data.channel.getSubmissionCuesStatistics)
-                }
-            })
-
-        }
-
-    }, [props.channelId, modalAnimation, props.channelCreatedBy])
-
-
-    useEffect(() => {
-        loadCuesAndScores()
-        loadSubmissionStatistics()
-    }, [props.channelId])
-
-    const modifyGrade = (cueId: string, userId: string, score: string) => {
-        if (Number.isNaN(Number(score))) {
-            Alert('Score should be a valid number')
-            return
-        }
-        const server = fetchAPI('')
-        server.mutate({
-            mutation: submitGrade,
-            variables: {
-                cueId,
-                userId,
-                score,
-            }
-        }).then(res => {
-            if (res.data.cue.submitGrade) {
-                // Fetch scores again and statistics again
-
-                server.query({
-                    query: getGradesList,
-                    variables: {
-                        channelId: props.channelId
-                    }
-                }).then(async (res2) => {
-                    if (res2.data.channel.getGrades) {
-                        const u = await AsyncStorage.getItem('user')
-                        if (u) {
-                            const user = JSON.parse(u)
-                            if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
-                                // all scores
-                                setScores(res2.data.channel.getGrades)
-                            } else {
-                                // only user's score
-                                const score = res2.data.channel.getGrades.find((u: any) => {
-                                    return u.userId.toString().trim() === user._id.toString().trim()
-                                })
-
-                                // if it is a quiz and not release submission then set Graded to false
-                               
-                                    const { scores } = score;
-
-                                    const updateScores = scores.map((x: any) => {
-
-                                        const { cueId, gradeWeight, graded, } = x;
-                                        const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
-                                            return u._id.toString() === cueId.toString()
-                                        });
-
-                                        const { cue, releaseSubmission } = findCue;
-
-                                        if (!releaseSubmission) {
-                                            return {
                                                     cueId,
                                                     gradeWeight,
                                                     graded: false,
-                                                    score: ""
-                                                }
-                                        } else {
-                                            return x
-                                        }
-                                    })
+                                                    score: ''
+                                                };
+                                            } else {
+                                                return x;
+                                            }
+                                        });
 
-                                    score.scores = updateScores;
+                                        score.scores = updateScores;
 
-                                const singleScoreArray = [{ ...score }]
-                                setScores(singleScoreArray)
+                                        const singleScoreArray = [{ ...score }];
+                                        setScores(singleScoreArray);
+                                    }
+                                }
+                                setLoading(false);
                             }
-
-                        }
-                        setLoading(false)
-                        modalAnimation.setValue(0)
-                        Animated.timing(modalAnimation, {
-                            toValue: 1,
-                            duration: 150,
-                            useNativeDriver: true
-                        }).start();
-                    }
-                    loadSubmissionStatistics()
-                }).catch(err => {
-                    Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
-                    setLoading(false)
-                    modalAnimation.setValue(0)
-                    Animated.timing(modalAnimation, {
-                        toValue: 1,
-                        duration: 150,
-                        useNativeDriver: true
-                    }).start();
-                })
-
-            }
-        }).catch((err) => {
-            alert('Something went wrong. Try Again.')
-        })
-
-    }
-
-    const windowHeight = Dimensions.get('window').width < 1024 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
-    return (
-        <ScrollView style={{
-            width: '100%',
-            height: windowHeight,
-            backgroundColor: 'white',
-            borderTopRightRadius: 0,
-            borderTopLeftRadius: 0
-        }}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={true}
-            scrollEventThrottle={1}
-            keyboardDismissMode={'on-drag'}
-            overScrollMode={'always'}
-            nestedScrollEnabled={true}
-        >
-            <Animated.View style={{
-                opacity: modalAnimation,
-                width: '100%',
-                height: windowHeight,
-                backgroundColor: 'white',
-                borderTopRightRadius: 0,
-                borderTopLeftRadius: 0
-            }}>
-                {
-                    loading
-                        ? <View style={{
-                            width: '100%',
-                            flex: 1,
-                            justifyContent: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            backgroundColor: 'white',
-                            borderTopRightRadius: 0,
-                            borderTopLeftRadius: 0
-                        }}>
-                            <ActivityIndicator color={'#a2a2ac'} />
-                        </View>
-                        :
-                        <GradesList
-                            key={JSON.stringify(scores)}
-                            scores={scores}
-                            cues={cues}
-                            channelName={props.filterChoice}
-                            channelId={props.channelId}
-                            isOwner={isOwner}
-                            closeModal={() => {
-                                Animated.timing(modalAnimation, {
-                                    toValue: 0,
-                                    duration: 150,
-                                    useNativeDriver: true
-                                }).start(() => props.closeModal())
-                            }}
-                            reload={() => loadCuesAndScores()}
-                            submissionStatistics={submissionStatistics}
-                            modifyGrade={modifyGrade}
-                            openCueFromGrades={props.openCueFromGrades}
-                        />
+                        })
+                        .catch(err => {
+                            console.log('Error', err);
+                            Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
+                            setLoading(false);
+                        });
                 }
-            </Animated.View>
-        </ScrollView>
-    );
-}
+            })
+            .catch(err => {
+                alert('Something went wrong. Try Again.');
+            });
+    };
 
-export default Grades
+    // MAIN RETURN
+    return (
+        <View style={{ width: '100%', backgroundColor: '#efefef' }}>
+            {loading ? (
+                <View
+                    style={{
+                        width: '100%',
+                        flex: 1,
+                        justifyContent: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        backgroundColor: '#efefef',
+                        borderTopRightRadius: 0,
+                        borderTopLeftRadius: 0,
+                        paddingVertical: 100
+                    }}>
+                    <ActivityIndicator color={'#1F1F1F'} />
+                </View>
+            ) : (
+                <GradesList
+                    key={JSON.stringify(scores) + JSON.stringify(props.activeTab) + JSON.stringify(props.report)}
+                    scores={scores}
+                    cues={cues}
+                    channelName={props.filterChoice}
+                    isOwner={isOwner}
+                    channelId={props.channelId}
+                    closeModal={() => props.closeModal()}
+                    reload={() => loadCuesAndScores()}
+                    modifyGrade={modifyGrade}
+                    openCueFromGrades={props.openCueFromGrades}
+                    activeTab={props.activeTab}
+                    channelColor={props.channelColor}
+                    report={props.report}
+                    attendance={props.attendance}
+                    thread={props.thread}
+                    date={props.date}
+                />
+            )}
+        </View>
+    );
+};
+
+export default Grades;

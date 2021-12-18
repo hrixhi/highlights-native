@@ -23,14 +23,21 @@ export const createUser = gql`
     }
   }
 `;
-
 export const createChannel = gql`
-  mutation($name: String!, $password: String, $createdBy: String!, $temporary: Boolean, $colorCode: String) {
+  mutation($name: String!, $password: String, $createdBy: String!, $temporary: Boolean, $colorCode: String, $description: String, $tags: [String!], $isPublic: Boolean, $subscribers: [String!], $moderators: [String!] ) {
     channel {
-      create(name: $name, password: $password, createdBy: $createdBy, temporary: $temporary, colorCode: $colorCode)
+      create(name: $name, password: $password, createdBy: $createdBy, temporary: $temporary, colorCode: $colorCode, description: $description, tags: $tags, isPublic: $isPublic, subscribers: $subscribers, moderators: $moderators)
     }
   }
 `;
+export const duplicateChannel = gql`
+mutation($channelId: String!, $name: String!, $password: String, $temporary: Boolean, $colorCode: String, $duplicateSubscribers: Boolean, $duplicateOwners: Boolean) {
+  channel {
+    duplicate(channelId: $channelId, name: $name, password: $password, temporary: $temporary, colorCode: $colorCode, duplicateSubscribers: $duplicateSubscribers, duplicateOwners: $duplicateOwners)
+  }
+}
+`;
+
 export const createCue = gql`
   mutation(
     $cue: String!
@@ -47,6 +54,9 @@ export const createCue = gql`
     $deadline: String
     $initiateAt: String
     $shareWithUserIds: [String!]
+    $limitedShares: Boolean
+    $allowedAttempts: String
+    $availableUntil: String
   ) {
     cue {
       create(
@@ -64,6 +74,9 @@ export const createCue = gql`
         deadline: $deadline
         initiateAt: $initiateAt
         shareWithUserIds: $shareWithUserIds
+        limitedShares: $limitedShares
+        allowedAttempts: $allowedAttempts
+        availableUntil: $availableUntil
       )
     }
   }
@@ -76,9 +89,9 @@ export const markAsRead = gql`
   }
 `;
 export const subscribe = gql`
-  mutation($name: String!, $userId: String!, $password: String) {
+  mutation($channelId: String!, $userId: String!, $password: String) {
     subscription {
-      subscribe(name: $name, userId: $userId, password: $password)
+      subscribe(channelId: $channelId, userId: $userId, password: $password)
     }
   }
 `;
@@ -108,9 +121,9 @@ export const createMessage = gql`
   }
 `;
 export const updateUser = gql`
-  mutation($userId: String!, $displayName: String!, $fullName: String!) {
+  mutation($userId: String!, $displayName: String!, $fullName: String!, $avatar: String) {
     user {
-      update(userId: $userId, displayName: $displayName, fullName: $fullName)
+      update(userId: $userId, displayName: $displayName, fullName: $fullName, avatar: $avatar)
     }
   }
 `;
@@ -135,22 +148,47 @@ export const convertToHtml = gql`
 export const signup = gql`
   mutation(
     $email: String!
-    $userId: String!
-    $password: String!
     $fullName: String!
-    $displayName: String!
+    $provider: String!
+    $password: String
+    $avatar: String
   ) {
     user {
       signup(
         email: $email
-        userId: $userId
-        password: $password
         fullName: $fullName
-        displayName: $displayName
+        provider: $provider
+        password: $password
+        avatar: $avatar
       )
     }
   }
 `;
+
+export const authWithProvider = gql`
+  mutation(
+    $email: String!
+    $fullName: String!
+    $provider: String!
+    $avatar: String
+  ) {
+    user {
+      authWithProvider(
+        email: $email
+        fullName: $fullName
+        provider: $provider
+        avatar: $avatar
+      ) {
+        user {
+          _id
+        }
+        error
+        token
+      }
+    } 
+  }
+`;
+
 export const saveCuesToCloud = gql`
   mutation($userId: String!, $cues: [CueInputObject!]!) {
     cue {
@@ -216,6 +254,13 @@ export const sendDirectMessage = gql`
     }
   }
 `;
+export const sendMessage = gql`
+  mutation($users: [String!]!, $message: String!, $channelId: String, $userId: String!, $groupId: String, $groupName: String, $groupImage: String) {
+    message {
+      createDirect(users: $users, message: $message, channelId: $channelId, userId: $userId, groupId: $groupId, groupName: $groupName, groupImage: $groupImage)
+    }
+  }
+`;
 export const inviteByEmail = gql`
   mutation($emails: [String!]!, $channelId: String!) {
     user {
@@ -237,18 +282,11 @@ export const markMessagesAsRead = gql`
     }
   }
 `;
-export const createDate = gql`
-  mutation($title: String!, $userId: String!, $start: String!, $end: String!, $channelId: String) {
-    date {
-      create(title: $title, start: $start, end: $end, userId: $userId, channelId: $channelId)
-    }
-  }
-`;
 
 export const createDateV1 = gql`
-  mutation($title: String!, $userId: String!, $start: String!, $end: String!, $channelId: String, $meeting: Boolean, $description: String, $recordMeeting: Boolean, $frequency: String, $repeatTill: String) {
+  mutation($title: String!, $userId: String!, $start: String!, $end: String!, $channelId: String, $meeting: Boolean, $description: String, $recordMeeting: Boolean, $frequency: String, $repeatTill: String, $repeatDays: [String!]) {
     date {
-      createV1(title: $title, userId: $userId, start: $start, end: $end, channelId: $channelId,  meeting: $meeting, description: $description, recordMeeting: $recordMeeting, frequency: $frequency, repeatTill: $repeatTill)
+      createV1(title: $title, userId: $userId, start: $start, end: $end, channelId: $channelId,  meeting: $meeting, description: $description, recordMeeting: $recordMeeting, frequency: $frequency, repeatTill: $repeatTill, repeatDays: $repeatDays)
     }
   }
 `
@@ -269,7 +307,6 @@ mutation($id: String!, $deleteAll: Boolean!) {
 }
 `
 
-
 export const editMeeting = gql`
   mutation($channelId: String!, $meetingOn: Boolean!) {
     channel {
@@ -281,13 +318,6 @@ export const shareCueWithMoreIds = gql`
   mutation($userId: String!, $cueId: String!) {
     cue {
       shareCueWithMoreIds(userId: $userId, cueId: $cueId)
-    }
-  }
-`;
-export const deleteDate = gql`
-  mutation($dateId: String!) {
-    date {
-      delete(dateId: $dateId)
     }
   }
 `;
@@ -334,20 +364,20 @@ export const modifyQuiz = gql`
   }
 `;
 
-export const makeSubActive = gql`
-  mutation($userId: String!, $channelId: String!) {
-    subscription {
-      makeActive(userId: $userId, channelId: $channelId)
-    }
-  }
-`;
-export const makeSubInactive = gql`
-  mutation($userId: String!, $channelId: String!) {
-    subscription {
-      makeInactive(userId: $userId, channelId: $channelId)
-    }
-  }
-`;
+// export const makeSubActive = gql`
+//   mutation($userId: String!, $channelId: String!) {
+//     subscription {
+//       makeActive(userId: $userId, channelId: $channelId)
+//     }
+//   }
+// `;
+// export const makeSubInactive = gql`
+//   mutation($userId: String!, $channelId: String!) {
+//     subscription {
+//       makeInactive(userId: $userId, channelId: $channelId)
+//     }
+//   }
+// `;
 export const start = gql`
   mutation($userId: String!, $cueId: String!, $cue: String!) {
     quiz {
@@ -401,13 +431,13 @@ mutation($channelId: String!, $password: String, $name: String!, $temporary: Boo
   }
 }
 `
-export const editPersonalMeeting = gql`
-mutation($channelId: String!, $meetingOn: Boolean!, $users: [String!]!) {
-  channel {
-    editPersonalMeeting(channelId: $channelId, meetingOn: $meetingOn, users: $users)
-  }
-}
-`
+// export const editPersonalMeeting = gql`
+// mutation($channelId: String!, $meetingOn: Boolean!, $users: [String!]!) {
+//   channel {
+//     editPersonalMeeting(channelId: $channelId, meetingOn: $meetingOn, users: $users)
+//   }
+// }
+// `
 export const editReleaseSubmission = gql`
 mutation($cueId: String!, $releaseSubmission: Boolean!) {
   cue {
@@ -415,6 +445,7 @@ mutation($cueId: String!, $releaseSubmission: Boolean!) {
   }
 }
 `
+
 export const deleteRecording = gql`
 mutation($recordID: String!) {
   channel {
@@ -429,13 +460,110 @@ mutation($userId: String!, $isOwner: Boolean!, $channelId: String!) {
   }
 }
 `
-export const personalMeetingRequest = gql`
-mutation($userId: String!, $users: [String!]!, $channelId: String!) {
-  channel {
-    personalMeetingRequest(userId: $userId, users: $users, channelId: $channelId)
+// export const personalMeetingRequest = gql`
+// mutation($userId: String!, $users: [String!]!, $channelId: String!) {
+//   channel {
+//     personalMeetingRequest(userId: $userId, users: $users, channelId: $channelId)
+//   }
+// }
+// `
+export const creatFolder = gql`
+mutation($title: String!, $cueIds: [String!]!) {
+  folder {
+    create(title: $title, cueIds: $cueIds)
   }
 }
 `
+export const updateFolder = gql`
+mutation($title: String!, $cueIds: [String!]!, $folderId: String!) {
+  folder {
+    update(title: $title, cueIds: $cueIds, folderId: $folderId)
+  }
+}
+`
+
+export const addToFolder = gql`
+mutation($cueId: String!, $folderId: String!) {
+  folder {
+    addToFolder(cueId: $cueId, folderId: $folderId)
+  }
+}
+`
+
+export const removeFromFolder = gql`
+mutation($cueId: String!, $folderId: String!) {
+  folder {
+    removeFromFolder(cueId: $cueId, folderId: $folderId)
+  }
+}
+`
+
+export const deleteFolder = gql`
+mutation( $folderId: String!) {
+  folder {
+    delete(folderId: $folderId)
+  }
+}
+`
+
+export const markActivityAsRead = gql`
+mutation($activityId: String, $userId: String!, $markAllRead: Boolean!) {
+  activity {
+    markActivityAsRead(activityId: $activityId, userId: $userId, markAllRead: $markAllRead)
+  }
+}
+`
+
+export const updateAnnotation = gql`
+mutation($cueId: String!, $userId: String!, $attempts: String!) {
+  cue {
+    updateAnnotation(cueId: $cueId, userId: $userId, attempts: $attempts)
+  }
+}
+`
+export const connectZoom = gql`
+mutation($userId: String!, $code: String!) {
+  user {
+    connectZoom(code: $code, userId: $userId) {
+      accountId
+      accessToken
+      refreshToken
+      expiresOn
+      email
+    }
+  }
+}`
+
+export const updateGroup = gql`
+mutation($groupId: String!, $users: [String!]!, $groupName: String!, $groupImage: String) {
+  message {
+    updateGroup(groupId: $groupId, users: $users, groupName: $groupName, groupImage: $groupImage)
+  }
+}
+`
+export const startInstantMeeting = gql`
+mutation($channelId: String!, $userId: String!, $title: String!, $description: String!, $start: String!, $end: String!, $notifyUsers: Boolean!) {
+  channel {
+    startInstantMeeting(channelId: $channelId, userId: $userId, title: $title, description: $description, start: $start, end: $end, notifyUsers: $notifyUsers)
+  }
+}
+`
+export const removeZoom = gql`
+mutation($userId: String!) {
+  user {
+    removeZoom(userId: $userId) 
+  }
+}
+`
+
+export const updateAnnotationsFromViewer = gql`
+  mutation($userId: String!, $cueId: String!, $annotations: String!, $source: String!) {
+    user {
+      updateAnnotationsFromViewer(userId: $userId, cueId: $cueId, annotations: $annotations, source: $source)
+    }
+  }
+`
+
 /**
  * ALL
  * QUERIES
@@ -446,13 +574,18 @@ export const findUserById = gql`
       findById(id: $id) {
         _id
         fullName
+        avatar
         displayName
+        zoomInfo {
+          accountId
+        }
         notificationId
         randomShuffleFrequency
         sleepFrom
         sleepTo
         email
         currentDraft
+        role
       }
     }
   }
@@ -475,6 +608,7 @@ export const getCues = gql`
         cue
         color
         channelId
+        folderId
         customCategory
         frequency
         date
@@ -496,6 +630,9 @@ export const getCues = gql`
         submittedAt
         releaseSubmission
         active
+        limitedShares
+        allowedAttempts
+        availableUntil
       }
     }
   }
@@ -515,9 +652,16 @@ export const getSubscriptions = gql`
   }
 `;
 export const checkChannelStatus = gql`
-  query($name: String!) {
+  query($channelId: String!) {
     channel {
-      getChannelStatus(name: $name)
+      getChannelStatus(channelId: $channelId)
+    }
+  }
+`;
+export const checkChannelStatusForCode = gql`
+  query($accessCode: String!) {
+    channel {
+      getChannelStatusForCode(accessCode: $accessCode)
     }
   }
 `;
@@ -536,6 +680,7 @@ export const getChannelThreads = gql`
         userId
         displayName
         fullName
+        avatar
         isPrivate
         anonymous
       }
@@ -557,6 +702,7 @@ export const getCueThreads = gql`
         userId
         displayName
         fullName
+        avatar
         isPrivate
         anonymous
       }
@@ -578,6 +724,7 @@ export const getThreadWithReplies = gql`
         displayName
         fullName
         isPrivate
+        avatar
         anonymous
       }
     }
@@ -602,9 +749,32 @@ export const getSubscribers = gql`
     user {
       findByChannelId(channelId: $channelId) {
         _id
+        email
+        zoomInfo {
+          accountId
+        }
+        avatar
         displayName
         fullName
+        unreadMessages
+        groupId
+      }
+    }
+  }
+`;
+
+export const getChannelModerators = gql`
+  query($channelId: String!) {
+    channel {
+      getChannelModerators(channelId: $channelId) {
+        _id
         email
+        zoomInfo {
+          accountId
+        }
+        avatar
+        displayName
+        fullName
         unreadMessages
         groupId
       }
@@ -619,6 +789,7 @@ export const getStatuses = gql`
         userId
         status
         fullName
+        avatar
         email
         submission
         score
@@ -639,6 +810,7 @@ export const login = gql`
           _id
         }
         error
+        token
       }
     }
   }
@@ -655,6 +827,7 @@ export const getCuesFromCloud = gql`
         unreadThreads
         frequency
         date
+        folderId
         endPlayAt
         channelName
         starred
@@ -672,6 +845,10 @@ export const getCuesFromCloud = gql`
         submittedAt
         releaseSubmission
         active
+        limitedShares
+        allowedAttempts
+        annotations
+        availableUntil
       }
     }
   }
@@ -709,35 +886,38 @@ export const getGradesList = gql`
     }
   }
 `;
-export const getSubmissionStatistics = gql`
-  query($channelId: String!) {
-    channel {
-      getSubmissionCuesStatistics(channelId: $channelId) {
-        max
-        min
-        mean
-        median
-        std
-        submissionCount
-        cueId
-      }
-    }
-  }
-`;
+// export const getSubmissionStatistics = gql`
+//   query($channelId: String!) {
+//     channel {
+//       getSubmissionCuesStatistics(channelId: $channelId) {
+//         max
+//         min
+//         mean
+//         median
+//         std
+//         submissionCount
+//         cueId
+//       }
+//     }
+//   }
+// `;
 export const getMessages = gql`
-  query($users: [String!]!) {
+  query($groupId: String!) {
     message {
-      getMessagesThread(users: $users) {
+      getMessagesThread(groupId: $groupId) {
         groupId
+        _id
         sentBy
         message
         displayName
         fullName
+        avatar
         sentAt
       }
     }
   }
 `;
+
 export const getEvents = gql`
   query($userId: String!) {
     date {
@@ -755,6 +935,12 @@ export const getEvents = gql`
         meeting
         channelId
         cueId
+        submitted
+        zoomMeetingId
+        zoomStartUrl
+        zoomJoinUrl
+        zoomMeetingScheduledBy
+        zoomMeetingCreatorProfile
       }
     }
   }
@@ -780,6 +966,14 @@ export const totalUnreadMessages = gql`
     }
   }
 `;
+
+export const totalInboxUnread = gql`
+  query($userId: String!) {
+    messageStatus {
+      totalInboxUnread(userId: $userId)
+    }
+  }
+`
 export const getMeetingStatus = gql`
   query($channelId: String!) {
     channel {
@@ -812,6 +1006,27 @@ export const getGroups = gql`
     }
   }
 `;
+export const getChats = gql`
+  query($userId: String!) {
+    group {
+      getChats(userId: $userId) {
+        _id
+        users
+        unreadMessages
+        userNames {
+          fullName
+          avatar
+          _id
+        }
+        lastMessage
+        lastMessageTime
+        name
+        image
+        createdBy
+      }
+    }
+  }
+`;
 export const getUpcomingDates = gql`
   query($channelId: String!) {
     attendance {
@@ -839,6 +1054,42 @@ export const getAttendances = gql`
       getAttendances(dateId: $dateId) {
         displayName
         joinedAt
+      }
+    }
+  }
+`;
+export const getAttendancesByUser = gql`
+  query($userId: String!) {
+    attendance {
+      getAttendancesByUser(userId: $userId) {
+        channelId
+        joinedAt
+        date {
+          start
+          end
+        }
+      }
+    }
+  }
+`;
+export const getAllPastDates = gql`
+  query($userId: String!) {
+    date {
+      getPastDates(userId: $userId) {
+        start
+        end
+        channelId
+      }
+    }
+  }
+`;
+export const findThreadsByUserId = gql`
+  query($userId: String!) {
+    thread {
+      findByUserId(userId: $userId) {
+        message
+        channelId
+        parentId
       }
     }
   }
@@ -885,26 +1136,68 @@ export const getQuiz = gql`
 `;
 
 export const gradeQuiz = gql`
-  mutation($userId: String!, $cueId: String! $problemScores: [String!]!, $problemComments: [String!]!, $score: Float!, $comment: String) {
+  mutation($userId: String!, $cueId: String! $problemScores: [String!]!, $problemComments: [String!]!, $score: Float!, $comment: String, $quizAttempt: Float) {
     cue {
-      gradeQuiz(userId: $userId, cueId: $cueId, problemScores: $problemScores, problemComments: $problemComments, score: $score, comment: $comment)
+      gradeQuiz(userId: $userId, cueId: $cueId, problemScores: $problemScores, problemComments: $problemComments, score: $score, comment: $comment, quizAttempt: $quizAttempt)
     }
   }
 `
-export const isSubInactive = gql`
-  query($userId: String!, $channelId: String!) {
-    subscription {
-      isSubInactive(userId: $userId, channelId: $channelId)
+export const modifyActiveAttemptQuiz = gql`
+  mutation($userId: String!, $cueId: String!, $quizAttempt: Float!) {
+    cue {
+      modifyActiveAttemptQuiz(userId: $userId, cueId: $cueId, quizAttempt: $quizAttempt)
     }
   }
-`;
+`
+export const resetAccessCode = gql`
+  mutation($channelId: String!) {
+    channel {
+      resetAccessCode(channelId: $channelId)
+    }
+  }
+`
+export const regenZoomMeeting = gql`
+  mutation($userId: String!, $dateId: String!) {
+    date {
+      regenZoomMeeting(userId: $userId, dateId: $dateId) {
+        eventId
+        dateId
+        title
+        start
+        end
+        channelName
+        description
+        createdBy
+        recurringId
+        recordMeeting
+        meeting
+        channelId
+        cueId
+        submitted
+        zoomMeetingId
+        zoomStartUrl
+        zoomJoinUrl
+        zoomMeetingScheduledBy
+        zoomMeetingCreatorProfile
+      }
+    }
+  }
+`
+
+// export const isSubInactive = gql`
+//   query($userId: String!, $channelId: String!) {
+//     subscription {
+//       isSubInactive(userId: $userId, channelId: $channelId)
+//     }
+// }
+// `
 export const getMeetingLink = gql`
 query($channelId: String!, $userId: String!) {
     channel {
         getMeetingLink(channelId: $channelId, userId: $userId)
     }
 }
-`;
+`
 export const doesChannelNameExist = gql`
 query($name: String!) {
   channel {
@@ -912,20 +1205,20 @@ query($name: String!) {
   }
 }
 `
-export const getPersonalMeetingLink = gql`
-query($userId: String!, $users: [String!]!) {
-  channel {
-    getPersonalMeetingLink(users: $users, userId: $userId)
-  }
-}
-`
-export const getPersonalMeetingLinkStatus = gql`
-query($users: [String!]!) {
-  channel {
-    getPersonalMeetingLinkStatus(users: $users)
-  }
-}
-`
+// export const getPersonalMeetingLink = gql`
+// query($userId: String!, $users: [String!]!) {
+//   channel {
+//     getPersonalMeetingLink(users: $users, userId: $userId)
+//   }
+// }
+// `
+// export const getPersonalMeetingLinkStatus = gql`
+// query($users: [String!]!) {
+//   channel {
+//     getPersonalMeetingLinkStatus(users: $users)
+//   }
+// }
+// `
 export const getRecordings = gql`
 query($channelId: String!) {
   channel {
@@ -946,6 +1239,7 @@ query($userId: String!) {
       logo
       _id
       allowStudentChannelCreation
+      streamId
     }
   }
 }
@@ -971,8 +1265,12 @@ query($channelId: String!) {
       name
       password
       temporary
-      owners
       channelCreator
+      owners
+      description
+      accessCode
+      tags
+      isPublic
     }
   }
 }
@@ -984,6 +1282,7 @@ export const getUserCount = gql`
             email
             displayName
             fullName
+            avatar
             _id
             role
             grade
@@ -994,13 +1293,14 @@ export const getUserCount = gql`
      }
  }
  `
- export const getChannelColorCode = gql`
+export const getChannelColorCode = gql`
  query($channelId: String!) {
      channel {
        getChannelColorCode(channelId: $channelId)
      }
  }
 `
+
 export const findBySchoolId = gql`
  query($schoolId: String!) {
      channel {
@@ -1010,9 +1310,12 @@ export const findBySchoolId = gql`
              password
              createdBy
              createdByUsername
+             channelCreator
+             createdByAvatar
              numSubs
              role
              meetingOn
+             owners
          }
      }
  }
@@ -1024,3 +1327,202 @@ export const getSharableLink = gql`
    }
  }
  `
+export const getActivity = gql`
+ query($userId: String!) {
+   activity {
+     getActivity(userId: $userId) {
+       _id
+       title
+       subtitle
+       body
+       channelName
+       channelId
+       status
+       colorCode
+       date
+       cueId
+       createdBy
+       target
+       threadId
+     }
+   }
+ }
+ `
+export const getPerformanceReport = gql`
+ query($userId: String!) {
+   user {
+    getPerformanceReport(userId: $userId) {
+      channelId
+      channelName
+      score
+      total
+      channelCreatedBy
+      submittedAssessments
+      lateAssessments
+      gradedAssessments
+      totalAssessments
+    }
+   }
+ }
+ `
+export const getSearch = gql`
+ query($userId: String!, $term: String!) {
+   user {
+     search(userId: $userId, term: $term)
+   }
+ }
+ `
+export const getAllUsers = gql`
+ query($userId: String!) {
+   user {
+     getAllUsers(userId: $userId) {
+       _id
+       email
+       fullName
+       avatar
+       role
+       grade
+       section
+       zoomInfo {
+        accountId
+       }
+       channelIds
+     }
+   }
+ }
+`;
+
+export const getFolder = gql`
+  query($folderId: String!) {
+    folder {
+      findById(folderId: $folderId) {
+        title
+        cueIds
+      }
+    }
+  }
+`
+
+export const getChannelFolders = gql`
+  query($channelId: String!) {
+    folder {
+      getFoldersForChannel(channelId: $channelId) {
+        _id
+        title
+      }
+    }
+  }
+`
+
+
+export const getFolderCues = gql`
+  query($folderId: String!, $userId: String!) {
+    folder {
+      getCuesById(folderId: $folderId, userId: $userId) {
+        _id
+        cue
+        color
+        channelId
+        folderId
+        customCategory
+        frequency
+        date
+        unreadThreads
+        endPlayAt
+        channelName
+        starred
+        createdBy
+        shuffle
+        original
+        submission
+        deadline
+        initiateAt
+        gradeWeight
+        graded
+        score
+        comment
+        status
+        submittedAt
+        releaseSubmission
+        active
+        limitedShares
+        allowedAttempts
+        availableUntil
+      }
+    }
+  }
+`
+export const getGroup = gql`
+  query($users: [String!]!) {
+    message {
+      getGroupId(users: $users) 
+    }
+  }
+`
+export const getReleaseSubmissionStatus = gql`
+  query($cueId: String!) {
+    cue {
+      getReleaseSubmissionStatus(cueId: $cueId)
+    }
+  }
+`
+export const retrievePDFFromArchive = gql`
+query($identifier: String!) {
+  cue {
+    retrievePDFFromArchive(identifier: $identifier)
+  }
+}
+`
+export const getChannelsOutside = gql`
+query($userId: String!) {
+  channel {
+    getChannelsOutside(userId: $userId) {
+      name
+             _id
+             password
+             createdBy
+             createdByUsername
+             channelCreator
+             createdByAvatar
+             numSubs
+             role
+             meetingOn
+             owners
+    }
+  }
+}
+`
+export const getOngoingMeetings = gql`
+query($userId: String!, $channelId: String!) {
+  channel {
+    ongoingMeetings(userId: $userId, channelId: $channelId) {
+      title
+      description
+      startUrl
+      joinUrl
+      start
+      end
+      error
+    }
+  }
+}
+`
+
+// PDF Viewer stuff;
+
+export const fetchAnnotationsForViewer = gql`
+  query($userId: String!, $cueId: String!) {
+    user {
+      fetchAnnotationsForViewer(userId: $userId, cueId: $cueId) {
+        _id
+        cue
+        date
+        original
+        submission
+        releaseSubmission
+        annotations
+      }
+    }
+  }
+`
+
