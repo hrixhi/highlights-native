@@ -9,7 +9,7 @@ import { Text, View, TouchableOpacity } from '../components/Themed';
 
 const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const colorScheme = 'dark';
-    const styleObject = styles(colorScheme, props.colorCode);
+    const styleObject = styles(colorScheme, props.colorCode || 'black');
     return (
         <View style={styleObject.swiper}>
             <TouchableOpacity
@@ -17,7 +17,8 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                 onPress={() => {
                     props.onPress();
                 }}
-                style={styleObject.card}>
+                style={styleObject.card}
+            >
                 <View style={styleObject.text}>
                     <View style={styleObject.dateContainer}>
                         {props.channelName !== '' && props.option !== 'Channels' ? (
@@ -32,7 +33,8 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                             flex: 1,
                             height: '100%',
                             flexDirection: 'row'
-                        }}>
+                        }}
+                    >
                         <View style={{ flex: 1, flexDirection: 'row' }}>
                             <Text
                                 ellipsizeMode={'tail'}
@@ -44,7 +46,8 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                                     flex: 1,
                                     marginTop: 5,
                                     color: '#000000'
-                                }}>
+                                }}
+                            >
                                 {props.title}
                             </Text>
                             {props.option === 'Channels' && !props.subscribed ? (
@@ -69,7 +72,6 @@ export default SearchResultCard;
 const styles: any = (colorScheme: any, col: any) =>
     StyleSheet.create({
         swiper: {
-            height: '100%',
             backgroundColor: '#fff',
             borderRadius: 1,
             maxWidth: 130,

@@ -105,6 +105,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const passwordInvalidError = PreferredLanguageText('atleast8char');
     const [filterStart, setFilterStart] = useState<any>(new Date());
     const [filterEnd, setFilterEnd] = useState<any>(null);
+    const [showAddEvent, setShowAddEvent] = useState<any>(null);
+    const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
 
     const responseListener: any = useRef();
 
@@ -1327,7 +1329,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             case 'To Do':
                 return option === op ? 'calendar' : 'calendar-outline';
             case 'Classroom':
-                return option === op ? 'book' : 'book-outline';
+                return option === op ? 'apps' : 'apps-outline';
             case 'Inbox':
                 return option === op ? 'chatbubble' : 'chatbubble-outline';
             default:
@@ -1862,8 +1864,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 ) : null}
                 {showHome &&
                 !reLoading &&
-                ((option === 'Classroom' && modalType !== 'Create') ||
-                    (option === 'To Do' && tab !== 'Add') ||
+                ((option === 'Classroom' && modalType !== 'Create' && !selectedWorkspace) ||
+                    // (option === 'To Do' && tab !== 'Add') ||
                     (option === 'Inbox' && !showDirectory && !hideNewChatButton) ||
                     (option === 'Channels' && !showCreate) ||
                     (option === 'Settings' && !showHelp)) ? (
@@ -1884,8 +1886,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 openModal('Create');
                                 // setShowHome(false)
                                 // setMenuCollapsed(true)
-                            } else if (option === 'To Do') {
-                                setTab('Add');
                             } else if (option === 'Channels') {
                                 setShowCreate(true);
                             } else if (option === 'Settings') {
@@ -1899,7 +1899,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             marginRight:
                                 Dimensions.get('window').width >= 1100
                                     ? (Dimensions.get('window').width - 1100) / 2 - 25
-                                    : 30,
+                                    : Dimensions.get('window').width >= 768
+                                    ? 30
+                                    : 24,
                             marginBottom: Dimensions.get('window').width < 768 ? 77 : 75,
                             right: 0,
                             justifyContent: 'center',
@@ -1923,8 +1925,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
                             {option === 'Classroom' ? (
                                 <Ionicons name="pencil-outline" size={25} />
-                            ) : option === 'To Do' ? (
-                                <Ionicons name="add-outline" size={35} />
                             ) : option === 'Channels' ? (
                                 <Ionicons name="add-outline" size={35} />
                             ) : option === 'Inbox' ? (
@@ -1976,6 +1976,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     showHelp={showHelp}
                                     showDirectory={showDirectory}
                                     setShowDirectory={(val: any) => setShowDirectory(val)}
+                                    // selectedWorkspace={selectedWorkspace}
+                                    setSelectedWorkspace={(val: any) => setSelectedWorkspace(val)}
                                     setOption={(op: any) => setOption(op)}
                                     option={option}
                                     options={options}
@@ -2133,10 +2135,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     <View
                         style={{
                             position: 'absolute',
-                            backgroundColor: '#fff',
+                            backgroundColor: '#000',
                             alignSelf: 'flex-end',
                             width: '100%',
-                            paddingTop: 14,
+                            paddingTop: 10,
                             paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
                             paddingHorizontal: Dimensions.get('window').width < 1024 ? 20 : 40,
                             flexDirection: 'row',
@@ -2149,25 +2151,26 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             },
                             shadowOpacity: 0.04,
                             shadowRadius: 10,
-                            zIndex: showLoginWindow ? 40 : 500000,
+                            zIndex: showLoginWindow ? 40 : 100,
+                            elevation: showLoginWindow ? 40 : 100,
                             borderTopColor: '#efefef',
                             borderTopWidth: 1
                         }}
                     >
-                        {options.map((op: any) => {
+                        {options.map((op: any, ind: number) => {
                             if (op === 'Channels') {
                                 return;
                             }
                             return (
                                 <TouchableOpacity
                                     style={{
-                                        backgroundColor: '#fff',
+                                        backgroundColor: '#000',
                                         width: '25%',
                                         flexDirection: 'column',
                                         justifyContent: 'center',
-                                        alignItems: 'center',
-                                        paddingTop: 2
+                                        alignItems: 'center'
                                     }}
+                                    key={ind}
                                     onPress={() => {
                                         setOption(op);
                                         if (op === 'Browse') {
@@ -2192,10 +2195,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 >
                                     <Ionicons
                                         name={getNavbarIconName(op)}
-                                        style={{ color: op === option ? '#000000' : '#656565' }}
-                                        size={25}
+                                        style={{ color: op === option ? '#006AFF' : '#A0A0A0' }}
+                                        size={26}
                                     />
-                                    {Dimensions.get('window').width < 768 ? (
+                                    {/* {Dimensions.get('window').width < 768 ? (
                                         <Text
                                             style={{
                                                 color: op === option ? '#000000' : '#656565',
@@ -2213,7 +2216,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 ? 'Account'
                                                 : op}
                                         </Text>
-                                    ) : null}
+                                    ) : null} */}
 
                                     {/* <Text style={op === option ? styles('').allGrayFill : styles('').all}>
                                         {op === 'Classroom'

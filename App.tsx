@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, Fragment } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useCachedResources from './hooks/useCachedResources';
@@ -31,14 +31,17 @@ export default function App() {
         return null;
     } else {
         return (
-            <SafeAreaView style={styles.font}>
-                <StatusBar style="dark" />
-                <MenuProvider>
-                    <LanguageProvider>
-                        <Navigation colorScheme={colorScheme} />
-                    </LanguageProvider>
-                </MenuProvider>
-            </SafeAreaView>
+            <Fragment>
+                <SafeAreaView style={{ flex: 0, backgroundColor: 'white' }} />
+                <SafeAreaView style={styles.font}>
+                    <StatusBar style="dark" />
+                    <MenuProvider>
+                        <LanguageProvider>
+                            <Navigation colorScheme={colorScheme} />
+                        </LanguageProvider>
+                    </MenuProvider>
+                </SafeAreaView>
+            </Fragment>
         );
     }
 }
@@ -46,7 +49,7 @@ export default function App() {
 const styles: any = StyleSheet.create({
     font: {
         maxHeight: '100%',
-        backgroundColor: '#fff',
+        backgroundColor: '#000',
         flex: 1
     }
 });

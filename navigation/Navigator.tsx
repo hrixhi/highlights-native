@@ -26,7 +26,7 @@ export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeNa
                                     width: '100%',
                                     justifyContent: 'center',
                                     flexDirection: 'row',
-                                    backgroundColor: '#fff',
+                                    backgroundColor: '#000',
                                     flex: 1
                                 }}
                             >

@@ -112,6 +112,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [instantMeetingAlertUsers, setInstantMeetingAlertUsers] = useState<any>(true);
     const [ongoingMeetings, setOngoingMeetings] = useState<any[]>([]);
     const [userZoomInfo, setUserZoomInfo] = useState<any>('');
+    const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
+    const [showSearchMobile, setShowSearchMobile] = useState<any>('');
 
     // ALERTS
     const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
@@ -413,6 +415,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     useEffect(() => {
         if (searchTerm.trim() === '') {
+            setResults({
+                Channels: [],
+                Classroom: [],
+                Messages: [],
+                Threads: []
+            });
+            setResultCount(0);
             return;
         }
 
@@ -941,261 +950,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     // };
 
     /**
-     * @description Renders View for search results
-     */
-    const searchResults = (
-        <View
-            key={cueMap.toString() + JSON.stringify(results)}
-            style={{
-                flexDirection: 'row',
-                height:
-                    Dimensions.get('window').width < 768
-                        ? Dimensions.get('window').height - 115
-                        : Dimensions.get('window').height - 52,
-                width: '100%',
-                overflow: 'hidden',
-                justifyContent: 'center',
-                backgroundColor: '#efefef'
-            }}
-        >
-            <View
-                style={{
-                    width: '100%',
-                    maxWidth: 900,
-                    paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
-                    backgroundColor: '#efefef'
-                }}
-            >
-                {!loadingSearchResults && resultCount !== 0 ? (
-                    <Text
-                        style={{
-                            fontSize: 20,
-                            paddingVertical: 30,
-                            fontFamily: 'inter',
-                            // flex: 1,
-                            lineHeight: 23,
-                            color: '#006AFF',
-                            backgroundColor: '#efefef'
-                        }}
-                    >
-                        {resultCount} Results
-                    </Text>
-                ) : null}
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    horizontal={true}
-                    nestedScrollEnabled={true}
-                    contentContainerStyle={{
-                        width: '100%'
-                    }}
-                >
-                    {!loadingSearchResults &&
-                    results &&
-                    results[searchOptions[0]].length === 0 &&
-                    results[searchOptions[1]].length === 0 &&
-                    results[searchOptions[2]].length === 0 &&
-                    results[searchOptions[3]].length === 0 ? (
-                        <Text
-                            style={{
-                                width: '100%',
-                                color: '#1F1F1F',
-                                fontSize: 20,
-                                paddingVertical: 50,
-                                fontFamily: 'inter',
-                                flex: 1,
-                                backgroundColor: '#efefef'
-                            }}
-                        >
-                            No results.
-                        </Text>
-                    ) : null}
-                    {loadingSearchResults ? (
-                        <View
-                            style={{
-                                width: '100%',
-                                flex: 1,
-                                justifyContent: 'center',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                backgroundColor: '#efefef'
-                            }}
-                        >
-                            <ActivityIndicator color={'#1F1F1F'} />
-                        </View>
-                    ) : null}
-                    <View style={{ flexDirection: 'row', backgroundColor: '#efefef' }}>
-                        {searchOptions.map((option: any) => {
-                            if (results[option].length === 0 || loadingSearchResults) {
-                                return null;
-                            }
-
-                            return (
-                                <View style={{ marginRight: 20, backgroundColor: '#efefef' }}>
-                                    <Text
-                                        style={{
-                                            flexDirection: 'row',
-                                            color: '#1F1F1F',
-                                            // fontWeight: 'bold',
-                                            fontSize: 14,
-                                            lineHeight: 25,
-                                            fontFamily: 'inter',
-                                            paddingBottom: 10
-                                        }}
-                                    >
-                                        {option === 'Classroom' ? 'Content' : option}
-                                    </Text>
-                                    <ScrollView>
-                                        {results[option].map((obj: any, index: any) => {
-                                            let t = '';
-                                            let s = '';
-                                            let channelName = '';
-                                            let colorCode = '';
-                                            let subscribed = false;
-
-                                            if (option === 'Classroom') {
-                                                const { title, subtitle } = htmlStringParser(obj.cue);
-                                                t = title;
-                                                s = subtitle;
-                                                const filterChannel = props.subscriptions.filter((channel: any) => {
-                                                    return channel.channelId === obj.channelId;
-                                                });
-
-                                                if (filterChannel && filterChannel.length !== 0) {
-                                                    channelName = filterChannel[0].channelName;
-                                                    colorCode = filterChannel[0].colorCode;
-                                                }
-                                            } else if (option === 'Channels') {
-                                                t = obj.name;
-
-                                                channelName = obj.name;
-                                                // Determine if already subscribed or not
-                                                const existingSubscription = props.subscriptions.filter(
-                                                    (channel: any) => {
-                                                        return channel.channelId === obj._id;
-                                                    }
-                                                );
-
-                                                if (existingSubscription && existingSubscription.length !== 0) {
-                                                    subscribed = true;
-                                                }
-                                            } else if (option === 'Threads') {
-                                                if (
-                                                    obj.message[0] === '{' &&
-                                                    obj.message[obj.message.length - 1] === '}'
-                                                ) {
-                                                    const o = JSON.parse(obj.message);
-                                                    t = o.title;
-                                                    s = o.type;
-                                                } else {
-                                                    const { title, subtitle } = htmlStringParser(obj.message);
-                                                    t = title;
-                                                    s = subtitle;
-                                                }
-                                                const filterChannel = props.subscriptions.filter((channel: any) => {
-                                                    return channel.channelId === obj.channelId;
-                                                });
-
-                                                if (filterChannel && filterChannel.length !== 0) {
-                                                    channelName = filterChannel[0].channelName;
-                                                    colorCode = filterChannel[0].colorCode;
-                                                }
-                                            } else if (option === 'Messages') {
-                                                if (
-                                                    obj.message[0] === '{' &&
-                                                    obj.message[obj.message.length - 1] === '}'
-                                                ) {
-                                                    const o = JSON.parse(obj.message);
-                                                    t = o.title;
-                                                    s = o.type;
-                                                } else {
-                                                    const { title, subtitle } = htmlStringParser(obj.message);
-                                                    t = title;
-                                                    s = subtitle;
-                                                }
-                                            }
-
-                                            return (
-                                                <View
-                                                    style={{
-                                                        // height: 150,
-                                                        marginBottom: 15,
-                                                        // marginBottom: i === priorities.length - 1 ? 0 : 20,
-                                                        // maxWidth: 150,
-                                                        backgroundColor: '#efefef',
-                                                        width: '100%',
-                                                        maxWidth: 150
-                                                    }}
-                                                    key={index}
-                                                >
-                                                    <SearchResultCard
-                                                        title={t}
-                                                        subtitle={s}
-                                                        channelName={channelName}
-                                                        colorCode={colorCode}
-                                                        option={option}
-                                                        subscribed={subscribed}
-                                                        handleSub={() => handleSub(obj.channelId)}
-                                                        onPress={async () => {
-                                                            if (option === 'Classroom') {
-                                                                props.openCueFromCalendar(
-                                                                    obj.channelId,
-                                                                    obj._id,
-                                                                    obj.createdBy
-                                                                );
-                                                                setSearchTerm('');
-                                                            } else if (option === 'Threads') {
-                                                                await AsyncStorage.setItem(
-                                                                    'openThread',
-                                                                    obj.parentId && obj.parentId !== ''
-                                                                        ? obj.parentId
-                                                                        : obj._id
-                                                                );
-
-                                                                if (obj.cueId && obj.cueId !== '') {
-                                                                    props.openQAFromSearch(obj.channelId, obj.cueId);
-                                                                } else {
-                                                                    props.openDiscussionFromSearch(obj.channelId);
-
-                                                                    props.setLoadDiscussionForChannelId(obj.channelId);
-                                                                }
-
-                                                                setSearchTerm('');
-                                                            } else if (option === 'Messages') {
-                                                                // open chat and set Chat ID and users in Async storage to open that specific chat
-
-                                                                await AsyncStorage.setItem(
-                                                                    'openChat',
-                                                                    JSON.stringify({
-                                                                        _id: obj.groupId,
-                                                                        users: obj.users
-                                                                    })
-                                                                );
-
-                                                                props.setOption('Inbox');
-
-                                                                setSearchTerm('');
-                                                            } else if (option === 'Channels') {
-                                                                if (subscribed) {
-                                                                    // Open the channel meeting
-                                                                    props.openChannelFromActivity(obj._id);
-                                                                }
-                                                            }
-                                                        }}
-                                                    />
-                                                </View>
-                                            );
-                                        })}
-                                    </ScrollView>
-                                </View>
-                            );
-                        })}
-                    </View>
-                </ScrollView>
-            </View>
-        </View>
-    );
-
-    /**
      * @description Round time to nearest seconds
      */
     const roundSeconds = (time: Date) => {
@@ -1262,6 +1016,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         width: '100%',
                                         alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center'
                                     }}
+                                    key={ind}
                                 >
                                     <View style={{}}>
                                         <Text
@@ -1616,6 +1371,256 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     //     );
     // };
 
+    console.log('Search results', results);
+
+    /**
+     * @description Renders View for search results
+     */
+    const searchResultsMobile = (
+        <ScrollView
+            horizontal={false}
+            key={JSON.stringify(results)}
+            contentContainerStyle={{
+                flexDirection: 'row',
+                width: '100%',
+                justifyContent: 'center',
+                backgroundColor: '#efefef'
+            }}
+        >
+            <View
+                style={{
+                    width: '100%',
+                    paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
+                    backgroundColor: '#efefef'
+                }}
+            >
+                {!loadingSearchResults && resultCount !== 0 ? (
+                    <Text
+                        style={{
+                            fontSize: 20,
+                            paddingVertical: 30,
+                            fontFamily: 'inter',
+                            // flex: 1,
+                            lineHeight: 23,
+                            color: '#006AFF',
+                            backgroundColor: '#efefef'
+                        }}
+                    >
+                        {resultCount} Results
+                    </Text>
+                ) : null}
+                <View>
+                    {!loadingSearchResults &&
+                    results &&
+                    results[searchOptions[0]].length === 0 &&
+                    results[searchOptions[1]].length === 0 &&
+                    results[searchOptions[2]].length === 0 &&
+                    results[searchOptions[3]].length === 0 ? (
+                        <Text
+                            style={{
+                                width: '100%',
+                                color: '#1F1F1F',
+                                fontSize: 20,
+                                paddingVertical: 50,
+                                lineHeight: 30,
+                                fontFamily: 'inter',
+                                flex: 1,
+                                backgroundColor: '#efefef'
+                            }}
+                        >
+                            {searchTerm.trim().length === 0
+                                ? 'Search for content, messages, discussion threads, or courses'
+                                : 'No results.'}
+                        </Text>
+                    ) : null}
+                    {loadingSearchResults ? (
+                        <View
+                            style={{
+                                width: '100%',
+                                flex: 1,
+                                justifyContent: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                backgroundColor: '#efefef',
+                                paddingTop: 100
+                            }}
+                        >
+                            <ActivityIndicator color={'#1F1F1F'} />
+                        </View>
+                    ) : null}
+                    <View style={{ flexDirection: 'column', backgroundColor: '#efefef' }}>
+                        {searchOptions.map((option: any, i: number) => {
+                            if (results[option].length === 0 || loadingSearchResults) {
+                                return null;
+                            }
+
+                            return (
+                                <View style={{ backgroundColor: '#efefef', marginBottom: 50 }} key={i}>
+                                    <Text
+                                        style={{
+                                            flex: 1,
+                                            flexDirection: 'row',
+                                            color: '#838383',
+                                            // fontWeight: 'bold',
+                                            fontSize: 15,
+                                            lineHeight: 25,
+                                            marginBottom: 5,
+                                            fontFamily: 'inter',
+                                            backgroundColor: '#efefef'
+                                        }}
+                                    >
+                                        {option === 'Classroom' ? 'Content' : option}
+                                    </Text>
+                                    <ScrollView horizontal={true}>
+                                        {results[option].map((obj: any, index: any) => {
+                                            let t = '';
+                                            let s = '';
+                                            let channelName = '';
+                                            let colorCode = '';
+                                            let subscribed = false;
+
+                                            if (option === 'Classroom') {
+                                                const { title, subtitle } = htmlStringParser(obj.cue);
+                                                t = title;
+                                                s = subtitle;
+                                                const filterChannel = props.subscriptions.filter((channel: any) => {
+                                                    return channel.channelId === obj.channelId;
+                                                });
+
+                                                if (filterChannel && filterChannel.length !== 0) {
+                                                    channelName = filterChannel[0].channelName;
+                                                    colorCode = filterChannel[0].colorCode;
+                                                }
+                                            } else if (option === 'Channels') {
+                                                t = obj.name;
+
+                                                channelName = obj.name;
+                                                // Determine if already subscribed or not
+                                                const existingSubscription = props.subscriptions.filter(
+                                                    (channel: any) => {
+                                                        return channel.channelId === obj._id;
+                                                    }
+                                                );
+
+                                                if (existingSubscription && existingSubscription.length !== 0) {
+                                                    subscribed = true;
+                                                }
+                                            } else if (option === 'Threads') {
+                                                if (
+                                                    obj.message[0] === '{' &&
+                                                    obj.message[obj.message.length - 1] === '}'
+                                                ) {
+                                                    const o = JSON.parse(obj.message);
+                                                    t = o.title;
+                                                    s = o.type;
+                                                } else {
+                                                    const { title, subtitle } = htmlStringParser(obj.message);
+                                                    t = title;
+                                                    s = subtitle;
+                                                }
+                                                const filterChannel = props.subscriptions.filter((channel: any) => {
+                                                    return channel.channelId === obj.channelId;
+                                                });
+
+                                                if (filterChannel && filterChannel.length !== 0) {
+                                                    channelName = filterChannel[0].channelName;
+                                                    colorCode = filterChannel[0].colorCode;
+                                                }
+                                            } else if (option === 'Messages') {
+                                                if (
+                                                    obj.message[0] === '{' &&
+                                                    obj.message[obj.message.length - 1] === '}'
+                                                ) {
+                                                    const o = JSON.parse(obj.message);
+                                                    t = o.title;
+                                                    s = o.type;
+                                                } else {
+                                                    const { title, subtitle } = htmlStringParser(obj.message);
+                                                    t = title;
+                                                    s = subtitle;
+                                                }
+                                            }
+
+                                            console.log('color code', colorCode);
+
+                                            return (
+                                                <View
+                                                    style={{
+                                                        marginBottom: 15,
+                                                        backgroundColor: '#efefef',
+                                                        width: '100%',
+                                                        maxWidth: 150
+                                                    }}
+                                                    key={index}
+                                                >
+                                                    <SearchResultCard
+                                                        title={t}
+                                                        subtitle={s}
+                                                        channelName={channelName}
+                                                        colorCode={colorCode}
+                                                        option={option}
+                                                        subscribed={subscribed}
+                                                        handleSub={() => handleSub(obj.channelId)}
+                                                        onPress={async () => {
+                                                            if (option === 'Classroom') {
+                                                                props.openCueFromCalendar(
+                                                                    obj.channelId,
+                                                                    obj._id,
+                                                                    obj.createdBy
+                                                                );
+                                                                setSearchTerm('');
+                                                            } else if (option === 'Threads') {
+                                                                await AsyncStorage.setItem(
+                                                                    'openThread',
+                                                                    obj.parentId && obj.parentId !== ''
+                                                                        ? obj.parentId
+                                                                        : obj._id
+                                                                );
+
+                                                                if (obj.cueId && obj.cueId !== '') {
+                                                                    props.openQAFromSearch(obj.channelId, obj.cueId);
+                                                                } else {
+                                                                    props.openDiscussionFromSearch(obj.channelId);
+
+                                                                    props.setLoadDiscussionForChannelId(obj.channelId);
+                                                                }
+
+                                                                setSearchTerm('');
+                                                            } else if (option === 'Messages') {
+                                                                // open chat and set Chat ID and users in Async storage to open that specific chat
+
+                                                                await AsyncStorage.setItem(
+                                                                    'openChat',
+                                                                    JSON.stringify({
+                                                                        _id: obj.groupId,
+                                                                        users: obj.users
+                                                                    })
+                                                                );
+
+                                                                props.setOption('Inbox');
+
+                                                                setSearchTerm('');
+                                                            } else if (option === 'Channels') {
+                                                                if (subscribed) {
+                                                                    // Open the channel meeting
+                                                                    props.openChannelFromActivity(obj._id);
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
+                                                </View>
+                                            );
+                                        })}
+                                    </ScrollView>
+                                </View>
+                            );
+                        })}
+                    </View>
+                </View>
+            </View>
+        </ScrollView>
+    );
+
     /**
      * @description Formats time in email format
      */
@@ -1626,6 +1631,570 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         else if (currentDate.isSame(date, 'year')) return date.format('MMM DD');
         else return date.format('MM/DD/YYYY');
     }
+
+    const overviewMobile = (
+        <View
+            style={{
+                flexDirection: 'column',
+                width: '100%',
+                height: '100%',
+                bottom: 0,
+                backgroundColor: '#efefef'
+            }}
+            key={selectedWorkspace}
+        >
+            <View
+                style={{
+                    paddingHorizontal: 20,
+                    height: 60
+                }}
+            >
+                {selectedWorkspace !== '' ? (
+                    <View
+                        style={{
+                            paddingVertical: 6,
+                            marginHorizontal: 12,
+                            backgroundColor: '#fff',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginTop: 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            onPress={() => {
+                                setSelectedWorkspace('');
+                                props.setSelectedWorkspace('');
+                            }}
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                borderRadius: 20,
+                                width: 30,
+                                height: 30,
+                                backgroundColor: 'white',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                shadowOffset: {
+                                    width: 3,
+                                    height: 3
+                                },
+                                // overflow: 'hidden',
+                                shadowOpacity: 0.12,
+                                shadowRadius: 8
+                            }}
+                        >
+                            <Ionicons size={24} name="arrow-back" />
+                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View
+                                style={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: 9,
+                                    // marginTop: 2,
+                                    marginRight: 5,
+                                    backgroundColor: selectedWorkspace.split('-SPLIT-')[3] || 'black'
+                                }}
+                            />
+                            <Text
+                                ellipsizeMode={'tail'}
+                                numberOfLines={1}
+                                style={{
+                                    marginLeft: 5,
+                                    fontFamily: 'Inter',
+                                    fontSize: 20,
+                                    width: 'auto',
+                                    fontWeight: 'bold'
+                                    // color: selectedWorkspace.split('-SPLIT-')[3]
+                                }}
+                            >
+                                {selectedWorkspace.split('-SPLIT-')[0]}
+                            </Text>
+                        </View>
+                    </View>
+                ) : (
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                        {showSearchMobile ? (
+                            <DefaultInput
+                                style={{
+                                    paddingHorizontal: 10,
+                                    width: 300,
+                                    // backgroundColor: '#',
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: '#656565',
+                                    // borderRadius: 10,
+                                    color: '#000',
+                                    fontSize: 20,
+                                    flex: 1,
+                                    // paddingVertical: 6
+                                    // paddingBottom: 20,
+                                    paddingBottom: 8,
+                                    marginTop: 10,
+                                    marginRight: 15
+                                }}
+                                placeholder="Search..."
+                                placeholderTextColor="#656565"
+                                value={searchTerm}
+                                autoFocus={true}
+                                onChangeText={val => setSearchTerm(val)}
+                            />
+                        ) : (
+                            <Text
+                                style={{
+                                    color: '#006aff',
+                                    fontFamily: 'Inter',
+                                    fontWeight: 'bold',
+                                    fontSize: 30,
+                                    paddingVertical: 6,
+                                    marginHorizontal: 12,
+                                    marginTop: 10
+                                }}
+                            >
+                                Workspace
+                            </Text>
+                        )}
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowSearchMobile(!showSearchMobile);
+                                setSearchTerm('');
+                            }}
+                            style={{
+                                // position: 'absolute',
+                                paddingVertical: 6,
+                                marginLeft: 'auto',
+                                marginTop: 10
+                                // paddingBottom: showSearchMobile ? 20 : 0
+                            }}
+                        >
+                            <Ionicons
+                                name={showSearchMobile ? 'close-outline' : 'search'}
+                                size={showSearchMobile ? 25 : 22}
+                                color="black"
+                            />
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
+
+            {/* Render all courses */}
+            {selectedWorkspace === '' ? (
+                showSearchMobile ? (
+                    searchResultsMobile
+                ) : (
+                    <ScrollView
+                        horizontal={false}
+                        contentContainerStyle={{
+                            backgroundColor: '#efefef'
+                        }}
+                    >
+                        <View
+                            style={{
+                                width: '100%',
+                                flexDirection: 'row',
+                                flexWrap: 'wrap',
+                                backgroundColor: '#efefef',
+                                paddingHorizontal: 20,
+                                paddingTop: 20
+                            }}
+                        >
+                            {Object.keys(cueMap).map((key: any, ind: any) => {
+                                return (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setSelectedWorkspace(key);
+                                            props.setSelectedWorkspace(key);
+                                        }}
+                                        key={ind}
+                                        style={{
+                                            height: 60,
+                                            backgroundColor: '#fff',
+                                            // borderRadius: 17,
+                                            borderLeftColor: key.split('-SPLIT-')[3] || 'black',
+                                            borderLeftWidth: 3,
+                                            marginRight: ind % 2 === 0 ? 20 : 0,
+                                            // maxWidth: '100%',
+                                            width: (Dimensions.get('window').width - 60) / 2,
+                                            // marginRight: '5%',
+                                            // borderColor: key.split('-SPLIT-')[3],
+                                            // borderLeftWidth: 3,
+                                            shadowOffset: {
+                                                width: 5,
+                                                height: 5
+                                            },
+                                            overflow: 'hidden',
+                                            shadowOpacity: 0.12,
+                                            shadowRadius: 7,
+                                            zIndex: 500000,
+                                            alignItems: 'center',
+                                            flexDirection: 'row',
+                                            paddingVertical: 10,
+                                            paddingLeft: 10,
+                                            marginBottom: 20
+                                        }}
+                                    >
+                                        {/* <View
+                                        style={{
+                                            width: 12,
+                                            height: 12,
+                                            borderRadius: 9,
+                                            // marginTop: 2,
+                                            marginRight: 5,
+                                            backgroundColor: key.split('-SPLIT-')[3] || 'black'
+                                        }}
+                                    /> */}
+                                        <Text
+                                            ellipsizeMode={'tail'}
+                                            numberOfLines={1}
+                                            style={{
+                                                marginLeft: 2,
+                                                fontFamily: 'Inter',
+                                                fontSize: 16,
+                                                width: 'auto',
+                                                fontWeight: 'bold'
+                                                // color: key.split('-SPLIT-')[3]
+                                            }}
+                                        >
+                                            {key.split('-SPLIT-')[0]}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    </ScrollView>
+                )
+            ) : (
+                <ScrollView
+                    horizontal={false}
+                    contentContainerStyle={{
+                        backgroundColor: '#efefef',
+                        paddingTop: 10
+                        // width: '100%',
+                        // height: '100%'
+                    }}
+                >
+                    {selectedWorkspace.split('-SPLIT-')[0] !== 'Home' ? renderTabs(selectedWorkspace) : null}
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            backgroundColor: '#efefef',
+                            borderColor: '#efefef',
+                            borderBottomWidth: collapseMap[selectedWorkspace]
+                        }}
+                        key={collapseMap.toString()}
+                    >
+                        <View
+                            style={{
+                                width: '100%',
+                                // maxWidth: 900,
+                                backgroundColor: '#efefef',
+                                paddingHorizontal: width < 768 ? 5 : 0
+                            }}
+                        >
+                            {[selectedWorkspace] ? (
+                                <View
+                                    style={{ width: '100%', paddingBottom: 25, backgroundColor: '#efefef' }}
+                                    key={editFolderChannelId.toString() + cueIds.toString() + cueMap.toString()}
+                                >
+                                    {indexMap[selectedWorkspace] !== 0 ? (
+                                        indexMap[selectedWorkspace] === 1 ? (
+                                            <Discussion
+                                                channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                filterChoice={selectedWorkspace.split('-SPLIT-')[0]}
+                                                channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
+                                                refreshUnreadDiscussionCount={() =>
+                                                    props.refreshUnreadDiscussionCount()
+                                                }
+                                                channelColor={selectedWorkspace.split('-SPLIT-')[3]}
+                                            />
+                                        ) : // Meet
+                                        indexMap[selectedWorkspace] === 2 ? (
+                                            <View
+                                                style={{
+                                                    alignItems: 'center',
+                                                    backgroundColor: '#efefef'
+                                                }}
+                                            >
+                                                {selectedWorkspace.split('-SPLIT-')[2] === userId ? (
+                                                    <View
+                                                        style={{
+                                                            width: '100%',
+                                                            marginBottom: 20,
+                                                            backgroundColor: '#efefef'
+                                                        }}
+                                                    >
+                                                        <TouchableOpacity
+                                                            onPress={() =>
+                                                                handleStartMeeting(
+                                                                    selectedWorkspace.split('-SPLIT-')[1],
+                                                                    selectedWorkspace.split('-SPLIT-')[2]
+                                                                )
+                                                            }
+                                                            style={{
+                                                                backgroundColor: '#efefef',
+                                                                overflow: 'hidden',
+                                                                height: 35,
+                                                                marginTop: 20,
+                                                                justifyContent: 'center',
+                                                                flexDirection: 'row',
+                                                                marginLeft: 'auto'
+                                                            }}
+                                                        >
+                                                            <Text
+                                                                style={{
+                                                                    textAlign: 'center',
+                                                                    lineHeight: 34,
+                                                                    color: '#fff',
+                                                                    borderRadius: 15,
+                                                                    backgroundColor: '#006AFF',
+                                                                    fontSize: 12,
+                                                                    paddingHorizontal: 20,
+                                                                    fontFamily: 'inter',
+                                                                    height: 35,
+                                                                    width: 175,
+                                                                    textTransform: 'uppercase'
+                                                                }}
+                                                            >
+                                                                Start Meeting
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                ) : null}
+
+                                                {ongoingMeetings.length > 0
+                                                    ? renderOngoingMeetings(
+                                                          selectedWorkspace.split('-SPLIT-')[2],
+                                                          selectedWorkspace.split('-SPLIT-')[3]
+                                                      )
+                                                    : null}
+
+                                                <Performance
+                                                    channelName={selectedWorkspace.split('-SPLIT-')[0]}
+                                                    onPress={(name: any, id: any, createdBy: any) => {
+                                                        props.setChannelFilterChoice('All');
+                                                        props.handleFilterChange(name);
+                                                        props.setChannelId(id);
+                                                        props.setChannelCreatedBy(createdBy);
+                                                        props.openGrades();
+                                                        props.hideHome();
+                                                    }}
+                                                    filterStart={filterStart}
+                                                    filterEnd={filterEnd}
+                                                    channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                    channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
+                                                    subscriptions={props.subscriptions}
+                                                    openCueFromGrades={props.openCueFromCalendar}
+                                                    colorCode={selectedWorkspace.split('-SPLIT-')[3]}
+                                                    activeTab={'meetings'}
+                                                />
+                                            </View>
+                                        ) : // Scores
+                                        indexMap[selectedWorkspace] === 3 ? (
+                                            <Performance
+                                                channelName={selectedWorkspace.split('-SPLIT-')[0]}
+                                                onPress={(name: any, id: any, createdBy: any) => {
+                                                    props.setChannelFilterChoice('All');
+                                                    props.handleFilterChange(name);
+                                                    props.setChannelId(id);
+                                                    props.setChannelCreatedBy(createdBy);
+                                                    props.openGrades();
+                                                    props.hideHome();
+                                                }}
+                                                filterStart={filterStart}
+                                                channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
+                                                filterEnd={filterEnd}
+                                                subscriptions={props.subscriptions}
+                                                openCueFromGrades={props.openCueFromCalendar}
+                                                colorCode={selectedWorkspace.split('-SPLIT-')[3]}
+                                                activeTab={'scores'}
+                                                isEditor={selectedWorkspace.split('-SPLIT-')[2] === userId}
+                                            />
+                                        ) : (
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    maxWidth: 400,
+                                                    alignSelf: 'center',
+                                                    borderTopRightRadius: 10,
+                                                    borderBottomRightRadius: 10
+                                                }}
+                                            >
+                                                <ChannelSettings
+                                                    channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                    refreshSubscriptions={props.refreshSubscriptions}
+                                                    closeModal={() => {
+                                                        // setShowHome(false)
+                                                        // closeModal()
+                                                    }}
+                                                    channelColor={selectedWorkspace.split('-SPLIT-')[3]}
+                                                />
+                                            </View>
+                                        )
+                                    ) : cueMap[selectedWorkspace].length === 0 ? (
+                                        <Text
+                                            style={{
+                                                width: '100%',
+                                                color: '#1F1F1F',
+                                                fontSize: 20,
+                                                paddingTop: 50,
+                                                paddingBottom: 50,
+                                                paddingHorizontal: 5,
+                                                fontFamily: 'inter',
+                                                flex: 1
+                                            }}
+                                        >
+                                            {PreferredLanguageText('noCuesCreated')}
+                                        </Text>
+                                    ) : (
+                                        <ScrollView
+                                            horizontal={false}
+                                            contentContainerStyle={{
+                                                // maxWidth: '100%',
+                                                backgroundColor: '#efefef',
+                                                paddingHorizontal: 10
+                                            }}
+                                            showsHorizontalScrollIndicator={false}
+                                            key={editFolderChannelId.toString() + cueIds.toString() + cueMap.toString()}
+                                        >
+                                            {categoryMap[selectedWorkspace].map((category: any, i: any) => {
+                                                // Check if even one category exists in cues
+
+                                                const foundCue = cueMap[selectedWorkspace].find(
+                                                    (cue: any) =>
+                                                        cue.customCategory.toString().trim() ===
+                                                        category.toString().trim()
+                                                );
+
+                                                if (!foundCue) return null;
+
+                                                return (
+                                                    <View
+                                                        style={{
+                                                            width: '100%',
+                                                            backgroundColor: '#efefef',
+                                                            marginRight: 15,
+                                                            marginBottom: 20
+                                                        }}
+                                                        key={i}
+                                                    >
+                                                        <View
+                                                            style={{
+                                                                backgroundColor: '#efefef',
+                                                                paddingLeft: 5
+                                                            }}
+                                                        >
+                                                            {category === '' ? null : (
+                                                                <Text
+                                                                    style={{
+                                                                        flex: 1,
+                                                                        flexDirection: 'row',
+                                                                        color: '#838383',
+                                                                        fontSize: 15,
+                                                                        lineHeight: 25,
+                                                                        marginBottom: category === '' ? 0 : 5,
+                                                                        fontFamily: 'inter',
+                                                                        backgroundColor: '#efefef'
+                                                                    }}
+                                                                    ellipsizeMode="tail"
+                                                                >
+                                                                    {category === '' ? ' ' : category}
+                                                                </Text>
+                                                            )}
+                                                        </View>
+                                                        <ScrollView
+                                                            horizontal={true}
+                                                            style={{
+                                                                paddingLeft: 5,
+                                                                backgroundColor: '#efefef',
+                                                                width: '100%'
+                                                            }}
+                                                            key={i.toString() + selectedWorkspace.toString()}
+                                                        >
+                                                            {cueMap[selectedWorkspace].map((cue: any, index: any) => {
+                                                                if (
+                                                                    cue.customCategory.toString().trim() !==
+                                                                    category.toString().trim()
+                                                                ) {
+                                                                    return null;
+                                                                }
+                                                                return (
+                                                                    <View
+                                                                        style={{
+                                                                            marginBottom: 15,
+                                                                            backgroundColor: '#efefef',
+                                                                            width: '100%',
+                                                                            maxWidth: 130,
+                                                                            marginRight: 15
+                                                                        }}
+                                                                        key={index}
+                                                                    >
+                                                                        <Card
+                                                                            gray={true}
+                                                                            cueIds={cueIds}
+                                                                            onLongPress={() => {
+                                                                                setCueIds([]);
+                                                                                setEditFolderChannelId(
+                                                                                    cue.channelId
+                                                                                        ? cue.channelId
+                                                                                        : 'Home'
+                                                                                );
+                                                                            }}
+                                                                            add={() => {
+                                                                                const temp = JSON.parse(
+                                                                                    JSON.stringify(cueIds)
+                                                                                );
+                                                                                const found = temp.find((i: any) => {
+                                                                                    return i === cue._id;
+                                                                                });
+                                                                                if (!found) {
+                                                                                    temp.push(cue._id);
+                                                                                }
+                                                                                setCueIds(temp);
+                                                                            }}
+                                                                            remove={() => {
+                                                                                const temp = JSON.parse(
+                                                                                    JSON.stringify(cueIds)
+                                                                                );
+                                                                                const upd = temp.filter((i: any) => {
+                                                                                    return i !== cue._id;
+                                                                                });
+                                                                                setCueIds(upd);
+                                                                            }}
+                                                                            editFolderChannelId={editFolderChannelId}
+                                                                            fadeAnimation={props.fadeAnimation}
+                                                                            updateModal={() => {
+                                                                                props.openUpdate(
+                                                                                    cue.key,
+                                                                                    cue.index,
+                                                                                    0,
+                                                                                    cue._id,
+                                                                                    cue.createdBy ? cue.createdBy : '',
+                                                                                    cue.channelId ? cue.channelId : ''
+                                                                                );
+                                                                            }}
+                                                                            cue={cue}
+                                                                            channelId={props.channelId}
+                                                                            subscriptions={props.subscriptions}
+                                                                        />
+                                                                    </View>
+                                                                );
+                                                            })}
+                                                        </ScrollView>
+                                                    </View>
+                                                );
+                                            })}
+                                        </ScrollView>
+                                    )}
+                                </View>
+                            ) : null}
+                        </View>
+                    </View>
+                </ScrollView>
+            )}
+        </View>
+    );
 
     /**
      * @description Renders all the channels under workspace
@@ -1685,6 +2254,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             containerStyle={{
                                 height: 'auto'
                             }}
+                            key={ind}
                         >
                             <View
                                 style={{
@@ -2142,6 +2712,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                         backgroundColor: '#efefef',
                                                                         marginRight: 15
                                                                     }}
+                                                                    key={i}
                                                                 >
                                                                     <View
                                                                         style={{
@@ -2548,76 +3119,80 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </View>
                 </View>
             </View> */}
-            {searchTerm === '' ? (
-                props.modalType === 'Create' && (props.option === 'Classroom' || props.option === 'Browse') ? (
-                    <Create
-                        key={JSON.stringify(props.customCategories)}
-                        customCategories={props.customCategories}
-                        closeModal={() => props.closeCreateModal()}
-                        closeOnCreate={() => props.closeOnCreate()}
-                        option={props.option}
-                        version={props.version}
-                    />
-                ) : (
-                    <View
-                        style={{
-                            alignSelf: 'center',
-                            width: '100%',
-                            backgroundColor: props.option === 'To Do' ? '#efefef' : '#fff',
-                            height: width < 768 ? windowHeight - 104 : windowHeight - 52
-                        }}
-                    >
-                        {props.option === 'Settings' ? (
-                            <Walkthrough
-                                closeModal={() => {}}
-                                saveDataInCloud={() => props.saveDataInCloud()}
-                                reOpenProfile={() => props.reOpenProfile()}
-                                reloadData={() => props.reloadData()}
-                                setShowHelp={(val: any) => props.setShowHelp(val)}
-                                showHelp={props.showHelp}
-                            />
-                        ) : null}
-                        {props.option === 'Channels' ? (
-                            <Channels
-                                setShowCreate={(val: any) => props.setShowCreate(val)}
-                                showCreate={props.showCreate}
-                                closeModal={() => {}}
-                                subscriptions={props.subscriptions}
-                                refreshSubscriptions={props.refreshSubscriptions}
-                            />
-                        ) : null}
-                        {props.option === 'Classroom' ? overview : null}
-                        {props.option === 'To Do' ? (
-                            <CalendarX
-                                tab={props.tab}
-                                version={props.version}
-                                setTab={(val: any) => props.setTab(val)}
-                                filterStart={filterStart}
-                                filterEnd={filterEnd}
-                                cues={props.calendarCues}
-                                subscriptions={props.subscriptions}
-                                openCueFromCalendar={props.openCueFromCalendar}
-                                openDiscussion={props.openDiscussionFromActivity}
-                                openChannel={props.openChannelFromActivity}
-                                openQA={props.openQAFromActivity}
-                                filterByChannel={filterByChannel}
-                                activityChannelId={activityChannelId}
-                                filterEventsType={filterEventsType}
-                            />
-                        ) : null}
-                        {props.option === 'Inbox' ? (
-                            <Inbox
-                                showDirectory={props.showDirectory}
-                                setShowDirectory={(val: any) => props.setShowDirectory(val)}
-                                subscriptions={props.subscriptions}
-                                refreshUnreadInbox={props.refreshUnreadInbox}
-                                hideNewChatButton={props.hideNewChatButton}
-                            />
-                        ) : null}
-                    </View>
-                )
+            {// searchTerm === '' ? (
+            props.modalType === 'Create' && (props.option === 'Classroom' || props.option === 'Browse') ? (
+                <Create
+                    key={JSON.stringify(props.customCategories)}
+                    customCategories={props.customCategories}
+                    closeModal={() => props.closeCreateModal()}
+                    closeOnCreate={() => props.closeOnCreate()}
+                    option={props.option}
+                    version={props.version}
+                />
             ) : (
-                searchResults
+                <View
+                    style={{
+                        alignSelf: 'center',
+                        width: '100%',
+                        backgroundColor: props.option === 'To Do' ? '#efefef' : '#fff',
+                        height: width < 768 ? windowHeight - 104 : windowHeight - 52
+                    }}
+                >
+                    {props.option === 'Settings' ? (
+                        <Walkthrough
+                            closeModal={() => {}}
+                            saveDataInCloud={() => props.saveDataInCloud()}
+                            reOpenProfile={() => props.reOpenProfile()}
+                            reloadData={() => props.reloadData()}
+                            setShowHelp={(val: any) => props.setShowHelp(val)}
+                            showHelp={props.showHelp}
+                        />
+                    ) : null}
+                    {props.option === 'Channels' ? (
+                        <Channels
+                            setShowCreate={(val: any) => props.setShowCreate(val)}
+                            showCreate={props.showCreate}
+                            closeModal={() => {}}
+                            subscriptions={props.subscriptions}
+                            refreshSubscriptions={props.refreshSubscriptions}
+                        />
+                    ) : null}
+                    {props.option === 'Classroom'
+                        ? Dimensions.get('window').width < 768
+                            ? overviewMobile
+                            : overview
+                        : null}
+                    {props.option === 'To Do' ? (
+                        <CalendarX
+                            tab={props.tab}
+                            version={props.version}
+                            setTab={(val: any) => props.setTab(val)}
+                            filterStart={filterStart}
+                            filterEnd={filterEnd}
+                            cues={props.calendarCues}
+                            subscriptions={props.subscriptions}
+                            openCueFromCalendar={props.openCueFromCalendar}
+                            openDiscussion={props.openDiscussionFromActivity}
+                            openChannel={props.openChannelFromActivity}
+                            openQA={props.openQAFromActivity}
+                            filterByChannel={filterByChannel}
+                            activityChannelId={activityChannelId}
+                            filterEventsType={filterEventsType}
+                        />
+                    ) : null}
+                    {props.option === 'Inbox' ? (
+                        <Inbox
+                            showDirectory={props.showDirectory}
+                            setShowDirectory={(val: any) => props.setShowDirectory(val)}
+                            subscriptions={props.subscriptions}
+                            refreshUnreadInbox={props.refreshUnreadInbox}
+                            hideNewChatButton={props.hideNewChatButton}
+                        />
+                    ) : null}
+                </View>
+                //     )
+                // ) : (
+                //     searchResults
             )}
             {/* <Popup
                 isOpen={showFilterPopup}

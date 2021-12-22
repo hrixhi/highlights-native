@@ -863,12 +863,13 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     }}
                     key={1}
                 >
-                    {Dimensions.get('window').width > 768 ? (
+                    {/* {Dimensions.get('window').width > 768 ? ( */}
+                    {
                         <View
                             style={{
-                                paddingHorizontal: 20,
+                                paddingHorizontal: Dimensions.get('window').width < 768 ? 10 : 20,
                                 paddingTop: 10,
-                                paddingBottom: 15
+                                paddingBottom: Dimensions.get('window').width < 768 ? 5 : 15
                             }}
                         >
                             <Text
@@ -884,7 +885,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                 Inbox
                             </Text>
                         </View>
-                    ) : null}
+                    }
+                    {/* ) : null} */}
                     <View style={{ width: '100%', backgroundColor: 'white' }}>
                         <View style={{ width: '100%', maxWidth: 900, alignSelf: 'center' }}>
                             <View
