@@ -1212,70 +1212,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 Set Date
                             </Text>
                         </TouchableOpacity>
-                        {/* <TouchableOpacity
-                            style={{
-                                backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
-                                borderRadius: 15,
-                                width: 150,
-                                justifyContent: 'center',
-                                flexDirection: 'row'
-                            }}
-                            onPress={() => {
-                                setShowRepeatTillDateAndroid(false);
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
-                                    overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15
-                                }}
-                            >
-                                Set Time
-                            </Text>
-                        </TouchableOpacity> */}
                     </View>
                 ) : null}
-                {/* <View style={{ height: 10, backgroundColor: 'white' }} /> */}
-                {/* {Platform.OS === 'ios' && (
-                    <DateTimePicker
-                        themeVariant="light"
-                        style={styles.timePicker}
-                        value={repeatTill}
-                        mode={'time'}
-                        textColor={'#2f2f3c'}
-                        onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
-                            const currentDate: any = selectedDate;
-                            setRepeatTill(currentDate);
-                        }}
-                    />
-                )}
-                {Platform.OS === 'android' && showRepeatTillTimeAndroid && (
-                    <DateTimePicker
-                        themeVariant="light"
-                        style={styles.timePicker}
-                        value={repeatTill}
-                        mode={'time'}
-                        textColor={'#2f2f3c'}
-                        onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
-                            const currentDate: any = selectedDate;
-                            setShowRepeatTillTimeAndroid(false);
-                            setRepeatTill(currentDate);
-                        }}
-                    />
-                )} */}
             </View>
         );
     };
@@ -1360,73 +1298,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 Set Date
                             </Text>
                         </TouchableOpacity>
-                        {/* <TouchableOpacity
-                            style={{
-                                backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
-                                borderRadius: 15,
-                                width: 150,
-                                justifyContent: 'center',
-                                flexDirection: 'row'
-                            }}
-                            onPress={() => {
-                                setShowFilterStartDateAndroid(false);
-                                setShowFilterStartTimeAndroid(true);
-                                setShowFilterEndDateAndroid(false);
-                                setShowFilterEndTimeAndroid(false);
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
-                                    overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15
-                                }}
-                            >
-                                Set Time
-                            </Text>
-                        </TouchableOpacity> */}
                     </View>
                 ) : null}
-                {/* <View style={{ height: 10, backgroundColor: 'white' }} />
-                {Platform.OS === 'ios' && (
-                    <DateTimePicker
-                        themeVariant="light"
-                        style={styles.timePicker}
-                        value={filterStart}
-                        mode={'time'}
-                        textColor={'#2f2f3c'}
-                        onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
-                            const currentDate: any = selectedDate;
-                            setFilterStart(currentDate);
-                        }}
-                    />
-                )}
-                {Platform.OS === 'android' && showFilterStartTimeAndroid && (
-                    <DateTimePicker
-                        themeVariant="light"
-                        style={styles.timePicker}
-                        value={start}
-                        mode={'time'}
-                        textColor={'#2f2f3c'}
-                        onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
-                            const currentDate: any = selectedDate;
-                            setShowFilterStartTimeAndroid(false);
-                            setFilterStart(currentDate);
-                        }}
-                    />
-                )} */}
             </View>
         );
     };
@@ -1438,7 +1311,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <DateTimePicker
                         themeVariant="light"
                         style={styles.timePicker}
-                        value={end}
+                        value={filterEnd}
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
@@ -1453,7 +1326,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <DateTimePicker
                         themeVariant="light"
                         style={styles.timePicker}
-                        value={end}
+                        value={filterEnd}
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
@@ -1511,74 +1384,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 Set Date
                             </Text>
                         </TouchableOpacity>
-                        {/* <TouchableOpacity
-                            style={{
-                                backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
-                                borderRadius: 15,
-                                width: 150,
-                                justifyContent: 'center',
-                                flexDirection: 'row'
-                            }}
-                            onPress={() => {
-                                setShowFilterStartDateAndroid(false);
-                                setShowFilterStartTimeAndroid(false);
-                                setShowFilterEndDateAndroid(false);
-                                setShowFilterEndTimeAndroid(true);
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
-                                    overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 150,
-                                    borderRadius: 15
-                                }}
-                            >
-                                Set Time
-                            </Text>
-                        </TouchableOpacity> */}
                     </View>
                 ) : null}
-
-                {/* <View style={{ height: 10, backgroundColor: 'white' }} />
-                {Platform.OS === 'ios' && (
-                    <DateTimePicker
-                        themeVariant="light"
-                        style={styles.timePicker}
-                        value={filterEnd}
-                        mode={'time'}
-                        textColor={'#2f2f3c'}
-                        onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
-                            const currentDate: any = selectedDate;
-                            setFilterEnd(currentDate);
-                        }}
-                    />
-                )}
-                {Platform.OS === 'android' && showFilterEndTimeAndroid && (
-                    <DateTimePicker
-                        themeVariant="light"
-                        style={styles.timePicker}
-                        value={end}
-                        mode={'time'}
-                        textColor={'#2f2f3c'}
-                        onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
-                            const currentDate: any = selectedDate;
-                            setShowFilterEndTimeAndroid(false);
-                            setFilterEnd(currentDate);
-                        }}
-                    />
-                )} */}
             </View>
         );
     };

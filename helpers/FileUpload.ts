@@ -1,30 +1,41 @@
 import * as DocumentPicker from 'expo-document-picker';
-const mime = require('mime-types');
+// const mime = require('mime-types');
 import axios from 'axios';
+import Alert from '../components/Alert';
 
 export const handleFile = async (audioVideoOnly: boolean) => {
     // e.preventDefault();
+    console.log('Initiate document picker');
     const res: any = await DocumentPicker.getDocumentAsync();
 
     if (res.type === 'cancel' || res.type !== 'success') {
         return { type: '', url: '' };
     }
 
-    const { file } = res;
+    let { name, size, uri } = res;
 
-    if (file.size > 26214400) {
-        alert('File size must be less than 25 mb');
-        return;
-    }
-    if (file === null) {
+    let nameParts = name.split('.');
+    let type = nameParts[nameParts.length - 1];
+    if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
+        Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
         return { type: '', url: '' };
     }
 
-    let type = mime.extension(file.type);
+    // const { file } = res;
 
-    if (file.type === 'video/avi') {
+    if (size > 26214400) {
+        alert('File size must be less than 25 mb');
+        return;
+    }
+    // if (file === null) {
+    //     return { type: '', url: '' };
+    // }
+
+    // let type = mime.extension(file.type);
+
+    if (type === 'video/avi') {
         type = 'avi';
-    } else if (file.type === 'video/quicktime') {
+    } else if (type === 'video/quicktime') {
         type = 'mov';
     }
 
@@ -39,16 +50,16 @@ export const handleFile = async (audioVideoOnly: boolean) => {
 
     console.log('File type', type);
 
-    if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
-        alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
-        return { type: '', url: '' };
-    }
+    // if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
+    //     alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
+    //     return { type: '', url: '' };
+    // }
 
     if (
         audioVideoOnly &&
         !(type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav')
     ) {
-        alert('Error! Only audio/video files can be imported.');
+        Alert('Error! Only audio/video files can be imported.');
         return { type: '', url: '' };
     }
 
@@ -57,9 +68,21 @@ export const handleFile = async (audioVideoOnly: boolean) => {
         return { type: '', url: '' };
     }
 
+    const file = {
+        name: name,
+        size: size,
+        uri: uri,
+        type: 'application/' + type
+    };
+
+    console.log('File to upload', file);
+
+    // return { type: '', url: '' };
+
     const response = await fileUpload(file, type);
 
     const { data } = response;
+    console.log('Result', data);
     if (data.status === 'success') {
         return {
             url: data.url,

@@ -1,6 +1,17 @@
 // REACT
-import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { StyleSheet, Switch, TextInput, ScrollView, Animated, Dimensions, Platform } from 'react-native';
+import React, { useCallback, useEffect, useState, useRef, Fragment } from 'react';
+import {
+    Keyboard,
+    KeyboardAvoidingView,
+    StyleSheet,
+    Switch,
+    TextInput,
+    ScrollView,
+    Animated,
+    Dimensions,
+    Platform,
+    KeyboardEvent
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -31,15 +42,25 @@ import Books from './Books';
 import DropDownPicker from 'react-native-dropdown-picker';
 // import DateTimePicker from '@react-native-community/datetimepicker';
 import { WebView } from 'react-native-webview';
+import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
+import { EmojiView, InsertLink } from './ToolbarComponents';
+import BottomSheet from './BottomSheet';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { handleFile } from '../helpers/FileUpload';
+import { handleImageUpload } from '../helpers/ImageUpload';
 import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
+import ColorPicker from './ColorPicker';
+// import { SafeAreaView } from 'react-native-safe-area-context';
+const emojiIcon = require('../assets/images/emojiIcon.png');
+const importIcon = require('../assets/images/importIcon.png');
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
-    const [cue, setCue] = useState('');
+    const [cue, setCue] = useState('<h1>Title</h1>');
     const [cueDraft, setCueDraft] = useState('');
     const [shuffle, setShuffle] = useState(false);
     const [starred] = useState(false);
@@ -61,13 +82,25 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [modalAnimation] = useState(new Animated.Value(0));
     let RichText: any = useRef();
     let editorRef: any = useRef();
+    const scrollRef: any = useRef();
     const [init, setInit] = useState(false);
     const [role, setRole] = useState('');
     const [submission, setSubmission] = useState(false);
     const [deadline, setDeadline] = useState(new Date(current.getTime() + 1000 * 60 * 60 * 24));
     const [initiateAt, setInitiateAt] = useState(new Date(current.getTime()));
+
+    const [showDeadlineTimeAndroid, setShowDeadlineTimeAndroid] = useState(false);
+    const [showDeadlineDateAndroid, setShowDeadlineDateAndroid] = useState(false);
+
+    const [showInitiateAtTimeAndroid, setShowInitiateAtTimeAndroid] = useState(false);
+    const [showInitiateAtDateAndroid, setShowInitiateAtDateAndroid] = useState(false);
+
     const [allowLateSubmission, setAllowLateSubmission] = useState(false);
     const [availableUntil, setAvailableUntil] = useState(new Date(current.getTime() + 1000 * 60 * 60 * 48));
+
+    const [showAvailableUntilTimeAndroid, setShowAvailableUntilTimeAndroid] = useState(false);
+    const [showAvailableUntilDateAndroid, setShowAvailableUntilDateAndroid] = useState(false);
+
     const [showBooks, setShowBooks] = useState(props.option === 'Browse' ? true : false);
     const [gradeWeight, setGradeWeight] = useState<any>(0);
     const [graded, setGraded] = useState(false);
@@ -120,6 +153,16 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [isChannelDropdownOpen, setIsChannelDropdownOpen] = useState(false);
     const [isUsersDropdownOpen, setIsUsersDropdownOpen] = useState(false);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+    const [height, setHeight] = useState(100);
+    const [reloadEditorKey, setReloadEditorKey] = useState(Math.random());
+    const [editorFocus, setEditorFocus] = useState(false);
+    const [emojiVisible, setEmojiVisible] = useState(false);
+    const [hiliteColorVisible, setHiliteColorVisible] = useState(false);
+    const [foreColorVisible, setForeColorVisible] = useState(false);
+    const [hiliteColor, setHiliteColor] = useState('#ffffff');
+    const [foreColor, setForeColor] = useState('#000000');
+    const [insertLinkVisible, setInsertLinkVisible] = useState(false);
+    const [insertImageVisible, setInsertImageVisible] = useState(false);
 
     // Alerts
     const enterOneProblemAlert = PreferredLanguageText('enterOneProblem');
@@ -135,7 +178,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const enterContentAlert = PreferredLanguageText('enterContent');
     const enterTitleAlert = PreferredLanguageText('enterTitle');
 
-    // HOOKS
+    // HOOK
 
     /**
      * @description Event listener for dimensions change
@@ -198,8 +241,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 )}`;
 
                 setCreatePdfviewerURL(pdfViewerURL);
+
+                console.log('pdfViewerURL', pdfViewerURL);
             }
         })();
+
+        console.log('Imported', imported);
+        console.log('import type', type);
 
         // WebViewer(
         //     {
@@ -326,9 +374,40 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }).start();
     }, []);
 
+    useEffect(() => {
+        if (selectedChannel === 'Home') {
+            setSelectedChannel('Home');
+            setChannelId('');
+            setCustomCategories(localCustomCategories);
+            setCustomCategory('None');
+            setAddCustomCategory(false);
+            setSubmission(false);
+            setGradeWeight(0);
+            setGraded(false);
+            setSelected([]);
+            setSubscribers([]);
+            setProblems([]);
+            setIsQuiz(false);
+            setTimer(false);
+        } else {
+            // const match = channels.find((c: any) => {
+            //     return c._id === selectedChannel;
+            // });
+            // setSelectedChannel(match._id);
+            setChannelId(selectedChannel);
+            setAddCustomCategory(false);
+            setCustomCategory('None');
+            setSubmission(isQuiz ? true : false);
+            setGradeWeight(0);
+            setGraded(false);
+        }
+    }, [selectedChannel]);
+
     const onDimensionsChange = useCallback(({ window, screen }: any) => {
         setDimensions({ window, screen });
     }, []);
+
+    console.log('Window dimensions', dimensions);
 
     /**
      * @description Used to insert equation into Editor HTML
@@ -550,6 +629,141 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         quizInstructions,
         headers
     ]);
+
+    // EDITOR METHODS
+
+    useEffect(() => {
+        changeForeColor(foreColor);
+    }, [foreColor]);
+
+    useEffect(() => {
+        changeHiliteColor(hiliteColor);
+    }, [hiliteColor]);
+
+    const handleUploadFile = useCallback(async () => {
+        const res = await handleFile(false);
+
+        console.log('File upload result', res);
+
+        if (!res || res.url === '' || res.type === '') {
+            return;
+        }
+
+        setEditorFocus(false);
+
+        updateAfterFileImport(res.url, res.type);
+    }, [RichText, RichText.current]);
+
+    const changeForeColor = useCallback(
+        (h: any) => {
+            RichText.current?.setForeColor(h);
+            setForeColorVisible(false);
+        },
+        [foreColor, RichText, RichText.current]
+    );
+
+    const changeHiliteColor = useCallback(
+        (h: any) => {
+            RichText.current?.setHiliteColor(h);
+            setHiliteColorVisible(false);
+        },
+        [hiliteColor, RichText, RichText.current]
+    );
+
+    /**
+     * @description Height for editor
+     */
+    const handleHeightChange = useCallback((h: any) => {
+        setHeight(h);
+    }, []);
+
+    const handleCursorPosition = useCallback(
+        (scrollY: any) => {
+            // Positioning scroll bar
+            scrollRef.current.scrollTo({ y: scrollY - 30, animated: true });
+        },
+        [scrollRef, scrollRef.current]
+    );
+
+    const insertEmoji = useCallback(
+        emoji => {
+            RichText.current?.insertText(emoji);
+            // RichText.current?.blurContentEditor();
+        },
+        [RichText, RichText.current]
+    );
+
+    const handleEmoji = useCallback(() => {
+        Keyboard.dismiss();
+        // RichText.current?.blurContentEditor();
+        setEmojiVisible(!emojiVisible);
+        setForeColorVisible(false);
+        setHiliteColorVisible(false);
+        setInsertImageVisible(false);
+        setInsertLinkVisible(false);
+    }, [RichText, RichText.current, emojiVisible]);
+
+    const handleHiliteColor = useCallback(() => {
+        Keyboard.dismiss();
+        setHiliteColorVisible(!hiliteColorVisible);
+        setForeColorVisible(false);
+        setEmojiVisible(false);
+        setInsertImageVisible(false);
+        setInsertLinkVisible(false);
+    }, [RichText, RichText.current, hiliteColorVisible]);
+
+    const handleForeColor = useCallback(() => {
+        Keyboard.dismiss();
+        setForeColorVisible(!foreColorVisible);
+        setHiliteColorVisible(false);
+        setEmojiVisible(false);
+        setInsertImageVisible(false);
+        setInsertLinkVisible(false);
+    }, [RichText, RichText.current, foreColorVisible]);
+
+    // const handleRemoveFormat = useCallback(() => {
+    //     RichText.current?.setHiliteColor('#ffffff');
+    //     RichText.current?.setForeColor('#000000');
+    //     // RichText.current?.setFontSize(3);
+    // }, [RichText, RichText.current]);
+
+    const handleAddImage = useCallback(async () => {
+        setInsertImageVisible(true);
+        setForeColorVisible(false);
+        setHiliteColorVisible(false);
+        setEmojiVisible(false);
+        setInsertLinkVisible(false);
+    }, []);
+
+    const uploadImageHandler = useCallback(
+        async (takePhoto: boolean) => {
+            const url = await handleImageUpload(takePhoto);
+
+            if (url && url !== '') {
+                RichText.current?.insertImage(url);
+            }
+
+            setInsertImageVisible(false);
+        },
+        [RichText, RichText.current]
+    );
+
+    const handleInsertLink = useCallback(() => {
+        setInsertLinkVisible(true);
+        setInsertImageVisible(false);
+        setForeColorVisible(false);
+        setHiliteColorVisible(false);
+        setEmojiVisible(false);
+    }, [RichText, RichText.current]);
+
+    const onInsertLink = useCallback(
+        (title, link) => {
+            RichText.current?.insertLink(title, link);
+            Keyboard.dismiss();
+            setInsertLinkVisible(false);
+        },
+        [RichText, RichText.current]
+    );
 
     /**
      * @description Loads channel Categories and subscribers for Create optins
@@ -906,7 +1120,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             {
                 text: 'Clear',
                 onPress: () => {
-                    setCue('');
+                    setCue('<h1>Title</h1>');
                     setCueDraft('');
                     setImported(false);
                     setUrl('');
@@ -922,43 +1136,535 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         ]);
     }, []);
 
-    /**
-     * @description Renders time to nearest minute
-     */
     const roundSeconds = (time: Date) => {
         time.setMinutes(time.getMinutes() + Math.round(time.getSeconds() / 60));
         time.setSeconds(0, 0);
+
         return time;
     };
 
+    const renderInitiateAtDateTimePicker = () => {
+        return (
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
+                {Platform.OS === 'ios' ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setInitiateAt(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' && showInitiateAtDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setShowInitiateAtDateAndroid(false);
+                            setInitiateAt(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(true);
+                                setShowInitiateAtTimeAndroid(false);
+                                setShowDeadlineDateAndroid(false);
+                                setShowDeadlineTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(false);
+                                setShowInitiateAtTimeAndroid(true);
+                                setShowDeadlineDateAndroid(false);
+                                setShowDeadlineTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Time
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+                <View style={{ height: 10, backgroundColor: 'white' }} />
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setInitiateAt(currentDate);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showInitiateAtTimeAndroid && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowInitiateAtTimeAndroid(false);
+                            setInitiateAt(currentDate);
+                        }}
+                    />
+                )}
+            </View>
+        );
+    };
+
+    const renderDeadlineDateTimePicker = () => {
+        return (
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setDeadline(roundedValue);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showDeadlineDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowDeadlineDateAndroid(false);
+
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setDeadline(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                width: 150,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(false);
+                                setShowInitiateAtTimeAndroid(false);
+                                setShowDeadlineDateAndroid(true);
+                                setShowDeadlineTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(false);
+                                setShowInitiateAtTimeAndroid(false);
+                                setShowDeadlineDateAndroid(false);
+                                setShowDeadlineTimeAndroid(true);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Time
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+
+                <View style={{ height: 10, backgroundColor: 'white' }} />
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setDeadline(currentDate);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showDeadlineTimeAndroid && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowDeadlineTimeAndroid(false);
+                            setDeadline(currentDate);
+                        }}
+                    />
+                )}
+            </View>
+        );
+    };
+
+    const renderAvailableUntilDateTimePicker = () => {
+        return (
+            <View
+                style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    marginLeft: 'auto'
+                    // paddingTop: width < 768 ? 10 : 0
+                }}
+            >
+                {Platform.OS === 'ios' ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setAvailableUntil(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' && showAvailableUntilDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setShowAvailableUntilDateAndroid(false);
+                            setAvailableUntil(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowAvailableUntilDateAndroid(true);
+                                setShowAvailableUntilTimeAndroid(false);
+                                // setShowEndDateAndroid(false);
+                                // setShowEndTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowAvailableUntilDateAndroid(false);
+                                setShowAvailableUntilTimeAndroid(true);
+                                // setShowEndDateAndroid(false);
+                                // setShowEndTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Time
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+                <View style={{ height: 10, backgroundColor: 'white' }} />
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setAvailableUntil(currentDate);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showAvailableUntilTimeAndroid && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowAvailableUntilTimeAndroid(false);
+                            setAvailableUntil(currentDate);
+                        }}
+                    />
+                )}
+            </View>
+        );
+    };
+
     return (
-        <ScrollView
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{
-                width: '100%',
-                height: dimensions.window.width < 1024 ? dimensions.window.height - 104 : dimensions.window.height - 52,
-                backgroundColor: 'white',
-                borderTopLeftRadius: 0,
-                borderTopRightRadius: 0,
-                overflow: 'scroll'
+                flex: 1
             }}
-            showsVerticalScrollIndicator={true}>
-            <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'center' }}>
+            keyboardVerticalOffset={dimensions.window.width < 768 ? 50 : 30}
+        >
+            <View style={{ flex: 1 }}>
                 <Animated.View
                     style={{
                         width: '100%',
                         backgroundColor: 'white',
                         opacity: modalAnimation,
-                        height: '100%',
                         maxWidth: 900,
                         paddingTop: 10,
-                        paddingHorizontal: dimensions.window.width < 1024 ? 10 : 0
-                    }}>
+                        paddingHorizontal: dimensions.window.width < 1024 ? 10 : 0,
+                        display: editorFocus ? 'none' : 'flex'
+                    }}
+                >
                     <View
                         style={{
                             flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-                            paddingBottom: 20
-                        }}>
+                            paddingBottom: showOptions ? 20 : 40
+                        }}
+                    >
                         {props.option === 'Browse' && !showOptions ? null : (
+                            // <TouchableOpacity
+                            //     onPress={() => {
+                            //         if (showOptions) {
+                            //             setShowOptions(false);
+                            //         } else if (showBooks) {
+                            //             setShowBooks(false);
+                            //         } else {
+                            //             props.closeModal();
+                            //         }
+                            //     }}
+                            //     style={{
+                            //         // position: 'absolute',
+                            //         left: 0,
+                            //         borderRadius: 20,
+                            //         width: 30,
+                            //         height: 30,
+                            //         backgroundColor: 'white',
+                            //         justifyContent: 'center',
+                            //         alignItems: 'center',
+                            //         shadowOffset: {
+                            //             width: 3,
+                            //             height: 3
+                            //         },
+                            //         marginVertical: 5,
+                            //         marginLeft: 10,
+                            //         // overflow: 'hidden',
+                            //         shadowOpacity: 0.12,
+                            //         shadowRadius: 8
+                            //     }}
+                            // >
+                            //     <Ionicons size={24} name="arrow-back" />
+                            // </TouchableOpacity>
                             <TouchableOpacity
                                 style={{
                                     paddingTop: 10,
@@ -972,7 +1678,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     } else {
                                         props.closeModal();
                                     }
-                                }}>
+                                }}
+                            >
                                 <Text>
                                     <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
                                 </Text>
@@ -988,7 +1695,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     }}
                                     onPress={() => {
                                         setShowBooks(!showBooks);
-                                    }}>
+                                    }}
+                                >
                                     <Text
                                         style={{
                                             textAlign: 'center',
@@ -1005,7 +1713,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             overflow: 'hidden',
                                             height: 30,
                                             textTransform: 'uppercase'
-                                        }}>
+                                        }}
+                                    >
                                         Browse Books
                                     </Text>
                                 </TouchableOpacity>
@@ -1027,7 +1736,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         }
                                         setIsQuiz(true);
                                         setSubmission(true);
-                                    }}>
+                                    }}
+                                >
                                     <Text
                                         style={{
                                             textAlign: 'center',
@@ -1044,7 +1754,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             overflow: 'hidden',
                                             height: 30,
                                             textTransform: 'uppercase'
-                                        }}>
+                                        }}
+                                    >
                                         {isQuiz ? 'Clear' : 'Create Quiz'}
                                     </Text>
                                 </TouchableOpacity>
@@ -1072,7 +1783,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         borderRadius: 15,
                                         backgroundColor: 'white'
                                         // marginLeft: 15
-                                    }}>
+                                    }}
+                                >
                                     <Text
                                         style={{
                                             textAlign: 'center',
@@ -1087,7 +1799,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             overflow: 'hidden',
                                             height: 30,
                                             textTransform: 'uppercase'
-                                        }}>
+                                        }}
+                                    >
                                         NEXT
                                     </Text>
                                 </TouchableOpacity>
@@ -1104,7 +1817,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                           // />
                           null
                         : null}
-                    <View style={{ paddingBottom: 100 }}>
+                </Animated.View>
+                <Animated.View
+                    style={{
+                        display: isQuiz || imported || showBooks || showOptions ? 'flex' : 'none',
+                        height: '100%'
+                    }}
+                >
+                    <ScrollView style={{ flexDirection: 'column', paddingHorizontal: 20 }}>
                         {showOptions ? (
                             <View
                                 style={{
@@ -1112,129 +1832,86 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     display: 'flex',
                                     flexDirection: 'column',
                                     marginHorizontal: 10,
-                                    maxWidth: 900,
                                     alignSelf: 'center'
-                                }}>
+                                }}
+                            >
                                 {channels.length !== 0 ? (
                                     <View
                                         style={{
-                                            display: 'flex',
-                                            overflow: 'visible'
-                                        }}>
+                                            display: 'flex'
+                                        }}
+                                    >
                                         <View
                                             style={{
                                                 flexDirection: width < 768 ? 'column' : 'row',
                                                 borderRightWidth: 0,
                                                 borderColor: '#efefef',
                                                 paddingTop: width < 768 ? 0 : 40
-                                            }}>
+                                            }}
+                                        >
                                             <View
                                                 style={{
-                                                    flex: 1,
-                                                    flexDirection: 'row',
+                                                    // flex: 1,
+                                                    // flexDirection: 'row',
+                                                    flexDirection: 'column',
                                                     paddingBottom: 15,
                                                     backgroundColor: 'white'
-                                                }}>
+                                                }}
+                                            >
                                                 <Text
                                                     style={{
                                                         fontSize: 14,
                                                         color: '#000000',
                                                         fontFamily: 'Inter'
-                                                    }}>
+                                                    }}
+                                                >
                                                     For
                                                 </Text>
                                             </View>
                                             <View
                                                 style={{
-                                                    backgroundColor: 'white'
-                                                }}>
+                                                    backgroundColor: 'white',
+                                                    marginLeft: width < 768 ? 0 : 'auto'
+                                                }}
+                                            >
                                                 <View
                                                     style={{
                                                         backgroundColor: 'white',
-                                                        display: 'flex'
-                                                    }}>
+                                                        display: 'flex',
+                                                        height: isChannelDropdownOpen ? 280 : 50,
+                                                        maxWidth: 400
+                                                    }}
+                                                >
                                                     <DropDownPicker
+                                                        listMode="SCROLLVIEW"
                                                         open={isChannelDropdownOpen}
                                                         value={selectedChannel}
                                                         items={channelOptions}
                                                         setOpen={setIsChannelDropdownOpen}
-                                                        setValue={(val: any) => {
-                                                            const channel = val;
-
-                                                            if (channel === 'Home') {
-                                                                setSelectedChannel('Home');
-                                                                setChannelId('');
-                                                                setCustomCategories(localCustomCategories);
-                                                                setCustomCategory('None');
-                                                                setAddCustomCategory(false);
-                                                                setSubmission(false);
-                                                                setGradeWeight(0);
-                                                                setGraded(false);
-                                                                setSelected([]);
-                                                                setSubscribers([]);
-                                                                setProblems([]);
-                                                                setIsQuiz(false);
-                                                                setTimer(false);
-                                                            } else {
-                                                                const match = channels.find((c: any) => {
-                                                                    return c._id === channel;
-                                                                });
-                                                                setSelectedChannel(match._id);
-                                                                setChannelId(match._id);
-                                                                setAddCustomCategory(false);
-                                                                setCustomCategory('None');
-                                                                setSubmission(isQuiz ? true : false);
-                                                                setGradeWeight(0);
-                                                                setGraded(false);
-                                                            }
+                                                        setValue={setSelectedChannel}
+                                                        zIndex={1000001}
+                                                        style={{
+                                                            borderWidth: 0,
+                                                            borderBottomWidth: 1,
+                                                            borderBottomColor: '#efefef'
+                                                        }}
+                                                        dropDownContainerStyle={{
+                                                            borderWidth: 0,
+                                                            zIndex: 1000001,
+                                                            elevation: 1000001
+                                                        }}
+                                                        containerStyle={{
+                                                            shadowColor: '#000',
+                                                            shadowOffset: {
+                                                                width: 4,
+                                                                height: 4
+                                                            },
+                                                            shadowOpacity: !isChannelDropdownOpen ? 0 : 0.12,
+                                                            shadowRadius: 12,
+                                                            zIndex: 1000001,
+                                                            elevation: 1000001
                                                         }}
                                                     />
-                                                    {/* <label style={{ width: 180 }}>
-                                                        <Select
-                                                            touchUi={true}
-                                                            value={selectedChannel}
-                                                            themeVariant="light"
-                                                            onChange={val => {
-                                                                const channel = val.value;
-
-                                                                if (channel === 'Home') {
-                                                                    setSelectedChannel('Home');
-                                                                    setChannelId('');
-                                                                    setCustomCategories(localCustomCategories);
-                                                                    setCustomCategory('None');
-                                                                    setAddCustomCategory(false);
-                                                                    setSubmission(false);
-                                                                    setGradeWeight(0);
-                                                                    setGraded(false);
-                                                                    setSelected([]);
-                                                                    setSubscribers([]);
-                                                                    setProblems([]);
-                                                                    setIsQuiz(false);
-                                                                    setTimer(false);
-                                                                } else {
-                                                                    const match = channels.find((c: any) => {
-                                                                        return c._id === channel;
-                                                                    });
-                                                                    setSelectedChannel(match._id);
-                                                                    setChannelId(match._id);
-                                                                    setAddCustomCategory(false);
-                                                                    setCustomCategory('None');
-                                                                    setSubmission(isQuiz ? true : false);
-                                                                    setGradeWeight(0);
-                                                                    setGraded(false);
-                                                                }
-                                                            }}
-                                                            responsive={{
-                                                                small: {
-                                                                    display: 'bubble'
-                                                                },
-                                                                medium: {
-                                                                    touchUi: false
-                                                                }
-                                                            }}
-                                                            data={channelOptions}
-                                                        />
-                                                    </label> */}
                                                 </View>
                                             </View>
                                         </View>
@@ -1245,20 +1922,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     width: '100%',
                                                     flexDirection: width < 768 ? 'column' : 'row',
                                                     paddingTop: 40
-                                                }}>
+                                                }}
+                                            >
                                                 <View
                                                     style={{
-                                                        flex: 1,
+                                                        // flex: 1,
                                                         flexDirection: 'row',
                                                         paddingBottom: 15,
                                                         backgroundColor: 'white'
-                                                    }}>
+                                                    }}
+                                                >
                                                     <Text
                                                         style={{
                                                             fontSize: 14,
                                                             color: '#000000',
                                                             fontFamily: 'Inter'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         Restrict Access
                                                     </Text>
                                                 </View>
@@ -1270,7 +1950,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             marginRight: 10,
                                                             flexDirection: 'row',
                                                             justifyContent: width < 768 ? 'flex-start' : 'flex-end'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         <Switch
                                                             value={limitedShare}
                                                             onValueChange={() => {
@@ -1287,16 +1968,19 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     {channelId !== '' && limitedShare ? (
                                                         <View
                                                             style={{
-                                                                flexDirection: 'column',
-                                                                overflow: 'scroll'
-                                                            }}>
+                                                                paddingTop: width < 768 ? 10 : 0,
+                                                                backgroundColor: 'white',
+                                                                marginLeft: width < 768 ? 0 : 'auto'
+                                                            }}
+                                                        >
                                                             <View
                                                                 style={{
-                                                                    width: '100%',
-                                                                    padding: 5,
-                                                                    height: 'auto',
-                                                                    maxWidth: 350
-                                                                }}>
+                                                                    backgroundColor: 'white',
+                                                                    display: 'flex',
+                                                                    height: isUsersDropdownOpen ? 280 : 50,
+                                                                    maxWidth: 400
+                                                                }}
+                                                            >
                                                                 {/* <label>
                                                                     <Select
                                                                         touchUi={true}
@@ -1320,12 +2004,33 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     />
                                                                 </label> */}
                                                                 <DropDownPicker
+                                                                    listMode="SCROLLVIEW"
                                                                     multiple={true}
                                                                     open={isUsersDropdownOpen}
                                                                     value={selected}
                                                                     items={subscribers}
                                                                     setOpen={setIsUsersDropdownOpen}
                                                                     setValue={setSelected}
+                                                                    zIndex={999999}
+                                                                    style={{
+                                                                        borderWidth: 0,
+                                                                        borderBottomWidth: 1,
+                                                                        borderBottomColor: '#efefef'
+                                                                    }}
+                                                                    dropDownContainerStyle={{
+                                                                        borderWidth: 0,
+                                                                        zIndex: 999999
+                                                                    }}
+                                                                    containerStyle={{
+                                                                        shadowColor: '#000',
+                                                                        shadowOffset: {
+                                                                            width: 4,
+                                                                            height: 4
+                                                                        },
+                                                                        shadowOpacity: !isUsersDropdownOpen ? 0 : 0.12,
+                                                                        shadowRadius: 12,
+                                                                        zIndex: 999999
+                                                                    }}
                                                                 />
                                                             </View>
                                                         </View>
@@ -1340,20 +2045,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     width: '100%',
                                                     flexDirection: width < 768 ? 'column' : 'row',
                                                     paddingTop: 40
-                                                }}>
+                                                }}
+                                            >
                                                 <View
                                                     style={{
-                                                        flex: 1,
+                                                        // flex: 1,
                                                         flexDirection: 'row',
                                                         paddingBottom: 15,
                                                         backgroundColor: 'white'
-                                                    }}>
+                                                    }}
+                                                >
                                                     <Text
                                                         style={{
                                                             fontSize: 14,
                                                             color: '#000000',
                                                             fontFamily: 'Inter'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         {PreferredLanguageText('submissionRequired')}
                                                     </Text>
                                                 </View>
@@ -1365,7 +2073,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             marginRight: 10,
                                                             flexDirection: 'row',
                                                             justifyContent: width < 768 ? 'flex-start' : 'flex-end'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         <Switch
                                                             disabled={isQuiz}
                                                             value={submission}
@@ -1390,7 +2099,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         flexDirection: 'row',
                                                                         backgroundColor: 'white',
                                                                         alignItems: 'center'
-                                                                    }}>
+                                                                    }}
+                                                                >
                                                                     <Text style={styles.text}>Available</Text>
                                                                     {/* <MobiscrollDatePicker
                                                                         controls={['date', 'time']}
@@ -1420,6 +2130,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                             }
                                                                         }}
                                                                     /> */}
+                                                                    {renderInitiateAtDateTimePicker()}
                                                                 </View>
                                                             ) : null}
                                                         </View>
@@ -1437,10 +2148,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         flexDirection: 'row',
                                                                         backgroundColor: 'white',
                                                                         alignItems: 'center'
-                                                                    }}>
+                                                                    }}
+                                                                >
                                                                     <Text style={styles.text}>
                                                                         {PreferredLanguageText('deadline')}
                                                                     </Text>
+                                                                    {renderDeadlineDateTimePicker()}
                                                                     {/* <MobiscrollDatePicker
                                                                         controls={['date', 'time']}
                                                                         touchUi={true}
@@ -1485,20 +2198,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     width: '100%',
                                                     flexDirection: width < 768 ? 'column' : 'row',
                                                     paddingTop: 40
-                                                }}>
+                                                }}
+                                            >
                                                 <View
                                                     style={{
-                                                        flex: 1,
+                                                        // flex: 1,
                                                         flexDirection: 'row',
                                                         paddingBottom: 15,
                                                         backgroundColor: 'white'
-                                                    }}>
+                                                    }}
+                                                >
                                                     <Text
                                                         style={{
                                                             fontSize: 14,
                                                             color: '#000000',
                                                             fontFamily: 'Inter'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         Graded
                                                     </Text>
                                                 </View>
@@ -1511,7 +2227,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 marginRight: 10,
                                                                 flexDirection: 'row',
                                                                 justifyContent: width < 768 ? 'flex-start' : 'flex-end'
-                                                            }}>
+                                                            }}
+                                                        >
                                                             <Switch
                                                                 value={graded}
                                                                 onValueChange={() => setGraded(!graded)}
@@ -1533,7 +2250,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         width < 768 ? 'flex-start' : 'flex-end',
                                                                     backgroundColor: 'white',
                                                                     alignItems: 'center'
-                                                                }}>
+                                                                }}
+                                                            >
                                                                 <TextInput
                                                                     value={gradeWeight}
                                                                     style={{
@@ -1556,7 +2274,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         textAlign: 'left',
                                                                         paddingHorizontal: 10,
                                                                         fontFamily: 'Inter'
-                                                                    }}>
+                                                                    }}
+                                                                >
                                                                     {PreferredLanguageText('percentageOverall')}
                                                                 </Text>
                                                             </View>
@@ -1572,20 +2291,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     width: '100%',
                                                     flexDirection: width < 768 ? 'column' : 'row',
                                                     paddingTop: 40
-                                                }}>
+                                                }}
+                                            >
                                                 <View
                                                     style={{
-                                                        flex: 1,
+                                                        // flex: 1,
                                                         flexDirection: 'row',
                                                         paddingBottom: 15,
                                                         backgroundColor: 'white'
-                                                    }}>
+                                                    }}
+                                                >
                                                     <Text
                                                         style={{
                                                             fontSize: 14,
                                                             color: '#000000',
                                                             fontFamily: 'Inter'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         Late Submission
                                                     </Text>
                                                 </View>
@@ -1598,7 +2320,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 marginRight: 10,
                                                                 flexDirection: 'row',
                                                                 justifyContent: width < 768 ? 'flex-start' : 'flex-end'
-                                                            }}>
+                                                            }}
+                                                        >
                                                             <Switch
                                                                 value={allowLateSubmission}
                                                                 onValueChange={() =>
@@ -1623,9 +2346,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     backgroundColor: 'white',
                                                                     alignItems: 'center'
                                                                     // marginLeft: 50,
-                                                                }}>
-                                                                <Text style={styles.text}>Allowed Until</Text>
-                                                                <MobiscrollDatePicker
+                                                                }}
+                                                            >
+                                                                <Text style={styles.text}>Ends on</Text>
+                                                                {renderAvailableUntilDateTimePicker()}
+                                                                {/* <MobiscrollDatePicker
                                                                     controls={['date', 'time']}
                                                                     touchUi={true}
                                                                     theme="ios"
@@ -1653,7 +2378,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                             touchUi: false
                                                                         }
                                                                     }}
-                                                                />
+                                                                /> */}
                                                             </View>
                                                         ) : null}
                                                     </View>
@@ -1669,19 +2394,22 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     width: '100%',
                                                     flexDirection: width < 768 ? 'column' : 'row',
                                                     paddingTop: 40
-                                                }}>
+                                                }}
+                                            >
                                                 <View
                                                     style={{
-                                                        flex: 1,
+                                                        // flex: 1,
                                                         flexDirection: 'row',
                                                         backgroundColor: 'white'
-                                                    }}>
+                                                    }}
+                                                >
                                                     <Text
                                                         style={{
                                                             fontSize: 14,
                                                             color: '#000000',
                                                             fontFamily: 'Inter'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         Unlimited Attempts
                                                     </Text>
                                                 </View>
@@ -1693,7 +2421,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             marginRight: 10,
                                                             flexDirection: 'row',
                                                             justifyContent: width < 768 ? 'flex-start' : 'flex-end'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         <Switch
                                                             value={unlimitedAttempts}
                                                             onValueChange={() => {
@@ -1721,7 +2450,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 backgroundColor: 'white',
                                                                 justifyContent: width < 768 ? 'flex-start' : 'flex-end',
                                                                 alignItems: 'center'
-                                                            }}>
+                                                            }}
+                                                        >
                                                             <Text style={styles.text}>Allowed attempts</Text>
                                                             <TextInput
                                                                 value={attempts}
@@ -1752,43 +2482,56 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 <View
                                     style={{
                                         display: 'flex'
-                                    }}>
+                                    }}
+                                >
                                     <View
                                         style={{
                                             width: '100%',
                                             borderRightWidth: 0,
                                             borderColor: '#efefef'
-                                        }}>
+                                        }}
+                                    >
                                         <View
                                             style={{
                                                 width: '100%',
                                                 backgroundColor: 'white',
                                                 flexDirection: width < 768 ? 'column' : 'row',
                                                 paddingTop: channels.length === 0 && width < 768 ? 0 : 40
-                                            }}>
+                                            }}
+                                        >
                                             <View
                                                 style={{
-                                                    flex: 1,
+                                                    // flex: 1,
                                                     flexDirection: 'row',
                                                     paddingBottom: 15,
                                                     backgroundColor: 'white'
-                                                }}>
+                                                }}
+                                            >
                                                 <Text
                                                     style={{
                                                         fontSize: 14,
                                                         color: '#000000',
                                                         fontFamily: 'Inter'
-                                                    }}>
+                                                    }}
+                                                >
                                                     {PreferredLanguageText('category')}
                                                 </Text>
                                             </View>
                                             <View
                                                 style={{
                                                     flexDirection: 'row',
-                                                    backgroundColor: 'white',
-                                                    alignItems: 'center'
-                                                }}>
-                                                <View style={{ width: '85%', backgroundColor: 'white' }}>
+                                                    backgroundColor: 'white'
+                                                    // alignItems: 'center'
+                                                }}
+                                            >
+                                                <View
+                                                    style={{
+                                                        maxWidth: 400,
+                                                        width: '85%',
+                                                        backgroundColor: 'white',
+                                                        marginLeft: width < 768 ? 0 : 'auto'
+                                                    }}
+                                                >
                                                     {addCustomCategory ? (
                                                         <View style={styles.colorBar}>
                                                             <TextInput
@@ -1798,8 +2541,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     borderColor: '#efefef',
                                                                     borderBottomWidth: 1,
                                                                     fontSize: 14,
-                                                                    height: '2.75em',
-                                                                    padding: '1em'
+                                                                    padding: 10,
+                                                                    paddingVertical: 15,
+                                                                    width: '100%'
                                                                 }}
                                                                 placeholder={'Enter Category'}
                                                                 onChangeText={val => {
@@ -1809,38 +2553,50 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             />
                                                         </View>
                                                     ) : (
-                                                        // <label style={{ width: 180 }}>
-                                                        //     <Select
-                                                        //         touchUi={true}
-                                                        //         cssClass="customDropdown"
-                                                        //         value={customCategory}
-                                                        //         rows={customCategories.length + 1}
-                                                        //         data={categoriesOptions}
-                                                        //         themeVariant="light"
-                                                        //         onChange={(val: any) => {
-                                                        //             setCustomCategory(val.value);
-                                                        //         }}
-                                                        //         responsive={{
-                                                        //             small: {
-                                                        //                 display: 'bubble'
-                                                        //             },
-                                                        //             medium: {
-                                                        //                 touchUi: false
-                                                        //             }
-                                                        //         }}
-                                                        //     />
-                                                        // </label>
-                                                        <DropDownPicker
-                                                            open={isCategoryDropdownOpen}
-                                                            value={customCategory}
-                                                            items={categoriesOptions}
-                                                            setOpen={setIsCategoryDropdownOpen}
-                                                            setValue={setCustomCategory}
-                                                        />
+                                                        <View
+                                                            style={{
+                                                                height: isCategoryDropdownOpen ? 250 : 50
+                                                            }}
+                                                        >
+                                                            <DropDownPicker
+                                                                listMode="SCROLLVIEW"
+                                                                open={isCategoryDropdownOpen}
+                                                                value={customCategory}
+                                                                items={categoriesOptions}
+                                                                setOpen={setIsCategoryDropdownOpen}
+                                                                setValue={setCustomCategory}
+                                                                zIndex={1000001}
+                                                                style={{
+                                                                    borderWidth: 0,
+                                                                    borderBottomWidth: 1,
+                                                                    borderBottomColor: '#efefef'
+                                                                }}
+                                                                dropDownContainerStyle={{
+                                                                    borderWidth: 0,
+                                                                    zIndex: 1000001,
+                                                                    elevation: 1000001
+                                                                }}
+                                                                containerStyle={{
+                                                                    shadowColor: '#000',
+                                                                    shadowOffset: {
+                                                                        width: 4,
+                                                                        height: 4
+                                                                    },
+                                                                    shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.12,
+                                                                    shadowRadius: 12,
+                                                                    zIndex: 1000001,
+                                                                    elevation: 1000001
+                                                                }}
+                                                            />
+                                                        </View>
                                                     )}
                                                 </View>
                                                 <View
-                                                    style={{ width: '15%', backgroundColor: 'white', paddingLeft: 20 }}>
+                                                    style={{
+                                                        width: '15%',
+                                                        backgroundColor: 'white'
+                                                    }}
+                                                >
                                                     <TouchableOpacity
                                                         onPress={() => {
                                                             if (addCustomCategory) {
@@ -1851,13 +2607,16 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 setAddCustomCategory(true);
                                                             }
                                                         }}
-                                                        style={{ backgroundColor: 'white' }}>
+                                                        style={{ backgroundColor: 'white' }}
+                                                    >
                                                         <Text
                                                             style={{
                                                                 textAlign: 'center',
                                                                 lineHeight: 20,
-                                                                width: '100%'
-                                                            }}>
+                                                                width: '100%',
+                                                                paddingTop: 15
+                                                            }}
+                                                        >
                                                             <Ionicons
                                                                 name={addCustomCategory ? 'close' : 'create-outline'}
                                                                 size={18}
@@ -1878,20 +2637,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             paddingTop: 40,
                                             alignItems: width < 1024 ? 'flex-start' : 'center',
                                             paddingBottom: 15
-                                        }}>
+                                        }}
+                                    >
                                         <View
                                             style={{
-                                                flex: 1,
+                                                // flex: 1,
                                                 flexDirection: 'row',
                                                 backgroundColor: 'white'
-                                            }}>
+                                            }}
+                                        >
                                             <Text
                                                 style={{
                                                     fontSize: 14,
                                                     color: '#000000',
                                                     fontFamily: 'Inter',
                                                     paddingBottom: 15
-                                                }}>
+                                                }}
+                                            >
                                                 {PreferredLanguageText('priority')}
                                             </Text>
                                         </View>
@@ -1899,12 +2661,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             style={{
                                                 flexDirection: 'row',
                                                 backgroundColor: 'white'
-                                            }}>
-                                            <View style={{ width: '100%', backgroundColor: 'white' }}>
+                                            }}
+                                        >
+                                            <View style={{ width: '100%', backgroundColor: 'white', paddingTop: 10 }}>
                                                 <ScrollView
-                                                    style={{ ...styles.colorBar, height: 20 }}
+                                                    style={{ ...styles.colorBar, height: 25 }}
                                                     horizontal={true}
-                                                    showsHorizontalScrollIndicator={false}>
+                                                    showsHorizontalScrollIndicator={false}
+                                                >
                                                     {colorChoices.map((c: string, i: number) => {
                                                         return (
                                                             <View
@@ -1913,7 +2677,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         ? styles.colorContainerOutline
                                                                         : styles.colorContainer
                                                                 }
-                                                                key={Math.random()}>
+                                                                key={Math.random()}
+                                                            >
                                                                 <TouchableOpacity
                                                                     style={{
                                                                         width: 12,
@@ -1946,7 +2711,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         }}>
                                         <View
                                             style={{
-                                                flex: 1,
+                                                // flex: 1,
                                                 flexDirection: 'row',
                                                 paddingBottom: 15,
                                                 backgroundColor: 'white'
@@ -1995,7 +2760,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             }}>
                                             <View
                                                 style={{
-                                                    flex: 1,
+                                                    // flex: 1,
                                                     flexDirection: 'row',
                                                     paddingBottom: 15,
                                                     backgroundColor: 'white'
@@ -2137,7 +2902,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             }}>
                                             <View
                                                 style={{
-                                                    flex: 1,
+                                                    // flex: 1,
                                                     flexDirection: 'row',
                                                     paddingBottom: 15,
                                                     backgroundColor: 'white'
@@ -2224,20 +2989,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             width: '100%',
                                             flexDirection: width < 768 ? 'column' : 'row',
                                             paddingTop: 40
-                                        }}>
+                                        }}
+                                    >
                                         <View
                                             style={{
-                                                flex: 1,
+                                                // flex: 1,
                                                 flexDirection: 'row',
                                                 paddingBottom: 15,
                                                 backgroundColor: 'white'
-                                            }}>
+                                            }}
+                                        >
                                             <Text
                                                 style={{
                                                     fontSize: 14,
                                                     color: '#000000',
                                                     fontFamily: 'Inter'
-                                                }}>
+                                                }}
+                                            >
                                                 Timed
                                             </Text>
                                         </View>
@@ -2249,7 +3017,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     marginRight: 10,
                                                     flexDirection: 'row',
                                                     justifyContent: width < 768 ? 'flex-start' : 'flex-end'
-                                                }}>
+                                                }}
+                                            >
                                                 <Switch
                                                     value={timer}
                                                     onValueChange={() => {
@@ -2277,7 +3046,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         paddingTop: 0,
                                                         borderColor: '#efefef',
                                                         flexDirection: 'row'
-                                                    }}>
+                                                    }}
+                                                >
                                                     <View>
                                                         <Menu
                                                             onSelect={(hour: any) =>
@@ -2285,14 +3055,16 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     ...duration,
                                                                     hours: hour
                                                                 })
-                                                            }>
+                                                            }
+                                                        >
                                                             <MenuTrigger>
                                                                 <Text
                                                                     style={{
                                                                         // fontFamily: "inter",
                                                                         fontSize: 15,
                                                                         color: '#000000'
-                                                                    }}>
+                                                                    }}
+                                                                >
                                                                     {duration.hours} H{' '}
                                                                     <Ionicons name="chevron-down-outline" size={15} />{' '}
                                                                     &nbsp; &nbsp;: &nbsp; &nbsp;
@@ -2309,7 +3081,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         overflow: 'scroll',
                                                                         maxHeight: '100%'
                                                                     }
-                                                                }}>
+                                                                }}
+                                                            >
                                                                 {hours.map((hour: any) => {
                                                                     return (
                                                                         <MenuOption value={hour}>
@@ -2327,14 +3100,16 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     ...duration,
                                                                     minutes: min
                                                                 })
-                                                            }>
+                                                            }
+                                                        >
                                                             <MenuTrigger>
                                                                 <Text
                                                                     style={{
                                                                         // fontFamily: "inter",
                                                                         fontSize: 15,
                                                                         color: '#000000'
-                                                                    }}>
+                                                                    }}
+                                                                >
                                                                     {duration.minutes} m{' '}
                                                                     <Ionicons name="chevron-down-outline" size={15} />
                                                                 </Text>
@@ -2350,7 +3125,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         overflow: 'scroll',
                                                                         maxHeight: '100%'
                                                                     }
-                                                                }}>
+                                                                }}
+                                                            >
                                                                 {minutes.map((min: any) => {
                                                                     return (
                                                                         <MenuOption value={min}>
@@ -2374,20 +3150,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             width: '100%',
                                             flexDirection: width < 768 ? 'column' : 'row',
                                             paddingTop: 40
-                                        }}>
+                                        }}
+                                    >
                                         <View
                                             style={{
-                                                flex: 1,
+                                                // flex: 1,
                                                 flexDirection: 'row',
                                                 paddingBottom: 15,
                                                 backgroundColor: 'white'
-                                            }}>
+                                            }}
+                                        >
                                             <Text
                                                 style={{
                                                     fontSize: 14,
                                                     color: '#000000',
                                                     fontFamily: 'Inter'
-                                                }}>
+                                                }}
+                                            >
                                                 Random Order
                                             </Text>
                                         </View>
@@ -2399,7 +3178,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     flexDirection: 'row',
                                                     justifyContent: width < 768 ? 'flex-start' : 'flex-end',
                                                     marginRight: 10
-                                                }}>
+                                                }}
+                                            >
                                                 <Switch
                                                     value={shuffleQuiz}
                                                     onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
@@ -2416,80 +3196,66 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 ) : null}
                             </View>
                         ) : (
-                            <>
+                            <View>
                                 {imported || isQuiz ? (
                                     <View
                                         style={{
-                                            flexDirection: width < 768 ? 'column' : 'row'
-                                        }}>
-                                        <View
+                                            width: '100%',
+                                            borderRightWidth: 0,
+                                            borderColor: '#efefef',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            paddingHorizontal: 10
+                                        }}
+                                    >
+                                        <AutoGrowingTextInput
+                                            value={title}
+                                            onChange={(event: any) => setTitle(event.nativeEvent.text || '')}
                                             style={{
-                                                width: '100%',
-                                                borderRightWidth: 0,
+                                                fontFamily: 'overpass',
+                                                // width: 300,
+                                                flex: 1,
+                                                marginRight: 20,
+                                                maxWidth: 400,
+                                                // borderBottom: '1px solid #efefef',
+                                                borderBottomWidth: 1,
                                                 borderColor: '#efefef',
-                                                flexDirection: 'row',
-                                                alignItems: 'center'
-                                            }}>
-                                            {/* <TextareaAutosize
-                                                value={title}
+                                                fontSize: 14,
+                                                paddingTop: 13,
+                                                paddingBottom: 13,
+                                                marginTop: 12,
+                                                marginBottom: 15,
+                                                borderRadius: 1
+                                            }}
+                                            placeholder={'Title'}
+                                            placeholderTextColor="#66737C"
+                                            maxHeight={200}
+                                            minHeight={45}
+                                            enableScrollToCaret
+                                            // ref={}
+                                        />
+                                        {!isQuiz ? (
+                                            <TouchableOpacity
                                                 style={{
-                                                    fontFamily: 'overpass',
-                                                    width: '100%',
-                                                    maxWidth: 400,
-                                                    borderBottom: '1px solid #efefef',
-                                                    fontSize: 14,
-                                                    paddingTop: 13,
-                                                    paddingBottom: 13,
-                                                    marginTop: 12,
-                                                    marginBottom: 15,
-                                                    borderRadius: 1,
-                                                    height: 35
+                                                    marginLeft: 'auto',
+                                                    paddingTop: 15,
+                                                    marginRight: 10
+                                                    // flex: 1
                                                 }}
-                                                minRows={1}
-                                                placeholder={PreferredLanguageText('title')}
-                                                onChange={(e: any) => setTitle(e.target.value)}
-                                            /> */}
-                                            <AutoGrowingTextInput
-                                                value={title}
-                                                onChange={(event: any) => setTitle(event.nativeEvent.text || '')}
-                                                style={{
-                                                    fontFamily: 'overpass',
-                                                    width: '100%',
-                                                    maxWidth: 400,
-                                                    borderBottom: '1px solid #efefef',
-                                                    fontSize: 14,
-                                                    paddingTop: 13,
-                                                    paddingBottom: 13,
-                                                    marginTop: 12,
-                                                    marginBottom: 15,
-                                                    borderRadius: 1
-                                                }}
-                                                placeholder={'Title'}
-                                                placeholderTextColor="#66737C"
-                                                maxHeight={200}
-                                                minHeight={45}
-                                                enableScrollToCaret
-                                                // ref={}
-                                            />
-                                            {!isQuiz ? (
-                                                <TouchableOpacity
+                                                onPress={() => clearAll()}
+                                            >
+                                                <Text
                                                     style={{
-                                                        marginLeft: Dimensions.get('window').width < 768 ? 20 : 'auto',
-                                                        paddingTop: 15
+                                                        fontSize: 12,
+                                                        lineHeight: 34,
+                                                        fontFamily: 'inter',
+                                                        color: '#006AFF'
                                                     }}
-                                                    onPress={() => clearAll()}>
-                                                    <Text
-                                                        style={{
-                                                            fontSize: 12,
-                                                            lineHeight: 34,
-                                                            fontFamily: 'inter',
-                                                            color: '#006AFF'
-                                                        }}>
-                                                        Clear
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            ) : null}
-                                        </View>
+                                                >
+                                                    Clear
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ) : null}
                                     </View>
                                 ) : null}
                                 <View
@@ -2497,25 +3263,29 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         width: '100%',
                                         minHeight: isQuiz ? 0 : 500,
                                         backgroundColor: 'white'
-                                    }}>
+                                    }}
+                                >
                                     {isQuiz ? (
                                         <View
                                             style={{
                                                 width: '100%',
                                                 flexDirection: 'column'
-                                            }}>
+                                            }}
+                                        >
                                             <View
                                                 style={{
                                                     backgroundColor: '#fff',
                                                     flexDirection: 'row',
                                                     width: '100%'
-                                                }}>
+                                                }}
+                                            >
                                                 <View
                                                     style={{
                                                         width: '100%',
                                                         maxWidth: 600,
                                                         paddingTop: 15
-                                                    }}>
+                                                    }}
+                                                >
                                                     {/* <Editor
                                                         initialValue={initialQuizInstructions}
                                                         apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
@@ -2609,11 +3379,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         type === 'wav' ? (
                                             <ReactPlayer
                                                 source={{ uri: url }}
-                                                // controls={true}
-                                                // onContextMenu={(e: any) => e.preventDefault()}
-                                                // config={{
-                                                //     file: { attributes: { controlsList: 'nodownload' } }
-                                                // }}
                                                 style={{
                                                     width: '100%',
                                                     height: '100%'
@@ -2622,7 +3387,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         ) : (
                                             <View
                                                 key={url + JSON.stringify(showOptions)}
-                                                style={{ flex: 1, maxHeight: 800 }}>
+                                                style={{ flex: 1, paddingTop: 20 }}
+                                            >
                                                 {/* <div
                                                     className="webviewer"
                                                     ref={RichText}
@@ -2636,114 +3402,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             </View>
                                         )
                                     ) : null}
-                                    {showBooks ? (
-                                        <Books
-                                            onUpload={(obj: any) => {
-                                                setCue(JSON.stringify(obj));
-                                                setShowBooks(false);
-                                            }}
-                                        />
-                                    ) : null}
-                                    {isQuiz || imported || showBooks
-                                        ? null
-                                        : // <Editor
-                                          //     onInit={(evt, editor) => (editorRef.current = editor)}
-                                          //     initialValue={cueDraft !== '' ? cueDraft : '<h2>Title</h2>'}
-                                          //     apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
-                                          //     init={{
-                                          //         skin: 'snow',
-                                          //         // toolbar_sticky: true,
-                                          //         branding: false,
-                                          //         placeholder: 'Content...',
-                                          //         min_height: 500,
-                                          //         paste_data_images: true,
-                                          //         images_upload_url:
-                                          //             'https://api.learnwithcues.com/api/imageUploadEditor',
-                                          //         mobile: {
-                                          //             plugins:
-                                          //                 'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
-                                          //         },
-                                          //         plugins:
-                                          //             'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
-                                          //         menu: {
-                                          //             // this is the complete default configuration
-                                          //             file: { title: 'File', items: 'newdocument' },
-                                          //             edit: {
-                                          //                 title: 'Edit',
-                                          //                 items: 'undo redo | cut copy paste pastetext | selectall'
-                                          //             },
-                                          //             insert: { title: 'Insert', items: 'link media | template hr' },
-                                          //             view: { title: 'View', items: 'visualaid' },
-                                          //             format: {
-                                          //                 title: 'Format',
-                                          //                 items:
-                                          //                     'bold italic underline strikethrough superscript subscript | formats | removeformat'
-                                          //             },
-                                          //             table: {
-                                          //                 title: 'Table',
-                                          //                 items: 'inserttable tableprops deletetable | cell row column'
-                                          //             },
-                                          //             tools: { title: 'Tools', items: 'spellchecker code' }
-                                          //         },
-                                          //         setup: (editor: any) => {
-                                          //             // const equationIcon = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 48 60" style="enable-background:new 0 0 48 48;" xml:space="preserve"><g><path d="M45,2v2H20.8271484l-7.8447266,41.1875c-0.0830078,0.4335938-0.4404297,0.7617188-0.8789063,0.8076172   C12.0683594,45.9980469,12.0341797,46,12,46c-0.4003906,0-0.7666016-0.2402344-0.9228516-0.6152344L6.7265625,34.9433594   L3.78125,38.625l-1.5625-1.25l4-5c0.2207031-0.2753906,0.5654297-0.4189453,0.9208984-0.3652344   c0.3496094,0.0488281,0.6474609,0.2792969,0.7832031,0.6054688l3.71875,8.9238281L19.0175781,2.8125   C19.1074219,2.3408203,19.5195313,2,20,2H45z M27.7070313,21.7070313L33,16.4140625l5.2929688,5.2929688l1.4140625-1.4140625   L34.4140625,15l5.2929688-5.2929688l-1.4140625-1.4140625L33,13.5859375l-5.2929688-5.2929688l-1.4140625,1.4140625L31.5859375,15   l-5.2929688,5.2929688L27.7070313,21.7070313z M32.9546509,38.5549316l-5.1089478-8.0891113l-1.6914063,1.0683594   l5.6068115,8.8773804l-2.6019287,4.0474243l1.6816406,1.0820313l9-14l-1.6816406-1.0820313L32.9546509,38.5549316z M23,27h20v-2H23   V27z"/></g></svg>'
-
-                                          //             const equationIcon =
-                                          //                 '<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4817 3.82717C11.3693 3.00322 9.78596 3.7358 9.69388 5.11699L9.53501 7.50001H12.25C12.6642 7.50001 13 7.8358 13 8.25001C13 8.66423 12.6642 9.00001 12.25 9.00001H9.43501L8.83462 18.0059C8.6556 20.6912 5.47707 22.0078 3.45168 20.2355L3.25613 20.0644C2.9444 19.7917 2.91282 19.3179 3.18558 19.0061C3.45834 18.6944 3.93216 18.6628 4.24389 18.9356L4.43943 19.1067C5.53003 20.061 7.24154 19.352 7.33794 17.9061L7.93168 9.00001H5.75001C5.3358 9.00001 5.00001 8.66423 5.00001 8.25001C5.00001 7.8358 5.3358 7.50001 5.75001 7.50001H8.03168L8.1972 5.01721C8.3682 2.45214 11.3087 1.09164 13.3745 2.62184L13.7464 2.89734C14.0793 3.1439 14.1492 3.61359 13.9027 3.94643C13.6561 4.27928 13.1864 4.34923 12.8536 4.10268L12.4817 3.82717Z"/><path d="M13.7121 12.7634C13.4879 12.3373 12.9259 12.2299 12.5604 12.5432L12.2381 12.8194C11.9236 13.089 11.4501 13.0526 11.1806 12.7381C10.911 12.4236 10.9474 11.9501 11.2619 11.6806L11.5842 11.4043C12.6809 10.4643 14.3668 10.7865 15.0395 12.0647L16.0171 13.9222L18.7197 11.2197C19.0126 10.9268 19.4874 10.9268 19.7803 11.2197C20.0732 11.5126 20.0732 11.9874 19.7803 12.2803L16.7486 15.312L18.2879 18.2366C18.5121 18.6627 19.0741 18.7701 19.4397 18.4568L19.7619 18.1806C20.0764 17.911 20.5499 17.9474 20.8195 18.2619C21.089 18.5764 21.0526 19.0499 20.7381 19.3194L20.4159 19.5957C19.3191 20.5357 17.6333 20.2135 16.9605 18.9353L15.6381 16.4226L12.2803 19.7803C11.9875 20.0732 11.5126 20.0732 11.2197 19.7803C10.9268 19.4874 10.9268 19.0126 11.2197 18.7197L14.9066 15.0328L13.7121 12.7634Z"/></svg>';
-                                          //             editor.ui.registry.addIcon('formula', equationIcon);
-
-                                          //             editor.ui.registry.addButton('formula', {
-                                          //                 icon: 'formula',
-                                          //                 // text: "Upload File",
-                                          //                 tooltip: 'Insert equation',
-                                          //                 onAction: () => {
-                                          //                     setShowEquationEditor(!showEquationEditor);
-                                          //                 }
-                                          //             });
-
-                                          //             editor.ui.registry.addButton('upload', {
-                                          //                 icon: 'upload',
-                                          //                 tooltip: 'Import File (pdf, docx, media, etc.)',
-                                          //                 onAction: async () => {
-                                          //                     const res = await handleFile(false);
-
-                                          //                     console.log('File upload result', res);
-
-                                          //                     if (!res || res.url === '' || res.type === '') {
-                                          //                         return;
-                                          //                     }
-
-                                          //                     updateAfterFileImport(res.url, res.type);
-                                          //                 }
-                                          //             });
-                                          //         },
-                                          //         // menubar: 'file edit view insert format tools table tc help',
-                                          //         menubar: false,
-                                          //         toolbar:
-                                          //             'undo redo | bold italic underline strikethrough | table image upload link media | forecolor backcolor |  numlist bullist checklist | fontselect fontSizeselect formatselect | formula superscript subscript charmap emoticons | alignleft aligncenter alignright alignjustify | casechange permanentpen formatpainter removeformat  pagebreak | preview print | outdent indent ltr rtl ',
-                                          //         importcss_append: true,
-                                          //         image_caption: true,
-                                          //         quickbars_selection_toolbar:
-                                          //             'bold italic underline | quicklink h2 h3 quickimage quicktable',
-                                          //         noneditable_noneditable_class: 'mceNonEditable',
-                                          //         toolbar_mode: 'sliding',
-                                          //         content_style:
-                                          //             '.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before{color: #1F1F1F;}',
-                                          //         // tinycomments_mode: 'embedded',
-                                          //         // content_style: '.mymention{ color: gray; }',
-                                          //         // contextmenu: 'link image table configurepermanentpen',
-                                          //         // a11y_advanced_options: true,
-                                          //         extended_valid_elements:
-                                          //             'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
-                                          //         // skin: useDarkMode ? 'oxide-dark' : 'oxide',
-                                          //         // content_css: useDarkMode ? 'dark' : 'default',
-                                          //     }}
-                                          //     onChange={(e: any) => setCue(e.target.getContent())}
-                                          // />
-                                          null}
                                 </View>
-                            </>
+                            </View>
                         )}
+
                         {!showOptions ? null : (
                             <View style={styles.footer}>
                                 <View
@@ -2755,7 +3417,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         flexDirection: 'row',
                                         height: 50,
                                         paddingTop: 10
-                                    }}>
+                                    }}
+                                >
                                     <TouchableOpacity
                                         onPress={async () => {
                                             if (isQuiz) {
@@ -2772,7 +3435,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             borderRadius: 15,
                                             backgroundColor: 'white'
-                                        }}>
+                                        }}
+                                    >
                                         {channelId === '' ? (
                                             <Text
                                                 style={{
@@ -2787,7 +3451,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     overflow: 'hidden',
                                                     height: 35,
                                                     textTransform: 'uppercase'
-                                                }}>
+                                                }}
+                                            >
                                                 {isSubmitting ? 'Creating...' : 'Create'}
                                             </Text>
                                         ) : (
@@ -2804,7 +3469,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     overflow: 'hidden',
                                                     height: 35,
                                                     textTransform: 'uppercase'
-                                                }}>
+                                                }}
+                                            >
                                                 {isSubmitting ? 'Creating...' : 'CREATE'}
                                             </Text>
                                         )}
@@ -2813,10 +3479,434 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             </View>
                         )}
                         {/* Collapsible ends here */}
-                    </View>
+                    </ScrollView>
+
+                    {showBooks ? (
+                        <Books
+                            onUpload={(obj: any) => {
+                                setCue(JSON.stringify(obj));
+                                setShowBooks(false);
+                            }}
+                        />
+                    ) : null}
                 </Animated.View>
+                <View
+                    style={{
+                        display: isQuiz || imported || showBooks || showOptions ? 'none' : 'flex',
+                        height: '100%',
+                        marginTop: editorFocus ? 0 : 10
+                    }}
+                >
+                    {isQuiz || imported || showBooks || showOptions ? null : (
+                        <View style={{ height: '100%' }}>
+                            <RichToolbar
+                                style={{
+                                    borderColor: '#efefef',
+                                    borderBottomWidth: 1,
+                                    backgroundColor: '#fff',
+                                    display: editorFocus ? 'flex' : 'none',
+                                    maxHeight: 40,
+                                    height: 40
+                                }}
+                                flatContainerStyle={{
+                                    paddingHorizontal: 12
+                                }}
+                                editor={RichText}
+                                disabled={false}
+                                selectedIconTint={'#006AFF'}
+                                disabledIconTint={'#bfbfbf'}
+                                actions={[
+                                    actions.keyboard,
+                                    actions.insertVideo,
+                                    actions.insertImage,
+                                    actions.insertLink,
+                                    actions.insertBulletsList,
+                                    actions.insertOrderedList,
+                                    actions.checkboxList,
+                                    actions.alignLeft,
+                                    actions.alignCenter,
+                                    actions.alignRight,
+                                    actions.blockquote,
+                                    actions.code,
+                                    actions.line,
+                                    'insertEmoji'
+                                ]}
+                                iconMap={{
+                                    [actions.keyboard]: ({ tintColor }) => (
+                                        <Text style={[styles.tib, { color: 'green', fontSize: 20 }]}>✓</Text>
+                                    ),
+                                    [actions.insertVideo]: importIcon,
+                                    insertEmoji: emojiIcon
+                                }}
+                                insertEmoji={handleEmoji}
+                                insertVideo={handleUploadFile}
+                                onPressAddImage={handleAddImage}
+                                onInsertLink={handleInsertLink}
+                            />
+                            <ScrollView
+                                horizontal={false}
+                                style={{
+                                    backgroundColor: '#efefef',
+                                    // maxHeight: editorFocus ? 340 : 'auto',
+                                    height: '100%'
+                                }}
+                                keyboardDismissMode={'none'}
+                                ref={scrollRef}
+                                nestedScrollEnabled={true}
+                                scrollEventThrottle={20}
+                                indicatorStyle={'black'}
+                                showsHorizontalScrollIndicator={true}
+                                persistentScrollbar={true}
+                            >
+                                <RichEditor
+                                    key={reloadEditorKey.toString()}
+                                    // containerStyle={{
+                                    //     height,
+                                    //     backgroundColor: '#fff',
+                                    //     padding: 3,
+                                    //     paddingTop: 5,
+                                    //     paddingBottom: 10,
+                                    //     // borderRadius: 15,
+                                    //     display: isQuiz || imported ? 'none' : 'flex'
+                                    // }}
+                                    ref={RichText}
+                                    useContainer={true}
+                                    style={{
+                                        width: '100%',
+                                        paddingHorizontal: 10,
+                                        backgroundColor: '#fff',
+                                        // borderRadius: 15,
+                                        minHeight: '100%',
+                                        display: isQuiz || imported ? 'none' : 'flex',
+                                        // borderTopWidth: 1,
+                                        // borderColor: '#efefef',
+                                        marginBottom: editorFocus ? 0 : 200,
+                                        flex: 1,
+                                        height: '100%'
+                                    }}
+                                    editorStyle={{
+                                        backgroundColor: '#fff',
+                                        placeholderColor: '#a2a2ac',
+                                        color: '#2f2f3c',
+                                        contentCSSText: 'font-size: 16px; min-height: 400px;'
+                                    }}
+                                    initialContentHTML={cue}
+                                    initialHeight={400}
+                                    onScroll={() => Keyboard.dismiss()}
+                                    placeholder={PreferredLanguageText('title')}
+                                    onChange={text => {
+                                        const modifedText = text.split('&amp;').join('&');
+                                        setCue(modifedText);
+                                    }}
+                                    onHeightChange={handleHeightChange}
+                                    onFocus={() => setEditorFocus(true)}
+                                    onBlur={() => setEditorFocus(false)}
+                                    allowFileAccess={true}
+                                    allowFileAccessFromFileURLs={true}
+                                    allowUniversalAccessFromFileURLs={true}
+                                    allowsFullscreenVideo={true}
+                                    allowsInlineMediaPlayback={true}
+                                    allowsLinkPreview={true}
+                                    allowsBackForwardNavigationGestures={true}
+                                    onCursorPosition={handleCursorPosition}
+                                />
+                            </ScrollView>
+
+                            {/* <KeyboardAvoidingView
+                                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                                style={{
+                                    flex: 1
+                                }}
+                                keyboardVerticalOffset={100}
+                            > */}
+                            <RichToolbar
+                                style={{
+                                    borderColor: '#efefef',
+                                    borderTopWidth: 1,
+                                    backgroundColor: '#fff',
+                                    display: editorFocus ? 'flex' : 'none'
+                                }}
+                                flatContainerStyle={{
+                                    paddingHorizontal: 12
+                                }}
+                                editor={RichText}
+                                disabled={false}
+                                // iconTint={color}
+                                selectedIconTint={'#006AFF'}
+                                disabledIconTint={'#bfbfbf'}
+                                // onPressAddImage={that.onPressAddImage}
+                                // iconSize={24}
+                                // iconGap={10}
+                                actions={[
+                                    actions.undo,
+                                    actions.redo,
+                                    // Format text
+                                    actions.setBold,
+                                    actions.setItalic,
+                                    actions.setUnderline,
+                                    actions.setStrikethrough,
+                                    actions.heading1,
+                                    actions.heading3,
+                                    actions.setParagraph,
+                                    actions.foreColor,
+                                    actions.hiliteColor,
+                                    actions.setSuperscript,
+                                    actions.setSubscript
+                                    // actions.removeFormat
+                                    // Insert stuff
+                                    // 'insertHTML',
+                                    // 'fontSize'
+                                ]} // default defaultActions
+                                iconMap={{
+                                    [actions.heading1]: ({ tintColor }) => (
+                                        <Text
+                                            style={[styles.tib, { color: tintColor, fontSize: 19, paddingBottom: 1 }]}
+                                        >
+                                            H1
+                                        </Text>
+                                    ),
+                                    [actions.heading3]: ({ tintColor }) => (
+                                        <Text
+                                            style={[
+                                                styles.tib,
+                                                {
+                                                    color: tintColor,
+                                                    fontSize: 19,
+                                                    paddingBottom: 1
+                                                }
+                                            ]}
+                                        >
+                                            H3
+                                        </Text>
+                                    ),
+                                    [actions.setParagraph]: ({ tintColor }) => (
+                                        <Text
+                                            style={[styles.tib, { color: tintColor, fontSize: 19, paddingBottom: 1 }]}
+                                        >
+                                            p
+                                        </Text>
+                                    ),
+                                    [actions.foreColor]: ({ tintColor }) => (
+                                        <Text
+                                            style={{
+                                                fontSize: 19,
+                                                fontWeight: 'bold',
+                                                color: 'red'
+                                            }}
+                                        >
+                                            A
+                                        </Text>
+                                    ),
+                                    [actions.hiliteColor]: ({ tintColor }) => (
+                                        <Text
+                                            style={{
+                                                color: 'black',
+                                                fontSize: 19,
+                                                backgroundColor: '#ffc701',
+                                                paddingHorizontal: 2
+                                            }}
+                                        >
+                                            H
+                                        </Text>
+                                    )
+                                }}
+                                hiliteColor={handleHiliteColor}
+                                foreColor={handleForeColor}
+                                // removeFormat={handleRemoveFormat}
+                            />
+
+                            {/* </KeyboardAvoidingView> */}
+                        </View>
+                    )}
+                </View>
             </View>
-        </ScrollView>
+            {/* {emojiVisible && <EmojiView onSelect={insertEmoji} />} */}
+            {emojiVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setEmojiVisible(false);
+                    }}
+                    isOpen={emojiVisible}
+                    title={'Select emoji'}
+                    renderContent={() => <EmojiView onSelect={insertEmoji} />}
+                    header={false}
+                />
+            )}
+            {insertImageVisible && (
+                <BottomSheet
+                    snapPoints={[0, 200]}
+                    close={() => {
+                        setInsertImageVisible(false);
+                    }}
+                    isOpen={insertImageVisible}
+                    title={'Insert image'}
+                    renderContent={() => (
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(true);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Camera{' '}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(false);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Gallery{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
+            )}
+            {insertLinkVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setInsertLinkVisible(false);
+                    }}
+                    isOpen={insertLinkVisible}
+                    title={'Insert Link'}
+                    renderContent={() => <InsertLink onInsertLink={onInsertLink} />}
+                    header={false}
+                />
+            )}
+            {hiliteColorVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setHiliteColorVisible(false);
+                    }}
+                    isOpen={hiliteColorVisible}
+                    title={'Highlight color'}
+                    renderContent={() => (
+                        <View
+                            style={{
+                                paddingHorizontal: 10,
+                                paddingTop: 20,
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <ColorPicker
+                                editorColors={true}
+                                color={hiliteColor}
+                                onChange={(color: string) => setHiliteColor(color)}
+                            />
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 10
+                                }}
+                                onPress={() => setHiliteColor('#ffffff')}
+                                disabled={hiliteColor === '#ffffff'}
+                            >
+                                <Text
+                                    style={{
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#006AFF'
+                                    }}
+                                >
+                                    {' '}
+                                    Remove{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
+            )}
+            {foreColorVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setForeColorVisible(false);
+                    }}
+                    isOpen={foreColorVisible}
+                    title={'Text color'}
+                    renderContent={() => (
+                        <View
+                            style={{
+                                paddingHorizontal: 10,
+                                paddingTop: 20,
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <ColorPicker
+                                editorColors={true}
+                                color={foreColor}
+                                onChange={(color: string) => setForeColor(color)}
+                            />
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 10
+                                }}
+                                onPress={() => setForeColor('#000000')}
+                                disabled={foreColor === '#000000'}
+                            >
+                                <Text
+                                    style={{
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#006AFF'
+                                    }}
+                                >
+                                    {' '}
+                                    Remove{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
+            )}
+        </KeyboardAvoidingView>
     );
 };
 
@@ -2828,24 +3918,25 @@ const styles: any = StyleSheet.create({
         backgroundColor: 'white',
         display: 'flex',
         flexDirection: 'row',
-        marginTop: 80,
-        lineHeight: 18
+        marginTop: 30,
+        lineHeight: 18,
+        marginBottom: 250
     },
     colorContainer: {
-        lineHeight: 20,
+        lineHeight: 25,
         justifyContent: 'center',
         display: 'flex',
         flexDirection: 'column',
-        marginLeft: 7,
+        marginLeft: 10,
         paddingHorizontal: 4,
         backgroundColor: 'white'
     },
     colorContainerOutline: {
-        lineHeight: 20,
+        lineHeight: 25,
         justifyContent: 'center',
         display: 'flex',
         flexDirection: 'column',
-        marginLeft: 7,
+        marginLeft: 10,
         paddingHorizontal: 4,
         backgroundColor: 'white',
         borderRadius: 10,
@@ -2866,13 +3957,13 @@ const styles: any = StyleSheet.create({
         width: '100%',
         flexDirection: 'row',
         backgroundColor: 'white',
-        lineHeight: 20
+        lineHeight: 25
     },
     text: {
         fontSize: 14,
         color: '#1F1F1F',
         textAlign: 'left',
-        paddingHorizontal: 10,
+        paddingRight: 10,
         fontFamily: 'Inter'
     },
     all: {
@@ -2881,5 +3972,12 @@ const styles: any = StyleSheet.create({
         height: 22,
         paddingHorizontal: 10,
         backgroundColor: 'white'
+    },
+    timePicker: {
+        width: 125,
+        fontSize: 16,
+        height: 45,
+        color: 'black',
+        borderRadius: 10
     }
 });

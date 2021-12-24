@@ -261,15 +261,27 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         });
     };
 
+    console.log('Past meetings', pastMeetings);
+    console.log('Past attendances', channelAttendances);
+
     // MAIN RETURN
     return (
         <View
             style={{
                 backgroundColor: '#efefef',
                 width: '100%'
-            }}>
+            }}
+        >
             {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
-                <Text style={{ color: '#1f1f1f', fontSize: 15, fontFamily: 'inter', marginBottom: 20 }}>
+                <Text
+                    style={{
+                        color: '#1f1f1f',
+                        fontSize: 18,
+                        fontFamily: 'inter',
+                        marginBottom: 10,
+                        paddingHorizontal: 10
+                    }}
+                >
                     Past meetings
                 </Text>
             )}
@@ -283,7 +295,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     paddingBottom: 20,
                     width: '100%',
                     justifyContent: 'flex-end'
-                }}>
+                }}
+            >
                 {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
                     <View style={{ backgroundColor: '#efefef' }}>
                         <View
@@ -295,7 +308,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 alignItems: 'center',
                                 borderBottomColor: '#d9dcdf',
                                 borderBottomWidth: 1
-                            }}>
+                            }}
+                        >
                             {/* <Datepicker
                                 themeVariant="light"
                                 controls={['calendar']}
@@ -329,11 +343,13 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             overflow: 'hidden',
                             height: 35,
                             justifyContent: 'center',
-                            flexDirection: 'row'
+                            flexDirection: 'row',
+                            marginRight: 10
                         }}
                         onPress={() => {
                             exportAttendance();
-                        }}>
+                        }}
+                    >
                         <Text
                             style={{
                                 textAlign: 'center',
@@ -347,7 +363,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 height: 35,
                                 borderRadius: 15,
                                 textTransform: 'uppercase'
-                            }}>
+                            }}
+                        >
                             EXPORT
                         </Text>
                     </TouchableOpacity>
@@ -367,7 +384,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             borderTopRightRadius: 0,
                             borderTopLeftRadius: 0,
                             paddingVertical: 100
-                        }}>
+                        }}
+                    >
                         <ActivityIndicator color={'#1F1F1F'} />
                     </View>
                 ) : (
@@ -378,9 +396,10 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 color: '#1F1F1F',
                                 fontSize: 20,
                                 paddingVertical: 50,
-                                paddingHorizontal: 5,
+                                paddingHorizontal: 20,
                                 fontFamily: 'inter'
-                            }}>
+                            }}
+                        >
                             {pastMeetings.length === 0 ? 'No past meetings.' : 'No Students.'}
                         </Text>
                     </View>
@@ -391,8 +410,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         width: '100%',
                         backgroundColor: 'white',
                         paddingTop: 10,
-                        maxHeight: 500,
-                        paddingHorizontal: 10,
+                        // maxHeight: 500,
+                        // paddingHorizontal: 10,
                         borderRadius: 1,
                         borderLeftColor: props.channelColor,
                         borderLeftWidth: 3,
@@ -404,7 +423,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         shadowRadius: 10,
                         zIndex: 5000000
                     }}
-                    key={JSON.stringify(channelAttendances)}>
+                    key={JSON.stringify(channelAttendances)}
+                >
                     <ScrollView
                         showsHorizontalScrollIndicator={true}
                         horizontal={true}
@@ -413,7 +433,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             maxHeight: 450,
                             flexDirection: 'column'
                         }}
-                        nestedScrollEnabled={true}>
+                        nestedScrollEnabled={true}
+                    >
                         <View>
                             <View
                                 style={{
@@ -424,7 +445,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                     borderBottomWidth: 1,
                                     borderBottomColor: '#efefef'
                                 }}
-                                key={'-'}>
+                                key={'-'}
+                            >
                                 {isOwner ? <View style={styles.col} key={'0,0'} /> : null}
                                 <View style={styles.col} key={'0,0'}>
                                     <Text
@@ -433,7 +455,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                             color: '#000000',
                                             fontFamily: 'inter',
                                             textAlign: 'center'
-                                        }}>
+                                        }}
+                                    >
                                         Total
                                     </Text>
                                 </View>
@@ -447,7 +470,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                     fontSize: 13,
                                                     color: '#000000',
                                                     fontFamily: 'inter'
-                                                }}>
+                                                }}
+                                            >
                                                 {title}
                                             </Text>
                                             <Text
@@ -456,7 +480,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                     fontSize: 12,
                                                     color: '#000000',
                                                     marginBottom: 5
-                                                }}>
+                                                }}
+                                            >
                                                 {moment(new Date(start)).format('MMMM Do')}
                                             </Text>
                                             <Text
@@ -465,7 +490,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                     fontSize: 12,
                                                     color: '#000000',
                                                     marginBottom: 5
-                                                }}>
+                                                }}
+                                            >
                                                 {moment(new Date(start)).format('h:mm')} -{' '}
                                                 {moment(new Date(end)).format('h:mm')}
                                             </Text>
@@ -480,7 +506,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             contentContainerStyle={{
                                 height: '100%'
                             }}
-                            nestedScrollEnabled={true}>
+                            nestedScrollEnabled={true}
+                        >
                             {channelAttendances.map((channelAttendance: any, row: number) => {
                                 const studentCount = attendanceTotalMap[channelAttendance.userId];
 
@@ -494,7 +521,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                         fontSize: 13,
                                                         color: '#000000',
                                                         fontFamily: 'inter'
-                                                    }}>
+                                                    }}
+                                                >
                                                     {channelAttendance.fullName}
                                                 </Text>
                                             </View>
@@ -506,7 +534,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                     fontSize: 13,
                                                     color: '#000000',
                                                     fontFamily: 'inter'
-                                                }}>
+                                                }}
+                                            >
                                                 {studentCount} / {pastMeetings.length}
                                             </Text>
                                         </View>
@@ -530,22 +559,25 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                             width: '100%',
                                                             flexDirection: 'row',
                                                             justifyContent: 'center'
-                                                        }}>
-                                                        {attendanceObject ? (
-                                                            <Ionicons
-                                                                name="checkmark-outline"
-                                                                size={15}
-                                                                color={'#006AFF'}
-                                                            />
-                                                        ) : isOwner ? (
-                                                            <Ionicons
-                                                                name="checkmark-outline"
-                                                                size={15}
-                                                                color={'#e0e0e0'}
-                                                            />
-                                                        ) : (
-                                                            '-'
-                                                        )}
+                                                        }}
+                                                    >
+                                                        <Text>
+                                                            {attendanceObject ? (
+                                                                <Ionicons
+                                                                    name="checkmark-outline"
+                                                                    size={15}
+                                                                    color={'#006AFF'}
+                                                                />
+                                                            ) : isOwner ? (
+                                                                <Ionicons
+                                                                    name="checkmark-outline"
+                                                                    size={15}
+                                                                    color={'#e0e0e0'}
+                                                                />
+                                                            ) : (
+                                                                '-'
+                                                            )}
+                                                        </Text>
                                                     </TouchableOpacity>
                                                     {attendanceObject ? (
                                                         <Text
@@ -554,7 +586,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                                 fontSize: 12,
                                                                 color: '#000000',
                                                                 width: '100%'
-                                                            }}>
+                                                            }}
+                                                        >
                                                             {attendanceObject.joinedAt
                                                                 ? moment(new Date(attendanceObject.joinedAt)).format(
                                                                       'h:mm a'

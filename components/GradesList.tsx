@@ -171,7 +171,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             overflow: 'hidden',
                             height: 35,
                             justifyContent: 'center',
-                            flexDirection: 'row'
+                            flexDirection: 'row',
+                            marginRight: 10
                         }}>
                         <Text style={{
                             textAlign: 'center',
@@ -205,7 +206,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             {
                 props.scores.length === 0 || cues.length === 0 ?
                     <View style={{ backgroundColor: '#efefef' }}>
-                        <Text style={{ width: '100%', color: '#1F1F1F', fontSize: 20, paddingVertical: 50, paddingHorizontal: 5, fontFamily: 'inter' }}>
+                        <Text style={{ width: '100%', color: '#1F1F1F', fontSize: 20, paddingVertical: 50, paddingHorizontal: 20, fontFamily: 'inter' }}>
                             {
                                 cues.length === 0 ? PreferredLanguageText('noGraded') : PreferredLanguageText('noStudents')
                             }
@@ -216,7 +217,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         width: '100%',
                         backgroundColor: 'white',
                         paddingTop: 10,
-                        maxHeight: 650,
+                        // maxHeight: 650,
                         paddingHorizontal: 10,
                         borderRadius: 1,
                         borderLeftColor: props.channelColor,

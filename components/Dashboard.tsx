@@ -47,6 +47,8 @@ import ChannelSettings from './ChannelSettings';
 // import logo from '../components/default-images/cues-logo-white-exclamation-hidden.jpg';
 import InsetShadow from 'react-native-inset-shadow';
 import DropDownPicker from 'react-native-dropdown-picker';
+import BottomSheet from './BottomSheet';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -67,8 +69,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     });
     const [resultCount, setResultCount] = useState(0);
     const [loadingSearchResults, setLoadingSearchResults] = useState(false);
-    const [filterStart, setFilterStart] = useState<any>(null);
-    const [filterEnd, setFilterEnd] = useState<any>(null);
+    // const [filterStart, setFilterStart] = useState<any>(null);
+    // const [filterEnd, setFilterEnd] = useState<any>(null);
     const [searchOptions] = useState(['Classroom', 'Messages', 'Threads', 'Channels']);
     const [sortBy, setSortBy] = useState('Date ↑');
     const [cueMap, setCueMap] = useState<any>({});
@@ -91,15 +93,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const sortbyOptions = [
         {
             value: 'Date ↑',
-            text: 'Date ↑'
+            label: 'Date ↑'
         },
         {
             value: 'Date ↓',
-            text: 'Date ↓'
+            label: 'Date ↓'
         },
         {
             value: 'Priority',
-            text: 'Priority'
+            label: 'Priority'
         }
     ];
     const [showInstantMeeting, setShowInstantMeeting] = useState(false);
@@ -114,6 +116,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [userZoomInfo, setUserZoomInfo] = useState<any>('');
     const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
     const [showSearchMobile, setShowSearchMobile] = useState<any>('');
+    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [showSortByFilterModal, setShowSortByFilterModal] = useState(false);
+    const [showFilterStartDateAndroid, setShowFilterStartDateAndroid] = useState(false);
+    const [showFilterEndDateAndroid, setShowFilterEndDateAndroid] = useState(false);
+    // Filter start & end
+    const currentDate = new Date();
+    const [filterStart, setFilterStart] = useState<any>(new Date(currentDate.getTime() - 1000 * 60 * 60 * 24 * 30 * 5));
+    const [filterEnd, setFilterEnd] = useState<any>(new Date(currentDate.getTime() + 1000 * 60 * 60 * 24 * 30 * 5));
 
     // ALERTS
     const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
@@ -733,6 +743,178 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     // FUNCTIONS
 
+    const renderFilterStartDateTimePicker = () => {
+        return (
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
+                {Platform.OS === 'ios' ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={filterStart}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setFilterStart(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' && showFilterStartDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={filterStart}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setShowFilterStartDateAndroid(false);
+                            setFilterStart(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowStartDateAndroid(true);
+                                setShowStartTimeAndroid(false);
+                                setShowEndDateAndroid(false);
+                                setShowEndTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+            </View>
+        );
+    };
+
+    const renderFilterEndDateTimePicker = () => {
+        return (
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={filterEnd}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setFilterEnd(roundedValue);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showFilterEndDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={filterEnd}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowFilterEndDateAndroid(false);
+
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setFilterEnd(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                width: 150,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowFilterStartDateAndroid(false);
+                                setShowFilterEndDateAndroid(true);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+            </View>
+        );
+    };
+
     const renderTabs = (key: any) => {
         const activeTab = tabs[indexMap[key]];
 
@@ -871,6 +1053,141 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
+    const renderFilterModalContent = () => {
+        const filterChannelOptions = [
+            { value: 'All', label: 'All' },
+            { value: '', label: 'Home' }
+        ];
+
+        props.subscriptions.map((sub: any) => {
+            filterChannelOptions.push({
+                value: sub.channelName,
+                label: sub.channelName
+            });
+        });
+
+        return (
+            <ScrollView
+                style={{
+                    width: '100%',
+                    // height: windowHeight,
+                    backgroundColor: 'white',
+                    borderTopRightRadius: 0,
+                    borderTopLeftRadius: 0
+                }}
+                contentContainerStyle={{
+                    paddingHorizontal: 20
+                }}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+                scrollEventThrottle={1}
+                keyboardDismissMode={'on-drag'}
+                overScrollMode={'never'}
+                nestedScrollEnabled={true}
+            >
+                <View style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
+                    <Text style={{ fontSize: 14, fontFamily: 'Inter', color: '#000000', fontWeight: 'bold' }}>
+                        Sort By
+                    </Text>
+
+                    <View
+                        style={{
+                            backgroundColor: 'white',
+                            display: 'flex',
+                            height: showSortByFilterModal ? 230 : 50,
+                            marginTop: 10
+                            // marginRight: 10
+                        }}
+                    >
+                        <DropDownPicker
+                            listMode="SCROLLVIEW"
+                            open={showSortByFilterModal}
+                            value={sortBy}
+                            items={sortbyOptions}
+                            setOpen={setShowSortByFilterModal}
+                            setValue={setSortBy}
+                            zIndex={1000001}
+                            style={{
+                                borderWidth: 0,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#efefef'
+                            }}
+                            dropDownContainerStyle={{
+                                borderWidth: 0,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
+                            containerStyle={{
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 4,
+                                    height: 4
+                                },
+                                shadowOpacity: !showSortByFilterModal ? 0 : 0.12,
+                                shadowRadius: 12,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
+                        />
+                    </View>
+                </View>
+
+                <View style={{ backgroundColor: '#fff', width: '100%' }}>
+                    <View
+                        style={{
+                            width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            // paddingTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: 'auto',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                color: '#000000',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Start
+                            {Platform.OS === 'android'
+                                ? ': ' + moment(new Date(filterStart)).format('MMMM Do YYYY, h:mm a')
+                                : null}
+                        </Text>
+                        {renderFilterStartDateTimePicker()}
+                    </View>
+                    <View
+                        style={{
+                            width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            backgroundColor: '#fff',
+                            marginTop: 12,
+                            marginLeft: 'auto',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                color: '#000000',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            End
+                            {Platform.OS === 'android'
+                                ? ': ' + moment(new Date(filterEnd)).format('MMMM Do YYYY, h:mm a')
+                                : null}
+                        </Text>
+                        {renderFilterEndDateTimePicker()}
+                    </View>
+                </View>
+            </ScrollView>
+        );
+    };
+
     /**
      * @description Renders filter for Agenda
      */
@@ -962,7 +1279,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         // console.log('Ongoing meetings', ongoingMeetings);
         return (
             <View style={{ width: '100%', maxWidth: 900, backgroundColor: '#efefef', paddingBottom: 30 }}>
-                <Text style={{ color: '#1f1f1f', fontSize: 15, fontFamily: 'inter', marginBottom: 20 }}>
+                <Text style={{ color: '#1f1f1f', fontSize: 18, fontFamily: 'inter', marginBottom: 20 }}>
                     In Progress
                 </Text>
 
@@ -1000,6 +1317,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             width: '100%',
                             maxHeight: Dimensions.get('window').width < 1024 ? 400 : 500
                         }}
+                        indicatorStyle="black"
                     >
                         {ongoingMeetings.map((meeting: any, ind: number) => {
                             let startTime = emailTimeDisplay(meeting.start);
@@ -1386,6 +1704,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 justifyContent: 'center',
                 backgroundColor: '#efefef'
             }}
+            indicatorStyle="black"
         >
             <View
                 style={{
@@ -1455,7 +1774,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             }
 
                             return (
-                                <View style={{ backgroundColor: '#efefef', marginBottom: 50 }} key={i}>
+                                <View style={{ backgroundColor: '#efefef', marginBottom: 20 }} key={i}>
                                     <Text
                                         style={{
                                             flex: 1,
@@ -1712,6 +2031,25 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 {selectedWorkspace.split('-SPLIT-')[0]}
                             </Text>
                         </View>
+
+                        {/* Filter icon */}
+                        {indexMap[selectedWorkspace] === 0 ? (
+                            <TouchableOpacity
+                                style={{
+                                    position: 'absolute',
+                                    marginTop: 7,
+                                    marginLeft: 5,
+                                    right: 0
+                                }}
+                                onPress={() => setShowFilterModal(!showFilterModal)}
+                            >
+                                <Ionicons
+                                    name={showFilterModal ? 'close-outline' : 'filter-outline'}
+                                    size={22}
+                                    color="black"
+                                />
+                            </TouchableOpacity>
+                        ) : null}
                     </View>
                 ) : (
                     <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -1787,6 +2125,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         contentContainerStyle={{
                             backgroundColor: '#efefef'
                         }}
+                        indicatorStyle="black"
                     >
                         <View
                             style={{
@@ -1872,6 +2211,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         // width: '100%',
                         // height: '100%'
                     }}
+                    indicatorStyle="black"
                 >
                     {selectedWorkspace.split('-SPLIT-')[0] !== 'Home' ? renderTabs(selectedWorkspace) : null}
                     <View
@@ -1888,8 +2228,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 width: '100%',
                                 // maxWidth: 900,
-                                backgroundColor: '#efefef',
-                                paddingHorizontal: width < 768 ? 5 : 0
+                                backgroundColor: '#efefef'
+                                // paddingHorizontal: width < 768 ? 5 : 0
                             }}
                         >
                             {[selectedWorkspace] ? (
@@ -1921,7 +2261,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         style={{
                                                             width: '100%',
                                                             marginBottom: 20,
-                                                            backgroundColor: '#efefef'
+                                                            backgroundColor: '#efefef',
+                                                            paddingHorizontal: 10
                                                         }}
                                                     >
                                                         <TouchableOpacity
@@ -1935,10 +2276,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                 backgroundColor: '#efefef',
                                                                 overflow: 'hidden',
                                                                 height: 35,
-                                                                marginTop: 20,
+                                                                // marginTop: 20,
                                                                 justifyContent: 'center',
                                                                 flexDirection: 'row',
-                                                                marginLeft: 'auto'
+                                                                marginLeft: 'auto',
+                                                                borderRadius: 15
                                                             }}
                                                         >
                                                             <Text
@@ -2040,7 +2382,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 fontSize: 20,
                                                 paddingTop: 50,
                                                 paddingBottom: 50,
-                                                paddingHorizontal: 5,
+                                                paddingHorizontal: 20,
                                                 fontFamily: 'inter',
                                                 flex: 1
                                             }}
@@ -2055,8 +2397,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 backgroundColor: '#efefef',
                                                 paddingHorizontal: 10
                                             }}
+                                            showsVerticalScrollIndicator={true}
                                             showsHorizontalScrollIndicator={false}
                                             key={editFolderChannelId.toString() + cueIds.toString() + cueMap.toString()}
+                                            indicatorStyle="black"
                                         >
                                             {categoryMap[selectedWorkspace].map((category: any, i: any) => {
                                                 // Check if even one category exists in cues
@@ -2090,7 +2434,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     style={{
                                                                         flex: 1,
                                                                         flexDirection: 'row',
-                                                                        color: '#838383',
+                                                                        color: '#1f1f1f',
                                                                         fontSize: 15,
                                                                         lineHeight: 25,
                                                                         marginBottom: category === '' ? 0 : 5,
@@ -2111,6 +2455,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                 width: '100%'
                                                             }}
                                                             key={i.toString() + selectedWorkspace.toString()}
+                                                            showsHorizontalScrollIndicator={false}
                                                         >
                                                             {cueMap[selectedWorkspace].map((cue: any, index: any) => {
                                                                 if (
@@ -2242,6 +2587,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     backgroundColor: '#fff'
                 }}
                 ref={scrollViewRef}
+                indicatorStyle="black"
             >
                 {Object.keys(cueMap).map((key: any, ind: any) => {
                     return (
@@ -2692,6 +3038,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             cueIds.toString() +
                                                             cueMap.toString()
                                                         }
+                                                        indicatorStyle="black"
                                                     >
                                                         {categoryMap[key].map((category: any, i: any) => {
                                                             // Check if even one category exists in cues
@@ -3194,6 +3541,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 // ) : (
                 //     searchResults
             )}
+            {showFilterModal && (
+                <BottomSheet
+                    snapPoints={[0, '55%']}
+                    close={() => {
+                        setShowFilterModal(false);
+                    }}
+                    isOpen={showFilterModal}
+                    title={'Filter'}
+                    renderContent={() => renderFilterModalContent()}
+                    header={false}
+                />
+            )}
             {/* <Popup
                 isOpen={showFilterPopup}
                 buttons={[
@@ -3361,5 +3720,13 @@ const styleObject: any = () =>
             lineHeight: 20,
             fontFamily: 'inter',
             textAlign: 'center'
+        },
+        timePicker: {
+            width: 125,
+            fontSize: 16,
+            height: 45,
+            color: 'black',
+            borderRadius: 10,
+            marginLeft: 10
         }
     });

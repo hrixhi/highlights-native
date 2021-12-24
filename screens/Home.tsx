@@ -2131,7 +2131,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     ) : null}
                 </View>
 
-                {Dimensions.get('window').width < 1024 && showHome ? (
+                {showHome ? (
                     <View
                         style={{
                             position: 'absolute',
