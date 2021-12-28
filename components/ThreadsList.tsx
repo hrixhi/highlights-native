@@ -35,7 +35,7 @@ import { htmlStringParser } from '../helpers/HTMLParser';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 import FileUpload from './UploadFiles';
 import ReactPlayer from 'react-native-video';
-// import NewPostModal from './NewPostModal';
+import NewPostModal from './NewPostModal';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -67,6 +67,38 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     const unableToLoadThreadAlert = PreferredLanguageText('unableToLoadThread');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
     const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
+
+    useEffect(() => {
+        const channelCategories: any[] = [];
+        threads.map(item => {
+            if (item.category !== '' && !categoryObject[item.category]) {
+                categoryObject[item.category] = 'category';
+            }
+        });
+        Object.keys(categoryObject).map(key => {
+            channelCategories.push(key);
+        });
+
+        console.log('categories', channelCategories);
+
+        const options = [
+            {
+                value: 'None',
+                label: 'None'
+            }
+        ];
+        channelCategories.map((category: any) => {
+            options.push({
+                value: category,
+                label: category
+            });
+        });
+
+        console.log('Categories options', options);
+
+        props.setNewPostCategories(options);
+    }, [threads]);
+
     threads.map(item => {
         if (item.category !== '' && !categoryObject[item.category]) {
             categoryObject[item.category] = 'category';
@@ -108,6 +140,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     });
 
     // HOOKS
+
+    useEffect(() => {}, []);
 
     /**
      * @description Load categories on init
@@ -474,11 +508,14 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      * @description Renders the Filter Dropdown and the New Post button
      */
     const renderThreadHeader = () => {
+        const filterDropdownHeight =
+            Object.keys(categoryChoices).length * 60 > 260 ? 250 : Object.keys(categoryChoices).length * 60;
+
         return (
             <View
                 style={{
                     backgroundColor: '#efefef',
-                    flexDirection: 'row',
+                    flexDirection: 'column-reverse',
                     paddingBottom: 20,
                     paddingHorizontal: 20,
                     width: '100%',
@@ -490,8 +527,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <View
                         style={{
                             backgroundColor: '#efefef',
-                            height: isFilterDropdownOpen ? 250 : 50,
-                            maxWidth: '100%'
+                            height: isFilterDropdownOpen ? filterDropdownHeight : 50,
+                            maxWidth: '100%',
+                            marginTop: 20
                         }}
                     >
                         <DropDownPicker
@@ -504,24 +542,28 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             zIndex={1000001}
                             style={{
                                 borderWidth: 0,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#efefef'
+                                // borderBottomWidth: 1,
+                                // borderBottomColor: '#efefef',
+                                backgroundColor: '#efefef',
+                                borderBottomColor: '#d9dcdf',
+                                borderBottomWidth: 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
                                 zIndex: 1000001,
-                                elevation: 1000001
-                            }}
-                            containerStyle={{
+                                elevation: 1000001,
+                                // backgroundColor: '#efefef',
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 4,
                                     height: 4
                                 },
                                 shadowOpacity: !isFilterDropdownOpen ? 0 : 0.12,
-                                shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                                shadowRadius: 12
+                            }}
+                            containerStyle={{
+                                // backgroundColor: '#efefef',
+                                borderRadius: 0
                             }}
                         />
                     </View>
@@ -540,7 +582,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             onPress={() => {
                                 setThreadId('');
                                 setThreadChat([]);
-                                setShowPost(true);
+                                // setShowPost(true);
+                                props.showNewPostModal();
                             }}
                             style={{
                                 backgroundColor: '#006AFF',
@@ -570,7 +613,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 }}
                             >
                                 NEW POST
-                                {/* <Ionicons name='create-outline' size={15} color={'#000000'} /> */}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -590,7 +632,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     maxWidth: 900,
                     borderRadius: 1,
                     padding: 10,
-                    minHeight: 400
+                    minHeight: 400,
+                    borderLeftWidth: 3,
+                    borderLeftColor: props.channelColor
                 }}
             >
                 <GiftedChat
@@ -703,13 +747,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <View
                 style={{
                     width: '100%',
-                    backgroundColor: threads.length === 0 ? '#efefef' : 'white',
+                    backgroundColor: '#fff',
                     maxWidth: 900,
-                    borderRadius: 1
+                    borderRadius: 1,
+                    borderLeftWidth: threads.length === 0 ? 0 : 3,
+                    borderLeftColor: props.channelColor
                 }}
             >
                 {threads.length === 0 ? (
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, backgroundColor: '#efefef' }}>
                         <Text
                             style={{
                                 width: '100%',
@@ -731,15 +777,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         horizontal={false}
                         // style={{ height: '100%' }}
                         contentContainerStyle={{
-                            // borderWidth: 1,
-                            // borderRightWidth: 0,
-                            // borderLeftWidth: 0,
-                            // borderRightWidth: 1,
                             paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 10,
                             borderColor: '#efefef',
                             borderRadius: 1,
                             width: '100%'
-                            // maxHeight: Dimensions.get('window').width < 1024 ? 400 : 500
                         }}
                     >
                         {filteredThreads.map((thread: any, ind) => {
@@ -776,7 +817,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 marginLeft: 5,
                                                 marginBottom: 5,
                                                 borderRadius: 75,
-                                                // marginTop: 20,
                                                 alignSelf: 'center'
                                             }}
                                             source={{
@@ -879,21 +919,25 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 width: '100%',
                 paddingTop: 0,
                 justifyContent: 'center',
-                flexDirection: 'row'
+                flexDirection: 'row',
+                flex: 1,
+                height: '100%'
+                // maxHeight: '100%'
             }}
         >
-            {/* <NewPostModal show={showPost} categories={categories} categoriesOptions={categoriesOptions} onClose={() => setShowPost(false)} onSend={createNewThread} /> */}
             <View
                 style={{
                     width: '100%',
                     maxWidth: 900,
                     backgroundColor: '#efefef',
-                    borderRadius: 1
+                    borderRadius: 1,
+                    flex: 1,
+                    height: '100%'
                 }}
             >
                 {!showThreadCues || showPost ? renderThreadHeader() : null}
                 {/* <Collapse isOpened={showComfments} style={{ flex: 1 }}> */}
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, backgroundColor: '#efefef' }}>
                     {loading ? (
                         <View
                             style={{
@@ -911,18 +955,16 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         <View
                             style={{
                                 width: '100%',
-                                backgroundColor: 'white',
+                                backgroundColor: '#efefef',
                                 flex: 1,
                                 flexDirection: 'column',
-                                borderLeftWidth: threads.length === 0 ? 0 : 3,
-                                borderLeftColor: props.channelColor,
-                                borderRadius: 1,
-                                shadowOffset: {
-                                    width: threads.length === 0 ? 0 : 2,
-                                    height: threads.length === 0 ? 0 : 2
-                                },
-                                shadowOpacity: 0.1,
-                                shadowRadius: threads.length === 0 ? 0 : 10
+                                borderRadius: 1
+                                // shadowOffset: {
+                                //     width: threads.length === 0 ? 0 : 2,
+                                //     height: threads.length === 0 ? 0 : 2
+                                // },
+                                // shadowOpacity: 0.1,
+                                // shadowRadius: threads.length === 0 ? 0 : 10
                             }}
                             key={JSON.stringify(filteredThreads) + JSON.stringify(showPost)}
                         >
@@ -930,7 +972,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 <View
                                     style={{
                                         width: '100%',
-                                        backgroundColor: '#fff'
+                                        backgroundColor: 'white',
+                                        borderLeftWidth: 3,
+                                        borderLeftColor: props.channelColor
                                     }}
                                 >
                                     <TouchableOpacity
@@ -961,9 +1005,17 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             {showThreadCues ? renderSelectedThread() : renderAllThreads()}
                         </View>
                     )}
-                    {/* </Collapse> */}
                 </View>
             </View>
+            {showPost && (
+                <NewPostModal
+                    show={showPost}
+                    categories={categories}
+                    categoriesOptions={categoriesOptions}
+                    onClose={() => setShowPost(false)}
+                    onSend={createNewThread}
+                />
+            )}
         </View>
     );
 };

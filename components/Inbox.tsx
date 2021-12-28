@@ -1,5 +1,5 @@
 // REACT
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, Image, Platform, Linking, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,9 +24,10 @@ import alert from '../components/Alert';
 import FileUpload from './UploadFiles';
 // import { Select } from '@mobiscroll/react';
 import { TextInput } from './CustomTextInput';
-import ReactPlayer from 'react-native-video';
+// import ReactPlayer from 'react-native-video';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { Video } from 'expo-av';
 
 // HELPERS
 import { htmlStringParser } from '../helpers/HTMLParser';
@@ -60,6 +61,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
     const [isFilterChannelDropdownOpen, setIsFilterChannelDropdownOpen] = useState(false);
     const [isNewUsersDropdownOpen, setIsNewUsersDropdownOpen] = useState(false);
     const [isUpdateUsersDropdownOpen, setIsUpdateUsersDropdownOpen] = useState(false);
+
+    const audioRef: any = useRef();
+    const videoRef: any = useRef();
 
     const width = Dimensions.get('window').width;
     let options = users.map((sub: any) => {
@@ -780,17 +784,19 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         if (props.currentMessage.audio && props.currentMessage.audio !== '') {
             return (
                 <View>
-                    <ReactPlayer
-                        source={{ uri: props.currentMessage.audio }}
-                        // controls={true}
-                        // onContextMenu={(e: any) => e.preventDefault()}
-                        // config={{
-                        //     file: { attributes: { controlsList: 'nodownload' } }
-                        // }}
+                    <Video
+                        ref={audioRef}
                         style={{
                             width: 250,
                             height: 60
                         }}
+                        source={{
+                            uri: props.currentMessage.audio
+                        }}
+                        useNativeControls
+                        resizeMode="contain"
+                        isLooping
+                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -806,15 +812,19 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         if (props.currentMessage.video && props.currentMessage.video !== '') {
             return (
                 <View>
-                    <ReactPlayer
-                        video={{ uri: props.currentMessage.video }}
-                        // controls={true}
-                        // onContextMenu={(e: any) => e.preventDefault()}
-                        // config={{
-                        //     file: { attributes: { controlsList: 'nodownload' } }
-                        // }}
-                        videoWidth={250}
-                        videoHeight={200}
+                    <Video
+                        ref={videoRef}
+                        style={{
+                            width: 250,
+                            height: 250
+                        }}
+                        source={{
+                            uri: props.currentMessage.video
+                        }}
+                        useNativeControls
+                        resizeMode="contain"
+                        isLooping
+                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -864,7 +874,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     key={1}
                 >
                     {/* {Dimensions.get('window').width > 768 ? ( */}
-                    {
+                    {showNewGroup || showChat || props.showDirectory ? null : (
                         <View
                             style={{
                                 paddingHorizontal: Dimensions.get('window').width < 768 ? 10 : 20,
@@ -885,7 +895,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                 Inbox
                             </Text>
                         </View>
-                    }
+                    )}
                     {/* ) : null} */}
                     <View style={{ width: '100%', backgroundColor: 'white' }}>
                         <View style={{ width: '100%', maxWidth: 900, alignSelf: 'center' }}>
@@ -937,33 +947,43 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         </TouchableOpacity>
                                     ) : null}
                                     {props.showDirectory && !showChat && !showNewGroup ? (
-                                        <View style={{ backgroundColor: '#fff', paddingTop: 10 }}>
-                                            <View style={{ flexDirection: 'row', backgroundColor: '#fff' }}>
-                                                {/* <label style={{ width: 150 }}>
-                                                    <Select
-                                                        touchUi={true}
-                                                        themeVariant="light"
-                                                        value={filterChannelId}
-                                                        onChange={(val: any) => {
-                                                            setFilterChannelId(val.value);
-                                                        }}
-                                                        responsive={{
-                                                            small: {
-                                                                display: 'bubble'
-                                                            },
-                                                            medium: {
-                                                                touchUi: false
-                                                            }
-                                                        }}
-                                                        data={channelOptions}
-                                                    />
-                                                </label> */}
+                                        <View style={{ backgroundColor: '#fff' }}>
+                                            <View
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    backgroundColor: '#fff',
+                                                    maxWidth: 150
+                                                    // height: isFilterChannelDropdownOpen ? 250 : 50
+                                                }}
+                                            >
                                                 <DropDownPicker
                                                     open={isFilterChannelDropdownOpen}
                                                     value={filterChannelId}
                                                     items={channelOptions}
                                                     setOpen={setIsFilterChannelDropdownOpen}
                                                     setValue={setFilterChannelId}
+                                                    style={{
+                                                        borderWidth: 0,
+                                                        borderBottomWidth: 1,
+                                                        borderBottomColor: '#efefef',
+                                                        zIndex: 1000001
+                                                    }}
+                                                    dropDownContainerStyle={{
+                                                        borderWidth: 0,
+                                                        zIndex: 1000001,
+                                                        elevation: 1000001
+                                                    }}
+                                                    containerStyle={{
+                                                        shadowColor: '#000',
+                                                        shadowOffset: {
+                                                            width: 4,
+                                                            height: 4
+                                                        },
+                                                        shadowOpacity: !isFilterChannelDropdownOpen ? 0 : 0.12,
+                                                        shadowRadius: 12,
+                                                        zIndex: 1000001,
+                                                        elevation: 1000001
+                                                    }}
                                                 />
                                             </View>
                                         </View>
@@ -1108,7 +1128,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     <Text
                                                         style={{
                                                             fontSize: 14,
-                                                            color: '#000000'
+                                                            fontFamily: 'Inter',
+                                                            color: '#000000',
+                                                            fontWeight: 'bold'
                                                         }}
                                                     >
                                                         {PreferredLanguageText('name')}
@@ -1129,7 +1151,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         <Text
                                             style={{
                                                 fontSize: 14,
-                                                color: '#000000'
+                                                fontFamily: 'Inter',
+                                                color: '#000000',
+                                                fontWeight: 'bold'
                                             }}
                                         >
                                             Users
@@ -1166,6 +1190,27 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 items={options}
                                                 setOpen={setIsNewUsersDropdownOpen}
                                                 setValue={setChatUsers}
+                                                style={{
+                                                    borderWidth: 0,
+                                                    borderBottomWidth: 1,
+                                                    borderBottomColor: '#efefef'
+                                                }}
+                                                dropDownContainerStyle={{
+                                                    borderWidth: 0,
+                                                    zIndex: 1000001,
+                                                    elevation: 1000001
+                                                }}
+                                                containerStyle={{
+                                                    shadowColor: '#000',
+                                                    shadowOffset: {
+                                                        width: 4,
+                                                        height: 4
+                                                    },
+                                                    shadowOpacity: !isNewUsersDropdownOpen ? 0 : 0.12,
+                                                    shadowRadius: 12,
+                                                    zIndex: 1000001,
+                                                    elevation: 1000001
+                                                }}
                                             />
                                         ) : (
                                             <ScrollView
@@ -1231,12 +1276,15 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             <TouchableOpacity
                                                 onPress={() => handleUpdateGroup()}
                                                 style={{
-                                                    backgroundColor: 'white',
+                                                    maxWidth: 130,
+                                                    backgroundColor: '#006AFF',
+                                                    alignSelf: 'center',
                                                     overflow: 'hidden',
                                                     marginTop: 50,
                                                     height: 35,
                                                     justifyContent: 'center',
-                                                    flexDirection: 'row'
+                                                    flexDirection: 'row',
+                                                    borderRadius: 15
                                                 }}
                                             >
                                                 <Text
@@ -1386,7 +1434,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         <ScrollView
                                             showsVerticalScrollIndicator={false}
                                             keyboardDismissMode={'on-drag'}
-                                            style={{ flex: 1, paddingTop: 12 }}
+                                            style={{ paddingTop: 12 }}
                                         >
                                             <View
                                                 style={{
@@ -1460,7 +1508,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         <Text
                                                             style={{
                                                                 fontSize: 14,
-                                                                color: '#000000'
+                                                                fontFamily: 'Inter',
+                                                                color: '#000000',
+                                                                fontWeight: 'bold'
                                                             }}
                                                         >
                                                             {PreferredLanguageText('name')}
@@ -1480,7 +1530,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     <Text
                                                         style={{
                                                             fontSize: 14,
+                                                            fontFamily: 'Inter',
                                                             color: '#000000',
+                                                            fontWeight: 'bold',
                                                             marginBottom: 15
                                                         }}
                                                     >
@@ -1509,24 +1561,50 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         }}
                                                         minWidth={[60, 320]}
                                                     /> */}
-                                                    <DropDownPicker
-                                                        multiple={true}
-                                                        open={isUpdateUsersDropdownOpen}
-                                                        value={selected}
-                                                        items={options}
-                                                        setOpen={setIsUpdateUsersDropdownOpen}
-                                                        setValue={setSelected}
-                                                    />
+                                                    <View style={{ height: isUpdateUsersDropdownOpen ? 250 : 50 }}>
+                                                        <DropDownPicker
+                                                            multiple={true}
+                                                            open={isUpdateUsersDropdownOpen}
+                                                            value={selected}
+                                                            items={options}
+                                                            setOpen={setIsUpdateUsersDropdownOpen}
+                                                            setValue={setSelected}
+                                                            style={{
+                                                                borderWidth: 0,
+                                                                borderBottomWidth: 1,
+                                                                borderBottomColor: '#efefef'
+                                                            }}
+                                                            dropDownContainerStyle={{
+                                                                borderWidth: 0,
+                                                                zIndex: 1000001,
+                                                                elevation: 1000001
+                                                            }}
+                                                            containerStyle={{
+                                                                shadowColor: '#000',
+                                                                shadowOffset: {
+                                                                    width: 4,
+                                                                    height: 4
+                                                                },
+                                                                shadowOpacity: !isUpdateUsersDropdownOpen ? 0 : 0.12,
+                                                                shadowRadius: 12,
+                                                                zIndex: 1000001,
+                                                                elevation: 1000001
+                                                            }}
+                                                        />
+                                                    </View>
                                                 </View>
                                             </View>
                                             <TouchableOpacity
                                                 onPress={() => createGroup()}
                                                 style={{
-                                                    backgroundColor: 'white',
+                                                    maxWidth: 130,
+                                                    alignSelf: 'center',
                                                     overflow: 'hidden',
                                                     height: 35,
                                                     justifyContent: 'center',
-                                                    flexDirection: 'row'
+                                                    flexDirection: 'row',
+                                                    borderRadius: 15,
+                                                    backgroundColor: '#006AFF'
                                                 }}
                                             >
                                                 <Text
@@ -1552,22 +1630,23 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                 ) : props.showDirectory ? (
                                     <View
                                         style={{
-                                            flex: 1,
+                                            // flex: 1,
                                             width: '100%',
                                             borderRadius: 1,
                                             borderColor: '#efefef',
-                                            overflow: 'hidden'
+                                            maxHeight: width < 1024 ? windowHeight - 104 - 90 : windowHeight - 52 - 110
+                                            // overflow: 'hidden'
                                         }}
                                     >
                                         <ScrollView
                                             contentContainerStyle={{
-                                                maxHeight:
-                                                    width < 1024 ? windowHeight - 104 - 110 : windowHeight - 52 - 110,
                                                 width: '100%',
                                                 borderRadius: 1,
                                                 marginTop: 10,
                                                 paddingHorizontal: 10
                                             }}
+                                            scrollEnabled={true}
+                                            indicatorStyle="black"
                                         >
                                             {users.map((user: any, ind: any) => {
                                                 if (filterChannelId !== 'All') {

@@ -19,6 +19,7 @@
     "@expo/webpack-config": "~0.16.2",
     "@flyerhq/react-native-keyboard-accessory-view": "^2.1.1",
     "@react-native-async-storage/async-storage": "~1.15.0",
+    "@react-native-clipboard/clipboard": "^1.9.0",
     "@react-native-community/checkbox": "^0.5.7",
     "@react-native-community/datetimepicker": "4.0.0",
     "@react-native-community/masked-view": "0.1.10",
@@ -102,7 +103,8 @@
     "rmc-date-picker": "^6.0.10",
     "tex-to-svg": "^0.2.0",
     "use-dynamic-refs": "^1.0.0",
-    "xlsx": "^0.17.0"
+    "xlsx": "^0.17.0",
+    "expo-av": "~10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

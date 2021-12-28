@@ -1,276 +1,376 @@
 // // REACT
-// import React, { useState } from 'react';
-// import { StyleSheet, Switch, TextInput, Dimensions } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Switch, TextInput, Dimensions, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // // COMPONENTS
-// import { View, Text, TouchableOpacity } from './Themed';
+import { View, Text, TouchableOpacity } from './Themed';
+import BottomSheet from './BottomSheet';
 // import { Popup } from '@mobiscroll/react';
 // import TextareaAutosize from 'react-textarea-autosize';
 // import { Select } from '@mobiscroll/react';
+import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
+import DropDownPicker from 'react-native-dropdown-picker';
 
-// const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
-//     const [message, setMessage] = useState('');
-//     const [customCategory, setCustomCategory] = useState('None');
-//     const [addCustomCategory, setAddCustomCategory] = useState(false);
-//     const [isPrivate, setIsPrivate] = useState(false);
-//     const styles = styleObject();
+const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const [message, setMessage] = useState('');
+    const [customCategory, setCustomCategory] = useState('None');
+    const [addCustomCategory, setAddCustomCategory] = useState(false);
+    const [isPrivate, setIsPrivate] = useState(false);
+    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+    const [dropdownHeight, setDropdownHeight] = useState(250);
 
-//     /**
-//      * @description Renders option to select Category for new discussion post
-//      */
-//     const customCategoryInput = (
-//         <View style={{ backgroundColor: '#f2f2f7', marginVertical: 20, paddingHorizontal: 20 }}>
-//             <View style={{ flexDirection: 'column', backgroundColor: '#f2f2f7' }}>
-//                 <Text style={{ fontSize: 11, textTransform: 'uppercase', fontFamily: 'overpass' }}>CATEGORY</Text>
-//                 <View
-//                     style={{
-//                         width: '100%',
-//                         flexDirection: 'row',
-//                         backgroundColor: '#f2f2f7',
-//                         alignItems: 'center',
-//                         marginTop: 10
-//                     }}>
-//                     <View style={{ backgroundColor: '#f2f2f7', marginRight: 10 }}>
-//                         {addCustomCategory ? (
-//                             <View style={styles.colorBar}>
-//                                 <TextInput
-//                                     value={customCategory}
-//                                     style={{
-//                                         borderRadius: 0,
-//                                         borderColor: '#f2f2f7',
-//                                         borderBottomWidth: 1,
-//                                         fontSize: 14,
-//                                         height: '2.75em',
-//                                         padding: '1em'
-//                                     }}
-//                                     placeholder={'Enter Category'}
-//                                     onChangeText={val => {
-//                                         setCustomCategory(val);
-//                                     }}
-//                                     placeholderTextColor={'#1F1F1F'}
-//                                 />
-//                             </View>
-//                         ) : (
-//                             <label style={{ width: 180, backgroundColor: 'white' }}>
-//                                 <Select
-//                                     themeVariant="light"
-//                                     touchUi={true}
-//                                     onChange={(val: any) => {
-//                                         setCustomCategory(val.value);
-//                                     }}
-//                                     responsive={{
-//                                         small: {
-//                                             display: 'bubble'
-//                                         },
-//                                         medium: {
-//                                             touchUi: false
-//                                         }
-//                                     }}
-//                                     value={customCategory}
-//                                     rows={props.categories.length + 1}
-//                                     data={props.categoriesOptions}
-//                                 />
-//                             </label>
-//                         )}
-//                     </View>
-//                     <View style={{ backgroundColor: '#f2f2f7' }}>
-//                         <TouchableOpacity
-//                             onPress={() => {
-//                                 if (addCustomCategory) {
-//                                     setCustomCategory('None');
-//                                     setAddCustomCategory(false);
-//                                 } else {
-//                                     setCustomCategory('');
-//                                     setAddCustomCategory(true);
-//                                 }
-//                             }}
-//                             style={{ backgroundColor: '#f2f2f7' }}>
-//                             <Text style={{ textAlign: 'right', lineHeight: 20, width: '100%' }}>
-//                                 <Ionicons
-//                                     name={addCustomCategory ? 'close' : 'create-outline'}
-//                                     size={18}
-//                                     color={'#1F1F1F'}
-//                                 />
-//                             </Text>
-//                         </TouchableOpacity>
-//                     </View>
-//                 </View>
-//             </View>
-//         </View>
-//     );
+    const styles = styleObject();
 
-//     // MAIN RETURN
+    const width = Dimensions.get('window').width;
 
-//     return (
-//         <Popup
-//             isOpen={props.show}
-//             buttons={[
-//                 {
-//                     text: 'SEND',
-//                     handler: function(event) {
-//                         props.onSend(message, customCategory, isPrivate);
-//                     }
-//                 },
-//                 {
-//                     text: 'CANCEL',
-//                     handler: function(event) {
-//                         props.onClose();
-//                     }
-//                 }
-//             ]}
-//             theme="ios"
-//             themeVariant="light"
-//             onClose={() => props.onClose()}
-//             responsive={{
-//                 small: {
-//                     display: 'bottom'
-//                 },
-//                 medium: {
-//                     // Custom breakpoint
-//                     display: 'center'
-//                 }
-//             }}>
-//             <View
-//                 style={{
-//                     flexDirection: 'column',
-//                     paddingHorizontal: 20,
-//                     marginVertical: 20,
-//                     minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
-//                     maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
-//                     backgroundColor: '#f2f2f7'
-//                 }}>
-//                 <Text
-//                     style={{
-//                         fontSize: 13,
-//                         textTransform: 'uppercase',
-//                         fontFamily: 'inter'
-//                     }}>
-//                     NEW POST
-//                 </Text>
-//                 <TextareaAutosize
-//                     value={message}
-//                     placeholder="Message..."
-//                     minRows={3}
-//                     style={{
-//                         fontFamily: 'overpass',
-//                         marginTop: 20,
-//                         fontSize: 14,
-//                         borderRadius: 1,
-//                         padding: 12,
-//                         width: '100%',
-//                         maxWidth: '100%',
-//                         borderBottom: '1px solid #f2f2f7'
-//                     }}
-//                     onChange={(e: any) => {
-//                         setMessage(e.target.value);
-//                     }}
-//                 />
-//             </View>
-//             {customCategoryInput}
-//             {props.isOwner ? null : (
-//                 <View
-//                     style={{
-//                         flexDirection: 'column',
-//                         paddingHorizontal: 20,
-//                         marginVertical: 20,
-//                         minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
-//                         maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
-//                         backgroundColor: '#f2f2f7'
-//                     }}>
-//                     <Text
-//                         style={{
-//                             fontSize: 11,
-//                             textTransform: 'uppercase',
-//                             fontFamily: 'overpass'
-//                         }}>
-//                         PRIVATE
-//                     </Text>
-//                     <View
-//                         style={{
-//                             backgroundColor: '#f2f2f7',
-//                             height: 40,
-//                             marginRight: 10,
-//                             marginTop: 10
-//                         }}>
-//                         <Switch
-//                             value={isPrivate}
-//                             onValueChange={() => {
-//                                 setIsPrivate(!isPrivate);
-//                             }}
-//                             style={{ height: 20 }}
-//                             trackColor={{
-//                                 false: '#F8F9FA',
-//                                 true: '#006AFF'
-//                             }}
-//                             activeThumbColor="white"
-//                         />
-//                     </View>
-//                 </View>
-//             )}
-//         </Popup>
-//     );
-// };
+    useEffect(() => {
+        setDropdownHeight(
+            Object.keys(props.categoriesOptions).length * 60 + 50 > 260
+                ? 250
+                : Object.keys(props.categoriesOptions).length * 60 + 50
+        );
+    }, [props.categoriesOptions]);
 
-// export default NewPost;
+    // console.log('Dropdown height', dropdownHeight);
 
-// const styleObject = () => {
-//     return StyleSheet.create({
-//         screen: {
-//             flex: 1
-//         },
-//         marginSmall: {
-//             height: 10
-//         },
-//         row: {
-//             flexDirection: 'row',
-//             display: 'flex',
-//             width: '100%',
-//             backgroundColor: 'white'
-//         },
-//         col: {
-//             width: '100%',
-//             height: 70,
-//             marginBottom: 15,
-//             backgroundColor: 'white'
-//         },
-//         colorBar: {
-//             width: '100%',
-//             height: '10%',
-//             flexDirection: 'row'
-//         },
-//         channelOption: {
-//             width: '33.333%'
-//         },
-//         channelText: {
-//             textAlign: 'center',
-//             overflow: 'hidden'
-//         },
-//         cusCategory: {
-//             fontSize: 14,
-//             backgroundColor: 'white',
-//             paddingHorizontal: 10,
-//             height: 22
-//         },
-//         cusCategoryOutline: {
-//             fontSize: 14,
-//             backgroundColor: 'white',
-//             paddingHorizontal: 10,
-//             height: 22,
-//             borderRadius: 1,
-//             borderWidth: 1,
-//             borderColor: '#1F1F1F',
-//             color: 'white'
-//         },
-//         allOutline: {
-//             fontSize: 12,
-//             color: '#1F1F1F',
-//             height: 22,
-//             paddingHorizontal: 10,
-//             backgroundColor: 'white',
-//             borderRadius: 12,
-//             borderWidth: 1,
-//             borderColor: '#1F1F1F'
-//         }
-//     });
-// };
+    /**
+     * @description Renders option to select Category for new discussion post
+     */
+    const customCategoryInput = (
+        <View style={{ backgroundColor: '#ffffff', marginVertical: 20, paddingHorizontal: 20 }}>
+            <View
+                style={{
+                    width: '100%',
+                    borderRightWidth: 0,
+                    borderColor: '#efefef'
+                }}
+            >
+                <View
+                    style={{
+                        width: '100%',
+                        backgroundColor: 'white',
+                        flexDirection: width < 768 ? 'column' : 'row',
+                        paddingTop: width < 768 ? 0 : 40
+                    }}
+                >
+                    <View
+                        style={{
+                            // flex: 1,
+                            flexDirection: 'row',
+                            paddingBottom: 15,
+                            backgroundColor: 'white'
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                color: '#000000',
+                                fontFamily: 'Inter'
+                            }}
+                        >
+                            Category
+                        </Text>
+                    </View>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            backgroundColor: 'white'
+                            // alignItems: 'center'
+                        }}
+                    >
+                        <View
+                            key={dropdownHeight}
+                            style={{
+                                maxWidth: 400,
+                                width: '85%',
+                                backgroundColor: 'white',
+                                marginLeft: width < 768 ? 0 : 'auto'
+                            }}
+                        >
+                            {addCustomCategory ? (
+                                <View style={styles.colorBar}>
+                                    <TextInput
+                                        value={customCategory}
+                                        style={{
+                                            borderRadius: 0,
+                                            borderColor: '#efefef',
+                                            borderBottomWidth: 1,
+                                            fontSize: 14,
+                                            padding: 10,
+                                            paddingVertical: 15,
+                                            width: '100%'
+                                        }}
+                                        placeholder={'Enter Category'}
+                                        onChangeText={val => {
+                                            setCustomCategory(val);
+                                        }}
+                                        placeholderTextColor={'#1F1F1F'}
+                                    />
+                                </View>
+                            ) : (
+                                <View
+                                    style={{
+                                        height: isCategoryDropdownOpen ? dropdownHeight : 50
+                                    }}
+                                >
+                                    <DropDownPicker
+                                        listMode="SCROLLVIEW"
+                                        open={isCategoryDropdownOpen}
+                                        value={customCategory}
+                                        items={props.categoriesOptions}
+                                        setOpen={setIsCategoryDropdownOpen}
+                                        setValue={setCustomCategory}
+                                        zIndex={1000001}
+                                        style={{
+                                            borderWidth: 0,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#efefef'
+                                        }}
+                                        dropDownContainerStyle={{
+                                            borderWidth: 0,
+                                            zIndex: 1000001,
+                                            elevation: 1000001
+                                        }}
+                                        containerStyle={{
+                                            shadowColor: '#000',
+                                            shadowOffset: {
+                                                width: 4,
+                                                height: 4
+                                            },
+                                            shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.12,
+                                            shadowRadius: 12,
+                                            zIndex: 1000001,
+                                            elevation: 1000001
+                                        }}
+                                    />
+                                </View>
+                            )}
+                        </View>
+                        <View
+                            style={{
+                                width: '15%',
+                                backgroundColor: 'white'
+                            }}
+                        >
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (addCustomCategory) {
+                                        setCustomCategory('None');
+                                        setAddCustomCategory(false);
+                                    } else {
+                                        setCustomCategory('');
+                                        setAddCustomCategory(true);
+                                    }
+                                }}
+                                style={{ backgroundColor: 'white' }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        lineHeight: 20,
+                                        width: '100%',
+                                        paddingTop: 15
+                                    }}
+                                >
+                                    <Ionicons
+                                        name={addCustomCategory ? 'close' : 'create-outline'}
+                                        size={18}
+                                        color={'#000000'}
+                                    />
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderNewPostContent = () => {
+        return (
+            <ScrollView style={{ backgroundColor: '#ffffff' }} scrollEnabled={false}>
+                <View
+                    style={{
+                        flexDirection: 'column',
+                        paddingHorizontal: 20,
+                        marginVertical: 20,
+                        backgroundColor: '#ffffff'
+                    }}
+                >
+                    <AutoGrowingTextInput
+                        value={message}
+                        onChange={(event: any) => setMessage(event.nativeEvent.text || '')}
+                        style={{
+                            fontFamily: 'overpass',
+                            width: '100%',
+                            maxWidth: 500,
+                            borderBottomColor: '#d9dcdf',
+                            borderBottomWidth: 1,
+                            fontSize: 14,
+                            paddingTop: 13,
+                            paddingBottom: 13,
+                            marginTop: 12,
+                            marginBottom: 20,
+                            borderRadius: 1,
+                            backgroundColor: '#ffffff'
+                        }}
+                        placeholder={'Message...'}
+                        placeholderTextColor="#66737C"
+                        maxHeight={200}
+                        minHeight={100}
+                        enableScrollToCaret
+                        // ref={}
+                    />
+                </View>
+                {customCategoryInput}
+                {props.isOwner ? null : (
+                    <View
+                        style={{
+                            flexDirection: 'column',
+                            paddingHorizontal: 20,
+                            marginVertical: 20,
+                            minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
+                            maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
+                            backgroundColor: '#ffffff'
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                color: '#000000',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Private
+                        </Text>
+                        <View
+                            style={{
+                                backgroundColor: '#ffffff',
+                                height: 40,
+                                marginRight: 10,
+                                marginTop: 10
+                            }}
+                        >
+                            <Switch
+                                value={isPrivate}
+                                onValueChange={() => {
+                                    setIsPrivate(!isPrivate);
+                                }}
+                                style={{ height: 20 }}
+                                trackColor={{
+                                    false: '#F8F9FA',
+                                    true: '#006AFF'
+                                }}
+                                activeThumbColor="white"
+                            />
+                        </View>
+                    </View>
+                )}
+
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: '#006AFF',
+                        borderRadius: 19,
+                        width: 120,
+                        alignSelf: 'center'
+                    }}
+                    onPress={() => {
+                        props.onSend(message, customCategory, isPrivate);
+                    }}
+                >
+                    <Text
+                        style={{
+                            color: 'white',
+                            padding: 10,
+                            textAlign: 'center',
+                            fontFamily: 'inter'
+                        }}
+                    >
+                        Create
+                    </Text>
+                </TouchableOpacity>
+            </ScrollView>
+        );
+    };
+
+    // MAIN RETURN
+
+    return (
+        <BottomSheet
+            isOpen={props.show}
+            snapPoints={[0, Dimensions.get('window').height]}
+            close={() => {
+                props.onClose();
+            }}
+            title={'New Discussion'}
+            renderContent={() => renderNewPostContent()}
+            header={true}
+        />
+    );
+};
+
+export default NewPost;
+
+const styleObject = () => {
+    return StyleSheet.create({
+        screen: {
+            flex: 1
+        },
+        marginSmall: {
+            height: 10
+        },
+        row: {
+            flexDirection: 'row',
+            display: 'flex',
+            width: '100%',
+            backgroundColor: 'white'
+        },
+        col: {
+            width: '100%',
+            height: 70,
+            marginBottom: 15,
+            backgroundColor: 'white'
+        },
+        colorBar: {
+            width: '100%',
+            flexDirection: 'row',
+            backgroundColor: 'white',
+            lineHeight: 25
+        },
+        channelOption: {
+            width: '33.333%'
+        },
+        channelText: {
+            textAlign: 'center',
+            overflow: 'hidden'
+        },
+        cusCategory: {
+            fontSize: 14,
+            backgroundColor: 'white',
+            paddingHorizontal: 10,
+            height: 22
+        },
+        cusCategoryOutline: {
+            fontSize: 14,
+            backgroundColor: 'white',
+            paddingHorizontal: 10,
+            height: 22,
+            borderRadius: 1,
+            borderWidth: 1,
+            borderColor: '#1F1F1F',
+            color: 'white'
+        },
+        allOutline: {
+            fontSize: 12,
+            color: '#1F1F1F',
+            height: 22,
+            paddingHorizontal: 10,
+            backgroundColor: 'white',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#1F1F1F'
+        }
+    });
+};

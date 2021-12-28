@@ -138,7 +138,8 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 width: '100%',
                 backgroundColor: '#efefef',
                 marginBottom: 20
-            }}>
+            }}
+        >
             <Animated.View
                 style={{
                     opacity: modalAnimation,
@@ -147,7 +148,8 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     backgroundColor: '#efefef',
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0
-                }}>
+                }}
+            >
                 {loading ? (
                     <View
                         style={{
@@ -157,7 +159,8 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             flex: 1,
                             flexDirection: 'column',
                             backgroundColor: '#efefef'
-                        }}>
+                        }}
+                    >
                         <ActivityIndicator color={'#1F1F1F'} />
                     </View>
                 ) : (
@@ -179,6 +182,8 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         refreshUnreadDiscussionCount={() => refreshUnreadDiscussionCount()}
                         type={'Discussion'}
                         channelColor={props.channelColor}
+                        setNewPostCategories={(categories: any[]) => props.setNewPostCategories(categories)}
+                        showNewPostModal={() => props.showNewPostModal()}
                     />
                 )}
             </Animated.View>

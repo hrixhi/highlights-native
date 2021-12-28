@@ -2099,14 +2099,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                 <View
                     style={{
-                        height: dimensions.window.height,
-                        backgroundColor: 'white',
+                        // height: dimensions.window.height,
+                        height: '100%',
                         width: '100%',
+                        backgroundColor: 'white',
                         alignSelf: 'center',
                         borderTopLeftRadius: 0,
-                        borderTopRightRadius: 0,
-                        maxWidth: dimensions.window.width,
-                        overflow: 'hidden'
+                        borderTopRightRadius: 0
+                        // maxWidth: dimensions.window.width
+                        // overflow: 'hidden'
                     }}
                 >
                     {modalType === 'Update' ? (

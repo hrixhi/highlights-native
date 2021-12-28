@@ -29,6 +29,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import Alert from './Alert';
 // import TextareaAutosize from 'react-textarea-autosize';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
+// import Clipboard from '@react-native-clipboard/clipboard';
 
 // import ReactTagInput from "@pathofdev/react-tag-input";
 // import "@pathofdev/react-tag-input/build/index.css";
@@ -645,7 +646,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const renderSubscriberFilters = () => {
         return (<View style={{ width: '100%', flexDirection: 'column', backgroundColor: 'white', marginTop: 20 }}>
             <View style={{ backgroundColor: 'white', }}>
-                <View style={{ backgroundColor: 'white', }}>
+                <View style={{ backgroundColor: 'white', maxWidth: 320, height: isRoleDropdownOpen ? 210 : 50 }}>
                     {/* <label style={{ width: Dimensions.get('window').width < 768 ? 120 : 150 }}>
                         <Select
                             touchUi={true}
@@ -672,13 +673,34 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         items={filterRoleOptions}
                         setOpen={setIsRoleDropdownOpen}
                         setValue={setActiveRole}
+                        style={{
+                            borderWidth: 0,
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#efefef'
+                        }}
+                        dropDownContainerStyle={{
+                            borderWidth: 0,
+                            zIndex: 1000001,
+                            elevation: 1000001
+                        }}
+                        containerStyle={{
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 4,
+                                height: 4
+                            },
+                            shadowOpacity: !isRoleDropdownOpen ? 0 : 0.12,
+                            shadowRadius: 12,
+                            zIndex: 1000001,
+                            elevation: 1000001
+                        }}
                     />
                 </View>
             </View>
 
             <View style={{ flexDirection: 'row', marginTop: 15 }}>
                 <View style={{ backgroundColor: 'white', paddingRight: 20 }}>
-                    <View style={{ backgroundColor: 'white', }}>
+                    <View style={{ backgroundColor: 'white', maxWidth: 150, height: isGradeDropdownOpen ? 250 : 50  }}>
                         {/* <label style={{ width: Dimensions.get('window').width < 768 ? 120 : 150 }}>
                             <Select
                                 touchUi={true}
@@ -704,11 +726,32 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             items={filterGradeOptions}
                             setOpen={setIsGradeDropdownOpen}
                             setValue={setActiveGrade}
+                            style={{
+                                borderWidth: 0,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#efefef'
+                            }}
+                            dropDownContainerStyle={{
+                                borderWidth: 0,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
+                            containerStyle={{
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 4,
+                                    height: 4
+                                },
+                                shadowOpacity: !isGradeDropdownOpen ? 0 : 0.12,
+                                shadowRadius: 12,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
                         />
                     </View>
                 </View>
-                <View style={{ backgroundColor: 'white', }}>
-                    <View style={{ backgroundColor: 'white', }}>
+                <View style={{ backgroundColor: 'white',  }}>
+                    <View style={{ backgroundColor: 'white', maxWidth: 150, height: isSectionDropdownOpen ? 250 : 50, }}>
                         {/* <label style={{ width: Dimensions.get('window').width < 768 ? 120 : 150 }}>
                             <Select
                                 touchUi={true}
@@ -734,6 +777,27 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             items={filterSectionOptions}
                             setOpen={setIsSectionDropdownOpen}
                             setValue={setActiveSection}
+                            style={{
+                                borderWidth: 0,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#efefef'
+                            }}
+                            dropDownContainerStyle={{
+                                borderWidth: 0,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
+                            containerStyle={{
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 4,
+                                    height: 4
+                                },
+                                shadowOpacity: !isSectionDropdownOpen ? 0 : 0.12,
+                                shadowRadius: 12,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
                         />
                     </View>
                 </View>
@@ -1145,13 +1209,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             },
             shadowOpacity: 0.1,
             shadowRadius: 10,
-            zIndex: 5000000
+            zIndex: 5000000,
         }}>
             <View style={styles.screen} >
                 <View style={{ backgroundColor: 'white', paddingTop: 20, paddingHorizontal: 10, }}>
                     <View
                         style={{
-                            maxWidth: 400,
+                            maxWidth: 320,
                             alignSelf: 'center',
                             minHeight: 100,
                         }}
@@ -1179,7 +1243,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         alignItems: 'center',
                                         marginRight: 10
                                     }} onPress={() => {
-                                        navigator.clipboard.writeText(accessCode)
+                                        // Clipboard.setString(accessCode)
                                         setCopied(true)
                                     }}>
                                         <Ionicons name={copied ? "checkmark-circle-outline" : "clipboard-outline"} size={18} color={copied ? "#35AC78" : "#006AFF"} />
@@ -1203,7 +1267,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </Text>
                         </View>
 
-                        <View style={{ backgroundColor: 'white' }}>
+                        <View style={{ backgroundColor: 'white', maxWidth: 320 }}>
                             <Text style={{
                                 fontSize: 14, 
                                 color: '#000000'
@@ -1222,7 +1286,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 footerMessage={'case sensitive'}
                             />
                         </View>
-                        <View style={{ backgroundColor: 'white' }}>
+                        <View style={{ backgroundColor: 'white', maxWidth: 320 }}>
                             <Text style={{
                                 fontSize: 14, 
                                 color: '#000000'
@@ -1247,7 +1311,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 Theme
                             </Text>
                             <View style={{ width: '100%', display: 'flex', flexDirection: 'row', backgroundColor: 'white', marginTop: 20 }}>
-                                <View style={{ width: '100%', backgroundColor: 'white' }}>
+                                <View style={{ width: '100%', backgroundColor: 'white', maxWidth: 320 }}>
                                     <ColorPicker
                                         color={colorCode}
                                         onChange={(color: any) => setColorCode(color) }
@@ -1349,8 +1413,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <View style={{
                             flexDirection: 'column', marginTop: 25,
                         }}>
-                            <View style={{ height: 'auto', maxWidth: 320, width: '100%' }}>
-                                <div style={{ width: '100%', maxWidth: 320 }} >
+                            <View style={{ height: 'auto', maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? 250 : 50, }}>
+
                                 <DropDownPicker
                                     multiple={true}
                                     open={isViewersDropdownOpen}
@@ -1364,6 +1428,27 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         let filterRemovedModerators = selectedModerators.filter((mod: any) => val.includes(mod))
 
                                         setSelectedModerators(filterRemovedModerators)
+                                    }}
+                                    style={{
+                                        borderWidth: 0,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: '#efefef'
+                                    }}
+                                    dropDownContainerStyle={{
+                                        borderWidth: 0,
+                                        zIndex: 1000001,
+                                        elevation: 1000001
+                                    }}
+                                    containerStyle={{
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 4,
+                                            height: 4
+                                        },
+                                        shadowOpacity: !isViewersDropdownOpen ? 0 : 0.12,
+                                        shadowRadius: 12,
+                                        zIndex: 1000001,
+                                        elevation: 1000001
                                     }}
                                 />
                                     {/* <label style={{ width: '100%', maxWidth: 320 }}>
@@ -1396,15 +1481,18 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         />
                                     </label> */}
 
-                                </div>
                             </View>
                         </View>
                         <Text style={{
                             fontSize: 14,
-                            color: '#000000', marginTop: 25, marginBottom: 20
+                            color: '#000000', marginTop: 25, marginBottom: 20,
+                            maxWidth: 320
                         }}>
                             Editors
                         </Text>
+                        <View style={{ height: isEditorsDropdownOpen ? 250 : 50, }}>
+
+                       
                         <DropDownPicker
                             multiple={true}
                             open={isEditorsDropdownOpen}
@@ -1412,7 +1500,29 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             items={moderatorOptions}
                             setOpen={setIsEditorsDropdownOpen}
                             setValue={setSelectedModerators}
+                            style={{
+                                borderWidth: 0,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#efefef'
+                            }}
+                            dropDownContainerStyle={{
+                                borderWidth: 0,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
+                            containerStyle={{
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 4,
+                                    height: 4
+                                },
+                                shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.12,
+                                shadowRadius: 12,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
                         />
+                         </View>
                         {/* <label style={{ width: '100%', maxWidth: 320 }}>
                             <Select
                                 themeVariant="light"

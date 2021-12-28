@@ -376,7 +376,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         </View>}
 
                         <View style={{ 
-                            height: props.isOwner ? '100%' : 'auto' ,
+                            // height: props.isOwner ? '100%' : 'auto' ,
                             maxHeight: 450,
                             marginLeft: props.isOwner || Dimensions.get('window').width < 768 ? 0 : 100,
                         }}>
@@ -446,7 +446,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 showsVerticalScrollIndicator={true}
                                 horizontal={props.isOwner || Dimensions.get('window').width < 768 ? false : true}
                                 contentContainerStyle={{
-                                    height: '100%',
+                                    // height: '100%',
                                     width: '100%'
                                 }}
                                 nestedScrollEnabled={true}

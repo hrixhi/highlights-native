@@ -2596,7 +2596,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <TouchableOpacity
                     style={{
                         // position: 'absolute',
-                        marginTop: 7,
+                        marginTop: 9,
                         marginLeft: 'auto'
                     }}
                     onPress={() => setShowFilterModal(!showFilterModal)}
@@ -2702,8 +2702,45 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
             {activeTab === 'activity' ? (
                 <TouchableOpacity
-                    onPress={() => {
-                        setShowAddEvent(true);
+                    onPress={async () => {
+                        const uString: any = await AsyncStorage.getItem('user');
+                        if (uString) {
+                            const user = JSON.parse(uString);
+                            const server = fetchAPI(user._id);
+                            server
+                                .mutate({
+                                    mutation: markActivityAsRead,
+                                    variables: {
+                                        userId: user._id,
+                                        markAllRead: true
+                                    }
+                                })
+                                .then(res => {
+                                    if (res.data.activity.markActivityAsRead) {
+                                        server
+                                            .query({
+                                                query: getActivity,
+                                                variables: {
+                                                    userId: user._id
+                                                }
+                                            })
+                                            .then(res => {
+                                                if (res.data && res.data.activity.getActivity) {
+                                                    const tempActivity = res.data.activity.getActivity.reverse();
+                                                    let unread = 0;
+                                                    tempActivity.map((act: any) => {
+                                                        if (act.status === 'unread') {
+                                                            unread++;
+                                                        }
+                                                    });
+                                                    setUnreadCount(unread);
+                                                    setActivity(tempActivity);
+                                                }
+                                            });
+                                    }
+                                })
+                                .catch(err => {});
+                        }
                     }}
                     style={{
                         position: 'absolute',

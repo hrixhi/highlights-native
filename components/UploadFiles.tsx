@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Dimensions } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import Alert from './Alert';
+import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 const FileUpload: React.FC<any> = (props: any) => {
     const [uploading, setUploading] = useState(false);
@@ -82,36 +83,42 @@ const FileUpload: React.FC<any> = (props: any) => {
                 backgroundColor: '#fff',
                 paddingTop: 3.5,
                 paddingBottom: Dimensions.get('window').width < 768 ? 5 : 0
-            }}>
+            }}
+        >
             {uploading ? (
                 <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>Importing...</Text>
+            ) : props.quiz ? (
+                <Text
+                    style={{
+                        color: '#006AFF',
+                        // lineHeight: props.chat ? 40 : 35,
+                        textAlign: 'right',
+                        fontSize: 12,
+                        fontFamily: 'overpass'
+                    }}
+                    onPress={() => onClick()}
+                >
+                    Media
+                </Text>
             ) : (
-                <View style={{ flexDirection: 'row', width: 220, backgroundColor: 'white' }}>
-                    <Ionicons
-                        name="arrow-back-outline"
-                        color="#a2a2ac"
-                        size={17}
-                        style={{ marginRight: 20 }}
-                        onPress={() => props.back()}
-                    />
-                    <TouchableOpacity onPress={() => onClick()} style={{ backgroundColor: 'white', borderRadius: 15 }}>
-                        <Text
-                            style={{
-                                textAlign: 'center',
-                                lineHeight: 25,
-                                color: '#2f2f3c',
-                                fontSize: 11,
-                                backgroundColor: '#f4f4f6',
-                                borderRadius: 10,
-                                paddingHorizontal: 25,
-                                fontFamily: 'inter',
-                                overflow: 'hidden',
-                                height: 25
-                            }}>
-                            CHOOSE FILE
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <Text
+                    style={{
+                        color: '#006AFF',
+                        lineHeight: props.chat ? 40 : 35,
+                        textAlign: 'right',
+                        fontSize: props.quiz ? 12 : 12,
+                        fontFamily: 'overpass',
+                        textTransform: 'uppercase',
+                        paddingLeft: 10
+                    }}
+                    onPress={() => onClick()}
+                >
+                    {props.chat ? (
+                        <Ionicons name="document-attach-outline" size={18} />
+                    ) : (
+                        PreferredLanguageText('import')
+                    )}
+                </Text>
             )}
         </View>
     );

@@ -410,7 +410,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         width: '100%',
                         backgroundColor: 'white',
                         paddingTop: 10,
-                        // maxHeight: 500,
+                        maxHeight: 450,
                         // paddingHorizontal: 10,
                         borderRadius: 1,
                         borderLeftColor: props.channelColor,
@@ -429,8 +429,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         showsHorizontalScrollIndicator={true}
                         horizontal={true}
                         contentContainerStyle={{
-                            height: '100%',
-                            maxHeight: 450,
+                            // height: '100%',
+                            // maxHeight: 450,
                             flexDirection: 'column'
                         }}
                         nestedScrollEnabled={true}
@@ -503,9 +503,11 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         <ScrollView
                             showsVerticalScrollIndicator={true}
                             horizontal={false}
-                            contentContainerStyle={{
-                                height: '100%'
-                            }}
+                            contentContainerStyle={
+                                {
+                                    // height: '100%'
+                                }
+                            }
                             nestedScrollEnabled={true}
                         >
                             {channelAttendances.map((channelAttendance: any, row: number) => {

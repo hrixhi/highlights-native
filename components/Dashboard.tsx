@@ -25,7 +25,8 @@ import {
     markAttendance,
     meetingRequest,
     startInstantMeeting,
-    getOngoingMeetings
+    getOngoingMeetings,
+    createMessage
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -49,6 +50,7 @@ import InsetShadow from 'react-native-inset-shadow';
 import DropDownPicker from 'react-native-dropdown-picker';
 import BottomSheet from './BottomSheet';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import NewPostModal from './NewPostModal';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -124,6 +126,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const currentDate = new Date();
     const [filterStart, setFilterStart] = useState<any>(new Date(currentDate.getTime() - 1000 * 60 * 60 * 24 * 30 * 5));
     const [filterEnd, setFilterEnd] = useState<any>(new Date(currentDate.getTime() + 1000 * 60 * 60 * 24 * 30 * 5));
+    const [showNewPostModal, setShowNewPostModal] = useState(false);
+    const [newPostCategories, setNewPostCategories] = useState<any[]>([]);
+    const [discussionReloadKey, setDiscussionReloadKey] = useState(Math.random());
+
+    const currentTime = new Date();
+    const [meetingEndTime, setMeetingEndTime] = useState(new Date(currentTime.getTime() + 1000 * 40 * 60));
+    const [showMeetingEndTimeAndroid, setShowMeetingEndTimeAndroid] = useState(false);
+    const [showMeetingEndDateAndroid, setShowMeetingEndDateAndroid] = useState(false);
 
     // ALERTS
     const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
@@ -131,6 +141,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const somethingWrongAlert = PreferredLanguageText('somethingWentWrong');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
     const doesNotExistAlert = PreferredLanguageText('doesNotExists');
+    const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
 
     // const openThreadFromSearch = useCallback(
     //     (channelId: String) => {
@@ -693,6 +704,40 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, []);
 
     /**
+     * @description Called from Modal for creating a new thread
+     */
+    const createNewThread = useCallback(
+        async (message: any, category: any, isPrivate: any) => {
+            const server = fetchAPI('');
+            server
+                .mutate({
+                    mutation: createMessage,
+                    variables: {
+                        message,
+                        userId,
+                        channelId: props.channelId,
+                        isPrivate,
+                        anonymous: false,
+                        cueId: props.cueId === null ? 'NULL' : props.cueId,
+                        parentId: 'INIT',
+                        category: category === 'None' ? '' : category
+                    }
+                })
+                .then(res => {
+                    if (res.data.thread.writeMessage) {
+                        setDiscussionReloadKey(Math.random());
+                    } else {
+                        Alert(checkConnectionAlert);
+                    }
+                })
+                .catch(err => {
+                    Alert(somethingWentWrongAlert, checkConnectionAlert);
+                });
+        },
+        [props.cueId, props.channelId, userId]
+    );
+
+    /**
      * @description Subscribes user to a channel
      */
     const handleSubscribe = useCallback(
@@ -799,10 +844,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 flexDirection: 'row'
                             }}
                             onPress={() => {
-                                setShowStartDateAndroid(true);
-                                setShowStartTimeAndroid(false);
-                                setShowEndDateAndroid(false);
-                                setShowEndTimeAndroid(false);
+                                setShowFilterStartDateAndroid(true);
+                                setShowFilterEndDateAndroid(false);
                             }}
                         >
                             <Text
@@ -828,6 +871,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </View>
         );
     };
+
+    console.log('New post categories', newPostCategories);
 
     const renderFilterEndDateTimePicker = () => {
         return (
@@ -1298,8 +1343,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             height: 2
                         },
                         shadowOpacity: 0.1,
-                        shadowRadius: 10,
-                        zIndex: 5000000
+                        shadowRadius: 10
+                        // zIndex: 5000000
                     }}
                 >
                     <ScrollView
@@ -1475,219 +1520,339 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
-    // const renderInstantMeetingPopup = () => {
-    //     return (
-    //         <Popup
-    //             isOpen={showInstantMeeting}
-    //             buttons={[
-    //                 {
-    //                     text: 'START',
-    //                     handler: function(event) {
-    //                         createInstantMeeting();
-    //                     }
-    //                 },
-    //                 {
-    //                     text: 'CANCEL',
-    //                     handler: function(event) {
-    //                         setShowInstantMeeting(false);
-    //                         setInstantMeetingChannelId('');
-    //                         setInstantMeetingCreatedBy('');
-    //                         setInstantMeetingTitle('');
-    //                         setInstantMeetingDescription('');
-    //                         setInstantMeetingStart('');
-    //                         setInstantMeetingEnd('');
-    //                     }
-    //                 }
-    //             ]}
-    //             theme="ios"
-    //             themeVariant="light"
-    //             onClose={() => {
-    //                 setShowInstantMeeting(false);
-    //                 setInstantMeetingChannelId('');
-    //                 setInstantMeetingCreatedBy('');
-    //             }}
-    //             responsive={{
-    //                 small: {
-    //                     display: 'bottom'
-    //                 },
-    //                 medium: {
-    //                     // Custom breakpoint
-    //                     display: 'center'
-    //                 }
-    //             }}>
-    //             <View
-    //                 style={{
-    //                     flexDirection: 'column',
-    //                     paddingHorizontal: Dimensions.get('window').width > 768 ? 25 : 0,
-    //                     backgroundColor: '#f2f2f7'
-    //                 }}
-    //                 className="mbsc-align-center mbsc-padding">
-    //                 <ScrollView
-    //                     showsVerticalScrollIndicator={true}
-    //                     horizontal={false}
-    //                     contentContainerStyle={{
-    //                         width: '100%'
-    //                     }}>
-    //                     <View
-    //                         style={{
-    //                             flexDirection: 'column',
-    //                             paddingHorizontal: 20,
-    //                             marginVertical: 20,
-    //                             minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
-    //                             maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
-    //                             backgroundColor: '#f2f2f7'
-    //                         }}>
-    //                         <Text
-    //                             style={{
-    //                                 fontSize: 13,
-    //                                 textTransform: 'uppercase',
-    //                                 fontFamily: 'inter',
-    //                                 marginBottom: 20
-    //                             }}>
-    //                             Start an instant meeting
-    //                         </Text>
+    const renderMeetingEndDateTimePicker = () => {
+        return (
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={meetingEndTime}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setMeetingEndTime(roundedValue);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showMeetingEndDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={meetingEndTime}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowMeetingEndDateAndroid(false);
 
-    //                         <View style={{ width: '100%', maxWidth: 400, marginTop: 20, backgroundColor: '#f2f2f7' }}>
-    //                             <Text
-    //                                 style={{
-    //                                     fontSize: 14,
-    //                                     // fontFamily: 'inter',
-    //                                     color: '#000000'
-    //                                 }}>
-    //                                 Topic
-    //                             </Text>
-    //                             <View style={{ marginTop: 10, marginBottom: 10 }}>
-    //                                 <DefaultInput
-    //                                     style={{ padding: 10, fontSize: 14 }}
-    //                                     value={instantMeetingTitle}
-    //                                     placeholder={''}
-    //                                     onChangeText={val => setInstantMeetingTitle(val)}
-    //                                     placeholderTextColor={'#1F1F1F'}
-    //                                     // required={true}
-    //                                 />
-    //                             </View>
-    //                         </View>
+                            const roundedValue = roundSeconds(currentDate);
 
-    //                         <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#f2f2f7' }}>
-    //                             <Text
-    //                                 style={{
-    //                                     fontSize: 14,
-    //                                     // fontFamily: 'inter',
-    //                                     color: '#000000'
-    //                                 }}>
-    //                                 Description
-    //                             </Text>
-    //                             <View style={{ marginTop: 10, marginBottom: 10 }}>
-    //                                 <DefaultInput
-    //                                     style={{ padding: 10, fontSize: 14 }}
-    //                                     value={instantMeetingDescription}
-    //                                     placeholder={''}
-    //                                     onChangeText={val => setInstantMeetingDescription(val)}
-    //                                     placeholderTextColor={'#1F1F1F'}
-    //                                     // required={true}
-    //                                 />
-    //                             </View>
-    //                         </View>
-    //                         <View
-    //                             style={{
-    //                                 width: '100%',
-    //                                 maxWidth: 400,
-    //                                 // paddingVertical: 15,
-    //                                 backgroundColor: '#f2f2f7'
-    //                             }}>
-    //                             <Text style={styles.text}>{PreferredLanguageText('end')}</Text>
-    //                             <View style={{ marginTop: 10, marginBottom: 10 }}>
-    //                                 <Datepicker
-    //                                     controls={['date', 'time']}
-    //                                     touchUi={true}
-    //                                     theme="ios"
-    //                                     value={instantMeetingEnd}
-    //                                     themeVariant="light"
-    //                                     // inputComponent="input"
-    //                                     inputProps={{
-    //                                         placeholder: 'Select end...',
-    //                                         backgroundColor: 'white'
-    //                                     }}
-    //                                     onChange={(event: any) => {
-    //                                         const date = new Date(event.value);
-    //                                         const roundOffDate = roundSeconds(date);
-    //                                         setInstantMeetingEnd(roundOffDate);
-    //                                     }}
-    //                                     responsive={{
-    //                                         xsmall: {
-    //                                             controls: ['date', 'time'],
-    //                                             display: 'bottom',
-    //                                             touchUi: true
-    //                                         },
-    //                                         medium: {
-    //                                             controls: ['date', 'time'],
-    //                                             display: 'anchored',
-    //                                             touchUi: false
-    //                                         }
-    //                                     }}
-    //                                 />
-    //                             </View>
-    //                         </View>
-    //                         <View
-    //                             style={{
-    //                                 width: '100%',
-    //                                 paddingTop: 10,
-    //                                 paddingBottom: 15,
-    //                                 backgroundColor: '#f2f2f7'
-    //                             }}>
-    //                             <Text
-    //                                 style={{
-    //                                     fontSize: 14,
-    //                                     // fontFamily: 'inter',
-    //                                     color: '#000000'
-    //                                 }}>
-    //                                 Notify Users
-    //                             </Text>
-    //                         </View>
-    //                         <View
-    //                             style={{
-    //                                 height: 40,
-    //                                 marginRight: 10,
-    //                                 backgroundColor: '#f2f2f7'
-    //                             }}>
-    //                             <Switch
-    //                                 value={instantMeetingAlertUsers}
-    //                                 onValueChange={() => {
-    //                                     setInstantMeetingAlertUsers(!instantMeetingAlertUsers);
-    //                                 }}
-    //                                 style={{ height: 20 }}
-    //                                 trackColor={{
-    //                                     false: '#efefef',
-    //                                     true: '#006AFF'
-    //                                 }}
-    //                                 activeThumbColor="white"
-    //                             />
-    //                         </View>
-    //                         <View
-    //                             style={{
-    //                                 width: '100%',
-    //                                 maxWidth: 400,
-    //                                 // paddingVertical: 15,
+                            setMeetingEndTime(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                width: 150,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowMeetingEndDateAndroid(true);
+                                setShowMeetingEndTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowMeetingEndDateAndroid(false);
+                                setShowMeetingEndTimeAndroid(true);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Time
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
 
-    //                                 backgroundColor: '#f2f2f7'
-    //                             }}>
-    //                             <Text
-    //                                 style={{
-    //                                     fontSize: 11,
-    //                                     color: '#000000',
-    //                                     textTransform: 'uppercase',
-    //                                     lineHeight: 20,
-    //                                     fontFamily: 'Inter'
-    //                                 }}>
-    //                                 NOTE: You can schedule future meetings under Agenda
-    //                             </Text>
-    //                         </View>
-    //                     </View>
-    //                 </ScrollView>
-    //             </View>
-    //         </Popup>
-    //     );
-    // };
+                <View style={{ height: 10, backgroundColor: 'white' }} />
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={meetingEndTime}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setMeetingEndTime(currentDate);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showMeetingEndTimeAndroid && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={meetingEndTime}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowMeetingEndTimeAndroid(false);
+                            setMeetingEndTime(currentDate);
+                        }}
+                    />
+                )}
+            </View>
+        );
+    };
+
+    const renderInstantMeetingModalContent = () => {
+        return (
+            <View>
+                <View
+                    style={{
+                        flexDirection: 'column',
+                        paddingHorizontal: Dimensions.get('window').width > 768 ? 25 : 0,
+                        backgroundColor: '#ffffff'
+                    }}
+                >
+                    <ScrollView
+                        showsVerticalScrollIndicator={true}
+                        horizontal={false}
+                        contentContainerStyle={{
+                            width: '100%'
+                        }}
+                    >
+                        <View
+                            style={{
+                                flexDirection: 'column',
+                                paddingHorizontal: 20,
+                                marginVertical: 20,
+                                // minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
+                                // maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
+                                backgroundColor: '#ffffff'
+                            }}
+                        >
+                            <View style={{ width: '100%', maxWidth: 400, marginTop: 20, backgroundColor: '#ffffff' }}>
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: 'inter',
+                                        color: '#000000',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    Topic
+                                </Text>
+                                <View style={{ marginTop: 10, marginBottom: 10, width: '100%' }}>
+                                    <TextInput
+                                        // style={{ padding: 10, fontSize: 14 }}
+                                        value={instantMeetingTitle}
+                                        placeholder={''}
+                                        onChangeText={val => setInstantMeetingTitle(val)}
+                                        placeholderTextColor={'#1F1F1F'}
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#ffffff' }}>
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: 'inter',
+                                        color: '#000000',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    Description
+                                </Text>
+                                <View style={{ marginTop: 10, marginBottom: 10 }}>
+                                    <TextInput
+                                        value={instantMeetingDescription}
+                                        placeholder={''}
+                                        onChangeText={val => setInstantMeetingDescription(val)}
+                                        placeholderTextColor={'#1F1F1F'}
+                                        multiline={true}
+                                    />
+                                </View>
+                            </View>
+                            <View
+                                style={{
+                                    fontSize: 14,
+                                    fontFamily: 'inter',
+                                    color: '#000000',
+                                    fontWeight: 'bold',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    width: '100%',
+                                    marginBottom: 30
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: 'inter',
+                                        color: '#000000',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    End
+                                </Text>
+
+                                {renderMeetingEndDateTimePicker()}
+                            </View>
+                            <View
+                                style={{
+                                    width: '100%',
+                                    paddingTop: 10,
+                                    paddingBottom: 15,
+                                    backgroundColor: '#ffffff'
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: 'inter',
+                                        color: '#000000',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    Notify Users
+                                </Text>
+                            </View>
+                            <View
+                                style={{
+                                    height: 40,
+                                    marginRight: 10,
+                                    backgroundColor: '#ffffff'
+                                }}
+                            >
+                                <Switch
+                                    value={instantMeetingAlertUsers}
+                                    onValueChange={() => {
+                                        setInstantMeetingAlertUsers(!instantMeetingAlertUsers);
+                                    }}
+                                    style={{ height: 20 }}
+                                    trackColor={{
+                                        false: '#efefef',
+                                        true: '#006AFF'
+                                    }}
+                                    activeThumbColor="white"
+                                />
+                            </View>
+                            <View
+                                style={{
+                                    width: '100%',
+                                    backgroundColor: '#ffffff'
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 11,
+                                        color: '#000000',
+                                        lineHeight: 20,
+                                        fontFamily: 'Inter',
+                                        paddingBottom: 15,
+                                        paddingTop: 10,
+                                        width: '100%'
+                                    }}
+                                >
+                                    NOTE: You can schedule future meetings under Agenda
+                                </Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: '#006AFF',
+                                borderRadius: 19,
+                                width: 120,
+                                alignSelf: 'center'
+                            }}
+                            onPress={() => {
+                                createInstantMeeting();
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    color: 'white',
+                                    padding: 10,
+                                    textAlign: 'center',
+                                    fontFamily: 'inter'
+                                }}
+                            >
+                                Create
+                            </Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </View>
+            </View>
+        );
+    };
 
     console.log('Search results', results);
 
@@ -1741,6 +1906,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 color: '#1F1F1F',
                                 fontSize: 20,
                                 paddingVertical: 50,
+                                textAlign: 'center',
                                 lineHeight: 30,
                                 fontFamily: 'inter',
                                 flex: 1,
@@ -2037,9 +2203,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <TouchableOpacity
                                 style={{
                                     position: 'absolute',
-                                    marginTop: 7,
-                                    marginLeft: 5,
-                                    right: 0
+                                    marginTop: 9,
+                                    marginLeft: 0,
+                                    right: -9
                                 }}
                                 onPress={() => setShowFilterModal(!showFilterModal)}
                             >
@@ -2164,7 +2330,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             overflow: 'hidden',
                                             shadowOpacity: 0.12,
                                             shadowRadius: 7,
-                                            zIndex: 500000,
                                             alignItems: 'center',
                                             flexDirection: 'row',
                                             paddingVertical: 10,
@@ -2235,7 +2400,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             {[selectedWorkspace] ? (
                                 <View
                                     style={{ width: '100%', paddingBottom: 25, backgroundColor: '#efefef' }}
-                                    key={editFolderChannelId.toString() + cueIds.toString() + cueMap.toString()}
+                                    key={
+                                        editFolderChannelId.toString() +
+                                        cueIds.toString() +
+                                        cueMap.toString() +
+                                        discussionReloadKey.toString()
+                                    }
                                 >
                                     {indexMap[selectedWorkspace] !== 0 ? (
                                         indexMap[selectedWorkspace] === 1 ? (
@@ -2246,6 +2416,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 refreshUnreadDiscussionCount={() =>
                                                     props.refreshUnreadDiscussionCount()
                                                 }
+                                                setNewPostCategories={(categories: any[]) =>
+                                                    setNewPostCategories(categories)
+                                                }
+                                                showNewPostModal={() => setShowNewPostModal(true)}
                                                 channelColor={selectedWorkspace.split('-SPLIT-')[3]}
                                             />
                                         ) : // Meet
@@ -3553,6 +3727,33 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     header={false}
                 />
             )}
+            {showNewPostModal && (
+                <NewPostModal
+                    show={showNewPostModal}
+                    // categories={categories}
+                    categoriesOptions={newPostCategories}
+                    onClose={() => setShowNewPostModal(false)}
+                    onSend={createNewThread}
+                />
+            )}
+            {showInstantMeeting ? (
+                <BottomSheet
+                    snapPoints={[0, Dimensions.get('window').height]}
+                    close={() => {
+                        setShowInstantMeeting(false);
+                        setInstantMeetingChannelId('');
+                        setInstantMeetingCreatedBy('');
+                        setInstantMeetingTitle('');
+                        setInstantMeetingDescription('');
+                        setInstantMeetingStart('');
+                        setInstantMeetingEnd('');
+                    }}
+                    isOpen={showInstantMeeting}
+                    title={'Start an Instant meeting'}
+                    renderContent={() => renderInstantMeetingModalContent()}
+                    header={true}
+                />
+            ) : null}
             {/* <Popup
                 isOpen={showFilterPopup}
                 buttons={[

@@ -1824,7 +1824,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         height: '100%'
                     }}
                 >
-                    <ScrollView style={{ flexDirection: 'column', paddingHorizontal: 20 }}>
+                    <ScrollView style={{ flexDirection: 'column', paddingHorizontal: 20 }} indicatorStyle="black">
                         {showOptions ? (
                             <View
                                 style={{
@@ -3196,7 +3196,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 ) : null}
                             </View>
                         ) : (
-                            <View>
+                            <View style={{ marginBottom: 200 }}>
                                 {imported || isQuiz ? (
                                     <View
                                         style={{
@@ -3283,9 +3283,182 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     style={{
                                                         width: '100%',
                                                         maxWidth: 600,
-                                                        paddingTop: 15
+                                                        paddingTop: 15,
+                                                        borderColor: '#efefef',
+                                                        borderBottomWidth: 1
                                                     }}
                                                 >
+                                                    <RichToolbar
+                                                        style={{
+                                                            backgroundColor: '#fff',
+                                                            maxHeight: 40,
+                                                            height: 40,
+                                                            display: editorFocus ? 'flex' : 'none'
+                                                        }}
+                                                        flatContainerStyle={{
+                                                            paddingHorizontal: 12
+                                                        }}
+                                                        editor={RichText}
+                                                        disabled={false}
+                                                        selectedIconTint={'#006AFF'}
+                                                        disabledIconTint={'#bfbfbf'}
+                                                        actions={[
+                                                            actions.keyboard,
+                                                            actions.setBold,
+                                                            actions.setItalic,
+                                                            actions.setUnderline,
+                                                            actions.insertImage,
+                                                            actions.insertLink,
+                                                            actions.insertBulletsList,
+                                                            actions.insertOrderedList,
+                                                            actions.heading1,
+                                                            actions.heading3,
+                                                            actions.setParagraph,
+                                                            actions.foreColor,
+                                                            actions.hiliteColor,
+                                                            'insertEmoji'
+                                                        ]}
+                                                        iconMap={{
+                                                            [actions.keyboard]: ({ tintColor }) => (
+                                                                <Text
+                                                                    style={[
+                                                                        styles.tib,
+                                                                        { color: 'green', fontSize: 20 }
+                                                                    ]}
+                                                                >
+                                                                    ✓
+                                                                </Text>
+                                                            ),
+                                                            [actions.insertVideo]: importIcon,
+                                                            insertEmoji: emojiIcon,
+                                                            [actions.heading1]: ({ tintColor }) => (
+                                                                <Text
+                                                                    style={[
+                                                                        styles.tib,
+                                                                        {
+                                                                            color: tintColor,
+                                                                            fontSize: 19,
+                                                                            paddingBottom: 1
+                                                                        }
+                                                                    ]}
+                                                                >
+                                                                    H1
+                                                                </Text>
+                                                            ),
+                                                            [actions.heading3]: ({ tintColor }) => (
+                                                                <Text
+                                                                    style={[
+                                                                        styles.tib,
+                                                                        {
+                                                                            color: tintColor,
+                                                                            fontSize: 19,
+                                                                            paddingBottom: 1
+                                                                        }
+                                                                    ]}
+                                                                >
+                                                                    H3
+                                                                </Text>
+                                                            ),
+                                                            [actions.setParagraph]: ({ tintColor }) => (
+                                                                <Text
+                                                                    style={[
+                                                                        styles.tib,
+                                                                        {
+                                                                            color: tintColor,
+                                                                            fontSize: 19,
+                                                                            paddingBottom: 1
+                                                                        }
+                                                                    ]}
+                                                                >
+                                                                    p
+                                                                </Text>
+                                                            ),
+                                                            [actions.foreColor]: ({ tintColor }) => (
+                                                                <Text
+                                                                    style={{
+                                                                        fontSize: 19,
+                                                                        fontWeight: 'bold',
+                                                                        color: 'red'
+                                                                    }}
+                                                                >
+                                                                    A
+                                                                </Text>
+                                                            ),
+                                                            [actions.hiliteColor]: ({ tintColor }) => (
+                                                                <Text
+                                                                    style={{
+                                                                        color: 'black',
+                                                                        fontSize: 19,
+                                                                        backgroundColor: '#ffc701',
+                                                                        paddingHorizontal: 2
+                                                                    }}
+                                                                >
+                                                                    H
+                                                                </Text>
+                                                            )
+                                                        }}
+                                                        hiliteColor={handleHiliteColor}
+                                                        foreColor={handleForeColor}
+                                                        insertEmoji={handleEmoji}
+                                                        onPressAddImage={handleAddImage}
+                                                        onInsertLink={handleInsertLink}
+                                                    />
+                                                    <ScrollView
+                                                        horizontal={false}
+                                                        style={{
+                                                            backgroundColor: '#efefef',
+                                                            height: 150,
+                                                            borderColor: '#efefef',
+                                                            borderWidth: 1
+                                                        }}
+                                                        keyboardDismissMode={'none'}
+                                                        ref={scrollRef}
+                                                        nestedScrollEnabled={true}
+                                                        scrollEventThrottle={20}
+                                                        indicatorStyle={'black'}
+                                                        showsHorizontalScrollIndicator={true}
+                                                        persistentScrollbar={true}
+                                                    >
+                                                        <RichEditor
+                                                            key={reloadEditorKey.toString()}
+                                                            ref={RichText}
+                                                            useContainer={true}
+                                                            style={{
+                                                                width: '100%',
+                                                                paddingHorizontal: 10,
+                                                                backgroundColor: '#fff',
+                                                                display: 'flex',
+                                                                flex: 1,
+                                                                height: '100%',
+                                                                minHeight: 150
+                                                            }}
+                                                            editorStyle={{
+                                                                backgroundColor: '#fff',
+                                                                placeholderColor: '#a2a2ac',
+                                                                color: '#2f2f3c',
+                                                                contentCSSText: 'font-size: 16px; min-height: 150;'
+                                                            }}
+                                                            initialContentHTML={quizInstructions}
+                                                            initialHeight={150}
+                                                            onScroll={() => Keyboard.dismiss()}
+                                                            placeholder={'Quiz instructions'}
+                                                            onChange={text => {
+                                                                const modifedText = text.split('&amp;').join('&');
+                                                                setQuizInstructions(modifedText);
+                                                            }}
+                                                            onHeightChange={handleHeightChange}
+                                                            onFocus={() => setEditorFocus(true)}
+                                                            onBlur={() => setEditorFocus(false)}
+                                                            allowFileAccess={true}
+                                                            allowFileAccessFromFileURLs={true}
+                                                            allowUniversalAccessFromFileURLs={true}
+                                                            allowsFullscreenVideo={true}
+                                                            allowsInlineMediaPlayback={true}
+                                                            allowsLinkPreview={true}
+                                                            allowsBackForwardNavigationGestures={true}
+                                                            onCursorPosition={handleCursorPosition}
+                                                        />
+                                                    </ScrollView>
                                                     {/* <Editor
                                                         initialValue={initialQuizInstructions}
                                                         apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
@@ -3640,7 +3813,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 actions={[
                                     actions.undo,
                                     actions.redo,
-                                    // Format text
                                     actions.setBold,
                                     actions.setItalic,
                                     actions.setUnderline,
