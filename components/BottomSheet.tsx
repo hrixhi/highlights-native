@@ -5,6 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const sheetRef: any = useRef();
+    const [callbackNode, setCallbackNode] = useState<any>(null);
+    useEffect(() => {
+        // console.log('On change callback node', callbackNode);
+        setCallbackNode(props.callbackNode);
+    }, [props.callbackNode]);
 
     useEffect(() => {
         if (props.isOpen && sheetRef && sheetRef.current) {
@@ -31,7 +36,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                     shadowRadius: 8,
                     backgroundColor: '#fff'
                     // borderWidth: 1,
-                    // borderColor: '#efefef',
+                    // borderColor: '#f2f2f2',
                 }}
             >
                 {/* Closing knob */}
@@ -42,7 +47,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                                 height: 5,
                                 width: 100,
                                 borderRadius: 3,
-                                backgroundColor: '#efefef',
+                                backgroundColor: '#f2f2f2',
                                 marginTop: 10
                             }}
                         />
@@ -114,9 +119,10 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
         <BottomSheet
             ref={sheetRef}
             snapPoints={props.snapPoints}
-            borderRadius={35}
+            borderRadius={props.header ? 0 : 20}
             onCloseEnd={() => props.close()}
             renderContent={renderContent}
+            callbackNode={callbackNode}
         />
     );
 };

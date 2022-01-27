@@ -309,15 +309,17 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 borderTopLeftRadius: 0,
                 borderTopRightRadius: 0,
                 overflow: 'hidden'
-            }}>
+            }}
+        >
             <View
                 style={{
                     width: '100%',
-                    height: '100%',
+                    // height: '100%',
                     backgroundColor: 'white',
                     borderTopLeftRadius: 0,
                     borderTopRightRadius: 0
-                }}>
+                }}
+            >
                 {showSavePassword ? (
                     <View
                         style={{
@@ -329,7 +331,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             marginBottom: 10,
                             marginTop: 20,
                             paddingHorizontal: 10
-                        }}>
+                        }}
+                    >
                         <View style={{ flexDirection: 'row' }}>
                             <TouchableOpacity
                                 onPress={() => {
@@ -340,7 +343,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     paddingRight: 20,
                                     paddingTop: 5,
                                     alignSelf: 'flex-start'
-                                }}>
+                                }}
+                            >
                                 <Text style={{ lineHeight: 34, width: '100%', textAlign: 'center' }}>
                                     <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
                                 </Text>
@@ -353,7 +357,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         width: '100%',
                         flexDirection: 'row'
                         // paddingTop: 30
-                    }}>
+                    }}
+                >
                     {!props.showHelp ? (
                         <View
                             style={{
@@ -361,8 +366,9 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 // paddingRight: Dimensions.get('window').width < 1024 ? 0 : 25,
                                 // marginRight: Dimensions.get('window').width < 1024 ? 0 : 20,
                                 // borderRightWidth: Dimensions.get('window').width < 1024 ? 0 : 1,
-                                borderColor: '#efefef'
-                            }}>
+                                borderColor: '#f2f2f2'
+                            }}
+                        >
                             <Profile
                                 closeModal={() => props.closeModal()}
                                 saveDataInCloud={() => props.saveDataInCloud()}
@@ -379,7 +385,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 alignSelf: 'center',
                                 flexDirection: 'row',
                                 paddingHorizontal: 20
-                            }}>
+                            }}
+                        >
                             <ScrollView
                                 contentContainerStyle={{
                                     backgroundColor: '#fff',
@@ -390,7 +397,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     maxWidth: 900,
                                     alignSelf: 'center',
                                     paddingHorizontal: 10
-                                }}>
+                                }}
+                            >
                                 {options.map((item: any, index: any) => {
                                     if (isInstructor && !item.instructorOnly) {
                                         return null;
@@ -409,13 +417,14 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             }}
                                             style={{
                                                 backgroundColor: '#fff',
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 borderBottomWidth: item.question === 'Planner' ? 0 : 1,
                                                 width: '100%',
                                                 paddingBottom: 10,
                                                 marginTop: 10
                                                 // paddingTop: item.question === 'Home' ? 40 : 0,
-                                            }}>
+                                            }}
+                                        >
                                             <View style={{ flexDirection: 'row' }}>
                                                 <Text
                                                     style={{
@@ -426,7 +435,8 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                         flex: 1,
                                                         lineHeight: 16,
                                                         color: item.isOpen ? '#006AFF' : '#000000'
-                                                    }}>
+                                                    }}
+                                                >
                                                     {item.question}
                                                 </Text>
                                                 <Text>

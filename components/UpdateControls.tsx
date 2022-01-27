@@ -1,6 +1,6 @@
 // REACT
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { Keyboard, StyleSheet, Switch, TextInput, Dimensions, ScrollView, Animated } from 'react-native';
+import { Keyboard, StyleSheet, Switch, TextInput, Dimensions, ScrollView, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import lodash from 'lodash';
@@ -34,7 +34,7 @@ import FileUpload from './UploadFiles';
 import Quiz from './Quiz';
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
 import TeXToSVG from 'tex-to-svg';
-import ReactPlayer from 'react-native-video';
+import { Video } from 'expo-av';
 import QuizGrading from './QuizGrading';
 // import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 // import TextareaAutosize from 'react-textarea-autosize';
@@ -50,6 +50,12 @@ import ColorPicker from './ColorPicker';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
+import MultiSelectComponent from './MultiSelect';
+import DropDownPicker from 'react-native-dropdown-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import BottomSheet from './BottomSheet';
+import { EmojiView, InsertLink } from './ToolbarComponents';
+import RenderHtml from 'react-native-render-html';
 
 // HELPERS
 import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
@@ -57,7 +63,6 @@ import { handleFile } from '../helpers/FileUpload';
 import { handleImageUpload } from '../helpers/ImageUpload';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { htmlStringParser } from '../helpers/HTMLParser';
-import DropDownPicker from 'react-native-dropdown-picker';
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
@@ -180,6 +185,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [isShareWithDropdownOpen, setIsShareWithDropdownOpen] = useState(false);
     const [isFrequencyDropdownOpen, setIsFrequencyDropdownOpen] = useState(false);
     const width = Dimensions.get('window').width;
+    const videoRef: any = useRef();
+
     const [originalPdfviewerURL, setOriginalPdfviewerURL] = useState('');
     const [submissionPdfviewerURL, setSubmissionPdfviewerURL] = useState('');
     const [height, setHeight] = useState(100);
@@ -192,6 +199,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [foreColor, setForeColor] = useState('#000000');
     const [insertLinkVisible, setInsertLinkVisible] = useState(false);
     const [insertImageVisible, setInsertImageVisible] = useState(false);
+
+    const [showDeadlineTimeAndroid, setShowDeadlineTimeAndroid] = useState(false);
+    const [showDeadlineDateAndroid, setShowDeadlineDateAndroid] = useState(false);
+
+    const [showInitiateAtTimeAndroid, setShowInitiateAtTimeAndroid] = useState(false);
+    const [showInitiateAtDateAndroid, setShowInitiateAtDateAndroid] = useState(false);
+
+    const [showAvailableUntilTimeAndroid, setShowAvailableUntilTimeAndroid] = useState(false);
+    const [showAvailableUntilDateAndroid, setShowAvailableUntilDateAndroid] = useState(false);
 
     // ALERTS
     const unableToStartQuizAlert = PreferredLanguageText('unableToStartQuiz');
@@ -214,9 +230,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     /**
      * @description Load User on Init
      */
-    // useEffect(() => {
-    //     loadUser();
-    // }, []);
+    useEffect(() => {
+        loadUser();
+    }, []);
 
     // SHARE WITH ANY OTHER CHANNEL IN INSTITUTE
     // useEffect(() => {
@@ -277,14 +293,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         let options = [
             {
                 value: 'None',
-                text: 'None'
+                label: 'None'
             }
         ];
 
         customCategories.map((category: any) => {
             options.push({
                 value: category,
-                text: category
+                label: category
             });
         });
 
@@ -396,6 +412,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 setQuizId(obj.quizId);
 
                                 const solutionsObject = cue ? JSON.parse(cue) : {};
+                                // console.log('SolutionsObject', solutionsObject);
+
                                 if (solutionsObject.solutions) {
                                     setSolutions(solutionsObject.solutions);
                                     setQuizSolutions(solutionsObject);
@@ -474,7 +492,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 setFetchingQuiz(false);
                                 setLoading(false);
                             }
-                        });
+                        })
+                        .catch(e => console.log('error', e));
                 } else {
                     setImported(true);
                     setType(obj.type);
@@ -598,7 +617,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     useEffect(() => {
         if (props.del) {
             handleDelete();
-            props.setDelete(false);
+            // props.setDelete(false);
         }
     }, [props.del]);
 
@@ -734,6 +753,33 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     }, [props.showOriginal, props.showComments, props.showOptions]);
 
     /**
+     * @description Called when new user selected in share with dropdown
+     */
+    const onAddNew = useCallback(
+        userId => {
+            const server = fetchAPI('');
+            server
+                .mutate({
+                    mutation: shareCueWithMoreIds,
+                    variables: {
+                        cueId: props.cue._id,
+                        userId
+                    }
+                })
+                .then(res => {
+                    if (res.data && res.data.cue.shareCueWithMoreIds) {
+                        loadChannelsAndSharedWith();
+                    }
+                })
+                .catch(err => console.log(err));
+            const updatedSelected: any[] = [...selected];
+            updatedSelected.push(userId);
+            setSelected(updatedSelected);
+        },
+        [subscribers, props.cue, selected]
+    );
+
+    /**
      * @description Loads all the channel categories and list of people cue has been shared with
      */
     const loadChannelsAndSharedWith = useCallback(async () => {
@@ -787,44 +833,34 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     })
                     .then((res: any) => {
                         if (res.data && res.data.cue.getSharedWith) {
-                            const format = res.data.cue.getSharedWith.map((sub: any) => {
-                                return {
-                                    value: sub.value,
-                                    label: sub.label,
-                                    isFixed: sub.isFixed,
-                                    visited: sub.isFixed
-                                };
+                            const sharedWith = res.data.cue.getSharedWith;
+                            const shared: any[] = [];
+                            const ids: any[] = [];
+                            sharedWith.map((s: any) => {
+                                shared.push({
+                                    value: s.value,
+                                    label: s.label
+                                });
+                                if (s.isFixed) {
+                                    ids.push(s.value);
+                                }
                             });
-
-                            const subscriberwithoutOwner: any = [];
-                            format.map((i: any) => {
+                            const sharedWithoutOwner: any = [];
+                            shared.map((i: any) => {
                                 if (user._id !== i.value) {
-                                    subscriberwithoutOwner.push(i);
+                                    sharedWithoutOwner.push(i);
                                 }
                             });
 
-                            setSubscribers(subscriberwithoutOwner);
-                            // clear selected
-                            const sel = res.data.cue.getSharedWith.filter((item: any) => {
-                                return item.isFixed;
-                            });
-
-                            const formatSel = sel.map((sub: any) => {
-                                return {
-                                    value: sub.value,
-                                    label: sub.label,
-                                    isFixed: true,
-                                    visited: true
-                                };
-                            });
-
-                            const withoutOwner: any = [];
-                            formatSel.map((i: any) => {
-                                if (user._id !== i.value) {
-                                    withoutOwner.push(i);
+                            const idswithoutOwner: any = [];
+                            ids.map((i: any) => {
+                                if (user._id !== i) {
+                                    idswithoutOwner.push(i);
                                 }
                             });
-                            setSelected(withoutOwner);
+                            setSubscribers(sharedWithoutOwner);
+                            setSelected(idswithoutOwner);
+                            setKey(key);
                         }
                     })
                     .catch((err: any) => console.log(err));
@@ -888,7 +924,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     }, [hiliteColor]);
 
     const handleUploadFile = useCallback(async () => {
-        const res = await handleFile(false);
+        const res = await handleFile(false, userId);
 
         console.log('File upload result', res);
 
@@ -900,6 +936,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
         updateAfterFileImport(res.url, res.type);
     }, [RichText, RichText.current]);
+
+    const handleUploadAudioVideo = useCallback(async () => {
+        const res = await handleFile(true, userId);
+
+        console.log('File upload result', res);
+
+        if (!res || res.url === '' || res.type === '') {
+            return;
+        }
+
+        setEditorFocus(false);
+
+        updateAfterFileImport(res.url, res.type);
+    }, [RichText, RichText.current, userId]);
 
     const changeForeColor = useCallback(
         (h: any) => {
@@ -984,7 +1034,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
-            const url = await handleImageUpload(takePhoto);
+            const url = await handleImageUpload(takePhoto, userId);
 
             if (url && url !== '') {
                 RichText.current?.insertImage(url);
@@ -992,7 +1042,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
             setInsertImageVisible(false);
         },
-        [RichText, RichText.current]
+        [RichText, RichText.current, userId]
     );
 
     const handleInsertLink = useCallback(() => {
@@ -1029,38 +1079,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     /**
      * @description Fetch user organization and role
      */
-    // const loadUser = useCallback(async () => {
-    //     const u = await AsyncStorage.getItem('user');
-    //     if (u) {
-    //         const parsedUser = JSON.parse(u);
-    //         setUserId(parsedUser._id);
-    //         const server = fetchAPI('');
-    //         server
-    //             .query({
-    //                 query: getOrganisation,
-    //                 variables: {
-    //                     userId: parsedUser._id
-    //                 }
-    //             })
-    //             .then(res => {
-    //                 if (res.data && res.data.school.findByUserId) {
-    //                     setSchool(res.data.school.findByUserId);
-    //                 }
-    //             });
-    //         server
-    //             .query({
-    //                 query: getRole,
-    //                 variables: {
-    //                     userId: parsedUser._id
-    //                 }
-    //             })
-    //             .then(res => {
-    //                 if (res.data && res.data.user.getRole) {
-    //                     setRole(res.data.user.getRole);
-    //                 }
-    //             });
-    //     }
-    // }, []);
+    const loadUser = useCallback(async () => {
+        const u = await AsyncStorage.getItem('user');
+        if (u) {
+            const parsedUser = JSON.parse(u);
+            setUserId(parsedUser._id);
+        }
+    }, []);
 
     /**
      * @description Initialize the quiz (Timed quiz)
@@ -1432,6 +1457,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 text: 'Cancel',
                 style: 'cancel',
                 onPress: () => {
+                    props.setDelete(false);
                     return;
                 }
             },
@@ -1520,7 +1546,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         Alert(submissionCompleteAlert, new Date().toString(), [
                             {
                                 text: 'Okay',
-                                onPress: () => window.location.reload()
+                                onPress: () => props.closeModal()
                             }
                         ]);
                     }
@@ -1619,6 +1645,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 saveCue = submissionDraft;
                             }
 
+                            console.log('Save cue', saveCue);
+
                             const server = fetchAPI('');
                             server
                                 .mutate({
@@ -1636,7 +1664,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         Alert(submissionCompleteAlert, new Date().toString(), [
                                             {
                                                 text: 'Okay',
-                                                onPress: () => window.location.reload()
+                                                onPress: () => props.closeModal()
                                             }
                                         ]);
                                     } else {
@@ -2044,7 +2072,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderQuizTimerOrUploadOptions = () => {
         return props.showOriginal && (imported || isQuiz) ? (
-            <View style={{ flexDirection: 'column', marginRight: 0, marginLeft: 0 }}>
+            <View style={{ flexDirection: 'column', paddingHorizontal: 10 }}>
                 <View
                     style={{
                         flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
@@ -2061,7 +2089,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 width: '100%',
                                 maxWidth: 500,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#efefef',
+                                borderBottomColor: '#f2f2f2',
                                 fontSize: 14,
                                 paddingTop: 13,
                                 paddingBottom: 13,
@@ -2119,7 +2147,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         const hours = Math.floor(remainingTime / 3600);
                                         const minutes = Math.floor((remainingTime % 3600) / 60);
                                         const seconds = remainingTime % 60;
-                                        return `${hours}h ${minutes}m ${seconds}s`;
+                                        return <Text>{`${hours}h ${minutes}m ${seconds}s`}</Text>;
                                     }}
                                     isPlaying={true}
                                     duration={duration}
@@ -2132,7 +2160,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 ) : props.cue.graded ? null : (
                     <View
                         style={{
-                            marginLeft: 15
+                            marginBottom: 10
                         }}
                     >
                         {isOwner || !props.cue.channelId ? (
@@ -2161,6 +2189,476 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 )}
             </View>
         ) : null;
+    };
+
+    const roundSeconds = (time: Date) => {
+        time.setMinutes(time.getMinutes() + Math.round(time.getSeconds() / 60));
+        time.setSeconds(0, 0);
+
+        return time;
+    };
+
+    const renderInitiateAtDateTimePicker = () => {
+        return (
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
+                {Platform.OS === 'ios' ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setInitiateAt(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' && showInitiateAtDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setShowInitiateAtDateAndroid(false);
+                            setInitiateAt(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(true);
+                                setShowInitiateAtTimeAndroid(false);
+                                setShowDeadlineDateAndroid(false);
+                                setShowDeadlineTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(false);
+                                setShowInitiateAtTimeAndroid(true);
+                                setShowDeadlineDateAndroid(false);
+                                setShowDeadlineTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Time
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+                <View style={{ height: 10, backgroundColor: 'white' }} />
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setInitiateAt(currentDate);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showInitiateAtTimeAndroid && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={initiateAt}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowInitiateAtTimeAndroid(false);
+                            setInitiateAt(currentDate);
+                        }}
+                    />
+                )}
+            </View>
+        );
+    };
+
+    const renderDeadlineDateTimePicker = () => {
+        return (
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setDeadline(roundedValue);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showDeadlineDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'date'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowDeadlineDateAndroid(false);
+
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setDeadline(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                width: 150,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(false);
+                                setShowInitiateAtTimeAndroid(false);
+                                setShowDeadlineDateAndroid(true);
+                                setShowDeadlineTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowInitiateAtDateAndroid(false);
+                                setShowInitiateAtTimeAndroid(false);
+                                setShowDeadlineDateAndroid(false);
+                                setShowDeadlineTimeAndroid(true);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Time
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+
+                <View style={{ height: 10, backgroundColor: 'white' }} />
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setDeadline(currentDate);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showDeadlineTimeAndroid && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={deadline}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowDeadlineTimeAndroid(false);
+                            setDeadline(currentDate);
+                        }}
+                    />
+                )}
+            </View>
+        );
+    };
+
+    const renderAvailableUntilDateTimePicker = () => {
+        return (
+            <View
+                style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    marginLeft: 'auto'
+                    // paddingTop: width < 768 ? 10 : 0
+                }}
+            >
+                {Platform.OS === 'ios' ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+
+                            setAvailableUntil(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' && showAvailableUntilDateAndroid ? (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'date'}
+                        textColor={'#1f1f1f'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            const roundedValue = roundSeconds(currentDate);
+                            setShowAvailableUntilDateAndroid(false);
+                            setAvailableUntil(roundedValue);
+                        }}
+                    />
+                ) : null}
+                {Platform.OS === 'android' ? (
+                    <View
+                        style={{
+                            width: '100%',
+                            flexDirection: 'row',
+                            marginTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                marginBottom: 10,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowAvailableUntilDateAndroid(true);
+                                setShowAvailableUntilTimeAndroid(false);
+                                // setShowEndDateAndroid(false);
+                                // setShowEndTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Date
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                borderRadius: 15,
+                                width: 150,
+                                justifyContent: 'center',
+                                flexDirection: 'row'
+                            }}
+                            onPress={() => {
+                                setShowAvailableUntilDateAndroid(false);
+                                setShowAvailableUntilTimeAndroid(true);
+                                // setShowEndDateAndroid(false);
+                                // setShowEndTimeAndroid(false);
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: '#2f2f3c',
+                                    overflow: 'hidden',
+                                    fontSize: 10,
+                                    // backgroundColor: '#f4f4f6',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    width: 150,
+                                    borderRadius: 15
+                                }}
+                            >
+                                Set Time
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+                <View style={{ height: 10, backgroundColor: 'white' }} />
+                {Platform.OS === 'ios' && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setAvailableUntil(currentDate);
+                        }}
+                    />
+                )}
+                {Platform.OS === 'android' && showAvailableUntilTimeAndroid && (
+                    <DateTimePicker
+                        themeVariant="light"
+                        style={styles.timePicker}
+                        value={availableUntil}
+                        mode={'time'}
+                        textColor={'#2f2f3c'}
+                        onChange={(event, selectedDate) => {
+                            if (!selectedDate) return;
+                            const currentDate: any = selectedDate;
+                            setShowAvailableUntilTimeAndroid(false);
+                            setAvailableUntil(currentDate);
+                        }}
+                    />
+                )}
+            </View>
+        );
     };
 
     /**
@@ -2364,7 +2862,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     flexDirection: 'row',
                     marginTop: 20,
                     marginBottom: 10,
-                    marginLeft: Dimensions.get('window').width < 768 ? 'none' : 'auto'
+                    marginLeft: Dimensions.get('window').width < 768 ? '0%' : 'auto'
                 }}
             >
                 <Text
@@ -2439,6 +2937,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     isQuizTimed && !isOwner ? (
                         initiatedAt ? (
                             <View style={{ width: '100%', flexDirection: 'column' }}>
+                                {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
                                 <Quiz
                                     // disable quiz if graded or deadline has passed
                                     isOwner={isOwner}
@@ -2500,6 +2999,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         )
                     ) : (
                         <View style={{ width: '100%', flexDirection: 'column' }}>
+                            {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
                             <Quiz
                                 isOwner={isOwner}
                                 submitted={
@@ -2532,7 +3032,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     type === 'mp2' ||
                     type === 'wav' ? (
                         <View style={{ width: '100%' }}>
-                            <ReactPlayer
+                            {/* <ReactPlayer
                                 source={{ uri: url }}
                                 // controls={true}
                                 // onContextMenu={(e: any) => e.preventDefault()}
@@ -2543,6 +3043,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     width: '100%',
                                     height: '100%'
                                 }}
+                            /> */}
+                            <Video
+                                ref={videoRef}
+                                style={{
+                                    width: '100%',
+                                    height: '100%'
+                                }}
+                                source={{
+                                    uri: url
+                                }}
+                                useNativeControls
+                                resizeMode="contain"
+                                isLooping
                             />
                         </View>
                     ) : (
@@ -2572,7 +3085,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     submissionType === 'mp2' ||
                     submissionType === 'wav' ? (
                         <View style={{ width: '100%' }}>
-                            <ReactPlayer url={submissionUrl} controls={true} width={'100%'} height={'100%'} />
+                            {/* <ReactPlayer url={submissionUrl} controls={true} width={'100%'} height={'100%'} /> */}
+                            <Video
+                                ref={videoRef}
+                                style={{
+                                    width: '100%',
+                                    height: '100%'
+                                }}
+                                source={{
+                                    uri: submissionUrl
+                                }}
+                                useNativeControls
+                                resizeMode="contain"
+                                isLooping
+                            />
                             {renderFooter()}
                         </View>
                     ) : (
@@ -2584,10 +3110,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 JSON.stringify(viewSubmissionTab)
                             }
                         >
-                            {/* <div
-                                className="webviewer"
-                                ref={RichText}
-                                style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}></div> */}
                             <WebView
                                 style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
                                 source={{ uri: originalPdfviewerURL }}
@@ -2602,11 +3124,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         {!viewSubmission ? (
                             submissionImported ? null : (
                                 <View>
-                                    {/* {props.cue.releaseSubmission ||
+                                    {props.cue.releaseSubmission ||
                                     (!allowLateSubmission && new Date() > deadline) ||
                                     (allowLateSubmission && new Date() > availableUntil)
                                         ? null
-                                        : renderRichEditorModified()} */}
+                                        : renderRichEditorModified()}
                                     {renderFooter()}
                                 </View>
                             )
@@ -2635,10 +3157,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
         if (!isOwner && props.cue.channelId && props.cue.channelId !== '') {
             return (
-                <Text className="mce-content-body htmlParser" style={{ width: '100%', color: 'black' }}>
-                    {/* {parser(initialOriginal)} */}
-                    {initialOriginal}
-                </Text>
+                <RenderHtml
+                    source={{
+                        html: initialOriginal
+                    }}
+                />
             );
         }
 
@@ -2654,7 +3177,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     <View style={{ height: '100%' }}>
                         <RichToolbar
                             style={{
-                                borderColor: '#efefef',
+                                borderColor: '#f2f2f2',
                                 borderBottomWidth: 1,
                                 backgroundColor: '#fff',
                                 display: editorFocus ? 'flex' : 'none',
@@ -2670,8 +3193,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             disabledIconTint={'#bfbfbf'}
                             actions={[
                                 actions.keyboard,
-                                actions.insertVideo,
+                                'insertFile',
                                 actions.insertImage,
+                                actions.insertVideo,
                                 actions.insertLink,
                                 actions.insertBulletsList,
                                 actions.insertOrderedList,
@@ -2688,18 +3212,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 [actions.keyboard]: ({ tintColor }) => (
                                     <Text style={[styles.tib, { color: 'green', fontSize: 20 }]}>✓</Text>
                                 ),
-                                [actions.insertVideo]: importIcon,
+                                insertFile: importIcon,
                                 insertEmoji: emojiIcon
                             }}
                             insertEmoji={handleEmoji}
-                            insertVideo={handleUploadFile}
+                            insertFile={handleUploadFile}
+                            insertVideo={handleUploadAudioVideo}
                             onPressAddImage={handleAddImage}
                             onInsertLink={handleInsertLink}
                         />
                         <ScrollView
                             horizontal={false}
                             style={{
-                                backgroundColor: '#efefef',
+                                backgroundColor: '#f2f2f2',
                                 // maxHeight: editorFocus ? 340 : 'auto',
                                 height: '100%'
                             }}
@@ -2732,7 +3257,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     minHeight: '100%',
                                     display: 'flex',
                                     // borderTopWidth: 1,
-                                    // borderColor: '#efefef',
+                                    // borderColor: '#f2f2f2',
                                     marginBottom: editorFocus ? 0 : 200,
                                     flex: 1,
                                     height: '100%'
@@ -2773,7 +3298,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                         <RichToolbar
                             style={{
-                                borderColor: '#efefef',
+                                borderColor: '#f2f2f2',
                                 borderTopWidth: 1,
                                 backgroundColor: '#fff',
                                 display: editorFocus ? 'flex' : 'none'
@@ -2935,7 +3460,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     {attempt.title}
                                 </Text>
                             ) : null}
-                            <ReactPlayer url={attempt.url} controls={true} width={'100%'} height={'100%'} />
+                            {/* <ReactPlayer url={attempt.url} controls={true} width={'100%'} height={'100%'} /> */}
+                            <Video
+                                ref={videoRef}
+                                style={{
+                                    width: '100%',
+                                    height: '100%'
+                                }}
+                                source={{
+                                    uri: attempt.url
+                                }}
+                                useNativeControls
+                                resizeMode="contain"
+                                isLooping
+                            />
                         </View>
                     ) : (
                         <View
@@ -3014,101 +3552,322 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     /**
      * @description Rich editor for Submissions
      */
-    // const renderRichEditorModified = () => {
-    //     return (
-    //         <Editor
-    //             onInit={(evt, editor) => (editorRef.current = editor)}
-    //             initialValue={initialSubmissionDraft}
-    //             disabled={
-    //                 props.cue.releaseSubmission ||
-    //                 (!allowLateSubmission && new Date() > deadline) ||
-    //                 (allowLateSubmission && new Date() > availableUntil)
-    //             }
-    //             apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
-    //             init={{
-    //                 skin: 'snow',
-    //                 branding: false,
-    //                 placeholder: 'Content...',
-    //                 readonly:
-    //                     props.cue.releaseSubmission ||
-    //                     (!allowLateSubmission && new Date() > deadline) ||
-    //                     (allowLateSubmission && new Date() > availableUntil),
-    //                 min_height: 500,
-    //                 paste_data_images: true,
-    //                 images_upload_url: 'https://api.learnwithcues.com/api/imageUploadEditor',
-    //                 mobile: {
-    //                     plugins:
-    //                         'print preview powerpaste casechange importcss tinydrive searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
-    //                 },
-    //                 plugins:
-    //                     'print preview powerpaste casechange importcss tinydrive searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
-    //                 menu: {
-    //                     // this is the complete default configuration
-    //                     file: { title: 'File', items: 'newdocument' },
-    //                     edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall' },
-    //                     insert: { title: 'Insert', items: 'link media | template hr' },
-    //                     view: { title: 'View', items: 'visualaid' },
-    //                     format: {
-    //                         title: 'Format',
-    //                         items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'
-    //                     },
-    //                     table: { title: 'Table', items: 'inserttable tableprops deletetable | cell row column' },
-    //                     tools: { title: 'Tools', items: 'spellchecker code' }
-    //                 },
-    //                 setup: (editor: any) => {
-    //                     const equationIcon =
-    //                         '<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4817 3.82717C11.3693 3.00322 9.78596 3.7358 9.69388 5.11699L9.53501 7.50001H12.25C12.6642 7.50001 13 7.8358 13 8.25001C13 8.66423 12.6642 9.00001 12.25 9.00001H9.43501L8.83462 18.0059C8.6556 20.6912 5.47707 22.0078 3.45168 20.2355L3.25613 20.0644C2.9444 19.7917 2.91282 19.3179 3.18558 19.0061C3.45834 18.6944 3.93216 18.6628 4.24389 18.9356L4.43943 19.1067C5.53003 20.061 7.24154 19.352 7.33794 17.9061L7.93168 9.00001H5.75001C5.3358 9.00001 5.00001 8.66423 5.00001 8.25001C5.00001 7.8358 5.3358 7.50001 5.75001 7.50001H8.03168L8.1972 5.01721C8.3682 2.45214 11.3087 1.09164 13.3745 2.62184L13.7464 2.89734C14.0793 3.1439 14.1492 3.61359 13.9027 3.94643C13.6561 4.27928 13.1864 4.34923 12.8536 4.10268L12.4817 3.82717Z"/><path d="M13.7121 12.7634C13.4879 12.3373 12.9259 12.2299 12.5604 12.5432L12.2381 12.8194C11.9236 13.089 11.4501 13.0526 11.1806 12.7381C10.911 12.4236 10.9474 11.9501 11.2619 11.6806L11.5842 11.4043C12.6809 10.4643 14.3668 10.7865 15.0395 12.0647L16.0171 13.9222L18.7197 11.2197C19.0126 10.9268 19.4874 10.9268 19.7803 11.2197C20.0732 11.5126 20.0732 11.9874 19.7803 12.2803L16.7486 15.312L18.2879 18.2366C18.5121 18.6627 19.0741 18.7701 19.4397 18.4568L19.7619 18.1806C20.0764 17.911 20.5499 17.9474 20.8195 18.2619C21.089 18.5764 21.0526 19.0499 20.7381 19.3194L20.4159 19.5957C19.3191 20.5357 17.6333 20.2135 16.9605 18.9353L15.6381 16.4226L12.2803 19.7803C11.9875 20.0732 11.5126 20.0732 11.2197 19.7803C10.9268 19.4874 10.9268 19.0126 11.2197 18.7197L14.9066 15.0328L13.7121 12.7634Z"/></svg>';
-    //                     editor.ui.registry.addIcon('formula', equationIcon);
+    const renderRichEditorModified = () => {
+        return (
+            <View style={{ width: '100%', height: '100%' }}>
+                <View
+                    style={{
+                        display: 'flex',
+                        height: '100%'
+                        // marginTop: editorFocus ? 0 : 10
+                    }}
+                >
+                    <View style={{ height: '100%' }}>
+                        <RichToolbar
+                            style={{
+                                borderColor: '#f2f2f2',
+                                borderBottomWidth: 1,
+                                backgroundColor: '#fff',
+                                display: editorFocus ? 'flex' : 'none',
+                                maxHeight: 40,
+                                height: 40
+                            }}
+                            flatContainerStyle={{
+                                paddingHorizontal: 12
+                            }}
+                            editor={RichText}
+                            disabled={false}
+                            selectedIconTint={'#006AFF'}
+                            disabledIconTint={'#bfbfbf'}
+                            actions={[
+                                actions.keyboard,
+                                actions.insertVideo,
+                                actions.insertImage,
+                                actions.insertLink,
+                                actions.insertBulletsList,
+                                actions.insertOrderedList,
+                                actions.checkboxList,
+                                actions.alignLeft,
+                                actions.alignCenter,
+                                actions.alignRight,
+                                actions.blockquote,
+                                actions.code,
+                                actions.line,
+                                'insertEmoji'
+                            ]}
+                            iconMap={{
+                                [actions.keyboard]: ({ tintColor }) => (
+                                    <Text style={[styles.tib, { color: 'green', fontSize: 20 }]}>✓</Text>
+                                ),
+                                [actions.insertVideo]: importIcon,
+                                insertEmoji: emojiIcon
+                            }}
+                            insertEmoji={handleEmoji}
+                            insertVideo={handleUploadFile}
+                            onPressAddImage={handleAddImage}
+                            onInsertLink={handleInsertLink}
+                        />
+                        <ScrollView
+                            horizontal={false}
+                            style={{
+                                backgroundColor: '#f2f2f2',
+                                // maxHeight: editorFocus ? 340 : 'auto',
+                                height: '100%'
+                            }}
+                            keyboardDismissMode={'none'}
+                            ref={scrollRef}
+                            nestedScrollEnabled={true}
+                            scrollEventThrottle={20}
+                            indicatorStyle={'black'}
+                            showsHorizontalScrollIndicator={true}
+                            persistentScrollbar={true}
+                        >
+                            <RichEditor
+                                key={reloadEditorKey.toString()}
+                                // containerStyle={{
+                                //     height,
+                                //     backgroundColor: '#fff',
+                                //     padding: 3,
+                                //     paddingTop: 5,
+                                //     paddingBottom: 10,
+                                //     // borderRadius: 15,
+                                //     display: isQuiz || imported ? 'none' : 'flex'
+                                // }}
+                                ref={RichText}
+                                useContainer={true}
+                                style={{
+                                    width: '100%',
+                                    paddingHorizontal: 10,
+                                    backgroundColor: '#fff',
+                                    // borderRadius: 15,
+                                    minHeight: '100%',
+                                    display: 'flex',
+                                    // borderTopWidth: 1,
+                                    // borderColor: '#f2f2f2',
+                                    marginBottom: editorFocus ? 0 : 200,
+                                    flex: 1,
+                                    height: '100%'
+                                }}
+                                editorStyle={{
+                                    backgroundColor: '#fff',
+                                    placeholderColor: '#a2a2ac',
+                                    color: '#2f2f3c',
+                                    contentCSSText: 'font-size: 16px; min-height: 400px;'
+                                }}
+                                initialContentHTML={initialSubmissionDraft}
+                                initialHeight={400}
+                                onScroll={() => Keyboard.dismiss()}
+                                placeholder={PreferredLanguageText('title')}
+                                onChange={text => {
+                                    const modifedText = text.split('&amp;').join('&');
+                                    setSubmissionDraft(modifedText);
+                                }}
+                                onHeightChange={handleHeightChange}
+                                onFocus={() => {
+                                    props.setEditorFocus(true);
+                                    setEditorFocus(true);
+                                }}
+                                onBlur={() => {
+                                    props.setEditorFocus(false);
+                                    setEditorFocus(false);
+                                }}
+                                allowFileAccess={true}
+                                allowFileAccessFromFileURLs={true}
+                                allowUniversalAccessFromFileURLs={true}
+                                allowsFullscreenVideo={true}
+                                allowsInlineMediaPlayback={true}
+                                allowsLinkPreview={true}
+                                allowsBackForwardNavigationGestures={true}
+                                onCursorPosition={handleCursorPosition}
+                            />
+                        </ScrollView>
 
-    //                     editor.ui.registry.addButton('formula', {
-    //                         icon: 'formula',
-    //                         // text: "Upload File",
-    //                         tooltip: 'Insert equation',
-    //                         onAction: () => {
-    //                             setShowEquationEditor(!showEquationEditor);
-    //                         }
-    //                     });
+                        <RichToolbar
+                            style={{
+                                borderColor: '#f2f2f2',
+                                borderTopWidth: 1,
+                                backgroundColor: '#fff',
+                                display: editorFocus ? 'flex' : 'none'
+                            }}
+                            flatContainerStyle={{
+                                paddingHorizontal: 12
+                            }}
+                            editor={RichText}
+                            disabled={false}
+                            // iconTint={color}
+                            selectedIconTint={'#006AFF'}
+                            disabledIconTint={'#bfbfbf'}
+                            // onPressAddImage={that.onPressAddImage}
+                            // iconSize={24}
+                            // iconGap={10}
+                            actions={[
+                                actions.undo,
+                                actions.redo,
+                                actions.setBold,
+                                actions.setItalic,
+                                actions.setUnderline,
+                                actions.setStrikethrough,
+                                actions.heading1,
+                                actions.heading3,
+                                actions.setParagraph,
+                                actions.foreColor,
+                                actions.hiliteColor,
+                                actions.setSuperscript,
+                                actions.setSubscript
+                                // actions.removeFormat
+                                // Insert stuff
+                                // 'insertHTML',
+                                // 'fontSize'
+                            ]} // default defaultActions
+                            iconMap={{
+                                [actions.heading1]: ({ tintColor }) => (
+                                    <Text style={[styles.tib, { color: tintColor, fontSize: 19, paddingBottom: 1 }]}>
+                                        H1
+                                    </Text>
+                                ),
+                                [actions.heading3]: ({ tintColor }) => (
+                                    <Text
+                                        style={[
+                                            styles.tib,
+                                            {
+                                                color: tintColor,
+                                                fontSize: 19,
+                                                paddingBottom: 1
+                                            }
+                                        ]}
+                                    >
+                                        H3
+                                    </Text>
+                                ),
+                                [actions.setParagraph]: ({ tintColor }) => (
+                                    <Text style={[styles.tib, { color: tintColor, fontSize: 19, paddingBottom: 1 }]}>
+                                        p
+                                    </Text>
+                                ),
+                                [actions.foreColor]: ({ tintColor }) => (
+                                    <Text
+                                        style={{
+                                            fontSize: 19,
+                                            fontWeight: 'bold',
+                                            color: 'red'
+                                        }}
+                                    >
+                                        A
+                                    </Text>
+                                ),
+                                [actions.hiliteColor]: ({ tintColor }) => (
+                                    <Text
+                                        style={{
+                                            color: 'black',
+                                            fontSize: 19,
+                                            backgroundColor: '#ffc701',
+                                            paddingHorizontal: 2
+                                        }}
+                                    >
+                                        H
+                                    </Text>
+                                )
+                            }}
+                            hiliteColor={handleHiliteColor}
+                            foreColor={handleForeColor}
+                            // removeFormat={handleRemoveFormat}
+                        />
+                    </View>
+                </View>
+            </View>
+            // <Editor
+            //     onInit={(evt, editor) => (editorRef.current = editor)}
+            //     initialValue={initialSubmissionDraft}
+            //     disabled={
+            //         props.cue.releaseSubmission ||
+            //         (!allowLateSubmission && new Date() > deadline) ||
+            //         (allowLateSubmission && new Date() > availableUntil)
+            //     }
+            //     apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
+            //     init={{
+            //         skin: 'snow',
+            //         branding: false,
+            //         placeholder: 'Content...',
+            //         readonly:
+            //             props.cue.releaseSubmission ||
+            //             (!allowLateSubmission && new Date() > deadline) ||
+            //             (allowLateSubmission && new Date() > availableUntil),
+            //         min_height: 500,
+            //         paste_data_images: true,
+            //         images_upload_url: 'https://api.learnwithcues.com/api/imageUploadEditor',
+            //         mobile: {
+            //             plugins:
+            //                 'print preview powerpaste casechange importcss tinydrive searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
+            //         },
+            //         plugins:
+            //             'print preview powerpaste casechange importcss tinydrive searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
+            //         menu: {
+            //             // this is the complete default configuration
+            //             file: { title: 'File', items: 'newdocument' },
+            //             edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall' },
+            //             insert: { title: 'Insert', items: 'link media | template hr' },
+            //             view: { title: 'View', items: 'visualaid' },
+            //             format: {
+            //                 title: 'Format',
+            //                 items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'
+            //             },
+            //             table: { title: 'Table', items: 'inserttable tableprops deletetable | cell row column' },
+            //             tools: { title: 'Tools', items: 'spellchecker code' }
+            //         },
+            //         setup: (editor: any) => {
+            //             const equationIcon =
+            //                 '<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4817 3.82717C11.3693 3.00322 9.78596 3.7358 9.69388 5.11699L9.53501 7.50001H12.25C12.6642 7.50001 13 7.8358 13 8.25001C13 8.66423 12.6642 9.00001 12.25 9.00001H9.43501L8.83462 18.0059C8.6556 20.6912 5.47707 22.0078 3.45168 20.2355L3.25613 20.0644C2.9444 19.7917 2.91282 19.3179 3.18558 19.0061C3.45834 18.6944 3.93216 18.6628 4.24389 18.9356L4.43943 19.1067C5.53003 20.061 7.24154 19.352 7.33794 17.9061L7.93168 9.00001H5.75001C5.3358 9.00001 5.00001 8.66423 5.00001 8.25001C5.00001 7.8358 5.3358 7.50001 5.75001 7.50001H8.03168L8.1972 5.01721C8.3682 2.45214 11.3087 1.09164 13.3745 2.62184L13.7464 2.89734C14.0793 3.1439 14.1492 3.61359 13.9027 3.94643C13.6561 4.27928 13.1864 4.34923 12.8536 4.10268L12.4817 3.82717Z"/><path d="M13.7121 12.7634C13.4879 12.3373 12.9259 12.2299 12.5604 12.5432L12.2381 12.8194C11.9236 13.089 11.4501 13.0526 11.1806 12.7381C10.911 12.4236 10.9474 11.9501 11.2619 11.6806L11.5842 11.4043C12.6809 10.4643 14.3668 10.7865 15.0395 12.0647L16.0171 13.9222L18.7197 11.2197C19.0126 10.9268 19.4874 10.9268 19.7803 11.2197C20.0732 11.5126 20.0732 11.9874 19.7803 12.2803L16.7486 15.312L18.2879 18.2366C18.5121 18.6627 19.0741 18.7701 19.4397 18.4568L19.7619 18.1806C20.0764 17.911 20.5499 17.9474 20.8195 18.2619C21.089 18.5764 21.0526 19.0499 20.7381 19.3194L20.4159 19.5957C19.3191 20.5357 17.6333 20.2135 16.9605 18.9353L15.6381 16.4226L12.2803 19.7803C11.9875 20.0732 11.5126 20.0732 11.2197 19.7803C10.9268 19.4874 10.9268 19.0126 11.2197 18.7197L14.9066 15.0328L13.7121 12.7634Z"/></svg>';
+            //             editor.ui.registry.addIcon('formula', equationIcon);
 
-    //                     editor.ui.registry.addButton('upload', {
-    //                         icon: 'upload',
-    //                         tooltip: 'Import File (pdf, docx, media, etc.)',
-    //                         onAction: async () => {
-    //                             const res = await handleFile(false);
+            //             editor.ui.registry.addButton('formula', {
+            //                 icon: 'formula',
+            //                 // text: "Upload File",
+            //                 tooltip: 'Insert equation',
+            //                 onAction: () => {
+            //                     setShowEquationEditor(!showEquationEditor);
+            //                 }
+            //             });
 
-    //                             if (!res || res.url === '' || res.type === '') {
-    //                                 return;
-    //                             }
+            //             editor.ui.registry.addButton('upload', {
+            //                 icon: 'upload',
+            //                 tooltip: 'Import File (pdf, docx, media, etc.)',
+            //                 onAction: async () => {
+            //                     const res = await handleFile(false);
 
-    //                             updateAfterFileImport(res.url, res.type);
-    //                         }
-    //                     });
-    //                 },
-    //                 // menubar: 'file edit view insert format tools table tc help',
-    //                 menubar: false,
-    //                 toolbar:
-    //                     props.cue.releaseSubmission ||
-    //                     (!allowLateSubmission && new Date() > deadline) ||
-    //                     (allowLateSubmission && new Date() > availableUntil)
-    //                         ? false
-    //                         : 'undo redo | bold italic underline strikethrough | table image upload link media | forecolor backcolor |  numlist bullist checklist | fontselect fontSizeselect formatselect | formula superscript subscript charmap emoticons | alignleft aligncenter alignright alignjustify | casechange permanentpen formatpainter removeformat pagebreak | preview print | outdent indent ltr rtl ',
-    //                 importcss_append: true,
-    //                 image_caption: true,
-    //                 quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
-    //                 noneditable_noneditable_class: 'mceNonEditable',
-    //                 toolbar_mode: 'sliding',
-    //                 tinycomments_mode: 'embedded',
-    //                 content_style: '.mymention{ color: gray; }',
-    //                 // contextmenu: 'link image imagetools table configurepermanentpen',
-    //                 a11y_advanced_options: true,
-    //                 extended_valid_elements:
-    //                     'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
-    //                 // skin: useDarkMode ? 'oxide-dark' : 'oxide',
-    //                 // content_css: useDarkMode ? 'dark' : 'default',
-    //             }}
-    //             onChange={(e: any) => setSubmissionDraft(e.target.getContent())}
-    //         />
-    //     );
-    // };
+            //                     if (!res || res.url === '' || res.type === '') {
+            //                         return;
+            //                     }
+
+            //                     updateAfterFileImport(res.url, res.type);
+            //                 }
+            //             });
+            //         },
+            //         // menubar: 'file edit view insert format tools table tc help',
+            //         menubar: false,
+            //         toolbar:
+            //             props.cue.releaseSubmission ||
+            //             (!allowLateSubmission && new Date() > deadline) ||
+            //             (allowLateSubmission && new Date() > availableUntil)
+            //                 ? false
+            //                 : 'undo redo | bold italic underline strikethrough | table image upload link media | forecolor backcolor |  numlist bullist checklist | fontselect fontSizeselect formatselect | formula superscript subscript charmap emoticons | alignleft aligncenter alignright alignjustify | casechange permanentpen formatpainter removeformat pagebreak | preview print | outdent indent ltr rtl ',
+            //         importcss_append: true,
+            //         image_caption: true,
+            //         quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
+            //         noneditable_noneditable_class: 'mceNonEditable',
+            //         toolbar_mode: 'sliding',
+            //         tinycomments_mode: 'embedded',
+            //         content_style: '.mymention{ color: gray; }',
+            //         // contextmenu: 'link image imagetools table configurepermanentpen',
+            //         a11y_advanced_options: true,
+            //         extended_valid_elements:
+            //             'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
+            //         // skin: useDarkMode ? 'oxide-dark' : 'oxide',
+            //         // content_css: useDarkMode ? 'dark' : 'default',
+            //     }}
+            //     onChange={(e: any) => setSubmissionDraft(e.target.getContent())}
+            // />
+        );
+    };
 
     /**
      * @description Share with component
@@ -3196,6 +3955,21 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     onChange={onChange}
                                     options={subscribers}
                                 /> */}
+                                <ScrollView
+                                    style={{
+                                        width: '100%',
+                                        padding: 5,
+                                        backgroundColor: '#fff'
+                                    }}
+                                >
+                                    <MultiSelectComponent
+                                        selected={selected}
+                                        onAddNew={(e: any) => {
+                                            onAddNew(e);
+                                        }}
+                                        subscribers={subscribers}
+                                    />
+                                </ScrollView>
                             </View>
                         </View>
                     ) : null}
@@ -3209,11 +3983,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderSubmissionRequiredOptions = () => {
         return props.cue.channelId !== '' ? (
-            <View style={{ width: '100%', flexDirection: width < 768 ? 'column' : 'row', paddingTop: 40 }}>
+            <View
+                style={{
+                    width: width < 768 ? '100%' : '33.33%',
+                    backgroundColor: 'white'
+                }}
+            >
                 <View
                     style={{
-                        flexDirection: 'row',
-                        flex: 1,
+                        width: '100%',
+                        paddingTop: 40,
                         paddingBottom: 15,
                         backgroundColor: 'white'
                     }}
@@ -3228,113 +4007,151 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         {PreferredLanguageText('submissionRequired')}
                     </Text>
                 </View>
-                <View>
-                    <View style={{ flexDirection: 'row', justifyContent: width < 768 ? 'flex-start' : 'flex-end' }}>
-                        {isOwner ? (
-                            isQuiz ? null : (
-                                <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        height: 40,
-                                        marginRight: 10
-                                    }}
-                                >
-                                    <Switch
-                                        disabled={isQuiz}
-                                        value={submission}
-                                        onValueChange={() => {
-                                            setSubmission(!submission);
-                                        }}
-                                        style={{ height: 20 }}
-                                        trackColor={{
-                                            false: '#efefef',
-                                            true: '#006AFF'
-                                        }}
-                                        activeThumbColor="white"
-                                    />
-                                </View>
-                            )
-                        ) : (
-                            <View style={{ flex: 1, backgroundColor: '#fff' }}>
+                <View
+                    style={{
+                        flexDirection: 'column',
+                        backgroundColor: 'white'
+                    }}
+                >
+                    {isOwner ? (
+                        <View
+                            style={{
+                                backgroundColor: 'white',
+                                height: 40,
+                                paddingRight: 10
+                            }}
+                        >
+                            <Switch
+                                disabled={isQuiz}
+                                value={submission}
+                                onValueChange={() => {
+                                    setSubmission(!submission);
+                                }}
+                                style={{
+                                    height: 20,
+                                    marginRight: 'auto'
+                                }}
+                                trackColor={{
+                                    false: '#f2f2f2',
+                                    true: '#006AFF'
+                                }}
+                                activeThumbColor="white"
+                            />
+                        </View>
+                    ) : (
+                        <View
+                            style={{
+                                flex: 1,
+                                backgroundColor: '#fff'
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    color: '#000000',
+                                    fontFamily: 'Inter'
+                                }}
+                            >
+                                {!submission ? PreferredLanguageText('no') : null}
+                            </Text>
+                        </View>
+                    )}
+
+                    <View style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', width: '100%' }}>
+                        {submission ? (
+                            <View
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: Platform.OS === 'android' ? 'column' : 'row',
+                                    backgroundColor: 'white',
+                                    alignItems: Platform.OS === 'android' ? 'flex-start' : 'center',
+                                    paddingTop: 10,
+                                    paddingBottom: 10
+                                }}
+                            >
                                 <Text
                                     style={{
                                         fontSize: 14,
                                         color: '#000000',
-                                        textTransform: 'uppercase',
-                                        fontFamily: 'Inter'
+                                        fontFamily: 'Inter',
+                                        paddingRight: 10
                                     }}
                                 >
-                                    {!submission ? PreferredLanguageText('no') : null}
+                                    Available
+                                    {Platform.OS === 'android' && isOwner
+                                        ? ': ' + moment(new Date(initiateAt)).format('MMMM Do YYYY, h:mm a')
+                                        : null}
                                 </Text>
+                                {isOwner ? (
+                                    renderInitiateAtDateTimePicker()
+                                ) : (
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            color: '#000000',
+                                            fontFamily: 'Inter'
+                                        }}
+                                    >
+                                        {moment(new Date(initiateAt)).format('MMMM Do, h:mm a')}
+                                    </Text>
+                                )}
                             </View>
+                        ) : (
+                            <View
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: '#fff'
+                                }}
+                            />
+                        )}
+
+                        {submission ? (
+                            <View
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: Platform.OS === 'android' ? 'column' : 'row',
+                                    backgroundColor: 'white',
+                                    alignItems: Platform.OS === 'android' ? 'flex-start' : 'center'
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        color: '#000000',
+                                        fontFamily: 'Inter',
+                                        paddingRight: 10
+                                    }}
+                                >
+                                    Deadline
+                                    {Platform.OS === 'android' && isOwner
+                                        ? ': ' + moment(new Date(deadline)).format('MMMM Do YYYY, h:mm a')
+                                        : null}
+                                </Text>
+                                {isOwner ? (
+                                    renderDeadlineDateTimePicker()
+                                ) : (
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            color: '#000000',
+                                            fontFamily: 'Inter'
+                                        }}
+                                    >
+                                        {moment(new Date(deadline)).format('MMMM Do, h:mm a')}
+                                    </Text>
+                                )}
+                            </View>
+                        ) : (
+                            <View
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: '#fff'
+                                }}
+                            />
                         )}
                     </View>
-                    {submission ? (
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    color: '#1F1F1F',
-                                    textAlign: 'right',
-                                    paddingRight: 10,
-                                    fontFamily: 'Inter'
-                                }}
-                            >
-                                Released
-                            </Text>
-                            {isOwner ? null : ( // /> //     }} //         } //             touchUi: false //             display: 'anchored', //             controls: ['date', 'time'], //         medium: { //         }, //             touchUi: true //             display: 'bottom', //             controls: ['date', 'time'], //         xsmall: { //     responsive={{ //     }} //         setInitiateAt(date); //         const date = new Date(event.value); //     onChange={(event: any) => { //     }} //         placeholder: 'Please Select...' //     inputProps={{ //     // inputComponent="input" //     themeVariant="light" //     value={initiateAt} //     theme="ios" //     touchUi={true} //     controls={['date', 'time']} // <MobiscrollDatePicker
-                                <Text
-                                    style={{
-                                        fontSize: 14,
-                                        color: '#1F1F1F',
-                                        textAlign: 'left',
-                                        fontFamily: 'Inter'
-                                    }}
-                                >
-                                    {moment(new Date(initiateAt)).format('MMMM Do, h:mm a')}
-                                </Text>
-                            )}
-                        </View>
-                    ) : null}
-                    {submission ? (
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                marginTop: 10,
-                                marginLeft: width < 768 ? 0 : 'auto'
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    color: '#1F1F1F',
-                                    textAlign: 'right',
-                                    paddingRight: 10,
-                                    fontFamily: 'Inter'
-                                }}
-                            >
-                                Due
-                            </Text>
-                            {isOwner ? null : ( // /> //     }} //         } //             touchUi: false //             display: 'anchored', //             controls: ['date', 'time'], //         medium: { //         }, //             touchUi: true //             display: 'bottom', //             controls: ['date', 'time'], //         xsmall: { //     responsive={{ //     }} //         setDeadline(date); //         if (date < initiateAt) return; //         const date = new Date(event.value); //     onChange={(event: any) => { //     }} //         placeholder: 'Please Select...' //     inputProps={{ //     themeVariant="light" //     value={deadline} //     theme="ios" //     touchUi={true} //     controls={['date', 'time']} // <MobiscrollDatePicker
-                                <Text
-                                    style={{
-                                        fontSize: 14,
-                                        color: '#1F1F1F',
-                                        textAlign: 'left',
-                                        fontFamily: 'Inter'
-                                    }}
-                                >
-                                    {moment(new Date(deadline)).format('MMMM Do, h:mm a')}
-                                </Text>
-                            )}
-                        </View>
-                    ) : null}
                 </View>
             </View>
         ) : null;
@@ -3364,9 +4181,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         Grade Weight
                     </Text>
                 </View>
-                <View style={{}}>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
                     {isOwner ? (
-                        <View style={{ flexDirection: 'row', justifyContent: width < 768 ? 'flex-start' : 'flex-end' }}>
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                justifyContent: width < 768 ? 'flex-start' : 'flex-end',
+                                flex: 1
+                            }}
+                        >
                             <View
                                 style={{
                                     backgroundColor: 'white',
@@ -3380,7 +4204,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     onValueChange={() => setGraded(!graded)}
                                     style={{ height: 20 }}
                                     trackColor={{
-                                        false: '#efefef',
+                                        false: '#f2f2f2',
                                         true: '#006AFF'
                                     }}
                                     activeThumbColor="white"
@@ -3391,25 +4215,25 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     {graded ? (
                         <View
                             style={{
-                                width: '100%',
                                 display: 'flex',
                                 flexDirection: 'row',
                                 backgroundColor: 'white',
                                 justifyContent: width < 768 ? 'flex-start' : 'flex-end',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                marginLeft: 'auto'
                             }}
                         >
                             {isOwner ? (
                                 <TextInput
-                                    value={gradeWeight}
+                                    value={gradeWeight.toString()}
                                     style={{
-                                        width: '25%',
-                                        borderBottomColor: '#efefef',
+                                        borderBottomColor: '#f2f2f2',
                                         borderBottomWidth: 1,
                                         fontSize: 14,
                                         padding: 15,
                                         paddingVertical: 12,
-                                        marginTop: 0
+                                        marginTop: 0,
+                                        width: 80
                                     }}
                                     placeholder={'0-100'}
                                     onChangeText={val => setGradeWeight(val)}
@@ -3421,7 +4245,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     fontSize: 14,
                                     color: '#1F1F1F',
                                     textAlign: 'left',
-                                    paddingRight: 10,
+                                    paddingHorizontal: 10,
                                     fontFamily: 'Inter'
                                 }}
                             >
@@ -3486,7 +4310,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     onValueChange={() => setAllowLateSubmission(!allowLateSubmission)}
                                     style={{ height: 20 }}
                                     trackColor={{
-                                        false: '#efefef',
+                                        false: '#f2f2f2',
                                         true: '#006AFF'
                                     }}
                                     activeThumbColor="white"
@@ -3519,43 +4343,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         : 'No'
                                     : 'Allowed Until'}
                             </Text>
-                            {isOwner
-                                ? // <MobiscrollDatePicker
-                                  //     controls={['date', 'time']}
-                                  //     touchUi={true}
-                                  //     theme="ios"
-                                  //     value={availableUntil}
-                                  //     themeVariant="light"
-                                  //     // inputComponent="input"
-                                  //     inputProps={{
-                                  //         placeholder: 'Please Select...'
-                                  //     }}
-                                  //     onChange={(event: any) => {
-                                  //         const date = new Date(event.value);
-
-                                  //         if (date < deadline) return;
-                                  //         setAvailableUntil(date);
-                                  //     }}
-                                  //     responsive={{
-                                  //         xsmall: {
-                                  //             controls: ['date', 'time'],
-                                  //             display: 'bottom',
-                                  //             touchUi: true
-                                  //         },
-                                  //         // small: {
-                                  //         //     controls: ['date', 'time'],
-                                  //         //     display: 'anchored',
-                                  //         //     touchUi: true
-                                  //         // },
-                                  //         medium: {
-                                  //             controls: ['date', 'time'],
-                                  //             display: 'anchored',
-                                  //             touchUi: false
-                                  //         }
-                                  //     }}
-                                  // />
-                                  null
-                                : null}
+                            {isOwner ? renderAvailableUntilDateTimePicker() : null}
                         </View>
                     ) : !isOwner ? (
                         <Text
@@ -3664,7 +4452,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 }}
                                 style={{ height: 20 }}
                                 trackColor={{
-                                    false: '#efefef',
+                                    false: '#f2f2f2',
                                     true: '#006AFF'
                                 }}
                                 activeThumbColor="white"
@@ -3726,8 +4514,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     flexDirection: width < 768 ? 'column' : 'row',
                     alignItems: width < 768 ? 'flex-start' : 'center',
                     paddingTop: 40,
-                    paddingBottom: 15,
-                    borderColor: '#efefef'
+                    paddingBottom: 20,
+                    borderColor: '#f2f2f2'
                 }}
             >
                 <View
@@ -3758,7 +4546,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 backgroundColor: 'white'
                             }}
                         >
-                            <View style={{ width: '85%', backgroundColor: 'white' }}>
+                            <View style={{ width: '80%', backgroundColor: 'white' }}>
                                 <View style={styles.colorBar}>
                                     <TouchableOpacity style={styles.allGrayOutline} onPress={() => {}}>
                                         <Text
@@ -3780,22 +4568,30 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         <View
                             style={{
                                 flexDirection: 'row',
-                                alignItems: 'center',
+                                // alignItems: 'center',
                                 backgroundColor: 'white'
                             }}
                         >
-                            <View style={{ backgroundColor: 'white' }}>
+                            <View
+                                style={{
+                                    backgroundColor: 'white',
+                                    maxWidth: 400,
+                                    width: '85%',
+                                    height: isCategoryDropdownOpen ? 250 : 50
+                                }}
+                            >
                                 {addCustomCategory ? (
                                     <View style={styles.colorBar}>
                                         <TextInput
                                             value={customCategory}
                                             style={{
                                                 borderRadius: 0,
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 borderBottomWidth: 1,
                                                 fontSize: 14,
-                                                height: '2.75em',
-                                                padding: '1em'
+                                                padding: 10,
+                                                paddingVertical: 15,
+                                                width: '100%'
                                             }}
                                             placeholder={'Enter Category'}
                                             onChangeText={val => {
@@ -3805,80 +4601,45 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         />
                                     </View>
                                 ) : (
-                                    // <Menu
-                                    //     onSelect={(cat: any) => setCustomCategory(cat)}>
-                                    //     <MenuTrigger>
-                                    //         <Text style={{
-                                    //             fontSize: 12,
-                                    //             color: "#1F1F1F",
-                                    //             textAlign: "right",
-                                    //             paddingRight: 10,
-                                    //             // paddingTop: 5
-                                    //         }}>
-                                    //             {customCategory === '' ? 'None' : customCategory}<Ionicons name='chevron-down-outline' size={15} />
-                                    //         </Text>
-                                    //     </MenuTrigger>
-                                    //     <MenuOptions customStyles={{
-                                    //         optionsContainer: {
-                                    //             padding: 10,
-                                    //             borderRadius: 15,
-                                    //             shadowOpacity: 0,
-                                    //             borderWidth: 1,
-                                    //             borderColor: '#efefef',
-                                    //             overflow: 'scroll',
-                                    //             maxHeight: '100%'
-                                    //         }
-                                    //     }}>
-                                    //         <MenuOption
-                                    //             value={''}>
-                                    //             <Text>
-                                    //                 None
-                                    //             </Text>
-                                    //         </MenuOption>
-                                    //         {
-                                    //             customCategories.map((category: any) => {
-                                    //                 return <MenuOption
-                                    //                     value={category}>
-                                    //                     <Text>
-                                    //                         {category}
-                                    //                     </Text>
-                                    //                 </MenuOption>
-                                    //             })
-                                    //         }
-                                    //     </MenuOptions>
-                                    // </Menu>
-                                    // <label style={{ width: 180 }}>
-                                    //     <MobiscrollSelect
-                                    //         value={customCategory}
-                                    //         rows={customCategories.length + 1}
-                                    //         data={categoryOptions}
-                                    //         theme="ios"
-                                    //         themeVariant="light"
-                                    //         touchUi={true}
-                                    //         responsive={{
-                                    //             small: {
-                                    //                 display: 'bubble'
-                                    //             },
-                                    //             medium: {
-                                    //                 touchUi: false
-                                    //             }
-                                    //         }}
-                                    //         onChange={(val: any) => {
-                                    //             if (!initializedCustomCategories) return;
-                                    //             setCustomCategory(val.value);
-                                    //         }}
-                                    //     />
-                                    // </label>
                                     <DropDownPicker
+                                        listMode="SCROLLVIEW"
                                         open={isCategoryDropdownOpen}
                                         value={customCategory}
                                         items={categoryOptions}
                                         setOpen={setIsCategoryDropdownOpen}
                                         setValue={setCustomCategory}
+                                        zIndex={1000001}
+                                        style={{
+                                            borderWidth: 0,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#f2f2f2'
+                                        }}
+                                        dropDownContainerStyle={{
+                                            borderWidth: 0,
+                                            zIndex: 1000001,
+                                            elevation: 1000001
+                                        }}
+                                        containerStyle={{
+                                            shadowColor: '#000',
+                                            shadowOffset: {
+                                                width: 1,
+                                                height: 3
+                                            },
+                                            shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.08,
+                                            shadowRadius: 12,
+                                            zIndex: 1000001,
+                                            elevation: 1000001
+                                        }}
                                     />
                                 )}
                             </View>
-                            <View style={{ backgroundColor: 'white', paddingLeft: 20 }}>
+                            <View
+                                style={{
+                                    backgroundColor: 'white',
+                                    marginLeft: 20,
+                                    paddingTop: 20
+                                }}
+                            >
                                 <TouchableOpacity
                                     onPress={() => {
                                         if (addCustomCategory) {
@@ -3925,7 +4686,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     flexDirection: width < 768 ? 'column' : 'row',
                     alignItems: width < 768 ? 'flex-start' : 'center',
                     paddingTop: 40,
-                    borderColor: '#efefef'
+                    borderColor: '#f2f2f2'
                 }}
             >
                 <View
@@ -4000,7 +4761,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     flexDirection: width < 768 ? 'column' : 'row',
                     alignItems: width < 768 ? 'flex-start' : 'center',
                     borderRightWidth: 0,
-                    borderColor: '#efefef',
+                    borderColor: '#f2f2f2',
                     paddingTop: 40
                 }}
             >
@@ -4024,50 +4785,56 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 </View>
                 <View
                     style={{
-                        flexDirection: 'row',
-                        backgroundColor: 'white',
-                        alignItems: 'center'
+                        flexDirection: 'row'
+                        // backgroundColor: 'white'
+                        // alignItems: 'center'
                     }}
                 >
-                    {/* <label style={{ width: 180 }}>
-                        <MobiscrollSelect
-                            theme="ios"
-                            themeVariant="light"
-                            touchUi={true}
+                    <View
+                        style={{
+                            height: isShareWithDropdownOpen ? 250 : 50,
+                            width: '80%',
+                            minWidth: '80%',
+                            marginBottom: 20
+                        }}
+                    >
+                        <DropDownPicker
+                            listMode="SCROLLVIEW"
+                            open={isShareWithDropdownOpen}
                             value={shareWithChannelId}
-                            onChange={(val: any) => {
-                                setShareWithChannelId(val.value);
-                            }}
-                            responsive={{
-                                small: {
-                                    display: 'bubble'
-                                },
-                                medium: {
-                                    touchUi: false
-                                }
-                            }}
-                            data={channelOptions.map((channel: any) => {
+                            items={channelOptions.map((channel: any) => {
                                 return {
                                     value: channel._id,
-                                    text: channel.name
+                                    label: channel.name
                                 };
                             })}
+                            setOpen={setIsShareWithDropdownOpen}
+                            setValue={setShareWithChannelId}
+                            zIndex={1000001}
+                            style={{
+                                borderWidth: 0,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#f2f2f2'
+                            }}
+                            dropDownContainerStyle={{
+                                borderWidth: 0,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
+                            containerStyle={{
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 1,
+                                    height: 3
+                                },
+                                shadowOpacity: !isShareWithDropdownOpen ? 0 : 0.08,
+                                shadowRadius: 12,
+                                zIndex: 1000001,
+                                elevation: 1000001
+                            }}
                         />
-                    </label> */}
-                    <DropDownPicker
-                        open={isShareWithDropdownOpen}
-                        value={shareWithChannelId}
-                        items={channelOptions.map((channel: any) => {
-                            return {
-                                value: channel._id,
-                                label: channel.name
-                            };
-                        })}
-                        setOpen={setIsShareWithDropdownOpen}
-                        setValue={setShareWithChannelId}
-                    />
-
-                    <View style={{ backgroundColor: 'white', paddingLeft: 20 }}>
+                    </View>
+                    <View style={{ marginLeft: 20, paddingTop: 20 }}>
                         <TouchableOpacity
                             disabled={shareWithChannelId === 'None'}
                             onPress={() => {
@@ -4160,7 +4927,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             }}
                             style={{ height: 20 }}
                             trackColor={{
-                                false: '#efefef',
+                                false: '#f2f2f2',
                                 true: '#006AFF'
                             }}
                             activeThumbColor="white"
@@ -4201,7 +4968,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     onValueChange={() => setShuffle(!shuffle)}
                                     style={{ height: 20 }}
                                     trackColor={{
-                                        false: '#efefef',
+                                        false: '#f2f2f2',
                                         true: '#006AFF'
                                     }}
                                     activeThumbColor="white"
@@ -4287,7 +5054,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                 borderRadius: 15,
                                                 shadowOpacity: 0,
                                                 borderWidth: 1,
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 overflow: 'scroll',
                                                 maxHeight: '100%'
                                             }
@@ -4402,7 +5169,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     onValueChange={() => setPlayChannelCueIndef(!playChannelCueIndef)}
                                     style={{ height: 20 }}
                                     trackColor={{
-                                        false: '#efefef',
+                                        false: '#f2f2f2',
                                         true: '#006AFF'
                                     }}
                                     activeThumbColor="white"
@@ -4560,18 +5327,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         );
     }
 
-    console.log(
-        'what to Render',
-        props.showOriginal &&
-            ((remainingAttempts !== 0 &&
-                !(!allowLateSubmission && new Date() > deadline) &&
-                !(allowLateSubmission && new Date() > availableUntil) &&
-                !cueGraded &&
-                !isOwner &&
-                isQuiz) ||
-                !isQuiz ||
-                isOwner)
-    );
     // MAIN RETURN
     return (
         <View
@@ -4588,12 +5343,25 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             ((remainingAttempts !== 0 &&
                 !(!allowLateSubmission && new Date() > deadline) &&
                 !(allowLateSubmission && new Date() > availableUntil) &&
-                !cueGraded &&
+                !props.cue.releaseSubmission &&
                 !isOwner &&
                 isQuiz) ||
                 !isQuiz ||
                 isOwner) ? (
-                <View style={{ height: '100%' }}>{renderMainCueContent()}</View>
+                <ScrollView
+                    contentContainerStyle={{
+                        paddingBottom: 150,
+                        paddingHorizontal: 10
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={true}
+                    scrollEventThrottle={1}
+                    // keyboardDismissMode={'on-drag'}
+                    overScrollMode={'always'}
+                    nestedScrollEnabled={true}
+                >
+                    {renderMainCueContent()}
+                </ScrollView>
             ) : (
                 <Animated.View
                     style={{
@@ -4682,6 +5450,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     isQuiz
                         ? null
                         : renderSubmissionHistory()}
+
                     {props.showOptions || props.showComments || viewSubmission ? null : (
                         <View
                             style={{
@@ -4690,7 +5459,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 flexDirection: Dimensions.get('window').width < 768 ? 'column-reverse' : 'row',
                                 marginBottom: 5,
                                 backgroundColor: 'white',
-                                borderBottomColor: '#efefef'
+                                borderBottomColor: '#f2f2f2'
                             }}
                             onTouchStart={() => Keyboard.dismiss()}
                         >
@@ -4736,17 +5505,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             </View>
                         </View>
                     )}
-                    {/* <FormulaGuide
-                    value={equation}
-                    onChange={setEquation}
-                    show={showEquationEditor}
-                    onClose={() => setShowEquationEditor(false)}
-                    onInsertEquation={insertEquation}
-                /> */}
                     <ScrollView
-                        style={{
-                            paddingBottom: 25,
-                            height: '100%'
+                        contentContainerStyle={{
+                            paddingBottom: 150,
+                            paddingHorizontal: 10
                         }}
                         showsVerticalScrollIndicator={false}
                         scrollEnabled={true}
@@ -4862,7 +5624,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     width: '100%',
                                     maxWidth: 900,
                                     alignSelf: 'center',
-                                    paddingLeft: Dimensions.get('window').width < 768 ? 12 : 15
+                                    paddingLeft: Dimensions.get('window').width < 768 ? 10 : 15
                                 }}
                             >
                                 <View style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -4889,6 +5651,192 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         ) : null}
                     </ScrollView>
                 </Animated.View>
+            )}
+
+            {emojiVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setEmojiVisible(false);
+                    }}
+                    isOpen={emojiVisible}
+                    title={'Select emoji'}
+                    renderContent={() => <EmojiView onSelect={insertEmoji} />}
+                    header={false}
+                />
+            )}
+            {insertImageVisible && (
+                <BottomSheet
+                    snapPoints={[0, 200]}
+                    close={() => {
+                        setInsertImageVisible(false);
+                    }}
+                    isOpen={insertImageVisible}
+                    title={'Insert image'}
+                    renderContent={() => (
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(true);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Camera{' '}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(false);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Gallery{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
+            )}
+            {insertLinkVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setInsertLinkVisible(false);
+                    }}
+                    isOpen={insertLinkVisible}
+                    title={'Insert Link'}
+                    renderContent={() => <InsertLink onInsertLink={onInsertLink} />}
+                    header={false}
+                />
+            )}
+            {hiliteColorVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setHiliteColorVisible(false);
+                    }}
+                    isOpen={hiliteColorVisible}
+                    title={'Highlight color'}
+                    renderContent={() => (
+                        <View
+                            style={{
+                                paddingHorizontal: 10,
+                                paddingTop: 20,
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <ColorPicker
+                                editorColors={true}
+                                color={hiliteColor}
+                                onChange={(color: string) => setHiliteColor(color)}
+                            />
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 10
+                                }}
+                                onPress={() => setHiliteColor('#ffffff')}
+                                disabled={hiliteColor === '#ffffff'}
+                            >
+                                <Text
+                                    style={{
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#006AFF'
+                                    }}
+                                >
+                                    {' '}
+                                    Remove{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
+            )}
+            {foreColorVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setForeColorVisible(false);
+                    }}
+                    isOpen={foreColorVisible}
+                    title={'Text color'}
+                    renderContent={() => (
+                        <View
+                            style={{
+                                paddingHorizontal: 10,
+                                paddingTop: 20,
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <ColorPicker
+                                editorColors={true}
+                                color={foreColor}
+                                onChange={(color: string) => setForeColor(color)}
+                            />
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 10
+                                }}
+                                onPress={() => setForeColor('#000000')}
+                                disabled={foreColor === '#000000'}
+                            >
+                                <Text
+                                    style={{
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#006AFF'
+                                    }}
+                                >
+                                    {' '}
+                                    Remove{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
             )}
         </View>
     );
@@ -4929,7 +5877,7 @@ const styles: any = StyleSheet.create({
     },
     input: {
         width: '100%',
-        borderBottomColor: '#efefef',
+        borderBottomColor: '#f2f2f2',
         borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 12,
@@ -4976,5 +5924,12 @@ const styles: any = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#1F1F1F',
         lineHeight: 20
+    },
+    timePicker: {
+        width: 125,
+        fontSize: 16,
+        height: 45,
+        color: 'black',
+        borderRadius: 10
     }
 });

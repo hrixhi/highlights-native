@@ -49,7 +49,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const scroll3: any = useRef();
     const [channelOwner, setChannelOwner] = useState(false);
     const [viewStatus, setViewStatus] = useState(false);
-    const [submission, setSubmission] = useState(props.cue.submission ? props.cue.submission : false);
+    const [submission, setSubmission] = useState(props.cue && props.cue.submission ? props.cue.submission : false);
     const [showOriginal, setShowOriginal] = useState(true);
     const [isQuiz, setIsQuiz] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
@@ -61,7 +61,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [newFolderTitle, setNewFolderTitle] = useState('');
     const [channelCues, setChannelCues] = useState<any[]>([]);
     const [selectedCues, setSelectedCues] = useState<any[]>([]);
-    const [folderId, setFolderId] = useState(props.cue.folderId && props.cue.folderId !== '' ? props.cue.folderId : '');
+    const [folderId, setFolderId] = useState(
+        props.cue && props.cue.folderId && props.cue.folderId !== '' ? props.cue.folderId : ''
+    );
     const [creatingFolder, setCreatingFolder] = useState(false);
     const [channelFolders, setChannelFolders] = useState<any[]>([]);
     const [editFolder, setEditFolder] = useState(false);
@@ -770,7 +772,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     //             style={{
     //                 width: '100%',
     //                 maxWidth: 900,
-    //                 backgroundColor: '#efefef',
+    //                 backgroundColor: '#f2f2f2',
     //                 borderTopLeftRadius: 0,
     //                 borderTopRightRadius: 0,
     //                 paddingBottom: 15
@@ -793,7 +795,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     //             style={{
     //                 width: '100%',
     //                 maxWidth: 900,
-    //                 backgroundColor: '#efefef',
+    //                 backgroundColor: '#f2f2f2',
     //                 borderTopLeftRadius: 0,
     //                 borderTopRightRadius: 0,
     //                 paddingBottom: 15
@@ -926,7 +928,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         flex: 1,
                         flexDirection: 'column',
                         alignItems: 'center',
-                        backgroundColor: '#efefef',
+                        backgroundColor: '#f2f2f2',
                         paddingVertical: 14,
                         paddingHorizontal: 10
                     }}
@@ -951,7 +953,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         style={{
                             width: '100%',
                             maxWidth: 900,
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             borderTopLeftRadius: 0,
                             borderTopRightRadius: 0,
                             paddingBottom: 15
@@ -1076,7 +1078,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             flex: 1,
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             paddingTop: 14,
                             paddingBottom: 7
                         }}
@@ -1086,7 +1088,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     width: '100%',
                                     maxWidth: 900,
-                                    backgroundColor: '#efefef',
+                                    backgroundColor: '#f2f2f2',
                                     borderTopLeftRadius: 0,
                                     borderTopRightRadius: 0,
                                     paddingBottom: 15
@@ -1210,14 +1212,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 })}
                             </ScrollView>
                         ) : (
-                            <View style={{ backgroundColor: '#efefef' }}>
+                            <View style={{ backgroundColor: '#f2f2f2' }}>
                                 <Text
                                     style={{
                                         fontSize: 14,
                                         color: '#000000',
                                         textAlign: 'center',
                                         fontFamily: 'inter',
-                                        backgroundColor: '#efefef',
+                                        backgroundColor: '#f2f2f2',
                                         paddingVertical: 20
                                     }}
                                 >
@@ -1235,7 +1237,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 flex: 1,
                                 flexDirection: 'row',
                                 justifyContent: 'center',
-                                backgroundColor: '#efefef',
+                                backgroundColor: '#f2f2f2',
                                 paddingTop: 7,
                                 paddingBottom: 14
                             }}
@@ -1277,7 +1279,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             flex: 1,
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             paddingTop: 14,
                             paddingBottom: 7
                         }}
@@ -1287,7 +1289,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     width: '100%',
                                     maxWidth: 900,
-                                    backgroundColor: '#efefef',
+                                    backgroundColor: '#f2f2f2',
                                     borderTopLeftRadius: 0,
                                     borderTopRightRadius: 0,
                                     paddingBottom: 15
@@ -1413,14 +1415,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 })}
                             </ScrollView>
                         ) : (
-                            <View style={{ backgroundColor: '#efefef' }}>
+                            <View style={{ backgroundColor: '#f2f2f2' }}>
                                 <Text
                                     style={{
                                         fontSize: 14,
                                         color: '#000000',
                                         textAlign: 'center',
                                         fontFamily: 'inter',
-                                        backgroundColor: '#efefef',
+                                        backgroundColor: '#f2f2f2',
                                         paddingVertical: 20
                                     }}
                                 >
@@ -1437,7 +1439,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             flex: 1,
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             paddingTop: 7,
                             paddingBottom: 14
                         }}
@@ -1454,6 +1456,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             </InsetShadow>
         );
     };
+
+    if (!props.cue) return null;
 
     /**
      * @description Content view
@@ -1654,7 +1658,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             setChannelCues(filter);
                         }}
                         style={{
-                            backgroundColor: '#000',
+                            backgroundColor: '#ffffff',
                             paddingLeft: 0
                         }}
                     >
@@ -1665,7 +1669,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 textTransform: 'uppercase',
                                 fontSize: 12,
                                 fontFamily: 'overpass',
-                                color: '#fff',
+                                color: '#000',
                                 fontWeight: 'bold'
                             }}
                         >
@@ -1714,7 +1718,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <MenuTrigger>
                             <View
                                 style={{
-                                    backgroundColor: '#000',
+                                    backgroundColor: '#fff',
                                     paddingLeft: 0
                                 }}
                             >
@@ -1725,7 +1729,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         textTransform: 'uppercase',
                                         fontSize: 12,
                                         fontFamily: 'overpass',
-                                        color: '#fff',
+                                        color: '#000',
                                         fontWeight: 'bold'
                                     }}
                                 >
@@ -2004,7 +2008,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * */
     const renderHeader = () => {
         return (
-            <View style={{ width: '100%', backgroundColor: '#000', flexDirection: 'column', zIndex: 500000 }}>
+            <View style={{ width: '100%', backgroundColor: '#ffffff', flexDirection: 'column', zIndex: 500000 }}>
                 {/* The first bar will be the main black bar with the back button, Cue Tabs and buttons */}
                 <View
                     style={{
@@ -2012,15 +2016,15 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         width: '100%',
                         justifyContent: 'center',
                         height: 52,
-                        backgroundColor: '#000',
+                        backgroundColor: '#ffffff',
                         paddingHorizontal: 10,
                         shadowColor: '#000',
                         shadowOffset: {
-                            width: 4,
-                            height: 4
+                            width: 1,
+                            height: 1
                         },
-                        shadowOpacity: 0.12,
-                        shadowRadius: 10,
+                        shadowOpacity: 0.08,
+                        shadowRadius: 4,
                         zIndex: 500000
                     }}
                 >
@@ -2039,7 +2043,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 width: 35,
                                 height: 35,
                                 borderRadius: '100%',
-                                backgroundColor: '#efefef',
+                                backgroundColor: '#f2f2f2',
                                 flexDirection: 'row',
                                 justifyContent: 'center',
                                 alignItems: 'center',
@@ -2059,13 +2063,15 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             />
                         </TouchableOpacity>
                     ) : null}
-                    <View style={{ flexDirection: 'row', flex: 1, maxWidth: 900, backgroundColor: '#000', height: 52 }}>
+                    <View
+                        style={{ flexDirection: 'row', flex: 1, maxWidth: 900, backgroundColor: '#ffffff', height: 52 }}
+                    >
                         {/* BACK BUTTON */}
                         <TouchableOpacity
                             style={{
                                 flexDirection: 'row',
                                 paddingTop: Dimensions.get('window').width > 768 ? 9 : 11,
-                                backgroundColor: '#000'
+                                backgroundColor: '#ffffff'
                             }}
                             onPress={() => {
                                 props.closeModal();
@@ -2075,7 +2081,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 <Ionicons
                                     name="arrow-back-outline"
                                     size={Dimensions.get('window').width > 768 ? 30 : 26}
-                                    color={'#fff'}
+                                    color={'#000'}
                                 />
                             </Text>
                         </TouchableOpacity>
@@ -2090,7 +2096,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     flex: 1,
                                     height: 52,
-                                    backgroundColor: '#000',
+                                    backgroundColor: '#ffffff',
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     minWidth: 200,
@@ -2151,7 +2157,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <View
                                 style={{
                                     flex: 1,
-                                    backgroundColor: '#000',
+                                    backgroundColor: '#ffffff',
                                     justifyContent: 'flex-end',
                                     flexDirection: 'row',
                                     paddingTop: 8
@@ -2166,19 +2172,19 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         }}
                                         style={{
                                             paddingLeft: 0,
-                                            backgroundColor: '#000',
+                                            backgroundColor: '#ffffff',
                                             marginLeft: 20
                                         }}
                                     >
                                         <Text
                                             style={{
                                                 lineHeight: 34,
-                                                backgroundColor: '#000',
+                                                backgroundColor: '#ffffff',
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
                                                 fontSize: 12,
                                                 fontFamily: 'overpass',
-                                                color: '#fff'
+                                                color: '#000'
                                             }}
                                         >
                                             SAVE
@@ -2197,18 +2203,18 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             paddingLeft: 0,
                                             marginLeft: 20,
-                                            backgroundColor: '#000'
+                                            backgroundColor: '#ffffff'
                                         }}
                                     >
                                         <Text
                                             style={{
                                                 lineHeight: 34,
-                                                backgroundColor: '#000',
+                                                backgroundColor: '#ffffff',
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
                                                 fontSize: 12,
                                                 fontFamily: 'overpass',
-                                                color: '#fff'
+                                                color: '#000'
                                             }}
                                         >
                                             DELETE
@@ -2225,7 +2231,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                 <View
                     style={{
-                        backgroundColor: '#efefef'
+                        backgroundColor: '#f2f2f2'
                     }}
                 >
                     {folderId !== '' &&
@@ -2240,7 +2246,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                 <View
                     style={{
-                        backgroundColor: '#efefef'
+                        backgroundColor: '#f2f2f2'
                     }}
                 >
                     {createNewFolder ? renderNewFolderOptions() : null}
@@ -2248,7 +2254,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                 <View
                     style={{
-                        backgroundColor: '#efefef'
+                        backgroundColor: '#f2f2f2'
                     }}
                 >
                     {editFolder ? renderEditFolderOptions() : null}
@@ -2258,88 +2264,89 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{
-                flex: 1
-            }}
-            keyboardVerticalOffset={Dimensions.get('window').width < 768 ? 50 : 30}
-        >
-            <View
+        <View style={{ flex: 1, height: '100%' }}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#fff',
-                    borderTopLeftRadius: 0,
-                    borderTopRightRadius: 0,
-                    maxHeight: '100%'
+                    flex: 1
                 }}
+                keyboardVerticalOffset={Dimensions.get('window').width < 768 ? 50 : 30}
             >
-                {loading ? (
-                    <View
-                        style={{
-                            width: '100%',
-                            flex: 1,
-                            justifyContent: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            backgroundColor: 'white',
-                            borderTopLeftRadius: 0,
-                            borderTopRightRadius: 0
-                        }}
-                    >
-                        <ActivityIndicator color={'#000000'} />
-                    </View>
-                ) : (
-                    <View style={{ width: '100%', position: 'relative', height: '100%' }}>
-                        {/* Header */}
-                        {!editorFocus ? renderHeader() : null}
-                        {/* Main Content */}
+                <View
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: '#fff',
+                        borderTopLeftRadius: 0,
+                        borderTopRightRadius: 0,
+                        maxHeight: '100%'
+                    }}
+                >
+                    {loading ? (
                         <View
                             style={{
                                 width: '100%',
-                                backgroundColor: 'white',
-                                flexDirection: 'row',
+                                flex: 1,
                                 justifyContent: 'center',
-                                // flex: 1,
-                                height: '100%'
+                                display: 'flex',
+                                flexDirection: 'column',
+                                backgroundColor: 'white',
+                                borderTopLeftRadius: 0,
+                                borderTopRightRadius: 0
                             }}
                         >
-                            {ContentView}
+                            <ActivityIndicator color={'#000000'} />
                         </View>
-
-                        {/* Mobile tabs */}
-                        {Dimensions.get('window').width < 1024 && !editorFocus ? (
+                    ) : (
+                        <View style={{ width: '100%', position: 'relative', height: '100%' }}>
+                            {/* Header */}
+                            {!editorFocus ? renderHeader() : null}
+                            {/* Main Content */}
                             <View
                                 style={{
-                                    position: 'absolute',
-                                    zIndex: 1000,
-                                    backgroundColor: '#000',
-                                    bottom: 0,
                                     width: '100%',
-                                    paddingTop: 5,
-                                    paddingBottom: Dimensions.get('window').width < 768 ? 10 : 20,
-                                    paddingHorizontal: 20,
+                                    backgroundColor: 'white',
                                     flexDirection: 'row',
                                     justifyContent: 'center',
-                                    height: Dimensions.get('window').width < 768 ? 54 : 68,
-                                    shadowColor: '#000',
-                                    shadowOffset: {
-                                        width: 0,
-                                        height: -7
-                                    },
-                                    shadowOpacity: 0.12,
-                                    shadowRadius: 10,
-                                    zIndex: 500000
+                                    // flex: 1,
+                                    height: '100%'
                                 }}
                             >
-                                {options}
+                                {ContentView}
                             </View>
-                        ) : null}
-                    </View>
-                )}
-            </View>
-        </KeyboardAvoidingView>
+                        </View>
+                    )}
+                </View>
+            </KeyboardAvoidingView>
+            {/* Mobile tabs */}
+            {Dimensions.get('window').width < 1024 && !editorFocus ? (
+                <View
+                    style={{
+                        position: 'absolute',
+                        zIndex: 1000,
+                        backgroundColor: '#000',
+                        bottom: 0,
+                        width: '100%',
+                        paddingTop: 5,
+                        paddingBottom: Dimensions.get('window').width < 768 ? 10 : 20,
+                        paddingHorizontal: 20,
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        height: Dimensions.get('window').width < 768 ? 54 : 68,
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 0,
+                            height: -7
+                        },
+                        shadowOpacity: 0.12,
+                        shadowRadius: 10,
+                        zIndex: 500000
+                    }}
+                >
+                    {options}
+                </View>
+            ) : null}
+        </View>
     );
 };
 

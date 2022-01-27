@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, Fragment } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, LogBox } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
@@ -12,6 +12,12 @@ import { MenuProvider } from 'react-native-popup-menu';
 export default function App() {
     const isLoadingComplete = useCachedResources();
     const colorScheme = useColorScheme();
+
+    // Ignore log notification by message
+    LogBox.ignoreLogs(['Warning: ...']);
+
+    //Ignore all log notifications
+    LogBox.ignoreAllLogs();
 
     const longerSplashScreen = useCallback(async () => {
         await SplashScreen.preventAutoHideAsync();

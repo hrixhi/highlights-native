@@ -180,7 +180,7 @@ const Performance: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     justifyContent: 'center',
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: '#efefef',
+                    backgroundColor: '#f2f2f2',
                     alignSelf: 'center',
                     paddingVertical: 100
                 }}>
@@ -197,7 +197,7 @@ const Performance: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 width: '100%',
                 maxWidth: 900,
                 alignSelf: 'center',
-                backgroundColor: '#efefef',
+                backgroundColor: '#f2f2f2',
                 paddingBottom: 25
             }}>
             {props.activeTab === 'meetings' ? (

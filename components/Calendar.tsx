@@ -32,9 +32,9 @@ import moment from 'moment';
 import { Picker } from '@react-native-picker/picker';
 
 import { Agenda } from 'react-native-calendars';
-import { PreferredLanguageText } from '../helpers/LanguageContext';
+// import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { eventFrequencyOptions } from '../helpers/FrequencyOptions';
-import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+// import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import InsetShadow from 'react-native-inset-shadow';
 // import BottomSheet from 'reanimated-bottom-sheet';
 import BottomSheet from './BottomSheet';
@@ -42,6 +42,8 @@ import BottomSheet from './BottomSheet';
 import _ from 'lodash';
 import DropDownPicker from 'react-native-dropdown-picker';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
+
+import Reanimated from 'react-native-reanimated';
 
 const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [modalAnimation] = useState(new Animated.Value(1));
@@ -73,6 +75,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [allActivity, setAllActivity] = useState<any[]>([]);
     const [activity, setActivity] = useState<any[]>([]);
     const [userZoomInfo, setUserZoomInfo] = useState<any>('');
+    const [meetingProvider, setMeetingProvider] = useState('');
     const [unreadCount, setUnreadCount] = useState<any>(0);
     const [loadingEvents, setLoadingEvents] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState('Home');
@@ -86,10 +89,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [filterEnd, setFilterEnd] = useState<any>(new Date(currentDate.getTime() + 1000 * 60 * 60 * 24 * 30 * 10));
 
     // FILTERS
-    const [eventChannels, setEventChannels] = useState<any[]>([]);
-    const [filterChannels, setFilterChannels] = useState<any[]>([]);
     const [allItems, setAllItems] = useState<any[]>([]);
-    const [filterByLectures, setFilterByLectures] = useState(false);
     const [filterByChannel, setFilterByChannel] = useState('All');
     const [filterEventsType, setFilterEventsType] = useState('All');
 
@@ -113,7 +113,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const channelOptions = [
         {
-            value: 'Home',
+            value: '',
             label: 'Home'
         }
     ];
@@ -135,11 +135,43 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         '7': 'Sat'
     };
 
-    console.log('Channel options', channelOptions);
+    const fall = new Reanimated.Value(1);
+
+    const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
+        inputRange: [0, 1],
+        outputRange: [0.5, 0]
+    });
 
     const onUpdateSelectedDate = (date: any) => {
         setCurrentMonth(moment(date.dateString).format('MMMM YYYY'));
     };
+
+    /**
+     * @description Updated selected start day for recurring days selection (start day is disabled by default)
+     */
+    useEffect(() => {
+        const startDay = start.getDay() + 1;
+
+        setSelectedStartDay(startDay.toString());
+        setSelectedDays([startDay.toString()]);
+
+        // }
+    }, [start]);
+
+    /**
+     * @description Fetch meeting provider for org
+     */
+    useEffect(() => {
+        (async () => {
+            const org = await AsyncStorage.getItem('school');
+
+            if (org) {
+                const school = JSON.parse(org);
+
+                setMeetingProvider(school.meetingProvider ? school.meetingProvider : '');
+            }
+        })();
+    }, []);
 
     const loadChannels = useCallback(async () => {
         const uString: any = await AsyncStorage.getItem('user');
@@ -181,7 +213,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             filterByChannels = total;
         } else {
             const all = [...total];
-            const filter = all.filter((e: any) => filterByChannel === e.channelName);
+            const filter = all.filter((e: any) => filterByChannel === e.channelId);
 
             filterByChannels = filter;
         }
@@ -233,7 +265,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     })
                     .then(res => {
                         if (res.data && res.data.activity.getActivity) {
-                            const tempActivity = res.data.activity.getActivity.reverse();
+                            const tempActivity = res.data.activity.getActivity;
                             let unread = 0;
                             tempActivity.map((act: any) => {
                                 if (act.status === 'unread') {
@@ -389,7 +421,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     }}
                                     style={{
                                         flexDirection: 'row',
-                                        borderColor: '#efefef',
+                                        borderColor: '#f2f2f2',
                                         borderBottomWidth: index === activity.length - 1 ? 0 : 1,
                                         width: '100%',
                                         paddingVertical: 5,
@@ -524,9 +556,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     //     ]);
     //   }, []);
 
+    console.log('Start', start.toUTCString());
+
     /**
      * @description Handle Create event
      */
+
     const handleCreate = useCallback(async () => {
         if (title === '') {
             Alert('A title must be set for the event. ');
@@ -558,6 +593,21 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         const u = await AsyncStorage.getItem('user');
         if (u) {
             const user = JSON.parse(u);
+
+            console.log('Create Arguments', {
+                title,
+                userId: user._id,
+                start: start.toUTCString(),
+                end: end.toUTCString(),
+                channelId,
+                meeting,
+                description,
+                recordMeeting,
+                frequency: freq,
+                repeatTill: repeat,
+                repeatDays
+            });
+
             const server = fetchAPI('');
             server
                 .mutate({
@@ -577,6 +627,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 })
                 .then(res => {
+                    console.log('Res', res);
                     if (res.data && res.data.date.createV1 === 'SUCCESS') {
                         loadEvents();
                         setTitle('');
@@ -607,6 +658,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         setSelectedStartDay('');
                     } else {
                         Alert('Failed to create event. Try again.');
+                        setIsCreatingEvents(false);
                     }
                 })
                 .catch(err => {
@@ -722,20 +774,26 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             })
             .then(res => {
                 if (res.data.date && res.data.date.getCalendar) {
-                    const channelsSet = new Set();
-
                     const parsedEvents: any[] = [];
                     res.data.date.getCalendar.map((e: any) => {
                         const { title } = htmlStringParser(e.title);
 
-                        channelsSet.add(e.channelName);
+                        let colorCode = '#202025';
+
+                        const matchSubscription = props.subscriptions.find((sub: any) => {
+                            return sub.channelId === e.channelId;
+                        });
+
+                        if (matchSubscription && matchSubscription !== undefined) {
+                            colorCode = matchSubscription.colorCode;
+                        }
 
                         parsedEvents.push({
                             eventId: e.eventId ? e.eventId : '',
                             originalTitle: title,
                             title: e.channelName ? e.channelName + ' - ' + title : title,
                             start: new Date(e.start),
-                            end: new Date(e.end),
+                            end: datesEqual(e.start, e.end) ? null : new Date(e.end),
                             dateId: e.dateId,
                             description: e.description,
                             createdBy: e.createdBy,
@@ -744,7 +802,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             recordMeeting: e.recordMeeting ? true : false,
                             meeting: e.meeting,
                             channelId: e.channelId,
-                            cueId: e.cueId
+                            cueId: e.cueId,
+                            color: colorCode,
+                            submitted: e.submitted,
+                            zoomMeetingId: e.zoomMeetingId,
+                            zoomStartUrl: e.zoomStartUrl,
+                            zoomJoinUrl: e.zoomJoinUrl,
+                            zoomMeetingScheduledBy: e.zoomMeetingScheduledBy,
+                            zoomMeetingCreatorProfile: e.zoomMeetingCreatorProfile,
+                            meetingLink: e.meetingLink ? e.meetingLink : null
                         });
                     });
 
@@ -758,12 +824,22 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                         const { title } = htmlStringParser(item.title);
 
+                        let colorCode = '#202025';
+
+                        const matchSubscription = props.subscriptions.find((sub: any) => {
+                            return sub.channelId === item.channelId;
+                        });
+
+                        if (matchSubscription && matchSubscription !== undefined) {
+                            colorCode = matchSubscription.colorCode;
+                        }
+
                         const modifiedItem = {
                             eventId: item.eventId ? item.eventId : '',
                             originalTitle: title,
                             title: item.channelName ? item.channelName + ' - ' + title : title,
                             start: new Date(item.start),
-                            end: new Date(item.end),
+                            end: datesEqual(item.start, item.end) ? null : new Date(item.end),
                             dateId: item.dateId,
                             description: item.description,
                             createdBy: item.createdBy,
@@ -772,7 +848,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             recordMeeting: item.recordMeeting ? true : false,
                             meeting: item.meeting,
                             channelId: item.channelId,
-                            cueId: item.cueId
+                            cueId: item.cueId,
+                            color: colorCode,
+                            submitted: item.submitted,
+                            zoomMeetingId: item.zoomMeetingId,
+                            zoomStartUrl: item.zoomStartUrl,
+                            zoomJoinUrl: item.zoomJoinUrl,
+                            zoomMeetingScheduledBy: item.zoomMeetingScheduledBy,
+                            zoomMeetingCreatorProfile: item.zoomMeetingCreatorProfile,
+                            meetingLink: item.meetingLink ? item.meetingLink : null
                         };
 
                         allEvents.push(modifiedItem);
@@ -792,7 +876,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         loadedItems[todayStr] = [];
                     }
 
-                    setEventChannels(Array.from(channelsSet));
                     setItems(loadedItems);
                     setAllItems(allEvents);
                 }
@@ -819,7 +902,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     useNativeDriver: true
                 }).start();
             });
-    }, [props.tab, modalAnimation]);
+    }, [props.tab, modalAnimation, props.subscriptions]);
 
     const roundSeconds = (time: Date) => {
         time.setMinutes(time.getMinutes() + Math.round(time.getSeconds() / 60));
@@ -1418,6 +1501,204 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
+    /**
+     * @description Display zoom meeting info
+     */
+    const renderEditMeetingInfo = () => {
+        return editEvent && editEvent.zoomMeetingId && editEvent.zoomMeetingId !== '' ? (
+            <View style={{}}>
+                <View
+                    style={{
+                        width: '100%',
+                        maxWidth: 400,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 20
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            // fontFamily: 'inter',
+                            marginRight: 5,
+                            color: '#000000'
+                        }}
+                    >
+                        Zoom Meeting ID
+                    </Text>
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            fontFamily: 'inter',
+                            color: '#000000'
+                        }}
+                    >
+                        {editEvent.zoomMeetingId}
+                    </Text>
+                </View>
+
+                <View style={{ width: '100%', maxWidth: 400, marginBottom: 10 }}>
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            // fontFamily: 'inter',
+                            marginRight: 10,
+                            color: '#000000',
+                            marginBottom: 5
+                        }}
+                    >
+                        Invite Link
+                    </Text>
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            fontFamily: 'inter',
+                            color: '#000000'
+                        }}
+                    >
+                        {editEvent.zoomJoinUrl}
+                    </Text>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity
+                        style={{ marginRight: 15 }}
+                        onPress={() => {
+                            if (Platform.OS == 'web') {
+                                window.open(editEvent.zoomStartUrl, '_blank');
+                            } else {
+                                Linking.openURL(editEvent.zoomStartUrl);
+                            }
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontFamily: 'inter',
+                                color: '#006AFF'
+                            }}
+                        >
+                            Start meeting
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={{ marginRight: 15 }}
+                        onPress={async () => {
+                            await navigator.clipboard.writeText(editEvent.zoomJoinUrl);
+                            Alert('Invite link copied!');
+                            // setCopiedMeetingLink(true);
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontFamily: 'inter',
+                                color: '#006AFF'
+                            }}
+                        >
+                            Copy Invite
+                        </Text>
+                    </TouchableOpacity>
+
+                    {/* <TouchableOpacity style={{}}>
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    fontFamily: 'inter',
+                                    color: '#F94144'
+                                }}>
+                                Delete Meeting
+                            </Text>
+                        </TouchableOpacity> */}
+                </View>
+            </View>
+        ) : editEvent && userZoomInfo && userZoomInfo.accountId ? (
+            <View
+                style={{
+                    marginVertical: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 10,
+                    backgroundColor: '#f3f3f3',
+                    borderRadius: 1
+                }}
+            >
+                <Ionicons name="warning-outline" size={22} color={'#f3722c'} />
+                <View
+                    style={{
+                        backgroundColor: '#f3f3f3',
+                        flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row'
+                    }}
+                >
+                    <Text style={{ paddingLeft: 20, paddingBottom: Dimensions.get('window').width < 768 ? 10 : 0 }}>
+                        Zoom meeting has been deleted or has expired
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => {
+                            const server = fetchAPI('');
+                            server
+                                .mutate({
+                                    mutation: regenZoomMeeting,
+                                    variables: {
+                                        userId,
+                                        dateId: editEvent.eventId
+                                    }
+                                })
+                                .then(res => {
+                                    if (res.data && res.data.date.regenZoomMeeting) {
+                                        const e = res.data.date.regenZoomMeeting;
+                                        setEditEvent({
+                                            eventId: e.eventId ? e.eventId : '',
+                                            originalTitle: title,
+                                            title: e.channelName ? title + ' - ' + e.channelName : title,
+                                            start: new Date(e.start),
+                                            end: datesEqual(e.start, e.end) ? null : new Date(e.end),
+                                            dateId: e.dateId,
+                                            description: e.description,
+                                            createdBy: e.createdBy,
+                                            channelName: e.channelName,
+                                            recurringId: e.recurringId,
+                                            recordMeeting: e.recordMeeting ? true : false,
+                                            meeting: e.meeting,
+                                            channelId: e.channelId,
+                                            cueId: e.cueId,
+                                            submitted: e.submitted,
+                                            zoomMeetingId: e.zoomMeetingId,
+                                            zoomStartUrl: e.zoomStartUrl,
+                                            zoomJoinUrl: e.zoomJoinUrl,
+                                            zoomMeetingScheduledBy: e.zoomMeetingScheduledBy,
+                                            zoomMeetingCreatorProfile: e.zoomMeetingCreatorProfile
+                                        });
+                                    } else {
+                                        Alert('Failed to create zoom meeting.');
+                                    }
+                                })
+                                .catch(err => {
+                                    Alert('Something went wrong.');
+                                });
+                        }}
+                        style={{
+                            backgroundColor: '#f3f3f3',
+                            paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 10,
+                            paddingBottom: Dimensions.get('window').width < 768 ? 5 : 0
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 14,
+                                fontFamily: 'inter',
+                                color: '#006AFF',
+                                backgroundColor: '#f3f3f3'
+                            }}
+                        >
+                            Create New
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        ) : null;
+    };
+
     const renderEditEventOptions = () => {
         const { recurringId, start, end, channelId } = editEvent;
 
@@ -1429,74 +1710,20 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     width: Dimensions.get('window').width < 768 ? '100%' : '10%',
                     flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                     display: 'flex',
-                    marginBottom: 50,
                     alignItems: Dimensions.get('window').width < 768 ? 'center' : 'flex-start',
-                    backgroundColor: 'white'
+                    backgroundColor: 'white',
+                    marginTop: 15
+
                     // paddingLeft: 7
                     // justifyContent: 'center'
                 }}
             >
-                {date > new Date(start) && date < new Date(end) ? (
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: 'white',
-                            overflow: 'hidden',
-                            height: 35,
-                            marginTop: 35,
-                            borderRadius: 15
-                        }}
-                        onPress={async () => {
-                            const uString: any = await AsyncStorage.getItem('user');
-
-                            const user = JSON.parse(uString);
-
-                            const server = fetchAPI('');
-                            server
-                                .mutate({
-                                    mutation: meetingRequest,
-                                    variables: {
-                                        userId: user._id,
-                                        channelId,
-                                        isOwner: true
-                                    }
-                                })
-                                .then(res => {
-                                    if (res.data && res.data.channel.meetingRequest !== 'error') {
-                                        Linking.openURL(res.data.channel.meetingRequest);
-                                    } else {
-                                        Alert('Classroom not in session. Waiting for instructor.');
-                                    }
-                                })
-                                .catch(err => {
-                                    Alert('Something went wrong.');
-                                });
-                        }}
-                    >
-                        <Text
-                            style={{
-                                textAlign: 'center',
-                                lineHeight: 35,
-                                color: 'white',
-                                fontSize: 12,
-                                backgroundColor: '#006AFF',
-                                paddingHorizontal: 25,
-                                fontFamily: 'inter',
-                                height: 35,
-                                width: 200,
-                                borderRadius: 15,
-                                textTransform: 'uppercase'
-                            }}
-                        >
-                            Enter Classroom
-                        </Text>
-                    </TouchableOpacity>
-                ) : null}
                 <TouchableOpacity
                     style={{
                         backgroundColor: 'white',
                         overflow: 'hidden',
                         height: 35,
-                        marginTop: 25,
+                        // marginTop: 25,
                         borderRadius: 15
                         // marginBottom: 20
                     }}
@@ -1591,7 +1818,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     useEffect(() => {
         loadEvents();
         loadChannels();
-    }, []);
+    }, [props.subscriptions]);
 
     const loadItemsForMonth = (month: any) => {
         const itemsWithEmptyDates: { [label: string]: any } = {};
@@ -1626,15 +1853,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const renderItem = (item: any) => {
         const { title } = htmlStringParser(item.title);
 
-        let colorCode = '#202025';
+        const assingmentDue = new Date() > new Date(item.start);
+        const isMeeting = item.meeting;
 
-        const matchSubscription = props.subscriptions.find((sub: any) => {
-            return sub.channelName === item.channelName;
-        });
-
-        if (matchSubscription && matchSubscription !== undefined) {
-            colorCode = matchSubscription.colorCode;
-        }
+        const startTime = new Date(item.start);
+        const endTime = new Date(item.end);
 
         const displayDate = datesEqual(item.start, item.end)
             ? moment(new Date(item.start)).format('h:mm a')
@@ -1648,13 +1871,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     marginTop: 10,
                     marginBottom: 15,
                     marginRight: Dimensions.get('window').width > 768 ? 20 : 10,
-                    padding: 10,
+                    // padding: 10,
+                    paddingHorizontal: 10,
                     borderRadius: 15,
                     shadowOffset: {
                         width: 1,
                         height: 1
                     },
-                    // overflow: 'hidden',
+                    flexDirection: 'column',
                     shadowOpacity: 0.03,
                     shadowRadius: 16,
                     zIndex: 50
@@ -1663,25 +1887,22 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     onSelectEvent(item);
                 }}
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 2 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 10 }}>
                     <View
                         style={{
                             width: 9,
                             height: 9,
                             borderRadius: 6,
-                            // marginTop: 2,
                             marginRight: 5,
-                            // paddingTop: 5,
-                            backgroundColor: colorCode
+                            backgroundColor: item.color
                         }}
                     />
                     <Text
                         style={{
                             fontFamily: 'inter',
                             fontSize: 15,
-                            width: '100%'
-                            // paddingTop: 5,
-                            // color: colorCode,
+                            width: '100%',
+                            paddingRight: 10
                         }}
                         numberOfLines={1}
                     >
@@ -1689,17 +1910,59 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </Text>
                 </View>
 
-                <Text style={{ color: 'black', marginTop: item.description !== '' ? 5 : 10 }}>{displayDate} </Text>
-
                 <Text
                     style={{
-                        paddingTop: 5,
-                        color: '#a2a2ac'
+                        color: 'black',
+                        marginTop:
+                            item.description !== '' ||
+                            (item.submitted !== null && userId !== '' && userId !== item.createdBy) ||
+                            (isMeeting && new Date() > startTime && new Date() < endTime)
+                                ? 5
+                                : 10
                     }}
-                    numberOfLines={1}
                 >
-                    {item.description}
+                    {displayDate}{' '}
                 </Text>
+
+                {item.description && item.description !== '' ? (
+                    <Text
+                        style={{
+                            paddingTop: 5,
+                            color: '#a2a2ac',
+                            paddingRight: 10
+                        }}
+                        numberOfLines={1}
+                    >
+                        {item.description}
+                    </Text>
+                ) : null}
+
+                {item.submitted !== null && userId !== '' && userId !== item.createdBy ? (
+                    <Text
+                        style={{
+                            color: item.submitted ? '#35AC78' : !assingmentDue ? '#006AFF' : '#F94144',
+                            paddingTop: 5,
+                            fontSize: 13,
+                            fontFamily: 'inter'
+                            // color: '#a2a2ac'
+                        }}
+                    >
+                        {item.submitted ? 'SUBMITTED' : assingmentDue ? 'MISSING' : 'PENDING'}
+                    </Text>
+                ) : null}
+
+                {isMeeting && new Date() > startTime && new Date() < endTime ? (
+                    <Text
+                        style={{
+                            color: '#006AFF',
+                            paddingTop: 5,
+                            fontSize: 13,
+                            fontFamily: 'inter'
+                        }}
+                    >
+                        {'IN PROGRESS'}
+                    </Text>
+                ) : null}
             </TouchableOpacity>
         );
     };
@@ -1733,9 +1996,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
             if (user._id === event.createdBy && new Date(event.end) > new Date() && event.eventId) {
                 setEditEvent(event);
+                // setTab('Add');
                 setShowAddEvent(true);
-            } else if (user._id === event.createdBy && new Date(event.end) < new Date() && event.eventId) {
-                // console.log("Delete prompt should come")
+            } else if (
+                user._id === event.createdBy &&
+                event.cueId === '' &&
+                new Date(event.end) < new Date() &&
+                event.eventId
+            ) {
                 Alert('Delete ' + event.title + '?', descriptionString, [
                     {
                         text: 'Cancel',
@@ -1769,51 +2037,38 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 const date = new Date();
 
                 if (date > new Date(event.start) && date < new Date(event.end) && event.meeting) {
-                    Alert(event.title, 'Enter classroom?', [
-                        {
-                            text: 'No',
-                            style: 'cancel',
-                            onPress: () => {
-                                return;
-                            }
-                        },
-                        {
-                            text: 'Yes',
-                            onPress: async () => {
-                                const uString: any = await AsyncStorage.getItem('user');
+                    const meetingLink = !meetingProvider ? event.zoomJoinUrl : event.meetingLink;
 
-                                const user = JSON.parse(uString);
+                    if (!meetingLink) {
+                        Alert('No meeting link set. Contact your instructor.');
+                        return;
+                    }
 
-                                const server = fetchAPI('');
-                                server
-                                    .mutate({
-                                        mutation: meetingRequest,
-                                        variables: {
-                                            userId: user._id,
-                                            channelId: event.channelId,
-                                            isOwner: false
-                                        }
-                                    })
-                                    .then(res => {
-                                        if (res.data && res.data.channel.meetingRequest !== 'error') {
-                                            server.mutate({
-                                                mutation: markAttendance,
-                                                variables: {
-                                                    userId: user._id,
-                                                    channelId: event.channelId
-                                                }
-                                            });
-                                            Linking.openURL(res.data.channel.meetingRequest);
-                                        } else {
-                                            Alert('Classroom not in session. Waiting for instructor.');
-                                        }
-                                    })
-                                    .catch(err => {
-                                        Alert('Something went wrong.');
-                                    });
+                    Alert(
+                        'Join meeting?',
+                        (!userZoomInfo || !userZoomInfo.accountId) && !meetingProvider
+                            ? 'WARNING- To mark attendance as Present, you must Connect to Zoom under Account.'
+                            : '',
+                        [
+                            {
+                                text: 'No',
+                                style: 'cancel',
+                                onPress: () => {
+                                    return;
+                                }
+                            },
+                            {
+                                text: 'Yes',
+                                onPress: async () => {
+                                    if (Platform.OS == 'web') {
+                                        window.open(meetingLink, '_blank');
+                                    } else {
+                                        Linking.openURL(meetingLink);
+                                    }
+                                }
                             }
-                        }
-                    ]);
+                        ]
+                    );
                 } else if (event.cueId !== '') {
                     props.openCueFromCalendar(event.channelId, event.cueId, event.createdBy);
                 } else {
@@ -1901,7 +2156,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#efefef'
+                                borderBottomColor: '#f2f2f2'
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
@@ -1911,10 +2166,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
-                                    width: 4,
-                                    height: 4
+                                    width: 1,
+                                    height: 3
                                 },
-                                shadowOpacity: !showFrequencyDropdown ? 0 : 0.12,
+                                shadowOpacity: !showFrequencyDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
                                 zIndex: 1000001,
                                 elevation: 1000001
@@ -1925,7 +2180,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             ) : null}
 
             {recurring && frequency === '1-W' ? (
-                <View style={{ width: '100%', maxWidth: 400, display: 'flex' }}>
+                <View style={{ width: '100%', maxWidth: 400, display: 'flex' }} key={selectedDays.toString()}>
                     <View style={{ width: '100%', backgroundColor: 'white', paddingVertical: 15, marginTop: 20 }}>
                         <Text style={styles.text}>Occurs on</Text>
                         {
@@ -2006,6 +2261,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         </View>
     );
 
+    console.log('Channel id', channelId);
+
     const renderMeetingOptions = () => {
         return channelId !== '' || editChannelName !== '' ? (
             <View
@@ -2013,7 +2270,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     width: '100%',
                     flexDirection: 'row',
                     marginTop: 40,
-                    paddingBottom: 15,
                     backgroundColor: '#fff'
                 }}
             >
@@ -2047,7 +2303,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     false: '#f4f4f6',
                                     true: '#006AFF'
                                 }}
-                                disabled={editEvent}
+                                disabled={
+                                    editEvent ||
+                                    ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') &&
+                                        !meetingProvider)
+                                }
                                 activeThumbColor="white"
                             />
                         </View>
@@ -2067,12 +2327,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0
                 }}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
                 scrollEnabled={true}
                 scrollEventThrottle={1}
                 keyboardDismissMode={'on-drag'}
                 overScrollMode={'never'}
                 nestedScrollEnabled={true}
+                indicatorStyle={'black'}
             >
                 <View
                     style={{
@@ -2081,7 +2342,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         height: '100%',
                         paddingHorizontal: 20,
                         borderTopRightRadius: 0,
-                        borderTopLeftRadius: 0
+                        borderTopLeftRadius: 0,
+                        marginBottom: 120
                     }}
                 >
                     <View
@@ -2211,6 +2473,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         setValue={(val: any) => {
                                             setSelectedChannel(val);
 
+                                            console.log('Value', val);
+
                                             if (val === 'Home') {
                                                 setChannelId('');
                                             } else {
@@ -2221,7 +2485,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         style={{
                                             borderWidth: 0,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#efefef'
+                                            borderBottomColor: '#f2f2f2'
                                         }}
                                         dropDownContainerStyle={{
                                             borderWidth: 0,
@@ -2230,50 +2494,40 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         containerStyle={{
                                             shadowColor: '#000',
                                             shadowOffset: {
-                                                width: 4,
-                                                height: 4
+                                                width: 1,
+                                                height: 3
                                             },
-                                            shadowOpacity: !showChannelDropdown ? 0 : 0.12,
+                                            shadowOpacity: !showChannelDropdown ? 0 : 0.08,
                                             shadowRadius: 12,
                                             zIndex: 999999
                                         }}
                                     />
-                                    {/* <Select
-                          touchUi={true}
-                          themeVariant="light"
-                          value={selectedChannel}
-                          onChange={(val: any) => {
-                              setSelectedChannel(val.value);
-
-                              if (val.value === 'Home') {
-                                  setChannelId('');
-                              } else {
-                                  setChannelId(val.value);
-                              }
-                          }}
-                          responsive={{
-                              small: {
-                                  display: 'bubble'
-                              },
-                              medium: {
-                                  touchUi: false
-                              }
-                          }}
-                          style={{
-                              backgroundColor: '#efefef'
-                          }}
-                          data={channelOptions}
-					  /> */}
                                 </View>
                             </View>
                         ) : null}
                     </View>
 
-                    {editEvent && renderEditChannelName()}
+                    {/* {editEvent && renderEditChannelName()} */}
+                    {renderEditMeetingInfo()}
 
                     {!editEvent && renderRecurringOptions()}
                     {renderMeetingOptions()}
-                    {channelId !== '' && (
+                    {channelId !== '' && meetingProvider !== '' && isMeeting ? (
+                        <Text
+                            style={{
+                                fontSize: 11,
+                                color: '#000000',
+                                // textTransform: 'uppercase',
+                                lineHeight: 20,
+                                fontFamily: 'Inter',
+                                paddingBottom: 15
+                            }}
+                        >
+                            The meeting link will be same as the one in the Course Settings. Ensure you have a working
+                            link set at all times.
+                        </Text>
+                    ) : null}
+                    {channelId !== '' && userZoomInfo && userZoomInfo.accountId && !meetingProvider && !editEvent ? (
                         <Text
                             style={{
                                 fontSize: 11,
@@ -2287,7 +2541,63 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             Zoom meeting will be automatically created and attendances will be captured for online
                             meetings.
                         </Text>
-                    )}
+                    ) : null}
+
+                    {(channelId !== '' && (!userZoomInfo || !userZoomInfo.accountId) && !meetingProvider) ||
+                    (editEvent &&
+                        !meetingProvider &&
+                        !editEvent.zoomMeetingId &&
+                        (!userZoomInfo || !userZoomInfo.accountId)) ? (
+                        <View
+                            style={{
+                                marginVertical: 10,
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                padding: 10,
+                                backgroundColor: '#f3f3f3',
+                                borderRadius: 1
+                            }}
+                        >
+                            <View style={{ flexDirection: 'row', width: '70%', backgroundColor: '#f3f3f3' }}>
+                                <Ionicons name="warning-outline" size={22} color={'#f3722c'} />
+                                <Text style={{ paddingLeft: 20 }}>
+                                    {editEvent
+                                        ? 'To schedule online meeting connect your Zoom account'
+                                        : 'To schedule online meetings connect your account to Zoom'}
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    // ZOOM OAUTH
+
+                                    const url = 'https://app.learnwithcues.com/zoom_auth';
+
+                                    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                                        Linking.openURL(url);
+                                    } else {
+                                        window.open(url);
+                                    }
+                                }}
+                                style={{
+                                    backgroundColor: '#f3f3f3',
+                                    paddingLeft: 30,
+                                    width: '30%'
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontFamily: 'inter',
+                                        color: '#006AFF',
+                                        backgroundColor: '#f3f3f3'
+                                    }}
+                                >
+                                    Connect
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : null}
+
                     {!editEvent ? (
                         <View
                             style={{
@@ -2295,8 +2605,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 flexDirection: 'row',
                                 backgroundColor: '#fff',
                                 display: 'flex',
-                                justifyContent: 'center',
-                                marginBottom: 150
+                                justifyContent: 'center'
                             }}
                         >
                             <TouchableOpacity
@@ -2352,7 +2661,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         props.subscriptions.map((sub: any) => {
             filterChannelOptions.push({
-                value: sub.channelName,
+                value: sub.channelId,
                 label: sub.channelName
             });
         });
@@ -2413,7 +2722,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#efefef'
+                                borderBottomColor: '#f2f2f2'
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
@@ -2423,10 +2732,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
-                                    width: 4,
-                                    height: 4
+                                    width: 1,
+                                    height: 3
                                 },
-                                shadowOpacity: !showFilterByChannelDropdown ? 0 : 0.12,
+                                shadowOpacity: !showFilterByChannelDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
                                 zIndex: 1000001,
                                 elevation: 1000001
@@ -2466,7 +2775,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#efefef'
+                                borderBottomColor: '#f2f2f2'
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
@@ -2476,10 +2785,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
-                                    width: 4,
-                                    height: 4
+                                    width: 1,
+                                    height: 3
                                 },
-                                shadowOpacity: !showFilterTypeDropdown ? 0 : 0.12,
+                                shadowOpacity: !showFilterTypeDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
                                 zIndex: 1000001,
                                 elevation: 1000001
@@ -2528,6 +2837,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </ScrollView>
         );
     };
+
+    // console.log('opacity', animatedShadowOpacity);
 
     return (
         <Animated.View
@@ -2593,20 +2904,28 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={{
-                        // position: 'absolute',
-                        marginTop: 9,
-                        marginLeft: 'auto'
-                    }}
-                    onPress={() => setShowFilterModal(!showFilterModal)}
-                >
-                    <Ionicons name={showFilterModal ? 'close-outline' : 'filter-outline'} size={22} color="black" />
-                </TouchableOpacity>
+                <View style={{ display: 'flex', flexDirection: 'row', marginLeft: 'auto', marginTop: 9 }}>
+                    {!props.showSearchMobile ? (
+                        <TouchableOpacity
+                            style={{
+                                marginRight: 15
+                            }}
+                            onPress={() => props.setShowSearchMobile(true)}
+                        >
+                            <Ionicons name={'search-outline'} size={22} color="black" />
+                        </TouchableOpacity>
+                    ) : null}
+
+                    {!showFilterModal ? (
+                        <TouchableOpacity onPress={() => setShowFilterModal(!showFilterModal)}>
+                            <Ionicons name={'filter-outline'} size={22} color="black" />
+                        </TouchableOpacity>
+                    ) : null}
+                </View>
             </View>
             <View
                 style={{ flex: 1, marginBottom: Dimensions.get('window').width < 1024 ? 12 : 0 }}
-                key={activeTab.toString()}
+                key={activeTab.toString() + channels.length.toString()}
             >
                 {activeTab === 'agenda' ? (
                     loadingEvents ? (
@@ -2645,10 +2964,45 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     setShowAddEvent(false);
                 }}
                 isOpen={showAddEvent}
-                title={'Create an event'}
+                title={
+                    editEvent && editChannelName
+                        ? `${editEvent && editEvent.meeting ? 'Meeting' : 'Event'} for ${editChannelName}`
+                        : 'Create an event'
+                }
                 renderContent={() => renderEventModalContent()}
                 header={true}
+                callbackNode={fall}
             />
+
+            {showAddEvent ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: animatedShadowOpacity,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute'
+                    }}
+                ></Reanimated.View>
+            ) : null}
+
+            {showFilterModal ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: 0.3,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute'
+                    }}
+                ></Reanimated.View>
+            ) : null}
 
             <BottomSheet
                 snapPoints={[0, '55%']}
@@ -2659,6 +3013,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 title={'Filter'}
                 renderContent={() => renderFilterModalContent()}
                 header={false}
+                callbackNode={fall}
             />
 
             {activeTab === 'agenda' ? (
@@ -2682,7 +3037,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         height: 58,
                         borderRadius: 29,
                         backgroundColor: '#006aff',
-                        borderColor: '#efefef',
+                        borderColor: '#f2f2f2',
                         borderWidth: 0,
                         shadowColor: '#000',
                         shadowOffset: {
@@ -2760,7 +3115,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         paddingHorizontal: 20,
                         borderRadius: 29,
                         backgroundColor: '#006aff',
-                        borderColor: '#efefef',
+                        borderColor: '#f2f2f2',
                         borderWidth: 0,
                         shadowColor: '#000',
                         shadowOffset: {
@@ -2793,11 +3148,15 @@ export default React.memo(CalendarX, (prev, next) => {
     return _.isEqual(
         {
             ...prev.tab,
-            ...prev.cues
+            ...prev.cues,
+            ...prev.showSearchMobile,
+            ...prev.setShowSearchMobile
         },
         {
             ...next.tab,
-            ...prev.cues
+            ...next.cues,
+            ...next.showSearchMobile,
+            ...next.setShowSearchMobile
         }
     );
 });

@@ -12,10 +12,10 @@ export default function useCachedResources() {
                 SplashScreen.preventAutoHideAsync();
                 // Load fonts
                 await Font.loadAsync({
-                    inter: 'https://cues-files.s3.amazonaws.com/fonts/SF-Pro-Display-Bold.otf',
-                    Inter: 'https://cues-files.s3.amazonaws.com/fonts/SF-Pro-Display-Bold.otf',
-                    overpass: 'https://cues-files.s3.amazonaws.com/fonts/SF-Pro-Text-Regular.otf',
-                    Overpass: 'https://cues-files.s3.amazonaws.com/fonts/SF-Pro-Text-Regular.otf',
+                    inter: 'https://cues-files.s3.amazonaws.com/fonts/clarkson500.woff2',
+                    overpass: 'https://cues-files.s3.amazonaws.com/fonts/clarkson400.woff2',
+                    Inter: 'https://cues-files.s3.amazonaws.com/fonts/clarkson500.woff2',
+                    Overpass: 'https://cues-files.s3.amazonaws.com/fonts/clarkson400.woff2',
                     Ionicons: {
                         uri: 'https://cues-files.s3.amazonaws.com/fonts/Ionicons.ttf'
                     },

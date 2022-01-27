@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 // API
 import { fetchAPI } from '../graphql/FetchAPI';
 import {
-    doesChannelNameExist, findChannelById, getOrganisation, getSubscribers, getUserCount, subscribe, unsubscribe, updateChannel, getChannelColorCode, duplicateChannel, resetAccessCode, getChannelModerators
+    findChannelById, getOrganisation, getSubscribers, getUserCount, subscribe, unsubscribe, updateChannel, getChannelColorCode, duplicateChannel, resetAccessCode, getChannelModerators
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -126,8 +126,27 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [isSectionDropdownOpen, setIsSectionDropdownOpen] = useState(false);
     const [isViewersDropdownOpen, setIsViewersDropdownOpen] = useState(false);
     const [isEditorsDropdownOpen, setIsEditorsDropdownOpen] = useState(false); 
+    const [meetingProvider, setMeetingProvider] = useState('');
+    const [meetingUrl, setMeetingUrl] = useState('');
 
     // HOOKS
+
+    /**
+     * @description Fetch meeting provider for org
+     */
+    useEffect(() => {
+        (async () => {
+
+            const org = await AsyncStorage.getItem('school');
+
+            if (org) {
+                const school = JSON.parse(org);
+
+                setMeetingProvider(school.meetingProvider ? school.meetingProvider : '')
+            }
+
+        })()
+    }, [])
 
     /**
      * @description Filter dropdown users based on Roles, Grades and Section
@@ -271,6 +290,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             setDescription(res.data.channel.findById.description)
                                             setTags(res.data.channel.findById.tags ? res.data.channel.findById.tags : [])
                                             setAccessCode(res.data.channel.findById.accessCode)
+                                            setMeetingUrl(res.data.channel.findById.meetingUrl ? res.data.channel.findById.meetingUrl : '')
 
                                             if (res.data.channel.findById.owners) {
                                                 const ownerOptions: any[] = []
@@ -450,37 +470,28 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
 
         const server = fetchAPI('')
-        server.query({
-            query: doesChannelNameExist,
-            variables: {
-                name: duplicateChannelName.trim()
-            }
-        }).then(async res => {
-            if (res.data && (res.data.channel.doesChannelNameExist !== true)) {
-                server.mutate({
-                    mutation: duplicateChannel,
-                    variables: {
-                        channelId: props.channelId,
-                        name: duplicateChannelName.trim(),
-                        password: duplicateChannelPassword,
-                        colorCode: duplicateChannelColor,
-                        temporary: duplicateChannelTemporary,
-                        duplicateSubscribers: duplicateChannelSubscribers,
-                        duplicateOwners: duplicateChannelModerators
-                    }
-                }).then((res2) => {
-                    if (res2.data && res2.data.channel.duplicate === "created") {
-                        alert("Channel duplicated successfully.")
-                        // Refresh Subscriptions for user
-                        props.refreshSubscriptions()
-                        props.closeModal()
-                    }
-                })
-            }
-        })
-            .catch((e) => {
-                alert("Something went wrong. Try again.")
+        server.mutate({
+            mutation: duplicateChannel,
+                variables: {
+                    channelId: props.channelId,
+                    name: duplicateChannelName.trim(),
+                    password: duplicateChannelPassword,
+                    colorCode: duplicateChannelColor,
+                    temporary: duplicateChannelTemporary,
+                    duplicateSubscribers: duplicateChannelSubscribers,
+                    duplicateOwners: duplicateChannelModerators
+                }
+            }).then((res2) => {
+                if (res2.data && res2.data.channel.duplicate === "created") {
+                    alert("Channel duplicated successfully.")
+                    // Refresh Subscriptions for user
+                    props.refreshSubscriptions()
+                    props.closeModal()
+                }
             })
+        .catch((e) => {
+            alert("Something went wrong. Try again.")
+        })
 
     }, [duplicateChannel, duplicateChannelName, duplicateChannelPassword, props.channelId,
         duplicateChannelColor, duplicateChannelTemporary, duplicateChannelSubscribers,
@@ -552,7 +563,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         channelId: props.channelId,
                         temporary,
                         owners: selectedModerators,
-                        colorCode
+                        colorCode,
+                        meetingUrl
                     }
                 }).then(res => {
                     if (res.data && res.data.channel.update) {
@@ -598,7 +610,23 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         setIsUpdatingChannel(false);
 
                         alert("Course updated successfully.")
-                        setOriginalSubs([])
+                        
+                        const updatedOriginalSubs: any[] = []
+
+                        allUsers.map((item: any) => {
+
+                            if (selectedValues.includes(item._id)) {
+                                updatedOriginalSubs.push({
+                                    name: item.fullName,
+                                    id: item._id
+                                })
+                            }
+                            
+                        })
+
+
+                        // Set updated subs as new subs
+                        setOriginalSubs(updatedOriginalSubs)
 
                         // need to refresh channel subscriptions since name will be updated
 
@@ -613,7 +641,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 })
             
     }, [name, password, props.channelId, options, originalSubs, owners,
-        temporary, selected, originalName, colorCode, selectedValues, selectedModerators])
+        temporary, selected, originalName, colorCode, meetingUrl, selectedValues, selectedModerators])
 
     /**
      * @description Handle delete channel (Note: Only temporary channels can be deleted)
@@ -647,26 +675,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         return (<View style={{ width: '100%', flexDirection: 'column', backgroundColor: 'white', marginTop: 20 }}>
             <View style={{ backgroundColor: 'white', }}>
                 <View style={{ backgroundColor: 'white', maxWidth: 320, height: isRoleDropdownOpen ? 210 : 50 }}>
-                    {/* <label style={{ width: Dimensions.get('window').width < 768 ? 120 : 150 }}>
-                        <Select
-                            touchUi={true}
-                            value={activeRole}
-                            rows={3}
-                            themeVariant="light"
-                            onChange={(val: any) => {
-                                setActiveRole(val.value)
-                            }}
-                            responsive={{
-                                small: {
-                                    display: 'bubble'
-                                },
-                                medium: {
-                                    touchUi: false
-                                }
-                            }}
-                            data={filterRoleOptions}
-                        />
-                    </label> */}
                     <DropDownPicker
                         open={isRoleDropdownOpen}
                         value={activeRole}
@@ -676,7 +684,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         style={{
                             borderWidth: 0,
                             borderBottomWidth: 1,
-                            borderBottomColor: '#efefef'
+                            borderBottomColor: '#f2f2f2'
                         }}
                         dropDownContainerStyle={{
                             borderWidth: 0,
@@ -686,10 +694,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         containerStyle={{
                             shadowColor: '#000',
                             shadowOffset: {
-                                width: 4,
-                                height: 4
+                                width: 1,
+                                height: 3
                             },
-                            shadowOpacity: !isRoleDropdownOpen ? 0 : 0.12,
+                            shadowOpacity: !isRoleDropdownOpen ? 0 : 0.08,
                             shadowRadius: 12,
                             zIndex: 1000001,
                             elevation: 1000001
@@ -701,25 +709,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             <View style={{ flexDirection: 'row', marginTop: 15 }}>
                 <View style={{ backgroundColor: 'white', paddingRight: 20 }}>
                     <View style={{ backgroundColor: 'white', maxWidth: 150, height: isGradeDropdownOpen ? 250 : 50  }}>
-                        {/* <label style={{ width: Dimensions.get('window').width < 768 ? 120 : 150 }}>
-                            <Select
-                                touchUi={true}
-                                value={activeGrade}
-                                themeVariant="light"
-                                onChange={(val: any) => {
-                                    setActiveGrade(val.value)
-                                }}
-                                responsive={{
-                                    small: {
-                                        display: 'bubble'
-                                    },
-                                    medium: {
-                                        touchUi: false
-                                    }
-                                }}
-                                data={filterGradeOptions}
-                            />
-                        </label> */}
                         <DropDownPicker
                             open={isGradeDropdownOpen}
                             value={activeGrade}
@@ -729,7 +718,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#efefef'
+                                borderBottomColor: '#f2f2f2'
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
@@ -739,10 +728,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
-                                    width: 4,
-                                    height: 4
+                                    width: 1,
+                                    height: 3
                                 },
-                                shadowOpacity: !isGradeDropdownOpen ? 0 : 0.12,
+                                shadowOpacity: !isGradeDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
                                 zIndex: 1000001,
                                 elevation: 1000001
@@ -752,25 +741,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 </View>
                 <View style={{ backgroundColor: 'white',  }}>
                     <View style={{ backgroundColor: 'white', maxWidth: 150, height: isSectionDropdownOpen ? 250 : 50, }}>
-                        {/* <label style={{ width: Dimensions.get('window').width < 768 ? 120 : 150 }}>
-                            <Select
-                                touchUi={true}
-                                value={activeSection}
-                                themeVariant="light"
-                                onChange={(val: any) => {
-                                    setActiveSection(val.value)
-                                }}
-                                responsive={{
-                                    small: {
-                                        display: 'bubble'
-                                    },
-                                    medium: {
-                                        touchUi: false
-                                    }
-                                }}
-                                data={filterSectionOptions}
-                            />
-                        </label> */}
                         <DropDownPicker
                             open={isSectionDropdownOpen}
                             value={activeSection}
@@ -780,7 +750,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#efefef'
+                                borderBottomColor: '#f2f2f2'
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
@@ -790,10 +760,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
-                                    width: 4,
-                                    height: 4
+                                    width: 1,
+                                    height: 3
                                 },
-                                shadowOpacity: !isSectionDropdownOpen ? 0 : 0.12,
+                                shadowOpacity: !isSectionDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
                                 zIndex: 1000001,
                                 elevation: 1000001
@@ -814,7 +784,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 justifyContent: "center",
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "#efefef",
+                backgroundColor: "#f2f2f2",
                 paddingVertical: 100
             }}>
             <ActivityIndicator color={"#1F1F1F"} />
@@ -844,7 +814,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                     alignSelf: 'center',
                     minHeight: 100,
                 }}>
-                    <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 25 }}>
+                    <View style={{ backgroundColor: 'white', flexDirection: 'row', paddingBottom: 15 }}>
                         <TouchableOpacity
                             key={Math.random()}
                             style={{
@@ -860,19 +830,20 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 fontWeight: 'bold',
                                 color: '#1F1F1F'
                             }}>
-                                <Ionicons name='chevron-back-outline' size={22} color={'#000000'} style={{ marginRight: 10 }} />
+                                <Ionicons name='chevron-back-outline' size={24} color={'#000000'} style={{ marginRight: 10 }} />
                             </Text>
                         </TouchableOpacity>
                     </View>
                     <Text
                         style={{
                             fontSize: 20,
-                            paddingBottom: 20,
+                            // paddingBottom: 20,,
+                            alignSelf: 'center',
                             fontFamily: 'inter',
                             flex: 1,
                             lineHeight: 25
                         }}>
-                        Duplicate
+                        Duplicate Channel
                     </Text>
                     <ScrollView
                         onScroll={() => {
@@ -882,13 +853,15 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             maxHeight: Dimensions.get('window').height - 95,
                             // height: 'auto',
                             minHeight: 100,
-                            paddingRight: 50
+                            paddingRight: 50,
+                            maxWidth: 320,
                         }}
                     >
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{
                                 fontSize: 14,
-                                color: '#000000'
+                                color: '#000000',
+                                fontFamily: 'Inter',
                             }}>
                                 {PreferredLanguageText('name')}
                             </Text>
@@ -900,7 +873,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 }}
                                 placeholderTextColor={'#1F1F1F'}
                                 required={true}
-                                footerMessage={'case sensitive'}
                             />
                         </View>
                         {
@@ -908,7 +880,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             (<View style={{ backgroundColor: 'white' }}>
                                 <Text style={{
                                     fontSize: 14,
-                                    color: '#000000'
+                                    color: '#000000',
+                                    fontFamily: 'Inter',
                                 }}>
                                     Description
                                 </Text>
@@ -918,7 +891,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     fontFamily: 'overpass',
                                     width: "100%",
                                     maxWidth: 500,
-                                    borderBottom: '1px solid #efefef',
+                                    borderBottom: '1px solid #f2f2f2',
                                     fontSize: 14,
                                     paddingTop: 13,
                                     paddingBottom: 13,
@@ -938,7 +911,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         fontFamily: 'overpass',
                                         width: "100%",
                                         maxWidth: 500,
-                                        borderBottom: '1px solid #efefef',
+                                        borderBottom: '1px solid #f2f2f2',
                                         fontSize: 14,
                                         paddingTop: 13,
                                         paddingBottom: 13,
@@ -959,7 +932,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{
                                 fontSize: 14, 
-                                color: '#000000'
+                                color: '#000000',
+                                fontFamily: 'Inter',
                             }}>
                                 {PreferredLanguageText('enrolmentPassword')}
                             </Text>
@@ -968,14 +942,14 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 placeholder={`(${PreferredLanguageText('optional')})`}
                                 onChangeText={val => setDuplicateChannelPassword(val)}
                                 placeholderTextColor={'#1F1F1F'}
-                                secureTextEntry={true}
                                 required={false}
                             />
                         </View>
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{
                                 fontSize: 14, 
-                                color: '#000000'
+                                color: '#000000',
+                                fontFamily: 'Inter',
                             }}>
                                 Theme
                             </Text>
@@ -1004,7 +978,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         }}>
                                         <Text style={{
                                             fontSize: 14,
-                                            color: '#000000'
+                                            color: '#000000',
+                                            fontFamily: 'Inter',
                                         }}>Public</Text>
                                     </View>
                                     <View
@@ -1019,7 +994,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             onValueChange={() => setIsPublic(!isPublic)}
                                             style={{ height: 20 }}
                                             trackColor={{
-                                                false: "#efefef",
+                                                false: "#f2f2f2",
                                                 true: "#006AFF"
                                             }}
                                             activeThumbColor="white"
@@ -1083,7 +1058,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         <Text
                                             style={{
                                                 fontSize: 14,
-                                                color: '#000000'
+                                                color: '#000000',
+                                                fontFamily: 'Inter',
                                             }}
                                         >
                                             Duplicate Viewers
@@ -1104,7 +1080,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 }}
                                                 style={{ height: 20 }}
                                                 trackColor={{
-                                                    false: "#efefef",
+                                                    false: "#f2f2f2",
                                                     true: "#006AFF"
                                                 }}
                                                 activeThumbColor="white"
@@ -1130,7 +1106,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         <Text
                                             style={{
                                                 fontSize: 14,
-                                                color: '#000000'
+                                                color: '#000000',
+                                                fontFamily: 'Inter',
                                             }}
                                         >
                                             Duplicate Editors
@@ -1151,7 +1128,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 }}
                                                 style={{ height: 20 }}
                                                 trackColor={{
-                                                    false: "#efefef",
+                                                    false: "#f2f2f2",
                                                     true: "#006AFF"
                                                 }}
                                                 activeThumbColor="white"
@@ -1223,7 +1200,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{
                                 fontSize: 14, 
-                                color: '#000000'
+                                color: '#000000',
+                                fontFamily: 'Inter'
                             }}>
                                 Access Code
                             </Text>
@@ -1270,7 +1248,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <View style={{ backgroundColor: 'white', maxWidth: 320 }}>
                             <Text style={{
                                 fontSize: 14, 
-                                color: '#000000'
+                                color: '#000000',
+                                fontFamily: 'Inter'
                             }}>
                                 {PreferredLanguageText('name')}
                             </Text>
@@ -1283,13 +1262,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 }}
                                 placeholderTextColor={'#1F1F1F'}
                                 required={true}
-                                footerMessage={'case sensitive'}
                             />
                         </View>
                         <View style={{ backgroundColor: 'white', maxWidth: 320 }}>
                             <Text style={{
                                 fontSize: 14, 
-                                color: '#000000'
+                                color: '#000000',
+                                fontFamily: 'Inter'
                             }}>
                                 {PreferredLanguageText('enrolmentPassword')}
                             </Text>
@@ -1304,9 +1283,32 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             />
                         </View>
 
+                        {
+                            meetingProvider && meetingProvider !== "" ?
+                            (<View style={{ backgroundColor: 'white' }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    color: '#000000'
+                                }}>
+                                    Meeting link
+                                </Text>
+                                <TextInput
+                                    value={meetingUrl}
+                                    autoCompleteType='off'
+                                    placeholder={''}
+                                    onChangeText={val => setMeetingUrl(val)}
+                                    placeholderTextColor={'#1F1F1F'}
+                                    required={false}
+                                />
+                            </View>
+                            ) : null
+                        }
+
                         <View style={{ backgroundColor: 'white' }}>
                             <Text style={{
-                                color: '#000000'
+                                fontSize: 14,
+                                color: '#000000',
+                                fontFamily: 'Inter'
                             }}>
                                 Theme
                             </Text>
@@ -1336,7 +1338,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         }}>
                                         <Text style={{
                                             fontSize: 14,
-                                            color: '#000000'
+                                            color: '#000000',
+                                            fontFamily: 'Inter'
                                         }}>Public</Text>
                                     </View>
                                     <View
@@ -1351,7 +1354,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             onValueChange={() => setIsPublic(!isPublic)}
                                             style={{ height: 20 }}
                                             trackColor={{
-                                                false: "#efefef",
+                                                false: "#f2f2f2",
                                                 true: "#006AFF"
                                             }}
                                             activeThumbColor="white"
@@ -1378,7 +1381,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     }}>
                                     <Text style={{
                                         fontSize: 14,
-                                        color: '#000000'
+                                        color: '#000000',
+                                        fontFamily: 'Inter'
                                     }}>Tags</Text>
                                 </View>
                                 <View
@@ -1404,7 +1408,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <Text style={{
                             fontSize: 14,
                             paddingTop: 20,
-                            color: '#000000'
+                            color: '#000000',
+                            fontFamily: 'Inter'
                         }}>
                             Viewers
                         </Text>
@@ -1413,8 +1418,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <View style={{
                             flexDirection: 'column', marginTop: 25,
                         }}>
-                            <View style={{ height: 'auto', maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? 250 : 50, }}>
-
+                            <View style={{ maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? 250 : 50, }}>
                                 <DropDownPicker
                                     multiple={true}
                                     open={isViewersDropdownOpen}
@@ -1432,7 +1436,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     style={{
                                         borderWidth: 0,
                                         borderBottomWidth: 1,
-                                        borderBottomColor: '#efefef'
+                                        borderBottomColor: '#f2f2f2'
                                     }}
                                     dropDownContainerStyle={{
                                         borderWidth: 0,
@@ -1442,51 +1446,22 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     containerStyle={{
                                         shadowColor: '#000',
                                         shadowOffset: {
-                                            width: 4,
-                                            height: 4
+                                            width: 1,
+                                            height: 3
                                         },
-                                        shadowOpacity: !isViewersDropdownOpen ? 0 : 0.12,
+                                        shadowOpacity: !isViewersDropdownOpen ? 0 : 0.08,
                                         shadowRadius: 12,
                                         zIndex: 1000001,
                                         elevation: 1000001
                                     }}
                                 />
-                                    {/* <label style={{ width: '100%', maxWidth: 320 }}>
-                                        <Select
-                                            themeVariant="light"
-                                            selectMultiple={true}
-                                            group={true}
-                                            groupLabel="&nbsp;"
-                                            inputClass="mobiscrollCustomMultiInput"
-                                            placeholder="Select..."
-                                            touchUi={true}
-                                            value={selectedValues}
-                                            data={options}
-                                            onChange={(val: any) => {
-                                                setSelectedValues(val.value)
-                                                // Filter out any moderator if not part of the selected values
-
-                                                let filterRemovedModerators = selectedModerators.filter((mod: any) => val.value.includes(mod))
-
-                                                setSelectedModerators(filterRemovedModerators)
-                                            }}
-                                            responsive={{
-                                                small: {
-                                                    display: 'bubble'
-                                                },
-                                                medium: {
-                                                    touchUi: false,
-                                                }
-                                            }}
-                                        />
-                                    </label> */}
-
                             </View>
                         </View>
                         <Text style={{
                             fontSize: 14,
                             color: '#000000', marginTop: 25, marginBottom: 20,
-                            maxWidth: 320
+                            maxWidth: 320,
+                            fontFamily: 'Inter'
                         }}>
                             Editors
                         </Text>
@@ -1503,7 +1478,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#efefef'
+                                borderBottomColor: '#f2f2f2'
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
@@ -1513,10 +1488,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
-                                    width: 4,
-                                    height: 4
+                                    width: 1,
+                                    height: 3
                                 },
-                                shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.12,
+                                shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
                                 zIndex: 1000001,
                                 elevation: 1000001
@@ -1653,7 +1628,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             lineHeight: 34,
                                             color: '#000000',
                                             fontSize: 12,
-                                            backgroundColor: '#efefef',
+                                            backgroundColor: '#f2f2f2',
                                             paddingHorizontal: 20,
                                             fontFamily: 'inter',
                                             height: 35,
@@ -1717,7 +1692,7 @@ const styles = StyleSheet.create({
     },
     input: {
         width: '100%',
-        borderBottomColor: '#efefef',
+        borderBottomColor: '#f2f2f2',
         borderBottomWidth: 1,
         fontSize: 14, fontFamily: 'inter',
         paddingTop: 13,

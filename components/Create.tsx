@@ -31,7 +31,7 @@ import Alert from '../components/Alert';
 import QuizCreate from './QuizCreate';
 import TeXToSVG from 'tex-to-svg';
 import moment from 'moment';
-import ReactPlayer from 'react-native-video';
+import { Video } from 'expo-av';
 // import WebViewer from '@pdftron/pdfjs-express';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 // import TextareaAutosize from 'react-textarea-autosize';
@@ -133,6 +133,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const window = Dimensions.get('window');
     const screen = Dimensions.get('screen');
     const [dimensions, setDimensions] = useState({ window, screen });
+    const [userId, setUserId] = useState('');
     const width = dimensions.window.width;
     const hours: any[] = [0, 1, 2, 3, 4, 5, 6];
     const minutes: any[] = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
@@ -163,6 +164,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [foreColor, setForeColor] = useState('#000000');
     const [insertLinkVisible, setInsertLinkVisible] = useState(false);
     const [insertImageVisible, setInsertImageVisible] = useState(false);
+    const [quizEditorRef, setQuizEditorRef] = useState<any>(null);
+    const videoRef: any = useRef();
 
     // Alerts
     const enterOneProblemAlert = PreferredLanguageText('enterOneProblem');
@@ -179,6 +182,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const enterTitleAlert = PreferredLanguageText('enterTitle');
 
     // HOOK
+
+    console.log('URL', url);
 
     /**
      * @description Event listener for dimensions change
@@ -274,9 +279,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     useEffect(() => {
         (async () => {
             const uString: any = await AsyncStorage.getItem('user');
-            const userId = JSON.parse(uString);
-            if (userId.role) {
-                setRole(userId.role);
+            const parsedUser = JSON.parse(uString);
+            if (parsedUser.role) {
+                setRole(parsedUser.role);
+            }
+            if (parsedUser._id) {
+                setUserId(parsedUser._id);
             }
         })();
     });
@@ -641,7 +649,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     }, [hiliteColor]);
 
     const handleUploadFile = useCallback(async () => {
-        const res = await handleFile(false);
+        const res = await handleFile(false, userId);
 
         console.log('File upload result', res);
 
@@ -652,19 +660,43 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setEditorFocus(false);
 
         updateAfterFileImport(res.url, res.type);
-    }, [RichText, RichText.current]);
+    }, [RichText, RichText.current, userId]);
+
+    const handleUploadAudioVideo = useCallback(async () => {
+        const res = await handleFile(true, userId);
+
+        console.log('File upload result', res);
+
+        if (!res || res.url === '' || res.type === '') {
+            return;
+        }
+
+        setEditorFocus(false);
+
+        updateAfterFileImport(res.url, res.type);
+    }, [RichText, RichText.current, userId]);
 
     const changeForeColor = useCallback(
         (h: any) => {
-            RichText.current?.setForeColor(h);
+            if (quizEditorRef) {
+                quizEditorRef.current?.setForeColor(h);
+            } else {
+                RichText.current?.setForeColor(h);
+            }
+
             setForeColorVisible(false);
         },
-        [foreColor, RichText, RichText.current]
+        [foreColor, RichText, RichText.current, quizEditorRef]
     );
 
     const changeHiliteColor = useCallback(
         (h: any) => {
-            RichText.current?.setHiliteColor(h);
+            if (quizEditorRef) {
+                quizEditorRef.current?.setHiliteColor(h);
+            } else {
+                RichText.current?.setHiliteColor(h);
+            }
+
             setHiliteColorVisible(false);
         },
         [hiliteColor, RichText, RichText.current]
@@ -687,39 +719,65 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const insertEmoji = useCallback(
         emoji => {
-            RichText.current?.insertText(emoji);
+            if (quizEditorRef) {
+                quizEditorRef.current?.insertText(emoji);
+            } else {
+                RichText.current?.insertText(emoji);
+            }
+
             // RichText.current?.blurContentEditor();
         },
-        [RichText, RichText.current]
+        [RichText, RichText.current, quizEditorRef]
     );
 
-    const handleEmoji = useCallback(() => {
-        Keyboard.dismiss();
-        // RichText.current?.blurContentEditor();
-        setEmojiVisible(!emojiVisible);
-        setForeColorVisible(false);
-        setHiliteColorVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, emojiVisible]);
+    const handleEmoji = useCallback(
+        (editorRef: any) => {
+            Keyboard.dismiss();
+            // RichText.current?.blurContentEditor();
+            setEmojiVisible(!emojiVisible);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
 
-    const handleHiliteColor = useCallback(() => {
-        Keyboard.dismiss();
-        setHiliteColorVisible(!hiliteColorVisible);
-        setForeColorVisible(false);
-        setEmojiVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, hiliteColorVisible]);
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, emojiVisible]
+    );
 
-    const handleForeColor = useCallback(() => {
-        Keyboard.dismiss();
-        setForeColorVisible(!foreColorVisible);
-        setHiliteColorVisible(false);
-        setEmojiVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, foreColorVisible]);
+    const handleHiliteColor = useCallback(
+        (editorRef: any) => {
+            Keyboard.dismiss();
+            setHiliteColorVisible(!hiliteColorVisible);
+            setForeColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, hiliteColorVisible]
+    );
+
+    const handleForeColor = useCallback(
+        (editorRef: any) => {
+            Keyboard.dismiss();
+            setForeColorVisible(!foreColorVisible);
+            setHiliteColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, foreColorVisible]
+    );
 
     // const handleRemoveFormat = useCallback(() => {
     //     RichText.current?.setHiliteColor('#ffffff');
@@ -727,42 +785,63 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     //     // RichText.current?.setFontSize(3);
     // }, [RichText, RichText.current]);
 
-    const handleAddImage = useCallback(async () => {
+    const handleAddImage = useCallback((editorRef: any) => {
         setInsertImageVisible(true);
         setForeColorVisible(false);
         setHiliteColorVisible(false);
         setEmojiVisible(false);
         setInsertLinkVisible(false);
+
+        if (editorRef) {
+            setQuizEditorRef(editorRef);
+        }
     }, []);
 
     const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
-            const url = await handleImageUpload(takePhoto);
+            const url = await handleImageUpload(takePhoto, userId);
 
             if (url && url !== '') {
-                RichText.current?.insertImage(url);
+                if (quizEditorRef && quizEditorRef.current) {
+                    quizEditorRef.current?.insertImage(url);
+                    setQuizEditorRef(null);
+                } else {
+                    RichText.current?.insertImage(url);
+                }
             }
 
             setInsertImageVisible(false);
         },
+        [RichText, RichText.current, quizEditorRef, userId]
+    );
+
+    const handleInsertLink = useCallback(
+        (editorRef: any) => {
+            setInsertLinkVisible(true);
+            setInsertImageVisible(false);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setEmojiVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
         [RichText, RichText.current]
     );
 
-    const handleInsertLink = useCallback(() => {
-        setInsertLinkVisible(true);
-        setInsertImageVisible(false);
-        setForeColorVisible(false);
-        setHiliteColorVisible(false);
-        setEmojiVisible(false);
-    }, [RichText, RichText.current]);
-
     const onInsertLink = useCallback(
         (title, link) => {
-            RichText.current?.insertLink(title, link);
+            if (quizEditorRef && quizEditorRef.current) {
+                quizEditorRef.current?.insertLink(title, link);
+            } else {
+                RichText.current?.insertLink(title, link);
+            }
+
             Keyboard.dismiss();
             setInsertLinkVisible(false);
         },
-        [RichText, RichText.current]
+        [RichText, RichText.current, quizEditorRef]
     );
 
     /**
@@ -977,9 +1056,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         subCues = JSON.parse(value);
                     }
                 } catch (e) {}
-                let _id = subCues['local'].length;
+
+                let localCues: any[] = subCues['local'] ? subCues['local'] : [];
+
+                let _id = localCues.length;
+
                 while (true) {
-                    const duplicateId = subCues['local'].findIndex((item: any) => {
+                    const duplicateId = localCues.findIndex((item: any) => {
                         return item._id === _id;
                     });
                     if (duplicateId === -1) {
@@ -988,17 +1071,20 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         _id++;
                     }
                 }
-                subCues['local'].push({
-                    _id,
-                    cue: saveCue,
-                    date: new Date(),
-                    color,
-                    shuffle,
-                    frequency,
-                    starred,
-                    customCategory: customCategory === 'None' ? '' : customCategory,
-                    endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : ''
-                });
+                subCues['local'] = [
+                    ...localCues,
+                    {
+                        _id,
+                        cue: saveCue,
+                        date: new Date(),
+                        color,
+                        shuffle,
+                        frequency,
+                        starred,
+                        customCategory: customCategory === 'None' ? '' : customCategory,
+                        endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : ''
+                    }
+                ];
                 const stringifiedCues = JSON.stringify(subCues);
                 await AsyncStorage.setItem('cues', stringifiedCues);
                 storeDraft('cueDraft', '');
@@ -1845,7 +1931,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             style={{
                                                 flexDirection: width < 768 ? 'column' : 'row',
                                                 borderRightWidth: 0,
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 paddingTop: width < 768 ? 0 : 40
                                             }}
                                         >
@@ -1893,7 +1979,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         style={{
                                                             borderWidth: 0,
                                                             borderBottomWidth: 1,
-                                                            borderBottomColor: '#efefef'
+                                                            borderBottomColor: '#f2f2f2'
                                                         }}
                                                         dropDownContainerStyle={{
                                                             borderWidth: 0,
@@ -1903,10 +1989,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         containerStyle={{
                                                             shadowColor: '#000',
                                                             shadowOffset: {
-                                                                width: 4,
-                                                                height: 4
+                                                                width: 1,
+                                                                height: 3
                                                             },
-                                                            shadowOpacity: !isChannelDropdownOpen ? 0 : 0.12,
+                                                            shadowOpacity: !isChannelDropdownOpen ? 0 : 0.08,
                                                             shadowRadius: 12,
                                                             zIndex: 1000001,
                                                             elevation: 1000001
@@ -1959,7 +2045,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             }}
                                                             style={{ height: 20 }}
                                                             trackColor={{
-                                                                false: '#efefef',
+                                                                false: '#f2f2f2',
                                                                 true: '#006AFF'
                                                             }}
                                                             activeThumbColor="white"
@@ -2015,7 +2101,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     style={{
                                                                         borderWidth: 0,
                                                                         borderBottomWidth: 1,
-                                                                        borderBottomColor: '#efefef'
+                                                                        borderBottomColor: '#f2f2f2'
                                                                     }}
                                                                     dropDownContainerStyle={{
                                                                         borderWidth: 0,
@@ -2024,10 +2110,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     containerStyle={{
                                                                         shadowColor: '#000',
                                                                         shadowOffset: {
-                                                                            width: 4,
-                                                                            height: 4
+                                                                            width: 1,
+                                                                            height: 3
                                                                         },
-                                                                        shadowOpacity: !isUsersDropdownOpen ? 0 : 0.12,
+                                                                        shadowOpacity: !isUsersDropdownOpen ? 0 : 0.08,
                                                                         shadowRadius: 12,
                                                                         zIndex: 999999
                                                                     }}
@@ -2083,7 +2169,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             }}
                                                             style={{ height: 20 }}
                                                             trackColor={{
-                                                                false: '#efefef',
+                                                                false: '#f2f2f2',
                                                                 true: '#006AFF'
                                                             }}
                                                             activeThumbColor="white"
@@ -2102,34 +2188,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     }}
                                                                 >
                                                                     <Text style={styles.text}>Available</Text>
-                                                                    {/* <MobiscrollDatePicker
-                                                                        controls={['date', 'time']}
-                                                                        touchUi={true}
-                                                                        value={initiateAt}
-                                                                        themeVariant="light"
-                                                                        // inputComponent="input"
-                                                                        inputProps={{
-                                                                            placeholder: 'Please Select...'
-                                                                        }}
-                                                                        onChange={(event: any) => {
-                                                                            const date = new Date(event.value);
-                                                                            const roundValue = roundSeconds(date);
-                                                                            if (date < new Date()) return;
-                                                                            setInitiateAt(roundValue);
-                                                                        }}
-                                                                        responsive={{
-                                                                            xsmall: {
-                                                                                controls: ['date', 'time'],
-                                                                                display: 'bottom',
-                                                                                touchUi: true
-                                                                            },
-                                                                            medium: {
-                                                                                controls: ['date', 'time'],
-                                                                                display: 'anchored',
-                                                                                touchUi: false
-                                                                            }
-                                                                        }}
-                                                                    /> */}
                                                                     {renderInitiateAtDateTimePicker()}
                                                                 </View>
                                                             ) : null}
@@ -2154,35 +2212,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         {PreferredLanguageText('deadline')}
                                                                     </Text>
                                                                     {renderDeadlineDateTimePicker()}
-                                                                    {/* <MobiscrollDatePicker
-                                                                        controls={['date', 'time']}
-                                                                        touchUi={true}
-                                                                        theme="ios"
-                                                                        value={deadline}
-                                                                        themeVariant="light"
-                                                                        // inputComponent="input"
-                                                                        inputProps={{
-                                                                            placeholder: 'Please Select...'
-                                                                        }}
-                                                                        onChange={(event: any) => {
-                                                                            const date = new Date(event.value);
-                                                                            if (date < new Date()) return;
-                                                                            const roundValue = roundSeconds(date);
-                                                                            setDeadline(roundValue);
-                                                                        }}
-                                                                        responsive={{
-                                                                            xsmall: {
-                                                                                controls: ['date', 'time'],
-                                                                                display: 'bottom',
-                                                                                touchUi: true
-                                                                            },
-                                                                            medium: {
-                                                                                controls: ['date', 'time'],
-                                                                                display: 'anchored',
-                                                                                touchUi: false
-                                                                            }
-                                                                        }}
-                                                                    /> */}
                                                                 </View>
                                                             ) : null}
                                                         </View>
@@ -2218,7 +2247,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         Graded
                                                     </Text>
                                                 </View>
-                                                <View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                     <View>
                                                         <View
                                                             style={{
@@ -2234,14 +2263,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 onValueChange={() => setGraded(!graded)}
                                                                 style={{ height: 20 }}
                                                                 trackColor={{
-                                                                    false: '#efefef',
+                                                                    false: '#f2f2f2',
                                                                     true: '#006AFF'
                                                                 }}
                                                                 activeThumbColor="white"
                                                             />
                                                         </View>
                                                     </View>
-                                                    <View>
+                                                    <View style={{ marginLeft: 'auto' }}>
                                                         {graded ? (
                                                             <View
                                                                 style={{
@@ -2255,8 +2284,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 <TextInput
                                                                     value={gradeWeight}
                                                                     style={{
-                                                                        width: '25%',
-                                                                        borderBottomColor: '#efefef',
+                                                                        // width: '25%',
+                                                                        borderBottomColor: '#f2f2f2',
                                                                         borderBottomWidth: 1,
                                                                         fontSize: 14,
                                                                         padding: 15,
@@ -2329,7 +2358,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 }
                                                                 style={{ height: 20 }}
                                                                 trackColor={{
-                                                                    false: '#efefef',
+                                                                    false: '#f2f2f2',
                                                                     true: '#006AFF'
                                                                 }}
                                                                 activeThumbColor="white"
@@ -2400,7 +2429,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     style={{
                                                         // flex: 1,
                                                         flexDirection: 'row',
-                                                        backgroundColor: 'white'
+                                                        backgroundColor: 'white',
+                                                        paddingBottom: 15
                                                     }}
                                                 >
                                                     <Text
@@ -2435,7 +2465,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             }}
                                                             style={{ height: 20 }}
                                                             trackColor={{
-                                                                false: '#efefef',
+                                                                false: '#f2f2f2',
                                                                 true: '#006AFF'
                                                             }}
                                                             activeThumbColor="white"
@@ -2488,7 +2518,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             width: '100%',
                                             borderRightWidth: 0,
-                                            borderColor: '#efefef'
+                                            borderColor: '#f2f2f2'
                                         }}
                                     >
                                         <View
@@ -2538,7 +2568,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 value={customCategory}
                                                                 style={{
                                                                     borderRadius: 0,
-                                                                    borderColor: '#efefef',
+                                                                    borderColor: '#f2f2f2',
                                                                     borderBottomWidth: 1,
                                                                     fontSize: 14,
                                                                     padding: 10,
@@ -2555,7 +2585,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     ) : (
                                                         <View
                                                             style={{
-                                                                height: isCategoryDropdownOpen ? 250 : 50
+                                                                height: isCategoryDropdownOpen ? 250 : 50,
+                                                                marginBottom: isCategoryDropdownOpen ? 20 : 0
                                                             }}
                                                         >
                                                             <DropDownPicker
@@ -2569,7 +2600,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 style={{
                                                                     borderWidth: 0,
                                                                     borderBottomWidth: 1,
-                                                                    borderBottomColor: '#efefef'
+                                                                    borderBottomColor: '#f2f2f2'
                                                                 }}
                                                                 dropDownContainerStyle={{
                                                                     borderWidth: 0,
@@ -2579,11 +2610,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 containerStyle={{
                                                                     shadowColor: '#000',
                                                                     shadowOffset: {
-                                                                        width: 4,
-                                                                        height: 4
+                                                                        width: 1,
+                                                                        height: 3
                                                                     },
-                                                                    shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.12,
-                                                                    shadowRadius: 12,
+                                                                    shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.08,
+                                                                    shadowRadius: 8,
                                                                     zIndex: 1000001,
                                                                     elevation: 1000001
                                                                 }}
@@ -2593,8 +2624,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 </View>
                                                 <View
                                                     style={{
-                                                        width: '15%',
-                                                        backgroundColor: 'white'
+                                                        // width: '15%',
+                                                        backgroundColor: 'white',
+                                                        marginLeft: 20
                                                     }}
                                                 >
                                                     <TouchableOpacity
@@ -2632,7 +2664,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             width: '100%',
                                             borderRightWidth: 0,
-                                            borderColor: '#efefef',
+                                            borderColor: '#f2f2f2',
                                             flexDirection: width < 768 ? 'column' : 'row',
                                             paddingTop: 40,
                                             alignItems: width < 1024 ? 'flex-start' : 'center',
@@ -2744,7 +2776,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 }}
                                                 style={{ height: 20 }}
                                                 trackColor={{
-                                                    false: '#efefef',
+                                                    false: '#f2f2f2',
                                                     true: '#006AFF'
                                                 }}
                                                 activeThumbColor="white"
@@ -2788,7 +2820,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         onValueChange={() => setShuffle(!shuffle)}
                                                         style={{ height: 20 }}
                                                         trackColor={{
-                                                            false: '#efefef',
+                                                            false: '#f2f2f2',
                                                             true: '#006AFF'
                                                         }}
                                                         activeThumbColor="white"
@@ -2932,7 +2964,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         }
                                                         style={{ height: 20 }}
                                                         trackColor={{
-                                                            false: '#efefef',
+                                                            false: '#f2f2f2',
                                                             true: '#006AFF'
                                                         }}
                                                         activeThumbColor="white"
@@ -3009,7 +3041,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 Timed
                                             </Text>
                                         </View>
-                                        <View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <View
                                                 style={{
                                                     backgroundColor: 'white',
@@ -3033,7 +3065,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     }}
                                                     style={{ height: 20 }}
                                                     trackColor={{
-                                                        false: '#efefef',
+                                                        false: '#f2f2f2',
                                                         true: '#006AFF'
                                                     }}
                                                     activeThumbColor="white"
@@ -3044,8 +3076,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     style={{
                                                         borderRightWidth: 0,
                                                         paddingTop: 0,
-                                                        borderColor: '#efefef',
-                                                        flexDirection: 'row'
+                                                        borderColor: '#f2f2f2',
+                                                        flexDirection: 'row',
+                                                        marginLeft: 'auto'
                                                     }}
                                                 >
                                                     <View>
@@ -3077,7 +3110,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         borderRadius: 15,
                                                                         shadowOpacity: 0,
                                                                         borderWidth: 1,
-                                                                        borderColor: '#efefef',
+                                                                        borderColor: '#f2f2f2',
                                                                         overflow: 'scroll',
                                                                         maxHeight: '100%'
                                                                     }
@@ -3121,7 +3154,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         borderRadius: 15,
                                                                         shadowOpacity: 0,
                                                                         borderWidth: 1,
-                                                                        borderColor: '#efefef',
+                                                                        borderColor: '#f2f2f2',
                                                                         overflow: 'scroll',
                                                                         maxHeight: '100%'
                                                                     }
@@ -3185,7 +3218,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
                                                     style={{ height: 20 }}
                                                     trackColor={{
-                                                        false: '#efefef',
+                                                        false: '#f2f2f2',
                                                         true: '#006AFF'
                                                     }}
                                                     activeThumbColor="white"
@@ -3202,7 +3235,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             width: '100%',
                                             borderRightWidth: 0,
-                                            borderColor: '#efefef',
+                                            borderColor: '#f2f2f2',
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             paddingHorizontal: 10
@@ -3217,9 +3250,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 flex: 1,
                                                 marginRight: 20,
                                                 maxWidth: 400,
-                                                // borderBottom: '1px solid #efefef',
+                                                // borderBottom: '1px solid #f2f2f2',
                                                 borderBottomWidth: 1,
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 fontSize: 14,
                                                 paddingTop: 13,
                                                 paddingBottom: 13,
@@ -3284,7 +3317,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         width: '100%',
                                                         maxWidth: 600,
                                                         paddingTop: 15,
-                                                        borderColor: '#efefef',
+                                                        borderColor: '#f2f2f2',
                                                         borderBottomWidth: 1
                                                     }}
                                                 >
@@ -3400,16 +3433,16 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         hiliteColor={handleHiliteColor}
                                                         foreColor={handleForeColor}
                                                         insertEmoji={handleEmoji}
-                                                        onPressAddImage={handleAddImage}
-                                                        onInsertLink={handleInsertLink}
+                                                        onPressAddImage={() => handleAddImage(null)}
+                                                        onInsertLink={() => handleInsertLink(null)}
                                                     />
                                                     <ScrollView
                                                         horizontal={false}
                                                         style={{
-                                                            backgroundColor: '#efefef',
-                                                            height: 150,
-                                                            borderColor: '#efefef',
-                                                            borderWidth: 1
+                                                            backgroundColor: '#f2f2f2',
+                                                            height: 120,
+                                                            borderColor: '#f2f2f2',
+                                                            borderWidth: editorFocus ? 1 : 0
                                                         }}
                                                         keyboardDismissMode={'none'}
                                                         ref={scrollRef}
@@ -3430,16 +3463,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 display: 'flex',
                                                                 flex: 1,
                                                                 height: '100%',
-                                                                minHeight: 150
+                                                                minHeight: 120,
+                                                                borderBottomColor: '#f2f2f2',
+                                                                borderBottomWidth: 1
                                                             }}
                                                             editorStyle={{
                                                                 backgroundColor: '#fff',
                                                                 placeholderColor: '#a2a2ac',
                                                                 color: '#2f2f3c',
-                                                                contentCSSText: 'font-size: 16px; min-height: 150;'
+                                                                contentCSSText: 'font-size: 16px; min-height: 120;'
                                                             }}
                                                             initialContentHTML={quizInstructions}
-                                                            initialHeight={150}
+                                                            initialHeight={120}
                                                             onScroll={() => Keyboard.dismiss()}
                                                             placeholder={'Quiz instructions'}
                                                             onChange={text => {
@@ -3459,78 +3494,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             onCursorPosition={handleCursorPosition}
                                                         />
                                                     </ScrollView>
-                                                    {/* <Editor
-                                                        initialValue={initialQuizInstructions}
-                                                        apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
-                                                        init={{
-                                                            skin: 'snow',
-                                                            // toolbar_sticky: true,
-                                                            indent: false,
-                                                            branding: false,
-                                                            placeholder: 'Instructions',
-                                                            autoresize_on_init: false,
-                                                            autoresize_min_height: 200,
-                                                            height: 200,
-                                                            min_height: 200,
-                                                            paste_data_images: true,
-                                                            images_upload_url:
-                                                                'https://api.learnwithcues.com/api/imageUploadEditor',
-                                                            mobile: {
-                                                                plugins:
-                                                                    'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
-                                                            },
-                                                            plugins:
-                                                                'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
-                                                            menu: {
-                                                                // this is the complete default configuration
-                                                                file: { title: 'File', items: 'newdocument' },
-                                                                edit: {
-                                                                    title: 'Edit',
-                                                                    items:
-                                                                        'undo redo | cut copy paste pastetext | selectall'
-                                                                },
-                                                                insert: {
-                                                                    title: 'Insert',
-                                                                    items: 'link media | template hr'
-                                                                },
-                                                                view: { title: 'View', items: 'visualaid' },
-                                                                format: {
-                                                                    title: 'Format',
-                                                                    items:
-                                                                        'bold italic underline strikethrough superscript subscript | formats | removeformat'
-                                                                },
-                                                                table: {
-                                                                    title: 'Table',
-                                                                    items:
-                                                                        'inserttable tableprops deletetable | cell row column'
-                                                                },
-                                                                tools: { title: 'Tools', items: 'spellchecker code' }
-                                                            },
-                                                            statusbar: false,
-                                                            // menubar: 'file edit view insert format tools table tc help',
-                                                            menubar: false,
-                                                            toolbar:
-                                                                'undo redo | bold italic underline strikethrough |  numlist bullist checklist | forecolor backcolor permanentpen removeformat | table image media pageembed link | charmap emoticons superscript subscript',
-                                                            importcss_append: true,
-                                                            image_caption: true,
-                                                            quickbars_selection_toolbar:
-                                                                'bold italic underline | quicklink h2 h3 quickimage quicktable',
-                                                            noneditable_noneditable_class: 'mceNonEditable',
-                                                            toolbar_mode: 'sliding',
-                                                            // tinycomments_mode: 'embedded',
-                                                            content_style:
-                                                                '.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before{color: #1F1F1F;}',
-                                                            // contextmenu: 'link image table configurepermanentpen',
-                                                            // a11y_advanced_options: true,
-                                                            extended_valid_elements:
-                                                                'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
-                                                            // skin: useDarkMode ? 'oxide-dark' : 'oxide',
-                                                            // content_css: useDarkMode ? 'dark' : 'default',
-                                                        }}
-                                                        onChange={(e: any) => {
-                                                            setQuizInstructions(e.target.getContent());
-                                                        }}
-                                                    /> */}
                                                 </View>
                                             </View>
                                             <QuizCreate
@@ -3538,6 +3501,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 headers={headers}
                                                 setProblems={(p: any) => setProblems(p)}
                                                 setHeaders={(h: any) => setHeaders(h)}
+                                                // Pass in Methods to open
+                                                handleAddImage={handleAddImage}
+                                                handleInsertLink={handleInsertLink}
+                                                handleHiliteColor={handleHiliteColor}
+                                                handleForeColor={handleForeColor}
+                                                handleEmoji={handleEmoji}
                                             />
                                         </View>
                                     ) : imported ? (
@@ -3550,12 +3519,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         type === 'mpeg' ||
                                         type === 'mp2' ||
                                         type === 'wav' ? (
-                                            <ReactPlayer
-                                                source={{ uri: url }}
+                                            <Video
+                                                ref={videoRef}
                                                 style={{
                                                     width: '100%',
                                                     height: '100%'
                                                 }}
+                                                source={{
+                                                    uri: url
+                                                }}
+                                                useNativeControls
+                                                resizeMode="contain"
+                                                isLooping
                                             />
                                         ) : (
                                             <View
@@ -3568,7 +3543,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     style={{
                                                         height: Dimensions.get('window').width < 1024 ? '50vh' : '70vh',
                                                         borderWidth: 1,
-                                                        borderColor: '#efefef',
+                                                        borderColor: '#f2f2f2',
                                                         borderRadius: 1
                                                     }}></div> */}
                                                 <WebView source={{ uri: createPdfviewerURL }} />
@@ -3674,7 +3649,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <View style={{ height: '100%' }}>
                             <RichToolbar
                                 style={{
-                                    borderColor: '#efefef',
+                                    borderColor: '#f2f2f2',
                                     borderBottomWidth: 1,
                                     backgroundColor: '#fff',
                                     display: editorFocus ? 'flex' : 'none',
@@ -3690,8 +3665,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 disabledIconTint={'#bfbfbf'}
                                 actions={[
                                     actions.keyboard,
-                                    actions.insertVideo,
+                                    'insertFile',
                                     actions.insertImage,
+                                    actions.insertVideo,
                                     actions.insertLink,
                                     actions.insertBulletsList,
                                     actions.insertOrderedList,
@@ -3708,18 +3684,19 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     [actions.keyboard]: ({ tintColor }) => (
                                         <Text style={[styles.tib, { color: 'green', fontSize: 20 }]}>✓</Text>
                                     ),
-                                    [actions.insertVideo]: importIcon,
+                                    insertFile: importIcon,
                                     insertEmoji: emojiIcon
                                 }}
                                 insertEmoji={handleEmoji}
-                                insertVideo={handleUploadFile}
-                                onPressAddImage={handleAddImage}
-                                onInsertLink={handleInsertLink}
+                                insertVideo={handleUploadAudioVideo}
+                                insertFile={handleUploadFile}
+                                onPressAddImage={() => handleAddImage(null)}
+                                onInsertLink={() => handleInsertLink(null)}
                             />
                             <ScrollView
                                 horizontal={false}
                                 style={{
-                                    backgroundColor: '#efefef',
+                                    backgroundColor: '#f2f2f2',
                                     // maxHeight: editorFocus ? 340 : 'auto',
                                     height: '100%'
                                 }}
@@ -3752,7 +3729,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         minHeight: '100%',
                                         display: isQuiz || imported ? 'none' : 'flex',
                                         // borderTopWidth: 1,
-                                        // borderColor: '#efefef',
+                                        // borderColor: '#f2f2f2',
                                         marginBottom: editorFocus ? 0 : 200,
                                         flex: 1,
                                         height: '100%'
@@ -3794,7 +3771,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             > */}
                             <RichToolbar
                                 style={{
-                                    borderColor: '#efefef',
+                                    borderColor: '#f2f2f2',
                                     borderTopWidth: 1,
                                     backgroundColor: '#fff',
                                     display: editorFocus ? 'flex' : 'none'
@@ -3892,7 +3869,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     )}
                 </View>
             </View>
-            {/* {emojiVisible && <EmojiView onSelect={insertEmoji} />} */}
             {emojiVisible && (
                 <BottomSheet
                     snapPoints={[0, 350]}
@@ -4117,7 +4093,7 @@ const styles: any = StyleSheet.create({
     },
     input: {
         width: '100%',
-        borderBottomColor: '#efefef',
+        borderBottomColor: '#f2f2f2',
         borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 12,

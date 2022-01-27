@@ -34,7 +34,7 @@ const FileUpload: React.FC<any> = (props: any) => {
             props.action === 'audio/video' &&
             !(type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav')
         ) {
-            alert('Error! Only audio/video files can be uploaded');
+            alert('Error! This file format is not supported. Upload mp4 or ogg.');
             setUploading(false);
             return;
         }

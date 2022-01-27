@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, TextInput, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
-// import { TextInput as CustomTextInput } from './CustomTextInput'
+import { StyleSheet, TextInput, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { Text, View } from './Themed';
-// import EquationEditor from 'equation-editor-react';
-// import TextareaAutosize from 'react-textarea-autosize';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
-
-import { RadioButton } from "./RadioButton";
-// import parser from 'html-react-parser';
-
-import ReactPlayer from "react-native-video";
+import { RichEditor } from 'react-native-pell-rich-editor';
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
+import { Video } from 'expo-av';
 import { Ionicons } from "@expo/vector-icons";
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -106,13 +101,20 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
      * @description Renders Audio/Video player
      */
     const renderAudioVideoPlayer = (url: string, type: string) => {
-        return <ReactPlayer
-        source={{ uri: url }}
-        style={{
-            height: type === "mp3" || type === "wav" ? "75px" : "360px",
-            width: '100%'
-        }}
-      />
+        return <Video
+            // ref={audioRef}
+            style={{
+                width: '100%',
+                height: 250
+            }}
+            source={{
+                uri: url
+            }}
+            useNativeControls
+            resizeMode="contain"
+            isLooping
+            // onPlaybackStatusUpdate={status => setStatus(() => status)}
+        />
     }
 
     /**
@@ -242,12 +244,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
             paddingTop: 15,
-            paddingLeft: 0,
+            paddingHorizontal: 10,
             flexDirection: 'column',
             justifyContent: 'flex-start'
         }}>
             {
-                props.isOwner ? <View style={{ display: 'flex', flexDirection: Dimensions.get('window').width < 1024 ? 'column' : 'row', justifyContent: 'space-between', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: "#efefef", width: '100%' }}>
+                props.isOwner ? <View style={{ display: 'flex', flexDirection: Dimensions.get('window').width < 1024 ? 'column' : 'row', justifyContent: 'space-between', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: "#f2f2f2", width: '100%' }}>
                     <View style={{ display: 'flex', flexDirection: 'row', marginBottom: Dimensions.get('window').width < 1024 ? 20 : 0  }}>
                         <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 14 }}>
                             {props.problems.length} {props.problems.length === 1 ? "Question" : "Questions"}
@@ -337,7 +339,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         type = parse.type;
                     }
 
-                    return <View style={{ borderBottomColor: '#efefef', borderBottomWidth: index === (props.problems.length - 1) ? 0 : 1, marginBottom: 25 }} key={index}>
+                    return <View style={{ borderBottomColor: '#f2f2f2', borderBottomWidth: index === (props.problems.length - 1) ? 0 : 1, marginBottom: 25 }} key={index}>
                         {renderHeader(index)}
                         <View style={{ flexDirection: 'column', width: '100%' }}>
                                 <View style={{  flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', width: '100%' }}>
@@ -351,14 +353,42 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     {
                                         (audioVideoQuestion ? <View style={{ width: '100%', marginBottom: 10, paddingTop: 10, flex: 1 }}>
                                                 {renderAudioVideoPlayer(url, type)}
-                                                <Text style={{ marginTop: 10, marginBottom: 20, marginLeft: 20, fontSize: 14, lineHeight: 25 }}>
-                                                    {/* {parser(content)} */}
-                                                    {content}
-                                                </Text>
-                                            </View> : <Text style={{ marginTop: 10, marginBottom: 20, marginLeft: 20, fontSize: 14, width: window.screen.width < 1024 ? '100%' : '80%' , lineHeight: 25, paddingTop: 10, flex: 1 }}>
-                                                {/* {parser(problem.question)} */}
-                                                {problem.question}
-                                            </Text>)
+                                                <View
+                                                    style={{
+                                                        paddingTop: 10,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        flex: 1
+                                                    }}
+                                                >
+                                                    <RichEditor
+                                                        initialContentHTML={content}
+                                                        disabled={true}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            flex: 1
+                                                        }}
+                                                    />
+                                                </View>
+                                            </View> : <View
+                                                    style={{
+                                                        paddingTop: 10,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        flex: 1
+                                                    }}
+                                                >
+                                                    <RichEditor
+                                                        initialContentHTML={problem.question}
+                                                        disabled={true}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            flex: 1
+                                                        }}
+                                                    />
+                                                </View>)
                                     }
                                     
                                        
@@ -389,7 +419,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 }}
                                                 style={{
                                                     width: 120,
-                                                    borderBottomColor: '#efefef',
+                                                    borderBottomColor: '#f2f2f2',
                                                     borderBottomWidth: 1,
                                                     fontSize: 14,
                                                     padding: 15,
@@ -444,57 +474,71 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 }
 
                                 return <View style={{ flexDirection: 'row' }} key={solutions.toString() + i.toString()}>
-                                    <View style={{ paddingLeft: 40, paddingRight: 10, paddingTop: 21 }}>
-                                        {onlyOneCorrect ?
-                                        <TouchableOpacity
-                                            style={{ display: 'flex', alignItems: 'center', flexDirection: 'row', }}
-                                            disabled={true}
-                                        >
-                                            <RadioButton selected={solutions[index].selected[i].isSelected} />
-                                        </TouchableOpacity>
-                                        :
-                                        <input
-                                            disabled={true}
-                                            style={{ paddingRight: 20 }}
-                                            type='checkbox'
-                                            checked={solutions[index].selected[i].isSelected}
-                                        />}
+                                    <View style={{  paddingRight: 10, paddingTop: 21 }}>
+                                        <BouncyCheckbox
+                                            style={{}}
+                                            isChecked={
+                                                solutions[index].selected[i].isSelected
+                                            }
+                                            onPress={e => {
+                                                return;
+                                            }}
+                                                disabled={true}
+                                        />
                                     </View>
 
-                                    <Text
+                                    <View
                                         style={{
-                                            width: Dimensions.get('window').width < 1024 ? '80%' : '50%',
-                                            fontSize: 14,
-                                            padding: 15,
-                                            paddingTop: 12,
-                                            paddingBottom: 12,
-                                            marginTop: 5,
-                                            marginBottom: 20,
-                                            color,
-                                            lineHeight: 25
+                                            paddingTop: 10,
+                                            width: '100%',
+                                            height: '100%',
+                                            flex: 1
                                         }}
                                     >
-                                        {/* {parser(option.option)} */}
-                                        {option.option}
-                                    </Text>
+                                        <RichEditor
+                                            initialContentHTML={option.option}
+                                            disabled={true}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                flex: 1
+                                            }}
+                                        />
+                                    </View>
                                 </View>
                             })
                         }
                         {
                             problem.questionType === "freeResponse" ?
                                 <View style={{ width: '100%', paddingHorizontal: 40 }}>
-                                    <Text style={{ color: solutions[index].response !== "" ? 'black' : '#f94144', paddingTop: 20, paddingBottom: 40, lineHeight: 25, borderBottomColor: '#efefef', borderBottomWidth: 1 }}>
+                                    <Text style={{ color: solutions[index].response !== "" ? 'black' : '#f94144', paddingTop: 20, paddingBottom: 40, lineHeight: 25, borderBottomColor: '#f2f2f2', borderBottomWidth: 1 }}>
                                         {solutions[index].response && solutions[index].response !== "" ? 
-                                        // parser(solutions[index].response) 
-                                        (solutions[index].response)
-                                         : "No response"}
+                                        <View
+                                            style={{
+                                                paddingTop: 10,
+                                                width: '100%',
+                                                height: '100%',
+                                                flex: 1
+                                            }}
+                                        >
+                                            <RichEditor
+                                                initialContentHTML={solutions[index].response}
+                                                disabled={true}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    flex: 1
+                                                }}
+                                            />
+                                        </View>
+                                        : "No response"}
                                     </Text>
                                 </View>
                                 :
                                 null
                         }
 
-                        {!props.isOwner && problemComments[index] === '' ? null : <View style={{ width: window.screen.width < 1024 ? '100%' : '80%' , maxWidth: 400, marginLeft: 40, marginBottom: 40 }}>
+                        {!props.isOwner && problemComments[index] === '' ? null : <View style={{ width: Dimensions.get('window').width < 1024 ? '100%' : '80%' , maxWidth: 400, marginLeft: 40, marginBottom: 40 }}>
                             {props.isOwner ? 
                             // <TextareaAutosize
                             //     value={problemComments[index]}
@@ -510,7 +554,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             //         paddingBottom: 12,
                             //         width: '100%',
                             //         maxWidth: "100%",
-                            //         borderBottom: '1px solid #efefef',
+                            //         borderBottom: '1px solid #f2f2f2',
                             //         paddingLeft: 10,
                             //         paddingRight: 10
                             //     }}
@@ -550,11 +594,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </View>
                 })
             }
-            {!props.isOwner && !comment ? null : <View style={{ width: '100%', paddingVertical: 50, paddingHorizontal: 40, borderTopWidth: 1, borderColor: '#efefef' }}>
+            {!props.isOwner && !comment ? null : <View style={{ width: '100%', paddingVertical: 50, paddingHorizontal: 40, borderTopWidth: 1, borderColor: '#f2f2f2' }}>
                 {!props.isOwner ? <Text style={{ width: '100%', textAlign: 'left' }}>
                     Feedback
                 </Text> : null}
-                {props.isOwner ? <View style={{ width: window.screen.width < 1024 ? '100%' : '80%' , maxWidth: 400 }}>
+                {props.isOwner ? <View style={{ width: Dimensions.get('window').width < 1024 ? '100%' : '80%' , maxWidth: 400 }}>
                     {/* <TextareaAutosize
                         style={{ 
                             fontFamily: 'overpass',
@@ -566,7 +610,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             paddingBottom: 12,
                             width: '100%',
                             maxWidth: "100%",
-                            borderBottom: '1px solid #efefef',
+                            borderBottom: '1px solid #f2f2f2',
                         }}
                         value={comment}
                         onChange={(e: any) => setComment(e.target.value)}
@@ -673,7 +717,7 @@ export default Quiz;
 const styles = StyleSheet.create({
     input: {
         width: '50%',
-        // borderBottomColor: '#efefef',
+        // borderBottomColor: '#f2f2f2',
         // borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 12,

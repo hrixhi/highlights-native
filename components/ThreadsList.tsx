@@ -514,7 +514,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         return (
             <View
                 style={{
-                    backgroundColor: '#efefef',
+                    backgroundColor: '#f2f2f2',
                     flexDirection: 'column-reverse',
                     paddingBottom: 20,
                     paddingHorizontal: 20,
@@ -526,7 +526,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 {props.cueId === null && categoryChoices.length > 1 ? (
                     <View
                         style={{
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             height: isFilterDropdownOpen ? filterDropdownHeight : 50,
                             maxWidth: '100%',
                             marginTop: 20
@@ -543,8 +543,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             style={{
                                 borderWidth: 0,
                                 // borderBottomWidth: 1,
-                                // borderBottomColor: '#efefef',
-                                backgroundColor: '#efefef',
+                                // borderBottomColor: '#f2f2f2',
+                                backgroundColor: '#f2f2f2',
                                 borderBottomColor: '#d9dcdf',
                                 borderBottomWidth: 2
                             }}
@@ -552,17 +552,17 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 borderWidth: 0,
                                 zIndex: 1000001,
                                 elevation: 1000001,
-                                // backgroundColor: '#efefef',
+                                // backgroundColor: '#f2f2f2',
                                 shadowColor: '#000',
                                 shadowOffset: {
-                                    width: 4,
-                                    height: 4
+                                    width: 1,
+                                    height: 3
                                 },
-                                shadowOpacity: !isFilterDropdownOpen ? 0 : 0.12,
+                                shadowOpacity: !isFilterDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12
                             }}
                             containerStyle={{
-                                // backgroundColor: '#efefef',
+                                // backgroundColor: '#f2f2f2',
                                 borderRadius: 0
                             }}
                         />
@@ -574,7 +574,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             flex: 1,
                             justifyContent: 'flex-end',
                             flexDirection: 'row',
-                            backgroundColor: '#efefef'
+                            backgroundColor: '#f2f2f2'
                         }}
                     >
                         <TouchableOpacity
@@ -755,7 +755,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 }}
             >
                 {threads.length === 0 ? (
-                    <View style={{ flex: 1, backgroundColor: '#efefef' }}>
+                    <View style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
                         <Text
                             style={{
                                 width: '100%',
@@ -764,7 +764,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 paddingVertical: 50,
                                 fontFamily: 'inter',
                                 flex: 1,
-                                backgroundColor: '#efefef',
+                                backgroundColor: '#f2f2f2',
                                 paddingHorizontal: 20
                             }}
                         >
@@ -778,7 +778,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         // style={{ height: '100%' }}
                         contentContainerStyle={{
                             paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 10,
-                            borderColor: '#efefef',
+                            borderColor: '#f2f2f2',
                             borderRadius: 1,
                             width: '100%'
                         }}
@@ -798,9 +798,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 <TouchableOpacity
                                     onPress={() => loadCueDiscussions(thread._id)}
                                     style={{
-                                        // backgroundColor: '#efefef',
+                                        // backgroundColor: '#f2f2f2',
                                         flexDirection: 'row',
-                                        borderColor: '#efefef',
+                                        borderColor: '#f2f2f2',
                                         paddingVertical: 5,
                                         // borderRightWidth: 1,
                                         borderBottomWidth: ind === filteredThreads.length - 1 ? 0 : 1,
@@ -915,7 +915,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     return (
         <View
             style={{
-                backgroundColor: '#efefef',
+                backgroundColor: '#f2f2f2',
                 width: '100%',
                 paddingTop: 0,
                 justifyContent: 'center',
@@ -929,7 +929,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 style={{
                     width: '100%',
                     maxWidth: 900,
-                    backgroundColor: '#efefef',
+                    backgroundColor: '#f2f2f2',
                     borderRadius: 1,
                     flex: 1,
                     height: '100%'
@@ -937,7 +937,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             >
                 {!showThreadCues || showPost ? renderThreadHeader() : null}
                 {/* <Collapse isOpened={showComfments} style={{ flex: 1 }}> */}
-                <View style={{ flex: 1, backgroundColor: '#efefef' }}>
+                <View style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
                     {loading ? (
                         <View
                             style={{
@@ -946,7 +946,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 justifyContent: 'center',
                                 flex: 1,
                                 flexDirection: 'column',
-                                backgroundColor: '#efefef'
+                                backgroundColor: '#f2f2f2'
                             }}
                         >
                             <ActivityIndicator color={'#1F1F1F'} />
@@ -955,7 +955,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         <View
                             style={{
                                 width: '100%',
-                                backgroundColor: '#efefef',
+                                backgroundColor: '#f2f2f2',
                                 flex: 1,
                                 flexDirection: 'column',
                                 borderRadius: 1

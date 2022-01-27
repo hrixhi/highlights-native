@@ -43,7 +43,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 style={{
                     width: '100%',
                     borderRightWidth: 0,
-                    borderColor: '#efefef'
+                    borderColor: '#f2f2f2'
                 }}
             >
                 <View
@@ -94,7 +94,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         value={customCategory}
                                         style={{
                                             borderRadius: 0,
-                                            borderColor: '#efefef',
+                                            borderColor: '#f2f2f2',
                                             borderBottomWidth: 1,
                                             fontSize: 14,
                                             padding: 10,
@@ -125,7 +125,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         style={{
                                             borderWidth: 0,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#efefef'
+                                            borderBottomColor: '#f2f2f2'
                                         }}
                                         dropDownContainerStyle={{
                                             borderWidth: 0,
@@ -138,7 +138,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                                 width: 4,
                                                 height: 4
                                             },
-                                            shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.12,
+                                            shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.08,
                                             shadowRadius: 12,
                                             zIndex: 1000001,
                                             elevation: 1000001
@@ -149,8 +149,9 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         </View>
                         <View
                             style={{
-                                width: '15%',
-                                backgroundColor: 'white'
+                                // width: '15%',
+                                backgroundColor: 'white',
+                                marginLeft: 20
                             }}
                         >
                             <TouchableOpacity
@@ -307,6 +308,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
             title={'New Discussion'}
             renderContent={() => renderNewPostContent()}
             header={true}
+            callbackNode={props.callbackNode}
         />
     );
 };

@@ -1,99 +1,160 @@
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 // const mime = require('mime-types');
 import axios from 'axios';
 import Alert from '../components/Alert';
 
-export const handleFile = async (audioVideoOnly: boolean) => {
+const getFileSize = async (fileURI: string) => {
+    const fileSizeInBytes = await FileSystem.getInfoAsync(fileURI);
+    return fileSizeInBytes;
+};
+
+const isLessThanTheMB = (fileSize: number, smallerThanSizeMB: number) => {
+    const isOk = fileSize / 1024 / 1024 < smallerThanSizeMB;
+    return isOk;
+};
+
+export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
     // e.preventDefault();
     console.log('Initiate document picker');
-    const res: any = await DocumentPicker.getDocumentAsync();
+    if (audioVideoOnly) {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (res.type === 'cancel' || res.type !== 'success') {
-        return { type: '', url: '' };
-    }
+        if (permissionResult.granted === false) {
+            alert("You've refused to allow this app to access your photos!");
+            return;
+        }
 
-    let { name, size, uri } = res;
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+            allowsEditing: false,
+            quality: 0.8,
+            allowsMultipleSelection: false
+        });
 
-    let nameParts = name.split('.');
-    let type = nameParts[nameParts.length - 1];
-    if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
-        Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
-        return { type: '', url: '' };
-    }
+        if (!result.cancelled && result.type) {
+            // const img = await fetchImageFromUri(result.uri);
 
-    // const { file } = res;
+            // Check size first
+            const fileInfo = await getFileSize(result.uri);
 
-    if (size > 26214400) {
-        alert('File size must be less than 25 mb');
-        return;
-    }
-    // if (file === null) {
-    //     return { type: '', url: '' };
-    // }
+            if (!fileInfo.exists || !fileInfo.size) {
+                Alert('Error parsing file. Try a different video.');
+                return { type: '', url: '' };
+            }
 
-    // let type = mime.extension(file.type);
+            if (!isLessThanTheMB(fileInfo.size, 20)) {
+                Alert('File must be less than 20 mb');
+                return { type: '', url: '' };
+            }
 
-    if (type === 'video/avi') {
-        type = 'avi';
-    } else if (type === 'video/quicktime') {
-        type = 'mov';
-    }
+            const file = {
+                name: 'default.mp4',
+                // size: size,
+                uri: result.uri,
+                type: 'application/mp4'
+            };
 
-    if (type === 'wma' || type === 'avi') {
-        alert('This video format is not supported. Uplaod mp4 or ogg.');
-        return { type: '', url: '' };
-    }
+            // const file = blobToFile(img, 'default.jpg');
 
-    if (type === 'mpga') {
-        type = 'mp3';
-    }
+            const response = await fileUpload(file, 'mp4', userId);
 
-    console.log('File type', type);
-
-    // if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
-    //     alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
-    //     return { type: '', url: '' };
-    // }
-
-    if (
-        audioVideoOnly &&
-        !(type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav')
-    ) {
-        Alert('Error! Only audio/video files can be imported.');
-        return { type: '', url: '' };
-    }
-
-    if (type === 'svg') {
-        alert('This file type is not supported.');
-        return { type: '', url: '' };
-    }
-
-    const file = {
-        name: name,
-        size: size,
-        uri: uri,
-        type: 'application/' + type
-    };
-
-    console.log('File to upload', file);
-
-    // return { type: '', url: '' };
-
-    const response = await fileUpload(file, type);
-
-    const { data } = response;
-    console.log('Result', data);
-    if (data.status === 'success') {
-        return {
-            url: data.url,
-            type
-        };
+            const { data } = response;
+            console.log('Result', data);
+            if (data.status === 'success') {
+                return {
+                    url: data.url,
+                    type: 'mp4'
+                };
+            } else {
+                return { type: '', url: '' };
+            }
+        } else {
+            return { type: '', url: '' };
+        }
     } else {
-        return { type: '', url: '' };
+        const res: any = await DocumentPicker.getDocumentAsync();
+
+        if (res.type === 'cancel' || res.type !== 'success') {
+            return { type: '', url: '' };
+        }
+
+        let { name, size, uri } = res;
+
+        let nameParts = name.split('.');
+        let type = nameParts[nameParts.length - 1];
+        if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
+            Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
+            return { type: '', url: '' };
+        }
+
+        // const { file } = res;
+
+        if (size > 26214400) {
+            alert('File size must be less than 25 mb');
+            return;
+        }
+        // if (file === null) {
+        //     return { type: '', url: '' };
+        // }
+
+        // let type = mime.extension(file.type);
+
+        if (type === 'video/avi') {
+            type = 'avi';
+        } else if (type === 'video/quicktime') {
+            type = 'mov';
+        }
+
+        if (type === 'wma' || type === 'avi') {
+            alert('This video format is not supported. Upload mp4 or ogg.');
+            return { type: '', url: '' };
+        }
+
+        if (type === 'mpga') {
+            type = 'mp3';
+        }
+
+        console.log('File type', type);
+
+        // if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
+        //     alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
+        //     return { type: '', url: '' };
+        // }
+
+        if (type === 'svg') {
+            alert('This file type is not supported.');
+            return { type: '', url: '' };
+        }
+
+        const file = {
+            name: name,
+            size: size,
+            uri: uri,
+            type: 'application/' + type
+        };
+
+        console.log('File to upload', file);
+
+        // return { type: '', url: '' };
+
+        const response = await fileUpload(file, type, userId);
+
+        const { data } = response;
+        console.log('Result', data);
+        if (data.status === 'success') {
+            return {
+                url: data.url,
+                type
+            };
+        } else {
+            return { type: '', url: '' };
+        }
     }
 };
 
-const fileUpload = async (file: any, type: any) => {
+const fileUpload = async (file: any, type: any, userId: string) => {
     // LIVE
     const url = 'https://api.learnwithcues.com/api/upload';
     // DEV
@@ -101,6 +162,7 @@ const fileUpload = async (file: any, type: any) => {
     const formData = new FormData();
     formData.append('attachment', file);
     formData.append('typeOfUpload', type);
+    formData.append('userId', userId);
     const config = {
         headers: {
             'content-type': 'multipart/form-data'

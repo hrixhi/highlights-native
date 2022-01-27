@@ -965,7 +965,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     style={{
                                                         borderWidth: 0,
                                                         borderBottomWidth: 1,
-                                                        borderBottomColor: '#efefef',
+                                                        borderBottomColor: '#f2f2f2',
                                                         zIndex: 1000001
                                                     }}
                                                     dropDownContainerStyle={{
@@ -976,10 +976,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     containerStyle={{
                                                         shadowColor: '#000',
                                                         shadowOffset: {
-                                                            width: 4,
-                                                            height: 4
+                                                            width: 1,
+                                                            height: 3
                                                         },
-                                                        shadowOpacity: !isFilterChannelDropdownOpen ? 0 : 0.12,
+                                                        shadowOpacity: !isFilterChannelDropdownOpen ? 0 : 0.08,
                                                         shadowRadius: 12,
                                                         zIndex: 1000001,
                                                         elevation: 1000001
@@ -1000,7 +1000,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 width: '100%',
                                                 paddingVertical: 10,
                                                 borderBottomWidth: 1,
-                                                borderBottomColor: '#efefef',
+                                                borderBottomColor: '#f2f2f2',
                                                 paddingHorizontal: 10
                                             }}
                                         >
@@ -1104,7 +1104,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     lineHeight: 34,
                                                                     color: '#000000',
                                                                     fontSize: 12,
-                                                                    backgroundColor: '#efefef',
+                                                                    backgroundColor: '#f2f2f2',
                                                                     paddingHorizontal: 20,
                                                                     fontFamily: 'inter',
                                                                     height: 35,
@@ -1193,7 +1193,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 style={{
                                                     borderWidth: 0,
                                                     borderBottomWidth: 1,
-                                                    borderBottomColor: '#efefef'
+                                                    borderBottomColor: '#f2f2f2'
                                                 }}
                                                 dropDownContainerStyle={{
                                                     borderWidth: 0,
@@ -1203,10 +1203,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 containerStyle={{
                                                     shadowColor: '#000',
                                                     shadowOffset: {
-                                                        width: 4,
-                                                        height: 4
+                                                        width: 1,
+                                                        height: 3
                                                     },
-                                                    shadowOpacity: !isNewUsersDropdownOpen ? 0 : 0.12,
+                                                    shadowOpacity: !isNewUsersDropdownOpen ? 0 : 0.08,
                                                     shadowRadius: 12,
                                                     zIndex: 1000001,
                                                     elevation: 1000001
@@ -1229,7 +1229,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 paddingVertical: 7,
                                                                 borderBottomWidth:
                                                                     ind === Object.keys(groupUsers).length - 1 ? 0 : 1,
-                                                                borderBottomColor: '#efefef',
+                                                                borderBottomColor: '#f2f2f2',
                                                                 paddingHorizontal: 10
                                                             }}
                                                         >
@@ -1317,7 +1317,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     ? windowHeight - 104 - 80
                                                     : windowHeight - 52 - 80,
                                             zIndex: 5000,
-                                            borderColor: '#efefef'
+                                            borderColor: '#f2f2f2'
                                         }}
                                     >
                                         <GiftedChat
@@ -1572,7 +1572,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             style={{
                                                                 borderWidth: 0,
                                                                 borderBottomWidth: 1,
-                                                                borderBottomColor: '#efefef'
+                                                                borderBottomColor: '#f2f2f2'
                                                             }}
                                                             dropDownContainerStyle={{
                                                                 borderWidth: 0,
@@ -1582,10 +1582,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             containerStyle={{
                                                                 shadowColor: '#000',
                                                                 shadowOffset: {
-                                                                    width: 4,
-                                                                    height: 4
+                                                                    width: 1,
+                                                                    height: 3
                                                                 },
-                                                                shadowOpacity: !isUpdateUsersDropdownOpen ? 0 : 0.12,
+                                                                shadowOpacity: !isUpdateUsersDropdownOpen ? 0 : 0.08,
                                                                 shadowRadius: 12,
                                                                 zIndex: 1000001,
                                                                 elevation: 1000001
@@ -1633,7 +1633,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             // flex: 1,
                                             width: '100%',
                                             borderRadius: 1,
-                                            borderColor: '#efefef',
+                                            borderColor: '#f2f2f2',
                                             maxHeight: width < 1024 ? windowHeight - 104 - 90 : windowHeight - 52 - 110
                                             // overflow: 'hidden'
                                         }}
@@ -1667,7 +1667,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         style={{
                                                             backgroundColor: '#fff',
                                                             flexDirection: 'row',
-                                                            borderColor: '#efefef',
+                                                            borderColor: '#f2f2f2',
                                                             paddingVertical: 5,
                                                             borderBottomWidth: ind === users.length - 1 ? 0 : 1,
                                                             width: '100%'
@@ -1747,7 +1747,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             showsVerticalScrollIndicator={true}
                                             horizontal={false}
                                             contentContainerStyle={{
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 paddingHorizontal: 10,
                                                 borderRadius: 1,
                                                 width: '100%',
@@ -1818,7 +1818,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         style={{
                                                             backgroundColor: '#fff',
                                                             flexDirection: 'row',
-                                                            borderColor: '#efefef',
+                                                            borderColor: '#f2f2f2',
                                                             paddingVertical: 5,
                                                             borderBottomWidth: index === chats.length - 1 ? 0 : 1,
                                                             width: '100%'

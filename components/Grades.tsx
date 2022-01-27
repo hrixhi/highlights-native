@@ -223,7 +223,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     // MAIN RETURN
     return (
-        <View style={{ width: '100%', backgroundColor: '#efefef' }}>
+        <View style={{ width: '100%', backgroundColor: '#f2f2f2' }}>
             {loading ? (
                 <View
                     style={{
@@ -232,7 +232,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         justifyContent: 'center',
                         display: 'flex',
                         flexDirection: 'column',
-                        backgroundColor: '#efefef',
+                        backgroundColor: '#f2f2f2',
                         borderTopRightRadius: 0,
                         borderTopLeftRadius: 0,
                         paddingVertical: 100

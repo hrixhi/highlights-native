@@ -4,6 +4,8 @@ import { StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash';
 
+import Alert from './Alert';
+
 // COMPONENTS
 import { Text, View, TouchableOpacity } from '../components/Themed';
 
@@ -52,7 +54,24 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                             </Text>
                             {props.option === 'Channels' && !props.subscribed ? (
                                 <View style={{ paddingLeft: 10 }}>
-                                    <TouchableOpacity onPress={() => props.handleSub()} style={{ marginTop: 1 }}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            Alert('Subscribe to ' + props.channelName + '?', '', [
+                                                {
+                                                    text: 'Cancel',
+                                                    style: 'cancel',
+                                                    onPress: () => {
+                                                        return;
+                                                    }
+                                                },
+                                                {
+                                                    text: 'Yes',
+                                                    onPress: () => props.handleSub()
+                                                }
+                                            ]);
+                                        }}
+                                        style={{ marginTop: 1 }}
+                                    >
                                         <Text style={{}}>
                                             <Ionicons name="enter-outline" size={18} color="#006AFF" />
                                         </Text>
@@ -102,14 +121,14 @@ const styles: any = (colorScheme: any, col: any) =>
         dateContainer: {
             fontSize: 10,
             marginBottom: 5,
-            color: '#efefef',
+            color: '#f2f2f2',
             backgroundColor: 'white',
             display: 'flex',
             flexDirection: 'row'
         },
         date: {
             fontSize: 9,
-            color: colorScheme === 'light' ? '#efefef' : '#1F1F1F',
+            color: colorScheme === 'light' ? '#f2f2f2' : '#1F1F1F',
             lineHeight: 10
         },
         title: {

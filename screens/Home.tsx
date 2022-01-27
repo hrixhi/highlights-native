@@ -1,16 +1,29 @@
 // REACT
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { StyleSheet, Animated, ActivityIndicator, Dimensions, Image, ScrollView, Platform } from 'react-native';
+import {
+    StyleSheet,
+    Animated,
+    ActivityIndicator,
+    Dimensions,
+    Image,
+    ScrollView,
+    Platform,
+    KeyboardAvoidingView
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+import axios from 'axios';
+import * as AuthSession from 'expo-auth-session';
 
 // API
 import { fetchAPI } from '../graphql/FetchAPI';
 import {
     getSubscriptions,
+    getSsoLink,
     getCues,
+    getOrganisation,
     saveCuesToCloud,
     login,
     getCuesFromCloud,
@@ -19,7 +32,8 @@ import {
     totalInboxUnread,
     signup,
     authWithProvider,
-    updateNotificationId
+    updateNotificationId,
+    loginFromSso
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -42,6 +56,8 @@ import { getNextDate } from '../helpers/DateParser';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Updates from 'expo-updates';
 
+// import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     // read/learn
     const version = 'learn';
@@ -58,8 +74,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [subscriptions, setSubscriptions] = useState<any[]>([]);
     // All cues
     const [cues, setCues] = useState<any>({});
-
-    const [reLoading, setReLoading] = useState(true);
     const [fadeAnimation] = useState(new Animated.Value(0));
 
     // Open an existing Cue
@@ -96,6 +110,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const [unreadMessages, setUnreadMessages] = useState(0);
     const [emailValidError, setEmailValidError] = useState('');
+    const [ssoCode, setSsoCode] = useState('');
+
+    let cancelTokenRef: any = useRef({});
 
     const enterValidEmailError = PreferredLanguageText('enterValidEmail');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
@@ -107,6 +124,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [filterEnd, setFilterEnd] = useState<any>(null);
     const [showAddEvent, setShowAddEvent] = useState<any>(null);
     const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
+    const [isSsoEnabled, setIsSsoEnabled] = useState(false);
 
     const responseListener: any = useRef();
 
@@ -119,6 +137,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const [showHome, setShowHome] = useState(true);
     const [hideNewChatButton, setHideNewChatButton] = useState(false);
+
+    const [loadingCues, setLoadingCues] = useState(true);
+    const [loadingSubs, setLoadingSubs] = useState(true);
+    const [loadingUser, setLoadingUser] = useState(true);
+    const [loadingOrg, setLoadingOrg] = useState(true);
+
+    const [syncingCues, setSyncingCues] = useState(false);
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     const onOrientationChange = useCallback(async () => {
         await Updates.reloadAsync();
@@ -135,6 +161,97 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, []);
 
     useEffect(() => {
+        (async () => {
+            if (email === '' || !email.includes('@')) {
+                setIsSsoEnabled(false);
+            } else {
+                const split = email.split('@');
+
+                if (split[1] !== '') {
+                    if (typeof cancelTokenRef.current != typeof undefined) {
+                        cancelTokenRef.current &&
+                            cancelTokenRef.current.cancel &&
+                            cancelTokenRef.current.cancel('Operation canceled due to new request.');
+                    }
+
+                    //Save the cancel token for the current request
+                    cancelTokenRef.current = axios.CancelToken.source();
+
+                    try {
+                        axios
+                            .post(
+                                `https://api.learnwithcues.com/checkSSO`,
+                                {
+                                    ssoDomain: split[1]
+                                },
+                                { cancelToken: cancelTokenRef.current.token }
+                            )
+                            .then((res: any) => {
+                                if (res.data && res.data.ssoFound) {
+                                    setIsSsoEnabled(true);
+                                } else {
+                                    setIsSsoEnabled(false);
+                                }
+                            });
+                    } catch (e) {
+                        console.log(e);
+                        setIsSsoEnabled(false);
+                    }
+                }
+            }
+        })();
+    }, [email]);
+
+    useEffect(() => {
+        (async () => {
+            if (ssoCode && ssoCode !== '') {
+                setIsLoggingIn(true);
+
+                const server = fetchAPI('');
+                server
+                    .query({
+                        query: loginFromSso,
+                        variables: {
+                            code: ssoCode
+                        }
+                    })
+                    .then(async (r: any) => {
+                        console.log('Res', r.data.user.loginFromSso);
+                        if (
+                            r.data &&
+                            r.data.user.loginFromSso &&
+                            r.data.user.loginFromSso.user &&
+                            r.data.user.loginFromSso.token &&
+                            !r.data.user.loginFromSso.error
+                        ) {
+                            const u = r.data.user.loginFromSso.user;
+                            const token = r.data.user.loginFromSso.token;
+                            if (u.__typename) {
+                                delete u.__typename;
+                            }
+
+                            const sU = JSON.stringify(u);
+                            await AsyncStorage.setItem('jwt_token', token);
+                            await AsyncStorage.setItem('user', sU);
+                            setShowLoginWindow(false);
+                            loadDataFromCloud();
+                            setIsLoggingIn(false);
+                        } else {
+                            const { error } = r.data.user.loginFromSso;
+                            Alert(error);
+                            setIsLoggingIn(false);
+                        }
+                    })
+                    .catch(e => {
+                        console.log(e);
+                        setIsLoggingIn(false);
+                        Alert('Something went wrong. Try again.');
+                    });
+            }
+        })();
+    }, [ssoCode]);
+
+    useEffect(() => {
         if (email && !validateEmail(email.toString().toLowerCase())) {
             setEmailValidError(enterValidEmailError);
             return;
@@ -146,19 +263,24 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     //   Validate Submit on Login state change
     useEffect(() => {
         // Login
-        if (!showForgotPassword && email && password && !emailValidError) {
+        if (!showForgotPassword && email && password && !emailValidError && !isSsoEnabled) {
             setIsSubmitDisabled(false);
             return;
         }
 
         //
-        if (showForgotPassword && email && !emailValidError) {
+        if (showForgotPassword && email && !emailValidError && !isSsoEnabled) {
+            setIsSubmitDisabled(false);
+            return;
+        }
+
+        if (isSsoEnabled && !emailValidError) {
             setIsSubmitDisabled(false);
             return;
         }
 
         setIsSubmitDisabled(true);
-    }, [showForgotPassword, email, password, emailValidError]);
+    }, [showForgotPassword, email, password, emailValidError, isSsoEnabled]);
 
     useEffect(() => {
         if (
@@ -453,6 +575,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     // imp
     const loadNewChannelCues = useCallback(async () => {
+        setSyncingCues(true);
         let user = await AsyncStorage.getItem('user');
         const unparsedCues = await AsyncStorage.getItem('cues');
         if (user && unparsedCues) {
@@ -521,14 +644,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     await notificationScheduler(allCues);
                     const stringCues = JSON.stringify(allCues);
                     await AsyncStorage.setItem('cues', stringCues);
+                    setSyncingCues(false);
                     Animated.timing(fadeAnimation, {
                         toValue: 1,
                         duration: 150,
                         useNativeDriver: true
                     }).start();
-                    setReLoading(false);
                 }
             } catch (err) {
+                console.log('Error background', err);
                 Alert(unableToRefreshCuesAlert, checkConnectionAlert);
                 const custom: any = {};
                 setCues(allCues);
@@ -547,12 +671,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     customC.sort();
                     setCustomCategories(customC);
                 }
+                setSyncingCues(false);
                 Animated.timing(fadeAnimation, {
                     toValue: 1,
                     duration: 150,
                     useNativeDriver: true
                 }).start();
-                setReLoading(false);
             }
         } else if (unparsedCues) {
             const custom: any = {};
@@ -574,19 +698,54 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 customC.sort();
                 setCustomCategories(customC);
             }
+            setSyncingCues(false);
             Animated.timing(fadeAnimation, {
                 toValue: 1,
                 duration: 150,
                 useNativeDriver: true
             }).start();
-            setReLoading(false);
+        }
+    }, []);
+
+    const syncOfflineDataOnInit = useCallback(async () => {
+        const sC = await AsyncStorage.getItem('cues');
+        // const sub = await AsyncStorage.getItem('subscriptions');
+
+        // LOAD CUES
+        if (sC) {
+            await loadNewChannelCues();
+        } else {
+            const custom: any = {};
+            let allCues: any = {};
+            allCues['local'] = [...defaultCues];
+            const stringSC = JSON.stringify(allCues);
+            await AsyncStorage.setItem('cues', stringSC);
+            allCues['local'].map((item: any) => {
+                if (item.customCategory !== '') {
+                    if (!custom[item.customCategory]) {
+                        custom[item.customCategory] = 0;
+                    }
+                }
+            });
+            const customC: any[] = [];
+            Object.keys(custom).map(item => {
+                customC.push(item);
+            });
+            customC.sort();
+            setCues(allCues);
+            setCustomCategories(customC);
+            // START ANIMATION
+            Animated.timing(fadeAnimation, {
+                toValue: 1,
+                duration: 150,
+                useNativeDriver: true
+            }).start();
         }
     }, []);
 
     // FETCH NEW DATA
     const loadData = useCallback(
         async (saveData?: boolean) => {
-            setReLoading(true);
             try {
                 const version = 'v0.9';
                 const fO = await AsyncStorage.getItem(version);
@@ -600,83 +759,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 }
 
                 let u = await AsyncStorage.getItem('user');
-                const sC = await AsyncStorage.getItem('cues');
-                const sub = await AsyncStorage.getItem('subscriptions');
 
-                // LOAD SUBSCRIPTIONS
-                if (sub) {
-                    const parsedSubscriptions = JSON.parse(sub);
-                    if (u) {
-                        const parsedUser = JSON.parse(u);
-                        const server2 = fetchAPI(parsedUser._id);
-                        server2
-                            .query({
-                                query: getSubscriptions,
-                                variables: {
-                                    userId: parsedUser._id
-                                }
-                            })
-                            .then(async res => {
-                                if (res.data.subscription.findByUserId) {
-                                    const sortedSubs = res.data.subscription.findByUserId.sort((a: any, b: any) => {
-                                        if (a.channelName < b.channelName) {
-                                            return -1;
-                                        }
-                                        if (a.channelName > b.channelName) {
-                                            return 1;
-                                        }
-                                        return 0;
-                                    });
-                                    setSubscriptions(sortedSubs);
-                                    const stringSub = JSON.stringify(sortedSubs);
-                                    await AsyncStorage.setItem('subscriptions', stringSub);
-                                } else {
-                                    setSubscriptions(parsedSubscriptions);
-                                }
-                            })
-                            .catch(res => {
-                                // no message needed here
-                                // No internet connection, use existing subscription categories
-                                setSubscriptions(parsedSubscriptions);
-                            });
-                    } else {
-                        // no user,
-                        setSubscriptions(parsedSubscriptions);
-                    }
-                } else {
-                    const stringSub = JSON.stringify(subscriptions);
-                    await AsyncStorage.setItem('subscriptions', stringSub);
-                }
-                // LOAD CUES
-                if (sC) {
-                    await loadNewChannelCues();
-                } else {
-                    const custom: any = {};
-                    let allCues: any = {};
-                    allCues['local'] = [...defaultCues];
-                    const stringSC = JSON.stringify(allCues);
-                    await AsyncStorage.setItem('cues', stringSC);
-                    allCues['local'].map((item: any) => {
-                        if (item.customCategory !== '') {
-                            if (!custom[item.customCategory]) {
-                                custom[item.customCategory] = 0;
-                            }
-                        }
-                    });
-                    const customC: any[] = [];
-                    Object.keys(custom).map(item => {
-                        customC.push(item);
-                    });
-                    customC.sort();
-                    setCues(allCues);
-                    setCustomCategories(customC);
-                    // START ANIMATION
-                    Animated.timing(fadeAnimation, {
-                        toValue: 1,
-                        duration: 150,
-                        useNativeDriver: true
-                    }).start();
-                }
                 // HANDLE PROFILE
                 if (u) {
                     // UPDATE NOTIFICATION ID
@@ -691,6 +774,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             experienceId
                         });
                         const notificationId = expoToken.data;
+                        const server = fetchAPI('');
                         server
                             .mutate({
                                 mutation: updateNotificationId,
@@ -714,13 +798,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         if (saveData) {
                             await saveDataInCloud();
                         } else {
-                            loadDataFromCloud();
+                            await loadDataFromCloud();
                         }
                     }
-                }
-                // LOADED
-                if (!sC) {
-                    setReLoading(false);
                 }
             } catch (e) {
                 console.log(e);
@@ -826,8 +906,52 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             });
     }, [fullName, email, password, confirmPassword]);
 
+    const handleSsoRedirect = useCallback(() => {
+        const server = fetchAPI('');
+
+        if (!isSsoEnabled) {
+            return;
+        }
+
+        let redirect = AuthSession.makeRedirectUri().toString();
+
+        console.log('Redirect URL', redirect);
+
+        const split = email.toLowerCase().split('@');
+
+        server
+            .query({
+                query: getSsoLink,
+                variables: {
+                    ssoDomain: split[1].trim(),
+                    redirectURI: redirect
+                }
+            })
+            .then(async (r: any) => {
+                if (r.data && r.data.user.getSsoLinkNative) {
+                    console.log('URL', r.data.user.getSsoLinkNative);
+                    if (r.data.user.getSsoLinkNative !== '') {
+                        // window.location.href = r.data.user.getSsoLinkNative;
+                        const url = r.data.user.getSsoLinkNative;
+
+                        console.log('URL', url);
+
+                        let result = await AuthSession.startAsync({ authUrl: url, returnUrl: redirect });
+
+                        let code = JSON.parse(JSON.stringify(result)).params.code;
+
+                        setSsoCode(code);
+                    }
+                }
+            })
+            .catch(e => {
+                console.log(e);
+            });
+    }, [email, isSsoEnabled]);
+
     // Move to profile page
     const handleLogin = useCallback(() => {
+        setIsLoggingIn(true);
         const server = fetchAPI('');
         server
             .query({
@@ -850,6 +974,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     await AsyncStorage.setItem('user', sU);
                     setShowLoginWindow(false);
                     loadDataFromCloud();
+                    setIsLoggingIn(false);
                 } else {
                     const { error } = r.data.user.login;
                     Alert(error);
@@ -858,6 +983,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             .catch(e => {
                 console.log(e);
                 Alert('Something went wrong. Try again.');
+                setIsLoggingIn(false);
             });
     }, [email, password]);
 
@@ -865,6 +991,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const loadDataFromCloud = useCallback(async () => {
         const u = await AsyncStorage.getItem('user');
         if (u) {
+            setLoadingCues(true);
+            setLoadingSubs(true);
+            setLoadingUser(true);
+            setLoadingOrg(true);
+
             const user = JSON.parse(u);
             const server = fetchAPI(user._id);
             // Get User info
@@ -915,6 +1046,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 }
                             });
                         }
+                        setLoadingUser(false);
                     }
                 })
                 .catch(err => console.log(err));
@@ -960,6 +1092,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         const stringCues = JSON.stringify(allCues);
                         await AsyncStorage.setItem('cues', stringCues);
                         await notificationScheduler(allCues);
+                        setLoadingCues(false);
                     }
                 })
                 .catch(err => console.log(err));
@@ -985,6 +1118,25 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         setSubscriptions(sortedSubs);
                         const stringSub = JSON.stringify(sortedSubs);
                         await AsyncStorage.setItem('subscriptions', stringSub);
+                        setLoadingSubs(false);
+                    }
+                })
+                .catch(err => console.log(err));
+            // Get org
+            server
+                .query({
+                    query: getOrganisation,
+                    variables: {
+                        userId: user._id
+                    }
+                })
+                .then(async res => {
+                    if (res.data && res.data.school.findByUserId) {
+                        const stringOrg = JSON.stringify(res.data.school.findByUserId);
+                        await AsyncStorage.setItem('school', stringOrg);
+                        setLoadingOrg(false);
+                    } else {
+                        setLoadingOrg(false);
                     }
                 })
                 .catch(err => console.log(err));
@@ -1109,8 +1261,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     );
 
     useEffect(() => {
+        (async () => {
+            await syncOfflineDataOnInit();
+            await loadData();
+        })();
+
         // Called when component is loaded
-        loadData();
     }, []);
 
     const openModal = useCallback(
@@ -1300,6 +1456,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, [cues, updateModalKey, updateModalIndex]);
 
     const closeModal = useCallback(async () => {
+        loadData();
+
+        setModalType('');
+
         // Mark as read
         if (modalType === 'Update') {
             await markCueAsRead();
@@ -1311,13 +1471,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
         if (modalType === 'Update') {
             setChannelId('');
-            loadData();
-        } else {
-            loadData(true);
-        }
-
-        if (modalType === 'Create') {
-            setModalType('');
         }
     }, [fadeAnimation, modalType]);
 
@@ -1372,7 +1525,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%' }}>
             <View style={styles(channelId).container} key={showHome.toString() + option.toString() + tab.toString()}>
                 {showLoginWindow && showSignupWindow ? (
                     <View
@@ -1574,27 +1727,25 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 ) : null}
 
                 {showLoginWindow && !showSignupWindow ? (
-                    <View
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={{
                             width: '100%',
                             height: '100%',
-                            flex: 1,
-                            position: 'absolute',
-                            zIndex: 50,
-                            backgroundColor: 'rgba(16,16,16, 0.7)',
-                            overflow: 'hidden'
+                            backgroundColor: '#fff',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            zIndex: 50
                         }}
                     >
                         <View
                             style={{
-                                position: 'absolute',
                                 zIndex: 525,
                                 display: 'flex',
-                                alignSelf: 'center',
+                                flexDirection: 'column',
                                 justifyContent: 'center',
                                 backgroundColor: 'white',
                                 width: '100%',
-                                height: '100%',
                                 borderRadius: 0,
                                 marginTop: 0,
                                 paddingHorizontal: 40
@@ -1604,7 +1755,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 showsVerticalScrollIndicator={false}
                                 horizontal={false}
                                 contentContainerStyle={{
-                                    height: '100%',
                                     paddingVertical: 40,
                                     justifyContent: 'center'
                                 }}
@@ -1665,7 +1815,23 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         placeholderTextColor={'#1F1F1F'}
                                         errorText={emailValidError}
                                     />
-                                    {showForgotPassword ? null : (
+                                    {isSsoEnabled ? (
+                                        <View style={{ paddingBottom: 20, marginTop: 10 }}>
+                                            <View
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <Ionicons name="lock-closed" size={18} color="#006AFF" />
+                                                <Text style={{ paddingLeft: 7, color: '#1f1f1f', paddingTop: 3 }}>
+                                                    Single sign-on enabled
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    ) : null}
+                                    {showForgotPassword || isSsoEnabled ? null : (
                                         <View>
                                             <View
                                                 style={{
@@ -1725,16 +1891,20 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             onPress={() => {
                                                 if (showForgotPassword) {
                                                     forgotPassword();
+                                                } else if (isSsoEnabled) {
+                                                    handleSsoRedirect();
                                                 } else {
                                                     handleLogin();
                                                 }
                                             }}
                                             style={{
-                                                backgroundColor: 'white',
+                                                backgroundColor: '#006aff',
+                                                borderRadius: 15,
                                                 overflow: 'hidden',
                                                 height: 35,
                                                 marginTop: 15,
-                                                width: '100%',
+                                                width: 175,
+                                                alignSelf: 'center',
                                                 justifyContent: 'center',
                                                 flexDirection: 'row'
                                             }}
@@ -1860,15 +2030,21 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 </View>
                             </ScrollView>
                         </View>
-                    </View>
+                    </KeyboardAvoidingView>
                 ) : null}
                 {showHome &&
-                !reLoading &&
+                !loadingCues &&
+                !loadingUser &&
+                !loadingSubs &&
+                !loadingOrg &&
+                !saveDataInProgress &&
+                !syncingCues &&
                 ((option === 'Classroom' && modalType !== 'Create' && !selectedWorkspace) ||
                     // (option === 'To Do' && tab !== 'Add') ||
                     (option === 'Inbox' && !showDirectory && !hideNewChatButton) ||
-                    (option === 'Channels' && !showCreate) ||
-                    (option === 'Settings' && !showHelp)) ? (
+                    (option === 'Channels' && !showCreate)) ? (
+                    // ||
+                    // (option === 'Settings' && !showHelp)
                     <TouchableOpacity
                         onPress={() => {
                             if (option === 'Classroom') {
@@ -1910,7 +2086,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             height: 58,
                             borderRadius: 29,
                             backgroundColor: '#006aff',
-                            borderColor: '#efefef',
+                            borderColor: '#f2f2f2',
                             borderWidth: 0,
                             shadowColor: '#000',
                             shadowOffset: {
@@ -1961,7 +2137,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 marginTop: 0
                             }}
                         >
-                            {reLoading ? (
+                            {loadingCues ||
+                            loadingUser ||
+                            loadingSubs ||
+                            loadingOrg ||
+                            saveDataInProgress ||
+                            syncingCues ? (
                                 <View style={[styles(channelId).activityContainer, styles(channelId).horizontal]}>
                                     <ActivityIndicator color={'#1F1F1F'} />
                                 </View>
@@ -2031,7 +2212,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         tab.toString() +
                                         showDirectory.toString() +
                                         showCreate.toString() +
-                                        showHelp.toString()
+                                        showHelp.toString() +
+                                        subscriptions.toString() +
+                                        cues.toString()
                                     }
                                     openDiscussionFromActivity={(channelId: string) => {
                                         setOption('Classroom');
@@ -2154,7 +2337,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             shadowRadius: 10,
                             zIndex: showLoginWindow ? 40 : 100,
                             elevation: showLoginWindow ? 40 : 100,
-                            borderTopColor: '#efefef',
+                            borderTopColor: '#f2f2f2',
                             borderTopWidth: 1
                         }}
                     >
@@ -2301,7 +2484,7 @@ const styles = (channelId: string) =>
         },
         input: {
             width: '100%',
-            borderBottomColor: '#efefef',
+            borderBottomColor: '#f2f2f2',
             borderBottomWidth: 1,
             fontSize: 14,
             paddingTop: 13,

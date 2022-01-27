@@ -43,7 +43,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
             const url =
                 'https://archive.org/services/search/v1/scrape?fields=title,identifier,mediatype,format,description,downloads&q=';
             const response = await axios.get(
-                url + encodeURIComponent(searchTerm) + '&sorts=' + encodeURIComponent('downloads desc') + '&count=2000'
+                url + encodeURIComponent(searchTerm) + '&sorts=' + encodeURIComponent('downloads desc') + '&count=1000'
             );
             const items = response.data.items;
             const filteredItems = items.filter((item: any) => {
@@ -145,7 +145,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         value={searchTerm}
                         style={{
                             width: 300,
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             fontSize: 20,
                             padding: 15,
                             borderRadius: 25,
@@ -202,6 +202,16 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         }}
                     >
                         <ActivityIndicator color={'#1F1F1F'} style={{ alignSelf: 'center' }} />
+                        <Text
+                            style={{
+                                marginTop: 15,
+                                textAlign: 'center',
+                                fontSize: 18,
+                                fontFamily: 'Inter'
+                            }}
+                        >
+                            Fetching results...
+                        </Text>
                     </View>
                 ) : (
                     <View
@@ -391,7 +401,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 width: 2,
                                                 height: 2
                                             },
-                                            borderColor: '#efefef',
+                                            borderColor: '#f2f2f2',
                                             borderWidth: 1,
                                             overflow: 'hidden',
                                             shadowOpacity: 0.07,
@@ -460,6 +470,16 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         }}
                                     >
                                         <ActivityIndicator color={'#1F1F1F'} style={{ alignSelf: 'center' }} />
+                                        <Text
+                                            style={{
+                                                marginTop: 15,
+                                                textAlign: 'center',
+                                                fontSize: 18,
+                                                fontFamily: 'Inter'
+                                            }}
+                                        >
+                                            Retrieving text...
+                                        </Text>
                                     </View>
                                 </View>
                             ) : null}

@@ -16,13 +16,15 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 borderTopRightRadius: 0,
                 borderTopLeftRadius: 0
             }}
-            onTouchMove={() => Keyboard.dismiss()}>
+            onTouchMove={() => Keyboard.dismiss()}
+        >
             <View
                 style={{
-                    flex: 1,
+                    // flex: 1,
                     paddingHorizontal: 0,
                     backgroundColor: 'white'
-                }}>
+                }}
+            >
                 <ProfileControls
                     saveDataInCloud={() => props.saveDataInCloud()}
                     reOpenProfile={() => props.reOpenProfile()}

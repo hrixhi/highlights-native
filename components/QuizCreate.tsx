@@ -1,37 +1,24 @@
 // REACT
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Dimensions, TextInput as DefaultTextInput, Keyboard, ScrollView } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import TeXToSVG from 'tex-to-svg';
 import lodash from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
 
 // COMPONENTS
-// import parser from 'html-react-parser';
-// import TextareaAutosize from 'react-textarea-autosize';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 import { Text, TouchableOpacity, View } from '../components/Themed';
 import Alert from '../components/Alert';
-import ReactPlayer from 'react-native-video';
-// import { Select } from '@mobiscroll/react';
-// import FormulaGuide from './FormulaGuide';
 import useDynamicRefs from 'use-dynamic-refs';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
-import DropDownPicker from 'react-native-dropdown-picker';
-import { EmojiView, InsertLink } from './ToolbarComponents';
-import BottomSheet from './BottomSheet';
-
-import ColorPicker from './ColorPicker';
-// import { SafeAreaView } from 'react-native-safe-area-context';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
-import { handleImageUpload } from '../helpers/ImageUpload';
+import { Video } from 'expo-av';
+import RenderHtml from 'react-native-render-html';
 
 // HELPER
 import { PreferredLanguageText } from '../helpers/LanguageContext';
-import { handleFile } from '../helpers/FileUpload';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 
 // CONSTANTS
@@ -110,175 +97,24 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
     // EDITOR METHODS
 
-    const insertEmoji = useCallback(
-        emoji => {
-            RichText.current?.insertText(emoji);
-            // RichText.current?.blurContentEditor();
-        },
-        [RichText, RichText.current]
-    );
-
-    const handleEmoji = useCallback(() => {
-        Keyboard.dismiss();
-        // RichText.current?.blurContentEditor();
-        setEmojiVisible(!emojiVisible);
-        setForeColorVisible(false);
-        setHiliteColorVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, emojiVisible]);
-
-    const handleHiliteColor = useCallback(() => {
-        Keyboard.dismiss();
-        setHiliteColorVisible(!hiliteColorVisible);
-        setForeColorVisible(false);
-        setEmojiVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, hiliteColorVisible]);
-
-    const handleForeColor = useCallback(() => {
-        Keyboard.dismiss();
-        setForeColorVisible(!foreColorVisible);
-        setHiliteColorVisible(false);
-        setEmojiVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, foreColorVisible]);
-
-    // const handleRemoveFormat = useCallback(() => {
-    //     RichText.current?.setHiliteColor('#ffffff');
-    //     RichText.current?.setForeColor('#000000');
-    //     // RichText.current?.setFontSize(3);
-    // }, [RichText, RichText.current]);
-
-    const handleAddImage = useCallback(async () => {
-        setInsertImageVisible(true);
-        setForeColorVisible(false);
-        setHiliteColorVisible(false);
-        setEmojiVisible(false);
-        setInsertLinkVisible(false);
-    }, []);
-
-    const uploadImageHandler = useCallback(
-        async (takePhoto: boolean) => {
-            const url = await handleImageUpload(takePhoto);
-
-            if (url && url !== '') {
-                RichText.current?.insertImage(url);
-            }
-
-            setInsertImageVisible(false);
-        },
-        [RichText, RichText.current]
-    );
-
-    const handleInsertLink = useCallback(() => {
-        setInsertLinkVisible(true);
-        setInsertImageVisible(false);
-        setForeColorVisible(false);
-        setHiliteColorVisible(false);
-        setEmojiVisible(false);
-    }, [RichText, RichText.current]);
-
-    const onInsertLink = useCallback(
-        (title, link) => {
-            RichText.current?.insertLink(title, link);
-            Keyboard.dismiss();
-            setInsertLinkVisible(false);
-        },
-        [RichText, RichText.current]
-    );
-
-    /**
-     * @description Inserts equation into problem
-     */
-    const insertEquation = useCallback(() => {
-        if (equation === '') {
-            Alert('Equation cannot be empty.');
-            return;
-        }
-
-        let currentContent = RichText.current.getContent();
-
-        const SVGEquation = TeXToSVG(equation, { width: 100 }); // returns svg in html format
-        currentContent += '<div contenteditable="false" style="display: inline-block">' + SVGEquation + '</div>';
-        RichText.current.setContent(currentContent);
-
-        let audioVideoQuestion =
-            problems[editQuestionNumber - 1].question[0] === '{' &&
-            problems[editQuestionNumber - 1].question[problems[editQuestionNumber - 1].question.length - 1] === '}';
-
-        if (audioVideoQuestion) {
-            const currQuestion = JSON.parse(problems[editQuestionNumber - 1].question);
-            const updatedQuestion = {
-                ...currQuestion,
-                content: RichText.current.getContent()
-            };
-            const newProbs = [...problems];
-            newProbs[editQuestionNumber - 1].question = JSON.stringify(updatedQuestion);
-            setProblems(newProbs);
-            props.setProblems(newProbs);
-        } else {
-            // setCue(modifedText);
-            const newProbs = [...problems];
-            newProbs[editQuestionNumber - 1].question = RichText.current.getContent();
-            setProblems(newProbs);
-            props.setProblems(newProbs);
-        }
-
-        // RichText.current.insertHTML("<div><br/>" + SVGEquation + "<br/></div>");
-        setShowEquationEditor(false);
-        setEquation('');
-    }, [equation, RichText, RichText.current, showEquationEditor, editQuestionNumber, problems]);
-
-    /**
-     * @description Inserts equation for MCQ options
-     */
-    const insertOptionEquation = (index: number) => {
-        if (optionEquations[index] === '') {
-            Alert('Equation cannot be empty.');
-            return;
-        }
-
-        const ref: any = getRef(index.toString());
-
-        if (!ref || !ref.current) return;
-
-        let currentContent = ref.current.getContent();
-
-        const SVGEquation = TeXToSVG(optionEquations[index], { width: 100 }); // returns svg in html format
-        currentContent += '<div contenteditable="false" style="display: inline-block">' + SVGEquation + '</div>';
-
-        ref.current.setContent(currentContent);
-
-        // Update problem in props
-        const newProbs = [...problems];
-        newProbs[editQuestionNumber - 1].options[index].option = ref.current.getContent();
-
-        setProblems(newProbs);
-        props.setProblems(newProbs);
-
-        const updateShowFormulas = [...showOptionFormulas];
-        updateShowFormulas[index] = false;
-        setShowOptionFormulas(updateShowFormulas);
-
-        const updateOptionEquations = [...optionEquations];
-        updateOptionEquations[index] = '';
-        setOptionEquations(updateOptionEquations);
-    };
-
     /**
      * @description Renders Audio/Video player
      */
     const renderAudioVideoPlayer = (url: string, type: string) => {
         return (
-            <ReactPlayer
-                source={{ uri: url }}
+            <Video
+                // ref={audioRef}
                 style={{
                     width: '100%',
-                    height: type === 'mp3' || type === 'wav' ? '75px' : '360px'
+                    height: 250
                 }}
+                source={{
+                    uri: url
+                }}
+                useNativeControls
+                resizeMode="contain"
+                isLooping
+                // onPlaybackStatusUpdate={status => setStatus(() => status)}
             />
         );
     };
@@ -310,7 +146,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 {audioVideoQuestion ? (
                     <View style={{ marginBottom: 20 }}>{renderAudioVideoPlayer(url, type)}</View>
                 ) : null}
-                {/* <FormulaGuide equation={equation} onChange={setEquation} show={showEquationEditor} onClose={() => setShowEquationEditor(false)} onInsertEquation={insertEquation}  /> */}
                 <View>
                     <RichToolbar
                         style={{
@@ -328,6 +163,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         disabledIconTint={'#bfbfbf'}
                         actions={[
                             actions.keyboard,
+                            actions.undo,
+                            actions.redo,
                             actions.setBold,
                             actions.setItalic,
                             actions.setUnderline,
@@ -405,20 +242,20 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </Text>
                             )
                         }}
-                        hiliteColor={handleHiliteColor}
-                        foreColor={handleForeColor}
-                        insertEmoji={handleEmoji}
-                        onPressAddImage={handleAddImage}
-                        onInsertLink={handleInsertLink}
+                        hiliteColor={() => props.handleHiliteColor(RichText)}
+                        foreColor={() => props.handleForeColor(RichText)}
+                        insertEmoji={() => props.handleEmoji(RichText)}
+                        onPressAddImage={() => props.handleAddImage(RichText)}
+                        onInsertLink={() => props.handleInsertLink(RichText)}
                     />
                     <ScrollView
                         horizontal={false}
                         style={{
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             // maxHeight: editorFocus ? 340 : 'auto',
-                            height: 150,
-                            borderColor: '#efefef',
-                            borderWidth: 1
+                            minHeight: 150,
+                            borderColor: '#f2f2f2',
+                            borderWidth: questionEditorFocus ? 1 : 0
                         }}
                         keyboardDismissMode={'none'}
                         // ref={scrollRef}
@@ -440,8 +277,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 flex: 1,
                                 height: '100%',
                                 minHeight: 150,
-                                borderColor: '#efefef',
-                                borderBottomWidth: 2
+                                borderColor: '#f2f2f2',
+                                borderBottomWidth: 1
                             }}
                             editorStyle={{
                                 backgroundColor: '#fff',
@@ -548,23 +385,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 {index in headers ? (
                     <View style={{ flexDirection: 'row', width: '100%', marginTop: 50, marginBottom: 20 }}>
                         <View style={{ width: Dimensions.get('window').width < 768 ? '80%' : '50%' }}>
-                            {/* <TextareaAutosize
-                            style={{
-                                fontFamily: 'overpass',
-                                maxWidth: '100%', marginBottom: 10, marginTop: 10,
-                                borderRadius: 1,
-                                paddingTop: 13, paddingBottom: 13, fontSize: 14, borderBottom: '1px solid #C1C9D2',
-                            }}
-                            value={headers[index]}
-                            placeholder={'Heading'}
-                            onChange={(e: any) => {
-                                const currentHeaders = JSON.parse(JSON.stringify(headers))
-                                currentHeaders[index] = e.target.value
-                                setHeaders(currentHeaders);
-                                props.setHeaders(currentHeaders)
-                            }}
-                            minRows={1}
-                        /> */}
                             <AutoGrowingTextInput
                                 value={headers[index]}
                                 onChange={(event: any) => {
@@ -583,7 +403,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     fontSize: 14,
                                     // borderBottom: '1px solid #C1C9D2'
                                     borderBottomWidth: 1,
-                                    borderBottomColor: '#efefef'
+                                    borderBottomColor: '#f2f2f2'
                                 }}
                                 placeholder={'Header'}
                                 placeholderTextColor="#66737C"
@@ -731,10 +551,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 justifyContent: 'flex-start'
             }}
         >
-            {showFormulaGuide ? (
-                <FormulaGuide show={showFormulaGuide} onClose={() => setShowFormulaGuide(false)} />
-            ) : null}
-
             {/* Insert HEADER FOR INDEX 0 */}
             {problems.map((problem: any, index: any) => {
                 const { questionType } = problem;
@@ -764,7 +580,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 return (
                     <View
                         style={{
-                            borderBottomColor: '#efefef',
+                            borderBottomColor: '#f2f2f2',
                             borderBottomWidth: index === problems.length - 1 ? 0 : 1,
                             paddingBottom: 25,
                             width: '100%'
@@ -853,30 +669,18 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     <View style={{ marginBottom: 20 }}>
                                                         {renderAudioVideoPlayer(url, type)}
                                                     </View>
-                                                    <Text
-                                                        style={{
-                                                            marginVertical: 20,
-                                                            marginLeft: 20,
-                                                            fontSize: 15,
-                                                            lineHeight: 25
+                                                    <RenderHtml
+                                                        source={{
+                                                            html: content
                                                         }}
-                                                    >
-                                                        {/* {parser(content)} */}
-                                                        {content}
-                                                    </Text>
+                                                    />
                                                 </View>
                                             ) : (
-                                                <Text
-                                                    style={{
-                                                        marginVertical: 20,
-                                                        marginLeft: 20,
-                                                        fontSize: 15,
-                                                        lineHeight: 25
+                                                <RenderHtml
+                                                    source={{
+                                                        html: problem.question
                                                     }}
-                                                >
-                                                    {/* {parser(problem.question)} */}
-                                                    {problem.question}
-                                                </Text>
+                                                />
                                             )}
                                         </View>
                                     </View>
@@ -1097,7 +901,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             ? 0
                                                             : 30,
                                                     fontWeight: editQuestionNumber === index + 1 ? 'normal' : '700',
-                                                    borderBottomColor: '#efefef',
+                                                    borderBottomColor: '#f2f2f2',
                                                     borderBottomWidth: editQuestionNumber === index + 1 ? 1 : 0
                                                 }}
                                                 placeholder={PreferredLanguageText('enterPoints')}
@@ -1137,13 +941,13 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     {
                                                                         text: 'Clear',
                                                                         onPress: () => {
+                                                                            setEditQuestion({});
+                                                                            setEditQuestionNumber(0);
                                                                             const updatedProblems = [...problems];
                                                                             updatedProblems.splice(index, 1);
                                                                             removeHeadersOnDeleteProblem(index + 1);
                                                                             setProblems(updatedProblems);
                                                                             props.setProblems(updatedProblems);
-                                                                            setEditQuestionNumber(0);
-                                                                            setEditQuestion({});
                                                                         }
                                                                     }
                                                                 ]);
@@ -1253,24 +1057,18 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                         }}
                                     >
                                         {
-                                            <View style={{ width: '100%', marginBottom: 10 }}>
+                                            <View style={{ width: '100%', marginBottom: 10, paddingTop: 20 }}>
                                                 {questionType === 'trueFalse' || editQuestionNumber !== index + 1 ? (
-                                                    <Text
-                                                        style={{
-                                                            marginVertical: 20,
-                                                            marginLeft: 20,
-                                                            fontSize: 15,
-                                                            lineHeight: 25
+                                                    <RenderHtml
+                                                        source={{
+                                                            html: option.option
                                                         }}
-                                                    >
-                                                        {/* {parser(option.option)} */}
-                                                        {option.option}
-                                                    </Text>
+                                                    />
                                                 ) : (
                                                     <View>
                                                         <RichToolbar
                                                             style={{
-                                                                borderColor: '#efefef',
+                                                                borderColor: '#f2f2f2',
                                                                 borderBottomWidth: 1,
                                                                 backgroundColor: '#fff',
                                                                 maxHeight: 40,
@@ -1286,11 +1084,11 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             disabledIconTint={'#bfbfbf'}
                                                             actions={[
                                                                 actions.keyboard,
+                                                                actions.undo,
+                                                                actions.redo,
                                                                 actions.setBold,
                                                                 actions.setItalic,
                                                                 actions.setUnderline,
-                                                                actions.insertImage,
-                                                                actions.insertLink,
                                                                 actions.insertBulletsList,
                                                                 actions.insertOrderedList,
                                                                 actions.heading1,
@@ -1365,20 +1163,19 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     </Text>
                                                                 )
                                                             }}
-                                                            hiliteColor={handleHiliteColor}
-                                                            foreColor={handleForeColor}
-                                                            insertEmoji={handleEmoji}
-                                                            onPressAddImage={handleAddImage}
-                                                            onInsertLink={handleInsertLink}
+                                                            hiliteColor={() => props.handleHiliteColor(currRef)}
+                                                            foreColor={() => props.handleForeColor(currRef)}
+                                                            insertEmoji={() => props.handleEmoji(currRef)}
+                                                            onInsertLink={() => props.handleInsertLink(currRef)}
                                                         />
                                                         <ScrollView
                                                             horizontal={false}
                                                             style={{
-                                                                backgroundColor: '#efefef',
+                                                                backgroundColor: '#f2f2f2',
                                                                 // maxHeight: editorFocus ? 340 : 'auto',
-                                                                height: 150,
-                                                                borderColor: '#efefef',
-                                                                borderWidth: 1
+                                                                height: 100,
+                                                                borderColor: '#f2f2f2',
+                                                                borderWidth: optionEditorRefs[i] ? 1 : 0
                                                             }}
                                                             keyboardDismissMode={'none'}
                                                             // ref={scrollRef}
@@ -1399,14 +1196,16 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     display: 'flex',
                                                                     flex: 1,
                                                                     height: '100%',
-                                                                    minHeight: 150
+                                                                    minHeight: 100,
+                                                                    borderColor: '#f2f2f2',
+                                                                    borderBottomWidth: 1
                                                                 }}
                                                                 editorStyle={{
                                                                     backgroundColor: '#fff',
                                                                     placeholderColor: '#a2a2ac',
                                                                     color: '#2f2f3c',
                                                                     contentCSSText:
-                                                                        'font-size: 16px; min-height: 150px;'
+                                                                        'font-size: 16px; min-height: 100px;'
                                                                 }}
                                                                 initialContentHTML={
                                                                     editQuestion &&
@@ -1416,7 +1215,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                         ? editQuestion.options[i].option
                                                                         : ''
                                                                 }
-                                                                initialHeight={150}
+                                                                initialHeight={100}
                                                                 onScroll={() => Keyboard.dismiss()}
                                                                 placeholder={'Option ' + (i + 1)}
                                                                 onChange={text => {
@@ -1659,7 +1458,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     width: '100%',
                     flexDirection: 'row',
                     justifyContent: 'center',
-                    paddingBottom: 25
+                    paddingBottom: 100
                 }}
             >
                 <TouchableOpacity
@@ -1701,192 +1500,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     </Text>
                 </TouchableOpacity>
             </View>
-
-            {emojiVisible && (
-                <BottomSheet
-                    snapPoints={[0, 350]}
-                    close={() => {
-                        setEmojiVisible(false);
-                    }}
-                    isOpen={emojiVisible}
-                    title={'Select emoji'}
-                    renderContent={() => <EmojiView onSelect={insertEmoji} />}
-                    header={false}
-                />
-            )}
-            {insertImageVisible && (
-                <BottomSheet
-                    snapPoints={[0, 200]}
-                    close={() => {
-                        setInsertImageVisible(false);
-                    }}
-                    isOpen={insertImageVisible}
-                    title={'Insert image'}
-                    renderContent={() => (
-                        <View style={{ paddingHorizontal: 10 }}>
-                            <TouchableOpacity
-                                style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#006AFF',
-                                    borderRadius: 19,
-                                    width: 150,
-                                    alignSelf: 'center'
-                                }}
-                                onPress={() => {
-                                    uploadImageHandler(true);
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
-                                        color: '#fff'
-                                    }}
-                                >
-                                    {' '}
-                                    Camera{' '}
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#006AFF',
-                                    borderRadius: 19,
-                                    width: 150,
-                                    alignSelf: 'center'
-                                }}
-                                onPress={() => {
-                                    uploadImageHandler(false);
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
-                                        color: '#fff'
-                                    }}
-                                >
-                                    {' '}
-                                    Gallery{' '}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                    header={false}
-                />
-            )}
-            {insertLinkVisible && (
-                <BottomSheet
-                    snapPoints={[0, 350]}
-                    close={() => {
-                        setInsertLinkVisible(false);
-                    }}
-                    isOpen={insertLinkVisible}
-                    title={'Insert Link'}
-                    renderContent={() => <InsertLink onInsertLink={onInsertLink} />}
-                    header={false}
-                />
-            )}
-            {hiliteColorVisible && (
-                <BottomSheet
-                    snapPoints={[0, 350]}
-                    close={() => {
-                        setHiliteColorVisible(false);
-                    }}
-                    isOpen={hiliteColorVisible}
-                    title={'Highlight color'}
-                    renderContent={() => (
-                        <View
-                            style={{
-                                paddingHorizontal: 10,
-                                paddingTop: 20,
-                                flexDirection: 'column',
-                                alignItems: 'center'
-                            }}
-                        >
-                            <ColorPicker
-                                editorColors={true}
-                                color={hiliteColor}
-                                onChange={(color: string) => setHiliteColor(color)}
-                            />
-                            <TouchableOpacity
-                                style={{
-                                    marginTop: 10
-                                }}
-                                onPress={() => setHiliteColor('#ffffff')}
-                                disabled={hiliteColor === '#ffffff'}
-                            >
-                                <Text
-                                    style={{
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
-                                        color: '#006AFF'
-                                    }}
-                                >
-                                    {' '}
-                                    Remove{' '}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                    header={false}
-                />
-            )}
-            {foreColorVisible && (
-                <BottomSheet
-                    snapPoints={[0, 350]}
-                    close={() => {
-                        setForeColorVisible(false);
-                    }}
-                    isOpen={foreColorVisible}
-                    title={'Text color'}
-                    renderContent={() => (
-                        <View
-                            style={{
-                                paddingHorizontal: 10,
-                                paddingTop: 20,
-                                flexDirection: 'column',
-                                alignItems: 'center'
-                            }}
-                        >
-                            <ColorPicker
-                                editorColors={true}
-                                color={foreColor}
-                                onChange={(color: string) => setForeColor(color)}
-                            />
-                            <TouchableOpacity
-                                style={{
-                                    marginTop: 10
-                                }}
-                                onPress={() => setForeColor('#000000')}
-                                disabled={foreColor === '#000000'}
-                            >
-                                <Text
-                                    style={{
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
-                                        color: '#006AFF'
-                                    }}
-                                >
-                                    {' '}
-                                    Remove{' '}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                    header={false}
-                />
-            )}
         </View>
     );
 };

@@ -49,6 +49,10 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [currentFullName, setCurrentFullName] = useState('');
     const [currentDisplayName, setCurrentDisplayName] = useState('');
     const [currentAvatar, setCurrentAvatar] = useState<any>(undefined);
+    const [showSavePassword, setShowSavePassword] = useState(false);
+    const [reloadFormKey, setReloadFormKey] = useState(Math.random());
+    const [meetingProvider, setMeetingProvider] = useState('');
+
     // Alerts
     const passwordUpdatedAlert = PreferredLanguageText('passwordUpdated');
     const incorrectCurrentPasswordAlert = PreferredLanguageText('incorrectCurrentPassword');
@@ -60,11 +64,30 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     // HOOKS
 
     /**
+     * @description Fetch meeting provider for org
+     */
+    useEffect(() => {
+        (async () => {
+            const org = await AsyncStorage.getItem('school');
+
+            if (org) {
+                const school = JSON.parse(org);
+
+                setMeetingProvider(school.meetingProvider ? school.meetingProvider : '');
+            }
+        })();
+    }, []);
+
+    /**
      * @description Fetch user on Init
      */
     useEffect(() => {
         getUser();
     }, []);
+
+    useEffect(() => {
+        setReloadFormKey(Math.random());
+    }, [showSavePassword]);
 
     /**
      * @description Validate if submit is enabled after every state change
@@ -72,7 +95,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     useEffect(() => {
         // Reset Password state
         if (
-            props.showSavePassword &&
+            showSavePassword &&
             currentPassword &&
             newPassword &&
             confirmNewPassword &&
@@ -85,7 +108,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         // Logged in
         if (
-            !props.showSavePassword &&
+            !showSavePassword &&
             fullName &&
             displayName &&
             (fullName !== currentFullName || displayName !== currentDisplayName || avatar !== currentAvatar)
@@ -104,7 +127,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         confirmPassword,
         passwordValidError,
         confirmPasswordError,
-        props.showSavePassword,
+        showSavePassword,
         currentPassword,
         newPassword,
         confirmNewPassword,
@@ -151,7 +174,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         const user = JSON.parse(u);
         const server = fetchAPI('');
 
-        if (props.showSavePassword) {
+        if (showSavePassword) {
             // reset password
             server
                 .mutate({
@@ -201,7 +224,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             })
             .catch(e => Alert(somethingWentWrongAlert));
         //}
-    }, [email, avatar, displayName, fullName, confirmPassword, props.showSavePassword, newPassword, currentPassword]);
+    }, [email, avatar, displayName, fullName, confirmPassword, showSavePassword, newPassword, currentPassword]);
 
     /**
      * @description Loads User profile
@@ -306,9 +329,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             url = '';
         } else {
             // auth
-            url = `https://zoom.us/oauth/authorize?response_type=code&client_id=${zoomClientId}&redirect_uri=${encodeURIComponent(
-                zoomRedirectUri
-            )}&state=${userId}`;
+            url = 'https://app.learnwithcues.com/zoom_auth';
         }
 
         if (Platform.OS === 'ios' || Platform.OS === 'android') {
@@ -357,7 +378,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     // MAIN RETURN
 
     return (
-        <View style={styles.screen} key={1}>
+        <View style={styles.screen} key={reloadFormKey.toString()}>
             <ScrollView
                 style={{
                     backgroundColor: 'white',
@@ -376,25 +397,41 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             ? Dimensions.get('window').height - 104
                             : Dimensions.get('window').height - 52
                 }}
-                showsVerticalScrollIndicator={true}>
-                {/* <View style={{ overflow: 'scroll', width: '100%', flexDirection: 'row', flex: 1, justifyContent: 'center' }}> */}
-                {/* <View style={{ overflow: 'scroll', maxWidth: 400, width: '100%' }}> */}
-                {props.showSavePassword ? (
+                showsVerticalScrollIndicator={true}
+                key={reloadFormKey.toString()}
+            >
+                {showSavePassword ? (
                     <View
                         style={{
                             width: '100%',
                             backgroundColor: 'white',
                             paddingTop: Dimensions.get('window').width < 768 ? 25 : 50,
                             paddingBottom: 20,
-                            flex: 1,
+                            // flex: 1,
                             maxWidth: 400,
                             alignSelf: 'center'
-                        }}>
+                        }}
+                        key={reloadFormKey.toString()}
+                    >
+                        {/* <Text
+                            style={{
+                                fontSize: 16,
+                                color: '#000000',
+                                fontFamily: 'Inter',
+                                alignSelf: 'center',
+                                paddingBottom: 50
+                            }}
+                        >
+                            Change Password
+                        </Text> */}
                         <Text
                             style={{
                                 fontSize: 14,
-                                color: '#000000'
-                            }}>
+                                color: '#000000',
+                                fontFamily: 'Inter',
+                                marginTop: 50
+                            }}
+                        >
                             {PreferredLanguageText('currentPassword')}
                         </Text>
                         <TextInput
@@ -409,8 +446,10 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <Text
                             style={{
                                 fontSize: 14,
-                                color: '#000000'
-                            }}>
+                                color: '#000000',
+                                fontFamily: 'Inter'
+                            }}
+                        >
                             {PreferredLanguageText('newPassword')}
                         </Text>
                         <TextInput
@@ -427,12 +466,15 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <Text
                             style={{
                                 fontSize: 14,
-                                color: '#000000'
-                            }}>
+                                color: '#000000',
+                                fontFamily: 'Inter'
+                            }}
+                        >
                             {PreferredLanguageText('confirmNewPassword')}
                         </Text>
                         <TextInput
                             secureTextEntry={true}
+                            autoCompleteType="off"
                             value={confirmNewPassword}
                             placeholder={''}
                             onChangeText={val => setConfirmNewPassword(val)}
@@ -450,7 +492,9 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             maxWidth: 400,
                             alignSelf: 'center'
                             // flex: 1
-                        }}>
+                        }}
+                        key={reloadFormKey.toString()}
+                    >
                         <Image
                             style={{
                                 height: 100,
@@ -473,7 +517,8 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         // marginTop: 15,
                                         justifyContent: 'center',
                                         flexDirection: 'row'
-                                    }}>
+                                    }}
+                                >
                                     <Text>
                                         <Ionicons name={'close-circle-outline'} size={18} color={'#1F1F1F'} />
                                     </Text>
@@ -490,29 +535,36 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 marginTop: 20,
                                 fontSize: 14,
-                                color: '#000000'
-                            }}>
+                                color: '#000000',
+                                fontFamily: 'Inter'
+                            }}
+                        >
                             {PreferredLanguageText('email')}
                         </Text>
                         <TextInput
                             editable={false}
                             value={email}
+                            autoCompleteType="off"
                             placeholder={''}
                             onChangeText={val => setEmail(val)}
                             placeholderTextColor={'#1F1F1F'}
                             required={true}
                             style={{
-                                borderBottomWidth: 0
+                                borderBottomWidth: 0,
+                                paddingVertical: 10
                             }}
                         />
                         <Text
                             style={{
                                 fontSize: 14,
-                                color: '#000000'
-                            }}>
+                                color: '#000000',
+                                fontFamily: 'Inter'
+                            }}
+                        >
                             {PreferredLanguageText('fullName')}
                         </Text>
                         <TextInput
+                            editable={false}
                             textContentType="name"
                             autoCompleteType="off"
                             value={fullName}
@@ -520,6 +572,10 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             onChangeText={val => setFullName(val)}
                             placeholderTextColor={'#1F1F1F'}
                             required={true}
+                            style={{
+                                borderBottomWidth: 0,
+                                paddingVertical: 10
+                            }}
                         />
                         {/* <Text style={{
                   fontSize: 14,
@@ -569,18 +625,23 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         justifyContent: 'center',
                         maxWidth: 400,
                         alignSelf: 'center'
-                    }}>
+                    }}
+                >
                     <TouchableOpacity
                         onPress={() => handleSubmit()}
                         style={{
-                            backgroundColor: 'white',
+                            backgroundColor: '#006AFF',
+                            width: 175,
+                            borderRadius: 15,
                             overflow: 'hidden',
                             height: 35,
                             marginTop: 15,
                             justifyContent: 'center',
-                            flexDirection: 'row'
+                            flexDirection: 'row',
+                            alignSelf: 'center'
                         }}
-                        disabled={isSubmitDisabled}>
+                        disabled={isSubmitDisabled}
+                    >
                         <Text
                             style={{
                                 textAlign: 'center',
@@ -594,44 +655,45 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 borderRadius: 15,
                                 width: 175,
                                 textTransform: 'uppercase'
-                            }}>
-                            {props.showSavePassword ? PreferredLanguageText('update') : PreferredLanguageText('save')}
+                            }}
+                        >
+                            {showSavePassword ? PreferredLanguageText('update') : PreferredLanguageText('save')}
                         </Text>
                     </TouchableOpacity>
-                    {!props.showSavePassword ? (
-                        <TouchableOpacity
-                            onPress={() => props.setShowSavePassword(!props.showSavePassword)}
+
+                    <TouchableOpacity
+                        onPress={() => setShowSavePassword(!showSavePassword)}
+                        style={{
+                            backgroundColor: 'white',
+                            overflow: 'hidden',
+                            height: 35,
+                            marginTop: 20,
+                            justifyContent: 'center',
+                            flexDirection: 'row'
+                        }}
+                    >
+                        <Text
                             style={{
-                                backgroundColor: 'white',
-                                overflow: 'hidden',
+                                textAlign: 'center',
+                                lineHeight: 34,
+                                color: '#006AFF',
+                                borderWidth: 1,
+                                borderRadius: 15,
+                                borderColor: '#006AFF',
+                                backgroundColor: '#fff',
+                                fontSize: 12,
+                                paddingHorizontal: 20,
+                                fontFamily: 'inter',
                                 height: 35,
-                                marginTop: 20,
-                                justifyContent: 'center',
-                                flexDirection: 'row'
-                            }}>
-                            <Text
-                                style={{
-                                    textAlign: 'center',
-                                    lineHeight: 34,
-                                    color: '#006AFF',
-                                    borderWidth: 1,
-                                    borderRadius: 15,
-                                    borderColor: '#006AFF',
-                                    backgroundColor: '#fff',
-                                    fontSize: 12,
-                                    paddingHorizontal: 20,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    width: 175,
-                                    textTransform: 'uppercase'
-                                }}>
-                                {props.showSavePassword
-                                    ? PreferredLanguageText('back')
-                                    : PreferredLanguageText('password')}
-                            </Text>
-                        </TouchableOpacity>
-                    ) : null}
-                    {props.showSavePassword ? null : !zoomInfo ? (
+                                width: 175,
+                                textTransform: 'uppercase'
+                            }}
+                        >
+                            {showSavePassword ? PreferredLanguageText('back') : 'Change password'}
+                        </Text>
+                    </TouchableOpacity>
+
+                    {showSavePassword || meetingProvider !== '' ? null : !zoomInfo ? (
                         <TouchableOpacity
                             onPress={() => handleZoomAuth()}
                             style={{
@@ -642,7 +704,8 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 // width: "100%",
                                 justifyContent: 'center',
                                 flexDirection: 'row'
-                            }}>
+                            }}
+                        >
                             <Text
                                 style={{
                                     textAlign: 'center',
@@ -658,13 +721,28 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     fontSize: 12,
                                     width: 175,
                                     textTransform: 'uppercase'
-                                }}>
+                                }}
+                            >
                                 Connect Zoom
                             </Text>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
-                            onPress={() => handleZoomRemove()}
+                            onPress={() => {
+                                Alert('Disconnect your Zoom account from Cues?', '', [
+                                    {
+                                        text: 'Cancel',
+                                        style: 'cancel',
+                                        onPress: () => {
+                                            return;
+                                        }
+                                    },
+                                    {
+                                        text: 'Yes',
+                                        onPress: () => handleZoomRemove()
+                                    }
+                                ]);
+                            }}
                             style={{
                                 backgroundColor: 'white',
                                 overflow: 'hidden',
@@ -673,7 +751,8 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 // width: "100%",
                                 justifyContent: 'center',
                                 flexDirection: 'row'
-                            }}>
+                            }}
+                        >
                             <Text
                                 style={{
                                     textAlign: 'center',
@@ -689,13 +768,14 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     fontSize: 12,
                                     width: 175,
                                     textTransform: 'uppercase'
-                                }}>
+                                }}
+                            >
                                 Disconnect Zoom
                             </Text>
                         </TouchableOpacity>
                     )}
 
-                    {props.showSavePassword ? null : (
+                    {showSavePassword ? null : (
                         <TouchableOpacity
                             onPress={() => logout()}
                             style={{
@@ -704,17 +784,20 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 height: 35,
                                 marginTop: 20,
                                 marginBottom: 30,
-                                width: '100%',
+                                // width: '100%',
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                alignItems: 'center'
-                            }}>
+                                alignItems: 'center',
+                                alignSelf: 'center'
+                            }}
+                        >
                             <Ionicons name="log-out-outline" color="#006AFF" style={{ marginRight: 10 }} size={18} />
                             <Text
                                 style={{
                                     fontSize: 14,
                                     color: '#006AFF'
-                                }}>
+                                }}
+                            >
                                 Log Out
                             </Text>
                         </TouchableOpacity>
@@ -747,8 +830,8 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: 'white',
         justifyContent: 'center',
-        flexDirection: 'row',
-        flex: 1
+        flexDirection: 'row'
+        // flex: 1
     },
     outline: {
         borderRadius: 1,

@@ -268,7 +268,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     return (
         <View
             style={{
-                backgroundColor: '#efefef',
+                backgroundColor: '#f2f2f2',
                 width: '100%'
             }}
         >
@@ -290,7 +290,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
             </Text>
             <View
                 style={{
-                    backgroundColor: '#efefef',
+                    backgroundColor: '#f2f2f2',
                     flexDirection: 'row',
                     paddingBottom: 20,
                     width: '100%',
@@ -298,13 +298,13 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 }}
             >
                 {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
-                    <View style={{ backgroundColor: '#efefef' }}>
+                    <View style={{ backgroundColor: '#f2f2f2' }}>
                         <View
                             style={{
                                 display: 'flex',
                                 width: '100%',
                                 flexDirection: 'row',
-                                backgroundColor: '#efefef',
+                                backgroundColor: '#f2f2f2',
                                 alignItems: 'center',
                                 borderBottomColor: '#d9dcdf',
                                 borderBottomWidth: 1
@@ -335,11 +335,11 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         </View>
                     </View>
                 )}
-                <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#efefef' }} />
+                <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#f2f2f2' }} />
                 {pastMeetings.length === 0 || channelAttendances.length === 0 || !isOwner ? null : (
                     <TouchableOpacity
                         style={{
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             overflow: 'hidden',
                             height: 35,
                             justifyContent: 'center',
@@ -380,7 +380,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             justifyContent: 'center',
                             display: 'flex',
                             flexDirection: 'column',
-                            backgroundColor: '#efefef',
+                            backgroundColor: '#f2f2f2',
                             borderTopRightRadius: 0,
                             borderTopLeftRadius: 0,
                             paddingVertical: 100
@@ -389,7 +389,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         <ActivityIndicator color={'#1F1F1F'} />
                     </View>
                 ) : (
-                    <View style={{ backgroundColor: '#efefef' }}>
+                    <View style={{ backgroundColor: '#f2f2f2' }}>
                         <Text
                             style={{
                                 width: '100%',
@@ -443,7 +443,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                     overflow: 'hidden',
                                     paddingBottom: 10,
                                     borderBottomWidth: 1,
-                                    borderBottomColor: '#efefef'
+                                    borderBottomColor: '#f2f2f2'
                                 }}
                                 key={'-'}
                             >

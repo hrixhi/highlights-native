@@ -1,27 +1,31 @@
 // REACT
 import React, { useEffect, useState, useCallback, useRef, createRef } from 'react';
-import { StyleSheet, TextInput, ActivityIndicator, TouchableOpacity, Dimensions, Switch, Keyboard } from 'react-native';
+import {
+    StyleSheet,
+    TextInput,
+    ActivityIndicator,
+    TouchableOpacity,
+    Dimensions,
+    Switch,
+    Keyboard,
+    ScrollView
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import lodash from 'lodash';
-import * as ImagePicker from 'expo-image-picker';
 
 // COMPONENT
 import { Text, View } from './Themed';
-// import TextareaAutosize from 'react-textarea-autosize';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
-
-import { RadioButton } from './RadioButton';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
-import TeXToSVG from 'tex-to-svg';
-// import parser from 'html-react-parser';
 import FileUpload from './UploadFiles';
-import ReactPlayer from 'react-native-video';
-// import { Editor } from '@tinymce/tinymce-react';
-// import FormulaGuide from './FormulaGuide';
 import useDynamicRefs from 'use-dynamic-refs';
+import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
+import { Video } from 'expo-av';
+import RenderHtml from 'react-native-render-html';
 
-// HELPERS
-import { handleFile } from '../helpers/FileUpload';
+const emojiIcon = require('../assets/images/emojiIcon.png');
+const importIcon = require('../assets/images/importIcon.png');
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [problems, setProblems] = useState<any[]>(props.problems.slice());
@@ -49,7 +53,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [problemRefs, setProblemRefs] = useState<any[]>(props.problems.map(() => createRef(null)));
     const [showFormulas, setShowFormulas] = useState<any[]>(props.problems.map((prob: any) => false));
     const [responseEquations, setResponseEquations] = useState<any[]>(props.problems.map((prob: any) => ''));
-    const [showFormulaGuide, setShowFormulaGuide] = useState(false);
     const [getRef, setRef] = useDynamicRefs();
     const [optionEquations, setOptionEquations] = useState<any[]>([]);
     const [showOptionFormulas, setShowOptionFormulas] = useState<any[]>([]);
@@ -60,6 +63,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         noRegrading: 'Update question without regrading.'
     };
     let RichText: any = useRef();
+    const [editorFocus, setEditorFocus] = useState(false);
+    const [optionEditorRefs, setOptionEditorRefs] = useState<boolean[]>([]);
+    const [solutionEditorRefs, setSolutionEditorRefs] = useState<boolean[]>([]);
+
+    console.log('Quiz component props', props);
 
     // HOOKS
 
@@ -244,22 +252,24 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     borderRightWidth: 0,
                     flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                     paddingTop: 20,
-                    marginBottom: 20,
-                    borderColor: '#efefef'
-                }}>
+                    marginBottom: 50,
+                    borderColor: '#f2f2f2'
+                }}
+            >
                 <View
                     style={{
                         flexDirection: 'row',
-                        flex: 1,
                         paddingBottom: 15,
                         backgroundColor: 'white'
-                    }}>
+                    }}
+                >
                     <Text
                         style={{
                             fontSize: 14,
                             fontFamily: 'inter',
                             color: '#000000'
-                        }}>
+                        }}
+                    >
                         Timed
                     </Text>
                 </View>
@@ -269,7 +279,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         flexDirection: Dimensions.get('window').width < 768 ? 'row' : 'column',
                         alignItems: Dimensions.get('window').width < 768 ? 'center' : 'flex-end',
                         justifyContent: 'flex-start'
-                    }}>
+                    }}
+                >
                     <Switch
                         value={timer}
                         onValueChange={() => {
@@ -284,7 +295,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         }}
                         style={{ height: 20 }}
                         trackColor={{
-                            false: '#efefef',
+                            false: '#f2f2f2',
                             true: '#006AFF'
                         }}
                         activeThumbColor="white"
@@ -294,11 +305,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             style={{
                                 borderRightWidth: 0,
                                 paddingTop: 0,
-                                borderColor: '#efefef',
+                                borderColor: '#f2f2f2',
                                 flexDirection: 'row',
                                 paddingTop: 10,
                                 paddingLeft: Dimensions.get('window').width < 768 ? 20 : 0
-                            }}>
+                            }}
+                        >
                             <View>
                                 <Menu
                                     onSelect={(hour: any) =>
@@ -306,14 +318,16 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             ...duration,
                                             hours: hour
                                         })
-                                    }>
+                                    }
+                                >
                                     <MenuTrigger>
                                         <Text
                                             style={{
                                                 // fontFamily: "inter",
                                                 fontSize: 14,
                                                 color: '#000000'
-                                            }}>
+                                            }}
+                                        >
                                             {duration.hours} H <Ionicons name="chevron-down-outline" size={15} />{' '}
                                             &nbsp;&nbsp;:&nbsp;&nbsp;
                                         </Text>
@@ -325,11 +339,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 borderRadius: 15,
                                                 shadowOpacity: 0,
                                                 borderWidth: 1,
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 overflow: 'scroll',
                                                 maxHeight: '100%'
                                             }
-                                        }}>
+                                        }}
+                                    >
                                         {hours.map((hour: any) => {
                                             return (
                                                 <MenuOption value={hour}>
@@ -347,13 +362,15 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             ...duration,
                                             minutes: min
                                         })
-                                    }>
+                                    }
+                                >
                                     <MenuTrigger>
                                         <Text
                                             style={{
                                                 fontSize: 14,
                                                 color: '#000000'
-                                            }}>
+                                            }}
+                                        >
                                             {duration.minutes} m <Ionicons name="chevron-down-outline" size={15} />
                                         </Text>
                                     </MenuTrigger>
@@ -364,11 +381,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 borderRadius: 15,
                                                 shadowOpacity: 0,
                                                 borderWidth: 1,
-                                                borderColor: '#efefef',
+                                                borderColor: '#f2f2f2',
                                                 overflow: 'scroll',
                                                 maxHeight: '100%'
                                             }
-                                        }}>
+                                        }}
+                                    >
                                         {minutes.map((min: any) => {
                                             return (
                                                 <MenuOption value={min}>
@@ -397,22 +415,24 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     borderRightWidth: 0,
                     flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                     paddingTop: 20,
-                    borderColor: '#efefef',
+                    borderColor: '#f2f2f2',
                     marginBottom: 50
-                }}>
+                }}
+            >
                 <View
                     style={{
                         flexDirection: 'row',
-                        flex: 1,
                         paddingBottom: 15,
                         backgroundColor: 'white'
-                    }}>
+                    }}
+                >
                     <Text
                         style={{
                             fontSize: 14,
                             fontFamily: 'inter',
                             color: '#000000'
-                        }}>
+                        }}
+                    >
                         Random Order
                     </Text>
                 </View>
@@ -422,7 +442,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         height: 40,
                         flexDirection: 'row',
                         justifyContent: 'flex-start'
-                    }}>
+                    }}
+                >
                     <Switch
                         value={shuffleQuiz}
                         onValueChange={() => {
@@ -430,7 +451,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         }}
                         style={{ height: 20 }}
                         trackColor={{
-                            false: '#efefef',
+                            false: '#f2f2f2',
                             true: '#006AFF'
                         }}
                         activeThumbColor="white"
@@ -468,28 +489,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const renderHeader = (index: number) => {
         if (index in headers) {
             return props.isOwner ? (
-                // <TextareaAutosize
-                //     value={headers[index]}
-                //     style={{
-                //         fontFamily: 'overpass',
-                //         marginBottom: 30,
-                //         marginTop: 50,
-                //         fontSize: 14,
-                //         paddingTop: 12,
-                //         paddingBottom: 12,
-                //         maxWidth: '100%',
-                //         borderRadius: 1,
-                //         borderBottom: '1px solid #efefef',
-                //         width: Dimensions.get('window').width < 768 ? '100%' : '50%'
-                //     }}
-                //     onChange={(e: any) => {
-                //         const currentHeaders = JSON.parse(JSON.stringify(headers));
-                //         currentHeaders[index] = e.target.value;
-                //         setHeaders(currentHeaders);
-                //     }}
-                //     placeholder={'Header'}
-                //     minRows={1}
-                // />
                 <AutoGrowingTextInput
                     value={headers[index]}
                     onChange={(event: any) => {
@@ -499,22 +498,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     }}
                     style={{
                         fontFamily: 'overpass',
-                        width: '100%',
-                        maxWidth: 500,
-                        borderBottom: '1px solid #efefef',
-                        fontSize: 14,
+                        maxWidth: '100%',
+                        marginBottom: 10,
+                        marginTop: 10,
                         paddingTop: 13,
                         paddingBottom: 13,
-                        marginTop: 12,
-                        marginBottom: 20,
-                        borderRadius: 1
+                        fontSize: 14,
+                        // borderBottom: '1px solid #C1C9D2'
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#f2f2f2'
                     }}
                     placeholder={'Header'}
                     placeholderTextColor="#66737C"
                     maxHeight={200}
                     minHeight={45}
                     enableScrollToCaret
-                    // ref={}
                 />
             ) : (
                 <Text
@@ -526,7 +524,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         paddingBottom: 12,
                         fontWeight: '600',
                         width: '100%'
-                    }}>
+                    }}
+                >
                     {headers[index]}
                 </Text>
             );
@@ -539,122 +538,24 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
      * @description Renders Audio/Video player for quiz problems
      */
     const renderAudioVideoPlayer = (url: string, type: string) => {
+        console.log('Video URL', url);
         return (
-            <ReactPlayer
-                source={{ uri: url }}
+            <Video
+                // ref={audioRef}
                 style={{
                     width: '100%',
-                    height: type === 'mp3' || type === 'wav' ? '75px' : '360px'
+                    height: 250
                 }}
+                source={{
+                    uri: url
+                }}
+                useNativeControls
+                resizeMode="contain"
+                isLooping
+                // onPlaybackStatusUpdate={status => setStatus(() => status)}
             />
         );
     };
-
-    /**
-     * @description Used to insert equation into question being updated
-     */
-    const insertEquation = useCallback(() => {
-        if (equation === '') {
-            alert('Equation cannot be empty.');
-            return;
-        }
-
-        let currentContent = RichText.current.getContent();
-
-        const SVGEquation = TeXToSVG(equation); // returns svg in html format
-        currentContent += '<div contenteditable="false" style="display: inline-block">' + SVGEquation + '</div>';
-
-        RichText.current.setContent(currentContent);
-
-        let audioVideoQuestion =
-            problems[editQuestionNumber - 1].question[0] === '{' &&
-            problems[editQuestionNumber - 1].question[problems[editQuestionNumber - 1].question.length - 1] === '}';
-
-        if (audioVideoQuestion) {
-            const currQuestion = JSON.parse(problems[editQuestionNumber - 1].question);
-            const updatedQuestion = {
-                ...currQuestion,
-                content: RichText.current.getContent()
-            };
-            const newProbs = [...problems];
-            newProbs[editQuestionNumber - 1].question = JSON.stringify(updatedQuestion);
-            setProblems(newProbs);
-        } else {
-            const newProbs = [...problems];
-            newProbs[editQuestionNumber - 1].question = RichText.current.getContent();
-            setProblems(newProbs);
-        }
-
-        setShowEquationEditor(false);
-        setEquation('');
-    }, [equation, RichText, RichText.current, showEquationEditor, problems, editQuestionNumber]);
-
-    /**
-     * @description Used to insert equation into MCQ option
-     */
-    const insertOptionEquation = (index: number) => {
-        if (optionEquations[index] === '') {
-            alert('Equation cannot be empty.');
-            return;
-        }
-
-        const ref: any = getRef(index.toString());
-
-        if (!ref || !ref.current) return;
-
-        let currentContent = ref.current.getContent();
-
-        const SVGEquation = TeXToSVG(optionEquations[index], { width: 100 }); // returns svg in html format
-        currentContent += '<div contenteditable="false" style="display: inline-block">' + SVGEquation + '</div>';
-
-        ref.current.setContent(currentContent);
-
-        // Update option
-        const newProbs = [...problems];
-        newProbs[editQuestionNumber - 1].options[index].option = ref.current.getContent();
-        setProblems(newProbs);
-
-        const updateShowFormulas = [...showOptionFormulas];
-        updateShowFormulas[index] = false;
-        setShowOptionFormulas(updateShowFormulas);
-
-        const updateOptionEquations = [...optionEquations];
-        updateOptionEquations[index] = '';
-        setOptionEquations(updateOptionEquations);
-    };
-
-    /**
-     * @description Insert equation into Problem response editor
-     */
-    const insertResponseEquation = useCallback(
-        (problemIndex: number) => {
-            if (responseEquations[problemIndex] === '') {
-                alert('Equation cannot be empty.');
-                return;
-            }
-
-            let currentContent = problemRefs[problemIndex].current.getContent();
-
-            const SVGEquation = TeXToSVG(responseEquations[problemIndex]); // returns svg in html format
-            currentContent += '<div contenteditable="false" style="display: inline-block">' + SVGEquation + '</div>';
-
-            problemRefs[problemIndex].current.setContent(currentContent);
-
-            const updatedSolution = [...solutions];
-            updatedSolution[problemIndex].response = problemRefs[problemIndex].current.getContent();
-            setSolutions(updatedSolution);
-            props.setSolutions(updatedSolution);
-
-            const updateShowFormulas = [...showFormulas];
-            updateShowFormulas[problemIndex] = false;
-            setShowFormulas(updateShowFormulas);
-
-            const updateResponseEquations = [...responseEquations];
-            updateResponseEquations[problemIndex] = '';
-            setResponseEquations(updateResponseEquations);
-        },
-        [showFormulas, problemRefs, responseEquations, solutions]
-    );
 
     /**
      * @description Renders Rich editor for Question
@@ -696,128 +597,182 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </View>
                 )}
                 {audioVideoQuestion ? (
-                    <View style={{ marginBottom: 20 }}>{renderAudioVideoPlayer(url, type)}</View>
+                    <View style={{ marginVertical: 20 }}>{renderAudioVideoPlayer(url, type)}</View>
                 ) : null}
-                {/* <FormulaGuide
-                    equation={equation}
-                    onChange={setEquation}
-                    show={showEquationEditor}
-                    onClose={() => setShowEquationEditor(false)}
-                    onInsertEquation={insertEquation}
-                /> */}
-                {/* <Editor
-                    onInit={(evt, editor) => (RichText.current = editor)}
-                    initialValue={editQuestion && editQuestion.question ? editQuestion.question : ''}
-                    apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
-                    init={{
-                        skin: 'snow',
-                        // toolbar_sticky: true,
-                        // selector: 'textarea',  // change this value according to your HTML
-                        // content_style: 'div { margin: 10px; border: 5px solid red; padding: 3px; }',
-                        indent: false,
-                        body_class: 'tinyMCEInput',
-                        branding: false,
-                        placeholder: 'Problem',
-                        autoresize_on_init: false,
-                        autoresize_min_height: 250,
-                        height: 250,
-                        min_height: 250,
-                        paste_data_images: true,
-                        images_upload_url: 'https://api.learnwithcues.com/api/imageUploadEditor',
-                        mobile: {
-                            plugins:
-                                'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
-                        },
-                        plugins:
-                            'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
-                        menu: {
-                            // this is the complete default configuration
-                            file: { title: 'File', items: 'newdocument' },
-                            edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall' },
-                            insert: { title: 'Insert', items: 'link media | template hr' },
-                            view: { title: 'View', items: 'visualaid' },
-                            format: {
-                                title: 'Format',
-                                items:
-                                    'bold italic underline strikethrough superscript subscript | formats | removeformat'
-                            },
-                            table: { title: 'Table', items: 'inserttable tableprops deletetable | cell row column' },
-                            tools: { title: 'Tools', items: 'spellchecker code' }
-                        },
-                        setup: (editor: any) => {
-                            const equationIcon =
-                                '<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4817 3.82717C11.3693 3.00322 9.78596 3.7358 9.69388 5.11699L9.53501 7.50001H12.25C12.6642 7.50001 13 7.8358 13 8.25001C13 8.66423 12.6642 9.00001 12.25 9.00001H9.43501L8.83462 18.0059C8.6556 20.6912 5.47707 22.0078 3.45168 20.2355L3.25613 20.0644C2.9444 19.7917 2.91282 19.3179 3.18558 19.0061C3.45834 18.6944 3.93216 18.6628 4.24389 18.9356L4.43943 19.1067C5.53003 20.061 7.24154 19.352 7.33794 17.9061L7.93168 9.00001H5.75001C5.3358 9.00001 5.00001 8.66423 5.00001 8.25001C5.00001 7.8358 5.3358 7.50001 5.75001 7.50001H8.03168L8.1972 5.01721C8.3682 2.45214 11.3087 1.09164 13.3745 2.62184L13.7464 2.89734C14.0793 3.1439 14.1492 3.61359 13.9027 3.94643C13.6561 4.27928 13.1864 4.34923 12.8536 4.10268L12.4817 3.82717Z"/><path d="M13.7121 12.7634C13.4879 12.3373 12.9259 12.2299 12.5604 12.5432L12.2381 12.8194C11.9236 13.089 11.4501 13.0526 11.1806 12.7381C10.911 12.4236 10.9474 11.9501 11.2619 11.6806L11.5842 11.4043C12.6809 10.4643 14.3668 10.7865 15.0395 12.0647L16.0171 13.9222L18.7197 11.2197C19.0126 10.9268 19.4874 10.9268 19.7803 11.2197C20.0732 11.5126 20.0732 11.9874 19.7803 12.2803L16.7486 15.312L18.2879 18.2366C18.5121 18.6627 19.0741 18.7701 19.4397 18.4568L19.7619 18.1806C20.0764 17.911 20.5499 17.9474 20.8195 18.2619C21.089 18.5764 21.0526 19.0499 20.7381 19.3194L20.4159 19.5957C19.3191 20.5357 17.6333 20.2135 16.9605 18.9353L15.6381 16.4226L12.2803 19.7803C11.9875 20.0732 11.5126 20.0732 11.2197 19.7803C10.9268 19.4874 10.9268 19.0126 11.2197 18.7197L14.9066 15.0328L13.7121 12.7634Z"/></svg>';
-                            editor.ui.registry.addIcon('formula', equationIcon);
+                <View>
+                    <RichToolbar
+                        style={{
+                            backgroundColor: '#fff',
+                            maxHeight: 40,
+                            height: 40,
+                            display: editorFocus ? 'flex' : 'none'
+                        }}
+                        flatContainerStyle={{
+                            paddingHorizontal: 12
+                        }}
+                        editor={RichText}
+                        disabled={false}
+                        selectedIconTint={'#006AFF'}
+                        disabledIconTint={'#bfbfbf'}
+                        actions={[
+                            actions.keyboard,
+                            actions.undo,
+                            actions.redo,
+                            actions.setBold,
+                            actions.setItalic,
+                            actions.setUnderline,
+                            actions.insertImage,
+                            actions.insertLink,
+                            actions.insertBulletsList,
+                            actions.insertOrderedList,
+                            actions.heading1,
+                            actions.heading3,
+                            actions.setParagraph,
+                            actions.foreColor,
+                            actions.hiliteColor,
+                            'insertEmoji'
+                        ]}
+                        iconMap={{
+                            [actions.keyboard]: ({ tintColor }) => (
+                                <Text style={{ color: 'green', fontSize: 20 }}>✓</Text>
+                            ),
+                            [actions.insertVideo]: importIcon,
+                            insertEmoji: emojiIcon,
+                            [actions.heading1]: ({ tintColor }) => (
+                                <Text
+                                    style={{
+                                        color: tintColor,
+                                        fontSize: 19,
+                                        paddingBottom: 1
+                                    }}
+                                >
+                                    H1
+                                </Text>
+                            ),
+                            [actions.heading3]: ({ tintColor }) => (
+                                <Text
+                                    style={{
+                                        color: tintColor,
+                                        fontSize: 19,
+                                        paddingBottom: 1
+                                    }}
+                                >
+                                    H3
+                                </Text>
+                            ),
+                            [actions.setParagraph]: ({ tintColor }) => (
+                                <Text
+                                    style={{
+                                        color: tintColor,
+                                        fontSize: 19,
+                                        paddingBottom: 1
+                                    }}
+                                >
+                                    p
+                                </Text>
+                            ),
+                            [actions.foreColor]: ({ tintColor }) => (
+                                <Text
+                                    style={{
+                                        fontSize: 19,
+                                        fontWeight: 'bold',
+                                        color: 'red'
+                                    }}
+                                >
+                                    A
+                                </Text>
+                            ),
+                            [actions.hiliteColor]: ({ tintColor }) => (
+                                <Text
+                                    style={{
+                                        color: 'black',
+                                        fontSize: 19,
+                                        backgroundColor: '#ffc701',
+                                        paddingHorizontal: 2
+                                    }}
+                                >
+                                    H
+                                </Text>
+                            )
+                        }}
+                        hiliteColor={() => props.handleHiliteColor(RichText)}
+                        foreColor={() => props.handleForeColor(RichText)}
+                        insertEmoji={() => props.handleEmoji(RichText)}
+                        onPressAddImage={() => props.handleAddImage(RichText)}
+                        onInsertLink={() => props.handleInsertLink(RichText)}
+                    />
+                    <ScrollView
+                        horizontal={false}
+                        style={{
+                            backgroundColor: '#f2f2f2',
+                            minHeight: 150,
+                            borderColor: '#f2f2f2',
+                            borderWidth: editorFocus ? 1 : 0
+                        }}
+                        keyboardDismissMode={'none'}
+                        nestedScrollEnabled={true}
+                        scrollEventThrottle={20}
+                        indicatorStyle={'black'}
+                        showsHorizontalScrollIndicator={true}
+                        persistentScrollbar={true}
+                    >
+                        <RichEditor
+                            ref={RichText}
+                            useContainer={true}
+                            style={{
+                                width: '100%',
+                                paddingHorizontal: 10,
+                                backgroundColor: '#fff',
+                                display: 'flex',
+                                flex: 1,
+                                height: '100%',
+                                minHeight: 150,
+                                borderColor: '#f2f2f2',
+                                borderBottomWidth: 1
+                            }}
+                            editorStyle={{
+                                backgroundColor: '#fff',
+                                placeholderColor: '#a2a2ac',
+                                color: '#2f2f3c',
+                                contentCSSText: 'font-size: 16px; min-height: 150px;'
+                            }}
+                            initialContentHTML={editQuestion && editQuestion.question ? editQuestion.question : ''}
+                            initialHeight={150}
+                            onScroll={() => Keyboard.dismiss()}
+                            placeholder={'Problem'}
+                            onChange={text => {
+                                const modifedText = text.split('&amp;').join('&');
 
-                            editor.ui.registry.addButton('formula', {
-                                icon: 'formula',
-                                // text: "Upload File",
-                                tooltip: 'Insert equation',
-                                onAction: () => {
-                                    setShowEquationEditor(!showEquationEditor);
-                                }
-                            });
-
-                            editor.ui.registry.addButton('upload', {
-                                icon: 'upload',
-                                tooltip: 'Import Audio/Video file',
-                                onAction: async () => {
-                                    const res = await handleFile(true);
-
-                                    console.log('File upload result', res);
-
-                                    if (!res || res.url === '' || res.type === '') {
-                                        return;
-                                    }
-
-                                    const obj = { url: res.url, type: res.type, content: problems[index].question };
-
+                                if (audioVideoQuestion) {
+                                    const currQuestion = JSON.parse(problems[index].question);
+                                    const updatedQuestion = {
+                                        ...currQuestion,
+                                        content: modifedText
+                                    };
                                     const newProbs = [...problems];
-                                    newProbs[index].question = JSON.stringify(obj);
+                                    newProbs[index].question = JSON.stringify(updatedQuestion);
                                     setProblems(newProbs);
-                                    setShowImportOptions(false);
+                                    props.setProblems(newProbs);
+                                } else {
+                                    // setCue(modifedText);
+                                    const newProbs = [...problems];
+                                    newProbs[index].question = modifedText;
+                                    setProblems(newProbs);
+                                    props.setProblems(newProbs);
                                 }
-                            });
-                        },
-                        // menubar: 'file edit view insert format tools table tc help',
-                        menubar: false,
-                        statusbar: false,
-                        toolbar:
-                            'undo redo | bold italic underline strikethrough | formula superscript subscript | numlist bullist | forecolor backcolor permanentpen removeformat | table image upload link media | charmap emoticons ',
-                        importcss_append: true,
-                        image_caption: true,
-                        quickbars_selection_toolbar: 'bold italic underline | quicklink h2 h3 quickimage quicktable',
-                        noneditable_noneditable_class: 'mceNonEditable',
-                        toolbar_mode: 'sliding',
-                        content_style:
-                            '.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before{color: #1F1F1F;}',
-                        // tinycomments_mode: 'embedded',
-                        // content_style: '.mymention{ color: gray; }',
-                        // contextmenu: 'link image table configurepermanentpen',
-                        // a11y_advanced_options: true,
-                        extended_valid_elements:
-                            'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
-                        // skin: useDarkMode ? 'oxide-dark' : 'oxide',
-                        // content_css: useDarkMode ? 'dark' : 'default',
-                    }}
-                    onChange={(e: any) => {
-                        if (audioVideoQuestion) {
-                            const currQuestion = JSON.parse(problems[index].question);
-                            const updatedQuestion = {
-                                ...currQuestion,
-                                content: e.target.getContent()
-                            };
-                            const newProbs = [...problems];
-                            newProbs[index].question = JSON.stringify(updatedQuestion);
-                            setProblems(newProbs);
-                        } else {
-                            // setCue(modifedText);
-                            const newProbs = [...problems];
-                            newProbs[index].question = e.target.getContent();
-                            setProblems(newProbs);
-                        }
-                    }}
-                /> */}
+                            }}
+                            onFocus={() => setEditorFocus(true)}
+                            onBlur={() => setEditorFocus(false)}
+                            allowFileAccess={true}
+                            allowFileAccessFromFileURLs={true}
+                            allowUniversalAccessFromFileURLs={true}
+                            allowsFullscreenVideo={true}
+                            allowsInlineMediaPlayback={true}
+                            allowsLinkPreview={true}
+                            allowsBackForwardNavigationGestures={true}
+                        />
+                    </ScrollView>
+                </View>
             </View>
         );
     };
@@ -878,21 +833,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         props.setSolutions(updatedSolution);
     };
 
-    let solutionRefs: any[] = [];
+    // let solutionRefs: any[] = [];
+    console.log('Quiz Problems', problems);
+    console.log('Solutions', solutions);
 
     if (problems.length !== solutions.length && !props.isOwner) {
-        return null;
+        return <View />;
     }
 
     if (!props.isOwner && initialSolutions.length === 0) return null;
 
-    problems.map((prob: any, index: number) => {
-        solutionRefs.push(createRef(null));
-    });
-
     let displayProblems = props.shuffleQuiz && !props.isOwner ? shuffledProblems : problems;
 
-    if (loading || props.loading)
+    console.log('Problems', displayProblems);
+
+    if (loading || props.loading) {
         return (
             <View
                 style={{
@@ -902,10 +857,25 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     display: 'flex',
                     flexDirection: 'column',
                     backgroundColor: 'white'
-                }}>
+                }}
+            >
                 <ActivityIndicator color={'#1F1F1F'} />
             </View>
         );
+    }
+
+    let optionRefs: any[] = [];
+    let solutionRefs: any[] = [];
+
+    if (editQuestionNumber !== 0) {
+        problems[editQuestionNumber - 1].options.map((_: any, index: number) => {
+            optionRefs.push(getRef(index.toString()));
+        });
+    }
+
+    problems.map((prob: any, index: number) => {
+        solutionRefs.push(getRef(index.toString()));
+    });
 
     // MAIN RETURN
     return (
@@ -918,81 +888,185 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 paddingTop: 15,
                 flexDirection: 'column',
                 justifyContent: 'flex-start'
-            }}>
-            {/* {showFormulaGuide ? (
-                <FormulaGuide show={showFormulaGuide} onClose={() => setShowFormulaGuide(false)} />
-            ) : null} */}
+            }}
+        >
             <View style={{ flexDirection: 'column', width: '100%', paddingBottom: 25, paddingTop: 15 }}>
-                {props.isOwner ? //         placeholder: 'Instructions', //         branding: false, //         indent: false, //         // toolbar_sticky: true, //         skin: 'snow', //     init={{ //     apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl" //     initialValue={initialInstructions} //     // onInit={(evt, editor) => RichText.current = editor} // <Editor
-                //         autoresize_on_init: false,
-                //         autoresize_min_height: 250,
-                //         height: 250,
-                //         min_height: 250,
-                //         paste_data_images: true,
-                //         images_upload_url: 'https://api.learnwithcues.com/api/imageUploadEditor',
-                //         mobile: {
-                //             plugins:
-                //                 'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
-                //         },
-                //         plugins:
-                //             'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
-                //         menu: {
-                //             // this is the complete default configuration
-                //             file: { title: 'File', items: 'newdocument' },
-                //             edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall' },
-                //             insert: { title: 'Insert', items: 'link media | template hr' },
-                //             view: { title: 'View', items: 'visualaid' },
-                //             format: {
-                //                 title: 'Format',
-                //                 items:
-                //                     'bold italic underline strikethrough superscript subscript | formats | removeformat'
-                //             },
-                //             table: {
-                //                 title: 'Table',
-                //                 items: 'inserttable tableprops deletetable | cell row column'
-                //             },
-                //             tools: { title: 'Tools', items: 'spellchecker code' }
-                //         },
-                //         // menubar: 'file edit view insert format tools table tc help',
-                //         menubar: false,
-                //         statusbar: false,
-                //         toolbar:
-                //             'undo redo | bold italic underline strikethrough |  numlist bullist | forecolor backcolor permanentpen removeformat | table image media pageembed link | charmap emoticons superscript subscript',
-                //         importcss_append: true,
-                //         image_caption: true,
-                //         quickbars_selection_toolbar:
-                //             'bold italic underline | quicklink h2 h3 quickimage quicktable',
-                //         noneditable_noneditable_class: 'mceNonEditable',
-                //         toolbar_mode: 'sliding',
-                //         content_style:
-                //             '.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before{color: #1F1F1F;}',
-                //         // tinycomments_mode: 'embedded',
-                //         // content_style: '.mymention{ color: gray; }',
-                //         // contextmenu: 'link image table configurepermanentpen',
-                //         // a11y_advanced_options: true,
-                //         extended_valid_elements:
-                //             'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
-                //         // skin: useDarkMode ? 'oxide-dark' : 'oxide',
-                //         // content_css: useDarkMode ? 'dark' : 'default',
-                //     }}
-                //     onChange={(e: any) => {
-                //         setInstructions(e.target.getContent());
-                //     }}
-                // />
-                null : instructions !== '' ? (
-                    <Text
+                {props.isOwner ? (
+                    <View
                         style={{
-                            // marginTop: 20,
-                            marginBottom: 20,
-                            fontSize: 15,
-                            paddingTop: 12,
-                            paddingBottom: 12,
                             width: '100%',
-                            lineHeight: 25
-                        }}>
-                        {/* {parser(instructions)} */}
-                        {instructions}
-                    </Text>
+                            maxWidth: 600,
+                            paddingTop: 15,
+                            borderColor: '#f2f2f2',
+                            borderBottomWidth: 1
+                        }}
+                    >
+                        <RichToolbar
+                            style={{
+                                backgroundColor: '#fff',
+                                maxHeight: 40,
+                                height: 40,
+                                display: editorFocus ? 'flex' : 'none'
+                            }}
+                            flatContainerStyle={{
+                                paddingHorizontal: 12
+                            }}
+                            editor={RichText}
+                            disabled={false}
+                            selectedIconTint={'#006AFF'}
+                            disabledIconTint={'#bfbfbf'}
+                            actions={[
+                                actions.keyboard,
+                                actions.setBold,
+                                actions.setItalic,
+                                actions.setUnderline,
+                                actions.insertImage,
+                                actions.insertLink,
+                                actions.insertBulletsList,
+                                actions.insertOrderedList,
+                                actions.heading1,
+                                actions.heading3,
+                                actions.setParagraph,
+                                actions.foreColor,
+                                actions.hiliteColor,
+                                'insertEmoji'
+                            ]}
+                            iconMap={{
+                                [actions.keyboard]: ({ tintColor }) => (
+                                    <Text style={[{ color: 'green', fontSize: 20 }]}>✓</Text>
+                                ),
+                                [actions.insertVideo]: importIcon,
+                                insertEmoji: emojiIcon,
+                                [actions.heading1]: ({ tintColor }) => (
+                                    <Text
+                                        style={[
+                                            {
+                                                color: tintColor,
+                                                fontSize: 19,
+                                                paddingBottom: 1
+                                            }
+                                        ]}
+                                    >
+                                        H1
+                                    </Text>
+                                ),
+                                [actions.heading3]: ({ tintColor }) => (
+                                    <Text
+                                        style={[
+                                            {
+                                                color: tintColor,
+                                                fontSize: 19,
+                                                paddingBottom: 1
+                                            }
+                                        ]}
+                                    >
+                                        H3
+                                    </Text>
+                                ),
+                                [actions.setParagraph]: ({ tintColor }) => (
+                                    <Text
+                                        style={[
+                                            {
+                                                color: tintColor,
+                                                fontSize: 19,
+                                                paddingBottom: 1
+                                            }
+                                        ]}
+                                    >
+                                        p
+                                    </Text>
+                                ),
+                                [actions.foreColor]: ({ tintColor }) => (
+                                    <Text
+                                        style={{
+                                            fontSize: 19,
+                                            fontWeight: 'bold',
+                                            color: 'red'
+                                        }}
+                                    >
+                                        A
+                                    </Text>
+                                ),
+                                [actions.hiliteColor]: ({ tintColor }) => (
+                                    <Text
+                                        style={{
+                                            color: 'black',
+                                            fontSize: 19,
+                                            backgroundColor: '#ffc701',
+                                            paddingHorizontal: 2
+                                        }}
+                                    >
+                                        H
+                                    </Text>
+                                )
+                            }}
+                            hiliteColor={() => props.handleHiliteColor(RichText)}
+                            foreColor={() => props.handleForeColor(RichText)}
+                            insertEmoji={() => props.handleEmoji(RichText)}
+                            onPressAddImage={() => props.handleAddImage(RichText)}
+                            onInsertLink={() => props.handleInsertLink(RichText)}
+                        />
+                        <ScrollView
+                            horizontal={false}
+                            style={{
+                                backgroundColor: '#f2f2f2',
+                                height: 120,
+                                borderColor: '#f2f2f2',
+                                borderWidth: editorFocus ? 1 : 0
+                            }}
+                            keyboardDismissMode={'none'}
+                            nestedScrollEnabled={true}
+                            scrollEventThrottle={20}
+                            indicatorStyle={'black'}
+                            showsHorizontalScrollIndicator={true}
+                            persistentScrollbar={true}
+                        >
+                            <RichEditor
+                                ref={RichText}
+                                useContainer={true}
+                                style={{
+                                    width: '100%',
+                                    paddingHorizontal: 10,
+                                    backgroundColor: '#fff',
+                                    display: 'flex',
+                                    flex: 1,
+                                    height: '100%',
+                                    minHeight: 120,
+                                    borderBottomColor: '#f2f2f2',
+                                    borderBottomWidth: 1
+                                }}
+                                editorStyle={{
+                                    backgroundColor: '#fff',
+                                    placeholderColor: '#a2a2ac',
+                                    color: '#2f2f3c',
+                                    contentCSSText: 'font-size: 16px; min-height: 120;'
+                                }}
+                                initialContentHTML={instructions}
+                                initialHeight={120}
+                                onScroll={() => Keyboard.dismiss()}
+                                placeholder={'Quiz instructions'}
+                                onChange={text => {
+                                    const modifedText = text.split('&amp;').join('&');
+                                    setInstructions(modifedText);
+                                }}
+                                onFocus={() => setEditorFocus(true)}
+                                onBlur={() => setEditorFocus(false)}
+                                allowFileAccess={true}
+                                allowFileAccessFromFileURLs={true}
+                                allowUniversalAccessFromFileURLs={true}
+                                allowsFullscreenVideo={true}
+                                allowsInlineMediaPlayback={true}
+                                allowsLinkPreview={true}
+                                allowsBackForwardNavigationGestures={true}
+                            />
+                        </ScrollView>
+                    </View>
+                ) : instructions !== '' ? (
+                    <RenderHtml
+                        source={{
+                            html: instructions
+                        }}
+                    />
                 ) : null}
             </View>
 
@@ -1031,33 +1105,41 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     type = parse.type;
                 }
 
+                const solutionRef: any = setRef(index.toString());
+
                 return (
                     <View
                         style={{
-                            borderBottomColor: '#efefef',
+                            borderBottomColor: '#f2f2f2',
                             width: '100%',
                             paddingLeft: Dimensions.get('window').width < 768 ? 10 : 0,
                             borderBottomWidth: index === problems.length - 1 ? 0 : 1,
                             marginBottom: 25
                         }}
-                        key={index}>
+                        key={index}
+                    >
                         {renderHeader(index)}
                         {props.isOwner && modifiedCorrectAnswerProblems[index] ? (
                             <View
                                 style={{
-                                    marginVertical: 10,
+                                    marginTop: 10,
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     padding: 10,
                                     backgroundColor: '#f3f3f3',
                                     borderRadius: 1
-                                }}>
+                                }}
+                            >
                                 {regradeChoices[index] !== '' ? (
-                                    <Ionicons name="checkmark-circle-outline" size={22} color={'#53BE68'} />
+                                    <Text style={{ maxWidth: '10%' }}>
+                                        <Ionicons name="checkmark-circle-outline" size={22} color={'#53BE68'} />
+                                    </Text>
                                 ) : (
-                                    <Ionicons name="warning-outline" size={22} color={'#f3722c'} />
+                                    <Text style={{ maxWidth: '10%' }}>
+                                        <Ionicons name="warning-outline" size={22} color={'#f3722c'} />
+                                    </Text>
                                 )}
-                                <Text style={{ paddingLeft: 10 }}>
+                                <Text style={{ paddingLeft: 10, maxWidth: '90%' }}>
                                     {regradeChoices[index] !== ''
                                         ? regradeChoices[index] === 'noRegrading'
                                             ? 'Question will not be regraded'
@@ -1073,7 +1155,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         paddingTop: 15,
                                         flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                                         width: '100%'
-                                    }}>
+                                    }}
+                                >
                                     <Text
                                         style={{
                                             color: '#000000',
@@ -1082,11 +1165,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             width: 40,
                                             paddingTop: Dimensions.get('window').width < 768 ? 20 : 15,
                                             fontFamily: 'inter'
-                                        }}>
+                                        }}
+                                    >
                                         {index + 1}.
                                     </Text>
 
-                                    {/* Question */}
                                     <View
                                         style={{
                                             flexDirection:
@@ -1095,11 +1178,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         ? 'column-reverse'
                                                         : 'column'
                                                     : 'row',
-                                            flex: 1,
                                             justifyContent: 'space-between'
-                                        }}>
+                                        }}
+                                    >
                                         {props.isOwner && editQuestionNumber === index + 1 ? (
-                                            <View style={{ flexDirection: 'column', width: '100%', flex: 1 }}>
+                                            <View style={{ flexDirection: 'column', width: '100%' }}>
                                                 {editQuestionNumber === index + 1 ? (
                                                     <View
                                                         style={{
@@ -1107,7 +1190,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             marginTop: 20,
                                                             marginBottom: 10,
                                                             justifyContent: 'flex-end'
-                                                        }}>
+                                                        }}
+                                                    >
                                                         {audioVideoQuestion ? (
                                                             <TouchableOpacity
                                                                 onPress={() => {
@@ -1116,13 +1200,15 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                     const parse = JSON.parse(question);
                                                                     updateProblems[index].question = parse.content;
                                                                     setProblems(updateProblems);
-                                                                }}>
+                                                                }}
+                                                            >
                                                                 <Text
                                                                     style={{
                                                                         color: '#006AFF',
                                                                         fontFamily: 'Overpass',
                                                                         fontSize: 10
-                                                                    }}>
+                                                                    }}
+                                                                >
                                                                     {' '}
                                                                     Remove upload
                                                                 </Text>
@@ -1134,43 +1220,41 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 {renderQuestionEditor(editQuestionNumber - 1)}
                                             </View>
                                         ) : audioVideoQuestion ? (
-                                            <View style={{ width: '100%', marginBottom: 25, flex: 1 }}>
-                                                <View style={{ marginBottom: 20 }}>
+                                            <View style={{ width: '100%', marginBottom: 25 }}>
+                                                <View style={{ marginVertical: 20 }}>
                                                     {renderAudioVideoPlayer(url, type)}
                                                 </View>
-                                                <Text style={{ marginVertical: 20, fontSize: 14, lineHeight: 25 }}>
-                                                    {/* {parser(content)} */}
-                                                    {content}
-                                                </Text>
+                                                <RenderHtml
+                                                    source={{
+                                                        html: content
+                                                    }}
+                                                />
                                             </View>
                                         ) : (
-                                            <Text
-                                                style={{
-                                                    marginVertical: 20,
-                                                    fontSize: 14,
-                                                    width: Dimensions.get('window').width < 768 ? '100%' : '80%',
-                                                    marginBottom: 25,
-                                                    lineHeight: 25
-                                                }}>
-                                                {/* {parser(problem.question)} */}
-                                                {problem.question}
-                                            </Text>
+                                            <View style={{ paddingTop: 15 }}>
+                                                <RenderHtml
+                                                    source={{
+                                                        html: problem.question
+                                                    }}
+                                                />
+                                            </View>
                                         )}
 
-                                        {/* Options */}
                                         <View
                                             style={{
                                                 flexDirection: 'row',
                                                 marginBottom: Dimensions.get('window').width < 768 ? 15 : 0,
                                                 justifyContent: 'flex-end'
-                                            }}>
+                                            }}
+                                        >
                                             <View
                                                 style={{
                                                     flexDirection: 'row',
                                                     justifyContent: 'flex-end',
                                                     alignItems: 'flex-start',
                                                     paddingTop: Dimensions.get('window').width < 768 ? 0 : 15
-                                                }}>
+                                                }}
+                                            >
                                                 {editQuestionNumber === index + 1 ? null : !problem.required ? null : (
                                                     <Text
                                                         style={{
@@ -1179,8 +1263,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             color: 'black',
                                                             marginBottom: 5,
                                                             marginRight: 15,
-                                                            paddingTop: 8
-                                                        }}>
+                                                            paddingTop: 12
+                                                        }}
+                                                    >
                                                         *
                                                     </Text>
                                                 )}
@@ -1189,9 +1274,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         style={{
                                                             fontSize: 11,
                                                             color: '#a2a2ac',
-                                                            paddingTop: 12,
+                                                            paddingTop: 15,
+                                                            paddingLeft: 5,
                                                             marginRight: 15
-                                                        }}>
+                                                        }}
+                                                    >
                                                         Multiple correct answers
                                                     </Text>
                                                 ) : null}
@@ -1199,8 +1286,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     editable={props.isOwner && editQuestionNumber === index + 1}
                                                     value={
                                                         props.isOwner && editQuestionNumber === index + 1
-                                                            ? problem.points
-                                                            : problem.points +
+                                                            ? problem.points.toString()
+                                                            : problem.points.toString() +
                                                               ' ' +
                                                               (Number(problem.points) === 1 ? 'Point' : ' Points')
                                                     }
@@ -1213,7 +1300,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         marginRight: editQuestionNumber === index + 1 ? 20 : 0,
                                                         textAlign: 'center',
                                                         fontWeight: editQuestionNumber === index + 1 ? 'normal' : '700',
-                                                        borderBottomColor: '#efefef',
+                                                        borderBottomColor: '#f2f2f2',
                                                         borderBottomWidth: editQuestionNumber === index + 1 ? 1 : 0
                                                     }}
                                                     onChangeText={val => {
@@ -1269,16 +1356,18 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                 setShowFormulas(updateShowFormulas);
                                                                 setOptionEquations(updateOptionEquations);
                                                             }}
-                                                            style={{ marginBottom: 20, paddingTop: 6 }}>
-                                                            {' '}
-                                                            <Ionicons
-                                                                name="cog-outline"
-                                                                size={20}
-                                                                style={{
-                                                                    paddingTop: 4
-                                                                }}
-                                                                color={'#006AFF'}
-                                                            />
+                                                            style={{ marginBottom: 20, paddingTop: 8 }}
+                                                        >
+                                                            <Text>
+                                                                <Ionicons
+                                                                    name="cog-outline"
+                                                                    size={20}
+                                                                    style={{
+                                                                        paddingTop: 4
+                                                                    }}
+                                                                    color={'#006AFF'}
+                                                                />
+                                                            </Text>
                                                         </TouchableOpacity>
                                                     ))}
                                             </View>
@@ -1295,44 +1384,33 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     color = '#3B64F8';
                                 }
 
+                                const currRef: any = setRef(i.toString());
+
                                 return (
                                     <View style={{ flexDirection: 'row', marginBottom: 20 }}>
-                                        <View style={{ width: 40 }}>
+                                        <View style={{ width: 40, paddingTop: 17 }}>
                                             {onlyOneCorrect && editQuestionNumber !== index + 1 ? (
-                                                <TouchableOpacity
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        flexDirection: 'row',
-                                                        marginTop: 21
-                                                    }}
-                                                    onPress={() => {
-                                                        selectMCQOption(problem, problemIndex, i);
-                                                    }}
-                                                    disabled={props.isOwner}>
-                                                    <RadioButton
-                                                        selected={
-                                                            props.isOwner
-                                                                ? option.isCorrect
-                                                                : solutions[problemIndex].selected[i].isSelected
-                                                        }
-                                                    />
-                                                </TouchableOpacity>
-                                            ) : (
-                                                <input
-                                                    disabled={
-                                                        props.isOwner && editQuestionNumber === index + 1
-                                                            ? false
-                                                            : props.isOwner
-                                                    }
-                                                    style={{ marginTop: 22 }}
-                                                    type="checkbox"
-                                                    checked={
+                                                <BouncyCheckbox
+                                                    style={{}}
+                                                    isChecked={
                                                         props.isOwner
                                                             ? option.isCorrect
                                                             : solutions[problemIndex].selected[i].isSelected
                                                     }
-                                                    onChange={(e: any) => {
+                                                    onPress={e => {
+                                                        selectMCQOption(problem, problemIndex, i);
+                                                    }}
+                                                    disabled={props.isOwner}
+                                                />
+                                            ) : (
+                                                <BouncyCheckbox
+                                                    style={{}}
+                                                    isChecked={
+                                                        props.isOwner
+                                                            ? option.isCorrect
+                                                            : solutions[problemIndex].selected[i].isSelected
+                                                    }
+                                                    onPress={e => {
                                                         if (props.isOwner) {
                                                             const updatedProbs = [...problems];
                                                             if (problem.questionType === 'trueFalse') {
@@ -1348,6 +1426,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             selectMCQOption(problem, problemIndex, i);
                                                         }
                                                     }}
+                                                    disabled={
+                                                        props.isOwner && editQuestionNumber === index + 1
+                                                            ? false
+                                                            : props.isOwner
+                                                    }
                                                 />
                                             )}
                                         </View>
@@ -1357,145 +1440,209 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             <View
                                                 style={{
                                                     flexDirection: 'column',
-                                                    maxWidth: Dimensions.get('window').width < 768 ? '80%' : 400
-                                                }}>
-                                                {/* <FormulaGuide
-                                                    equation={optionEquations[i]}
-                                                    onChange={(eq: any) => {
-                                                        const updateOptionEquations = [...optionEquations];
-                                                        updateOptionEquations[i] = eq;
-                                                        setOptionEquations(updateOptionEquations);
+                                                    maxWidth: Dimensions.get('window').width < 768 ? '80%' : 400,
+                                                    flex: 1,
+                                                    paddingTop: 10
+                                                }}
+                                            >
+                                                <RichToolbar
+                                                    style={{
+                                                        borderColor: '#f2f2f2',
+                                                        borderBottomWidth: 1,
+                                                        backgroundColor: '#fff',
+                                                        maxHeight: 40,
+                                                        height: 40,
+                                                        display: optionEditorRefs[i] ? 'flex' : 'none'
                                                     }}
-                                                    show={showOptionFormulas[i]}
-                                                    onClose={() => {
-                                                        const updateShowFormulas = [...showOptionFormulas];
-                                                        updateShowFormulas[i] = !updateShowFormulas[i];
-                                                        setShowOptionFormulas(updateShowFormulas);
+                                                    flatContainerStyle={{
+                                                        paddingHorizontal: 12
                                                     }}
-                                                    onInsertEquation={() => insertOptionEquation(i)}
+                                                    editor={currRef}
+                                                    disabled={false}
+                                                    selectedIconTint={'#006AFF'}
+                                                    disabledIconTint={'#bfbfbf'}
+                                                    actions={[
+                                                        actions.keyboard,
+                                                        actions.undo,
+                                                        actions.redo,
+                                                        actions.setBold,
+                                                        actions.setItalic,
+                                                        actions.setUnderline,
+                                                        actions.insertBulletsList,
+                                                        actions.insertOrderedList,
+                                                        actions.heading1,
+                                                        actions.heading3,
+                                                        actions.setParagraph,
+                                                        actions.foreColor,
+                                                        actions.hiliteColor,
+                                                        'insertEmoji'
+                                                    ]}
+                                                    iconMap={{
+                                                        [actions.keyboard]: ({ tintColor }) => (
+                                                            <Text style={{ color: 'green', fontSize: 20 }}>✓</Text>
+                                                        ),
+                                                        [actions.insertVideo]: importIcon,
+                                                        insertEmoji: emojiIcon,
+                                                        [actions.heading1]: ({ tintColor }) => (
+                                                            <Text
+                                                                style={{
+                                                                    color: tintColor,
+                                                                    fontSize: 19,
+                                                                    paddingBottom: 1
+                                                                }}
+                                                            >
+                                                                H1
+                                                            </Text>
+                                                        ),
+                                                        [actions.heading3]: ({ tintColor }) => (
+                                                            <Text
+                                                                style={{
+                                                                    color: tintColor,
+                                                                    fontSize: 19,
+                                                                    paddingBottom: 1
+                                                                }}
+                                                            >
+                                                                H3
+                                                            </Text>
+                                                        ),
+                                                        [actions.setParagraph]: ({ tintColor }) => (
+                                                            <Text
+                                                                style={{
+                                                                    color: tintColor,
+                                                                    fontSize: 19,
+                                                                    paddingBottom: 1
+                                                                }}
+                                                            >
+                                                                p
+                                                            </Text>
+                                                        ),
+                                                        [actions.foreColor]: ({ tintColor }) => (
+                                                            <Text
+                                                                style={{
+                                                                    fontSize: 19,
+                                                                    fontWeight: 'bold',
+                                                                    color: 'red'
+                                                                }}
+                                                            >
+                                                                A
+                                                            </Text>
+                                                        ),
+                                                        [actions.hiliteColor]: ({ tintColor }) => (
+                                                            <Text
+                                                                style={{
+                                                                    color: 'black',
+                                                                    fontSize: 19,
+                                                                    backgroundColor: '#ffc701',
+                                                                    paddingHorizontal: 2
+                                                                }}
+                                                            >
+                                                                H
+                                                            </Text>
+                                                        )
+                                                    }}
+                                                    hiliteColor={() => props.handleHiliteColor(currRef)}
+                                                    foreColor={() => props.handleForeColor(currRef)}
+                                                    insertEmoji={() => props.handleEmoji(currRef)}
+                                                    onInsertLink={() => props.handleInsertLink(currRef)}
                                                 />
-                                                <Editor
-                                                    onInit={(evt, editor) => {
-                                                        const currRef: any = setRef(i.toString());
-                                                        if (currRef) {
-                                                            currRef.current = editor;
+                                                <ScrollView
+                                                    horizontal={false}
+                                                    style={{
+                                                        backgroundColor: '#f2f2f2',
+                                                        // maxHeight: editorFocus ? 340 : 'auto',
+                                                        height: 100,
+                                                        borderColor: '#f2f2f2',
+                                                        borderWidth: optionEditorRefs[i] ? 1 : 0,
+                                                        width: '100%'
+                                                    }}
+                                                    keyboardDismissMode={'none'}
+                                                    // ref={scrollRef}
+                                                    nestedScrollEnabled={true}
+                                                    scrollEventThrottle={20}
+                                                    indicatorStyle={'black'}
+                                                    showsHorizontalScrollIndicator={true}
+                                                    persistentScrollbar={true}
+                                                >
+                                                    <RichEditor
+                                                        // key={reloadEditorKey.toString()}
+                                                        ref={currRef}
+                                                        useContainer={true}
+                                                        style={{
+                                                            width: '100%',
+                                                            paddingHorizontal: 10,
+                                                            backgroundColor: '#fff',
+                                                            display: 'flex',
+                                                            flex: 1,
+                                                            height: '100%',
+                                                            minHeight: 100,
+                                                            borderColor: '#f2f2f2',
+                                                            borderBottomWidth: 1
+                                                        }}
+                                                        editorStyle={{
+                                                            backgroundColor: '#fff',
+                                                            placeholderColor: '#a2a2ac',
+                                                            color: '#2f2f3c',
+                                                            contentCSSText: 'font-size: 16px; min-height: 100px;'
+                                                        }}
+                                                        initialContentHTML={
+                                                            editQuestion &&
+                                                            editQuestion.options &&
+                                                            editQuestion.options[i] &&
+                                                            editQuestion.options[i].option !== ''
+                                                                ? editQuestion.options[i].option
+                                                                : ''
                                                         }
-                                                    }}
-                                                    initialValue={
-                                                        editQuestion &&
-                                                        editQuestion.options &&
-                                                        editQuestion.options[i] &&
-                                                        editQuestion.options[i].option !== ''
-                                                            ? editQuestion.options[i].option
-                                                            : ''
-                                                    }
-                                                    apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
-                                                    init={{
-                                                        skin: 'snow',
-                                                        // toolbar_sticky: true,
-                                                        statusbar: false,
-                                                        branding: false,
-                                                        placeholder: 'Option',
-                                                        autoresize_on_init: false,
-                                                        autoresize_min_height: 150,
-                                                        height: 150,
-                                                        min_height: 150,
-                                                        paste_data_images: true,
-                                                        images_upload_url:
-                                                            'https://api.learnwithcues.com/api/imageUploadEditor',
-                                                        mobile: {
-                                                            plugins:
-                                                                'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
-                                                        },
-                                                        plugins:
-                                                            'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
-                                                        menu: {
-                                                            // this is the complete default configuration
-                                                            file: { title: 'File', items: 'newdocument' },
-                                                            edit: {
-                                                                title: 'Edit',
-                                                                items:
-                                                                    'undo redo | cut copy paste pastetext | selectall'
-                                                            },
-                                                            insert: {
-                                                                title: 'Insert',
-                                                                items: 'link media | template hr'
-                                                            },
-                                                            view: { title: 'View', items: 'visualaid' },
-                                                            format: {
-                                                                title: 'Format',
-                                                                items:
-                                                                    'bold italic underline strikethrough superscript subscript | formats | removeformat'
-                                                            },
-                                                            table: {
-                                                                title: 'Table',
-                                                                items:
-                                                                    'inserttable tableprops deletetable | cell row column'
-                                                            },
-                                                            tools: { title: 'Tools', items: 'spellchecker code' }
-                                                        },
-                                                        setup: (editor: any) => {
-                                                            const equationIcon =
-                                                                '<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4817 3.82717C11.3693 3.00322 9.78596 3.7358 9.69388 5.11699L9.53501 7.50001H12.25C12.6642 7.50001 13 7.8358 13 8.25001C13 8.66423 12.6642 9.00001 12.25 9.00001H9.43501L8.83462 18.0059C8.6556 20.6912 5.47707 22.0078 3.45168 20.2355L3.25613 20.0644C2.9444 19.7917 2.91282 19.3179 3.18558 19.0061C3.45834 18.6944 3.93216 18.6628 4.24389 18.9356L4.43943 19.1067C5.53003 20.061 7.24154 19.352 7.33794 17.9061L7.93168 9.00001H5.75001C5.3358 9.00001 5.00001 8.66423 5.00001 8.25001C5.00001 7.8358 5.3358 7.50001 5.75001 7.50001H8.03168L8.1972 5.01721C8.3682 2.45214 11.3087 1.09164 13.3745 2.62184L13.7464 2.89734C14.0793 3.1439 14.1492 3.61359 13.9027 3.94643C13.6561 4.27928 13.1864 4.34923 12.8536 4.10268L12.4817 3.82717Z"/><path d="M13.7121 12.7634C13.4879 12.3373 12.9259 12.2299 12.5604 12.5432L12.2381 12.8194C11.9236 13.089 11.4501 13.0526 11.1806 12.7381C10.911 12.4236 10.9474 11.9501 11.2619 11.6806L11.5842 11.4043C12.6809 10.4643 14.3668 10.7865 15.0395 12.0647L16.0171 13.9222L18.7197 11.2197C19.0126 10.9268 19.4874 10.9268 19.7803 11.2197C20.0732 11.5126 20.0732 11.9874 19.7803 12.2803L16.7486 15.312L18.2879 18.2366C18.5121 18.6627 19.0741 18.7701 19.4397 18.4568L19.7619 18.1806C20.0764 17.911 20.5499 17.9474 20.8195 18.2619C21.089 18.5764 21.0526 19.0499 20.7381 19.3194L20.4159 19.5957C19.3191 20.5357 17.6333 20.2135 16.9605 18.9353L15.6381 16.4226L12.2803 19.7803C11.9875 20.0732 11.5126 20.0732 11.2197 19.7803C10.9268 19.4874 10.9268 19.0126 11.2197 18.7197L14.9066 15.0328L13.7121 12.7634Z"/></svg>';
-                                                            editor.ui.registry.addIcon('formula', equationIcon);
+                                                        initialHeight={100}
+                                                        onScroll={() => Keyboard.dismiss()}
+                                                        placeholder={'Option ' + (i + 1)}
+                                                        onChange={text => {
+                                                            const modifedText = text.split('&amp;').join('&');
 
-                                                            editor.ui.registry.addButton('formula', {
-                                                                icon: 'formula',
-                                                                // text: "Upload File",
-                                                                tooltip: 'Insert equation',
-                                                                onAction: () => {
-                                                                    const updateShowFormulas = [...showOptionFormulas];
-                                                                    updateShowFormulas[i] = !updateShowFormulas[i];
-                                                                    setShowOptionFormulas(updateShowFormulas);
-                                                                }
-                                                            });
-                                                        },
-                                                        // menubar: 'file edit view insert format tools table tc help',
-                                                        menubar: false,
-                                                        toolbar:
-                                                            'undo redo | bold italic underline strikethrough | formula superscript subscript | numlist bullist removeformat | table image media link | charmap emoticons',
-                                                        importcss_append: true,
-                                                        image_caption: true,
-                                                        quickbars_selection_toolbar:
-                                                            'bold italic underline | quicklink h2 h3 quickimage quicktable',
-                                                        noneditable_noneditable_class: 'mceNonEditable',
-                                                        toolbar_mode: 'sliding',
-                                                        content_style:
-                                                            '.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before{color: #1F1F1F;}',
-                                                        // tinycomments_mode: 'embedded',
-                                                        // content_style: '.mymention{ color: gray; }',
-                                                        // contextmenu: 'link image table configurepermanentpen',
-                                                        // a11y_advanced_options: true,
-                                                        extended_valid_elements:
-                                                            'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
-                                                        // skin: useDarkMode ? 'oxide-dark' : 'oxide',
-                                                        // content_css: useDarkMode ? 'dark' : 'default',
-                                                    }}
-                                                    onChange={(e: any) => {
-                                                        const newProbs = [...problems];
-                                                        newProbs[problemIndex].options[
-                                                            i
-                                                        ].option = e.target.getContent();
-                                                        setProblems(newProbs);
-                                                    }}
-                                                /> */}
+                                                            const newProbs = [...problems];
+                                                            newProbs[problemIndex].options[i].option = modifedText;
+                                                            setProblems(newProbs);
+                                                        }}
+                                                        // onHeightChange={handleHeightChange}
+                                                        onFocus={() => {
+                                                            const updateOptionEditorRefs: boolean[] = [
+                                                                ...optionEditorRefs
+                                                            ];
+                                                            updateOptionEditorRefs[i] = true;
+                                                            setOptionEditorRefs(updateOptionEditorRefs);
+                                                        }}
+                                                        onBlur={() => {
+                                                            const updateOptionEditorRefs: boolean[] = [
+                                                                ...optionEditorRefs
+                                                            ];
+                                                            updateOptionEditorRefs[i] = false;
+                                                            setOptionEditorRefs(updateOptionEditorRefs);
+                                                        }}
+                                                        allowFileAccess={true}
+                                                        allowFileAccessFromFileURLs={true}
+                                                        allowUniversalAccessFromFileURLs={true}
+                                                        allowsFullscreenVideo={true}
+                                                        allowsInlineMediaPlayback={true}
+                                                        allowsLinkPreview={true}
+                                                        allowsBackForwardNavigationGestures={true}
+                                                        // onCursorPosition={handleCursorPosition}
+                                                    />
+                                                </ScrollView>
                                             </View>
                                         ) : (
-                                            <Text
+                                            <View
                                                 style={{
-                                                    width: Dimensions.get('window').width < 768 ? '80%' : '50%',
-                                                    fontSize: 14,
-                                                    padding: Dimensions.get('window').width < 768 ? 0 : 15,
-                                                    paddingTop: 12,
-                                                    paddingBottom: 12,
-                                                    marginTop: 5,
-                                                    marginBottom: 20,
-                                                    color,
-                                                    lineHeight: 25
-                                                }}>
-                                                {/* {parser(option.option)} */}
-                                                {option.option}
-                                            </Text>
+                                                    paddingTop: 10,
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    flex: 1
+                                                }}
+                                            >
+                                                <RenderHtml
+                                                    source={{
+                                                        html: option.option
+                                                    }}
+                                                />
+                                            </View>
                                         )}
                                     </View>
                                 );
@@ -1505,7 +1652,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 style={{
                                     width: '100%',
                                     paddingLeft: 40
-                                }}>
+                                }}
+                            >
                                 {props.isOwner ? (
                                     <Text
                                         style={{
@@ -1517,120 +1665,182 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             // maxWidth: "100%",
                                             color: props.isOwner ? '#a2a2ac' : '#000000',
                                             marginBottom: props.isOwner ? 50 : 30
-                                        }}>
+                                        }}
+                                    >
                                         {props.isOwner ? 'Free Response Answer' : solutions[problemIndex].response}
                                     </Text>
                                 ) : (
                                     <View style={{ flexDirection: 'column', width: '100%' }}>
-                                        <FormulaGuide
-                                            equation={equation}
-                                            onChange={(x: any) => {
-                                                const updateResponseEquations = [...responseEquations];
-                                                updateResponseEquations[problemIndex] = x;
-                                                setResponseEquations(updateResponseEquations);
+                                        <RichToolbar
+                                            style={{
+                                                borderColor: '#f2f2f2',
+                                                borderBottomWidth: 1,
+                                                backgroundColor: '#fff',
+                                                maxHeight: 40,
+                                                height: 40,
+                                                display: solutionEditorRefs[index] ? 'flex' : 'none'
                                             }}
-                                            show={showFormulas[problemIndex]}
-                                            onClose={() => {
-                                                const updateShowFormulas = [...showFormulas];
-                                                updateShowFormulas[problemIndex] = !updateShowFormulas[problemIndex];
-                                                setShowFormulas(updateShowFormulas);
+                                            flatContainerStyle={{
+                                                paddingHorizontal: 12
                                             }}
-                                            onInsertEquation={() => insertResponseEquation(problemIndex)}
+                                            editor={solutionRef}
+                                            disabled={false}
+                                            selectedIconTint={'#006AFF'}
+                                            disabledIconTint={'#bfbfbf'}
+                                            actions={[
+                                                actions.keyboard,
+                                                actions.undo,
+                                                actions.redo,
+                                                actions.setBold,
+                                                actions.setItalic,
+                                                actions.setUnderline,
+                                                actions.insertBulletsList,
+                                                actions.insertOrderedList,
+                                                actions.heading1,
+                                                actions.heading3,
+                                                actions.setParagraph,
+                                                actions.foreColor,
+                                                actions.hiliteColor,
+                                                'insertEmoji'
+                                            ]}
+                                            iconMap={{
+                                                [actions.keyboard]: ({ tintColor }) => (
+                                                    <Text style={{ color: 'green', fontSize: 20 }}>✓</Text>
+                                                ),
+                                                [actions.insertVideo]: importIcon,
+                                                insertEmoji: emojiIcon,
+                                                [actions.heading1]: ({ tintColor }) => (
+                                                    <Text
+                                                        style={{
+                                                            color: tintColor,
+                                                            fontSize: 19,
+                                                            paddingBottom: 1
+                                                        }}
+                                                    >
+                                                        H1
+                                                    </Text>
+                                                ),
+                                                [actions.heading3]: ({ tintColor }) => (
+                                                    <Text
+                                                        style={{
+                                                            color: tintColor,
+                                                            fontSize: 19,
+                                                            paddingBottom: 1
+                                                        }}
+                                                    >
+                                                        H3
+                                                    </Text>
+                                                ),
+                                                [actions.setParagraph]: ({ tintColor }) => (
+                                                    <Text
+                                                        style={{
+                                                            color: tintColor,
+                                                            fontSize: 19,
+                                                            paddingBottom: 1
+                                                        }}
+                                                    >
+                                                        p
+                                                    </Text>
+                                                ),
+                                                [actions.foreColor]: ({ tintColor }) => (
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 19,
+                                                            fontWeight: 'bold',
+                                                            color: 'red'
+                                                        }}
+                                                    >
+                                                        A
+                                                    </Text>
+                                                ),
+                                                [actions.hiliteColor]: ({ tintColor }) => (
+                                                    <Text
+                                                        style={{
+                                                            color: 'black',
+                                                            fontSize: 19,
+                                                            backgroundColor: '#ffc701',
+                                                            paddingHorizontal: 2
+                                                        }}
+                                                    >
+                                                        H
+                                                    </Text>
+                                                )
+                                            }}
+                                            hiliteColor={() => props.handleHiliteColor(solutionRef)}
+                                            foreColor={() => props.handleForeColor(solutionRef)}
+                                            insertEmoji={() => props.handleEmoji(solutionRef)}
+                                            onInsertLink={() => props.handleInsertLink(solutionRef)}
                                         />
-                                        {/* <Editor
-                                            onInit={(evt, editor) => {
-                                                const updateRefs = [...problemRefs];
-                                                updateRefs[problemIndex].current = editor;
-                                                setProblemRefs(updateRefs);
-                                                solutionRefs[problemIndex].current = editor;
+                                        <ScrollView
+                                            horizontal={false}
+                                            style={{
+                                                backgroundColor: '#f2f2f2',
+                                                height: 100,
+                                                borderColor: '#f2f2f2',
+                                                borderWidth: 1
                                             }}
-                                            initialValue={initialSolutions[problemIndex].response}
-                                            apiKey="ip4jckmpx73lbu6jgyw9oj53g0loqddalyopidpjl23fx7tl"
-                                            init={{
-                                                skin: 'snow',
-                                                // toolbar_sticky: true,
-                                                indent: false,
-                                                branding: false,
-                                                placeholder: 'Answer',
-                                                autoresize_on_init: false,
-                                                autoresize_min_height: 350,
-                                                height: 350,
-                                                min_height: 350,
-                                                paste_data_images: true,
-                                                images_upload_url:
-                                                    'https://api.learnwithcues.com/api/imageUploadEditor',
-                                                mobile: {
-                                                    plugins:
-                                                        'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize'
-                                                },
-                                                plugins:
-                                                    'print preview powerpaste casechange importcss searchreplace autolink save directionality advcode visualblocks visualchars fullscreen image link media mediaembed template codesample table charmap hr pagebreak nonbreaking anchor toc insertdatetime advlist lists checklist wordcount textpattern noneditable help formatpainter pageembed charmap emoticons advtable autoresize',
-                                                menu: {
-                                                    // this is the complete default configuration
-                                                    file: { title: 'File', items: 'newdocument' },
-                                                    edit: {
-                                                        title: 'Edit',
-                                                        items: 'undo redo | cut copy paste pastetext | selectall'
-                                                    },
-                                                    insert: { title: 'Insert', items: 'link media | template hr' },
-                                                    view: { title: 'View', items: 'visualaid' },
-                                                    format: {
-                                                        title: 'Format',
-                                                        items:
-                                                            'bold italic underline strikethrough superscript subscript | formats | removeformat'
-                                                    },
-                                                    table: {
-                                                        title: 'Table',
-                                                        items: 'inserttable tableprops deletetable | cell row column'
-                                                    },
-                                                    tools: { title: 'Tools', items: 'spellchecker code' }
-                                                },
-                                                setup: (editor: any) => {
-                                                    const equationIcon =
-                                                        '<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.4817 3.82717C11.3693 3.00322 9.78596 3.7358 9.69388 5.11699L9.53501 7.50001H12.25C12.6642 7.50001 13 7.8358 13 8.25001C13 8.66423 12.6642 9.00001 12.25 9.00001H9.43501L8.83462 18.0059C8.6556 20.6912 5.47707 22.0078 3.45168 20.2355L3.25613 20.0644C2.9444 19.7917 2.91282 19.3179 3.18558 19.0061C3.45834 18.6944 3.93216 18.6628 4.24389 18.9356L4.43943 19.1067C5.53003 20.061 7.24154 19.352 7.33794 17.9061L7.93168 9.00001H5.75001C5.3358 9.00001 5.00001 8.66423 5.00001 8.25001C5.00001 7.8358 5.3358 7.50001 5.75001 7.50001H8.03168L8.1972 5.01721C8.3682 2.45214 11.3087 1.09164 13.3745 2.62184L13.7464 2.89734C14.0793 3.1439 14.1492 3.61359 13.9027 3.94643C13.6561 4.27928 13.1864 4.34923 12.8536 4.10268L12.4817 3.82717Z"/><path d="M13.7121 12.7634C13.4879 12.3373 12.9259 12.2299 12.5604 12.5432L12.2381 12.8194C11.9236 13.089 11.4501 13.0526 11.1806 12.7381C10.911 12.4236 10.9474 11.9501 11.2619 11.6806L11.5842 11.4043C12.6809 10.4643 14.3668 10.7865 15.0395 12.0647L16.0171 13.9222L18.7197 11.2197C19.0126 10.9268 19.4874 10.9268 19.7803 11.2197C20.0732 11.5126 20.0732 11.9874 19.7803 12.2803L16.7486 15.312L18.2879 18.2366C18.5121 18.6627 19.0741 18.7701 19.4397 18.4568L19.7619 18.1806C20.0764 17.911 20.5499 17.9474 20.8195 18.2619C21.089 18.5764 21.0526 19.0499 20.7381 19.3194L20.4159 19.5957C19.3191 20.5357 17.6333 20.2135 16.9605 18.9353L15.6381 16.4226L12.2803 19.7803C11.9875 20.0732 11.5126 20.0732 11.2197 19.7803C10.9268 19.4874 10.9268 19.0126 11.2197 18.7197L14.9066 15.0328L13.7121 12.7634Z"/></svg>';
-                                                    editor.ui.registry.addIcon('formula', equationIcon);
+                                            keyboardDismissMode={'none'}
+                                            // ref={scrollRef}
+                                            nestedScrollEnabled={true}
+                                            scrollEventThrottle={20}
+                                            indicatorStyle={'black'}
+                                            showsHorizontalScrollIndicator={true}
+                                            persistentScrollbar={true}
+                                        >
+                                            <RichEditor
+                                                // key={reloadEditorKey.toString()}
+                                                ref={solutionRef}
+                                                useContainer={true}
+                                                style={{
+                                                    width: '100%',
+                                                    paddingHorizontal: 10,
+                                                    backgroundColor: '#fff',
+                                                    display: 'flex',
+                                                    flex: 1,
+                                                    height: '100%',
+                                                    minHeight: 100,
+                                                    borderColor: '#f2f2f2',
+                                                    borderBottomWidth: 1
+                                                }}
+                                                editorStyle={{
+                                                    backgroundColor: '#fff',
+                                                    placeholderColor: '#a2a2ac',
+                                                    color: '#2f2f3c',
+                                                    contentCSSText: 'font-size: 16px; min-height: 100px;'
+                                                }}
+                                                initialContentHTML={initialSolutions[problemIndex].response}
+                                                initialHeight={100}
+                                                onScroll={() => Keyboard.dismiss()}
+                                                placeholder={'Free response'}
+                                                onChange={text => {
+                                                    const modifedText = text.split('&amp;').join('&');
 
-                                                    editor.ui.registry.addButton('formula', {
-                                                        icon: 'formula',
-                                                        // text: "Upload File",
-                                                        tooltip: 'Insert equation',
-                                                        onAction: () => {
-                                                            const updateShowFormulas = [...showFormulas];
-                                                            updateShowFormulas[problemIndex] = !updateShowFormulas[
-                                                                problemIndex
-                                                            ];
-                                                            setShowFormulas(updateShowFormulas);
-                                                        }
-                                                    });
-                                                },
-                                                // menubar: 'file edit view insert format tools table tc help',
-                                                menubar: false,
-                                                toolbar:
-                                                    'undo redo | bold italic underline strikethrough | formula superscript subscript | numlist bullist | forecolor backcolor permanentpen removeformat | table image media pageembed link | charmap emoticons ',
-                                                importcss_append: true,
-                                                image_caption: true,
-                                                quickbars_selection_toolbar:
-                                                    'bold italic underline | quicklink h2 h3 quickimage quicktable',
-                                                noneditable_noneditable_class: 'mceNonEditable',
-                                                toolbar_mode: 'sliding',
-                                                content_style:
-                                                    '.mce-content-body[data-mce-placeholder]:not(.mce-visualblocks)::before{color: #1F1F1F;}',
-                                                // tinycomments_mode: 'embedded',
-                                                // content_style: '.mymention{ color: gray; }',
-                                                // contextmenu: 'link image table configurepermanentpen',
-                                                // a11y_advanced_options: true,
-                                                extended_valid_elements:
-                                                    'svg[*],defs[*],pattern[*],desc[*],metadata[*],g[*],mask[*],path[*],line[*],marker[*],rect[*],circle[*],ellipse[*],polygon[*],polyline[*],linearGradient[*],radialGradient[*],stop[*],image[*],view[*],text[*],textPath[*],title[*],tspan[*],glyph[*],symbol[*],switch[*],use[*]'
-                                                // skin: useDarkMode ? 'oxide-dark' : 'oxide',
-                                                // content_css: useDarkMode ? 'dark' : 'default',
-                                            }}
-                                            onChange={(e: any) => {
-                                                const updatedSolution = [...solutions];
-                                                updatedSolution[problemIndex].response = e.target.getContent();
-                                                setSolutions(updatedSolution);
-                                                props.setSolutions(updatedSolution);
-                                            }}
-                                        /> */}
+                                                    const updatedSolution = [...solutions];
+                                                    updatedSolution[problemIndex].response = modifedText;
+                                                    setSolutions(updatedSolution);
+                                                    props.setSolutions(updatedSolution);
+                                                }}
+                                                // onHeightChange={handleHeightChange}
+                                                // onFocus={() => {
+                                                //     const updateSolutionEditorRefs: boolean[] = [...solutionEditorRefs];
+                                                //     updateSolutionEditorRefs[index] = true;
+                                                //     setSolutionEditorRefs(updateSolutionEditorRefs);
+                                                // }}
+                                                // onBlur={() => {
+                                                //     const updateSolutionEditorRefs: boolean[] = [...solutionEditorRefs];
+                                                //     updateSolutionEditorRefs[index] = false;
+                                                //     setSolutionEditorRefs(updateSolutionEditorRefs);
+                                                // }}
+                                                allowFileAccess={true}
+                                                allowFileAccessFromFileURLs={true}
+                                                allowUniversalAccessFromFileURLs={true}
+                                                allowsFullscreenVideo={true}
+                                                allowsInlineMediaPlayback={true}
+                                                allowsLinkPreview={true}
+                                                allowsBackForwardNavigationGestures={true}
+                                                // onCursorPosition={handleCursorPosition}
+                                            />
+                                        </ScrollView>
                                     </View>
                                 )}
                             </View>
@@ -1649,21 +1859,24 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     paddingLeft: Dimensions.get('window').width < 768 ? 20 : 40,
                                     flexDirection: 'row',
                                     alignItems: 'center'
-                                }}>
+                                }}
+                            >
                                 <Text style={{ marginRight: 10 }}>Regrade Option: </Text>
                                 <Menu
                                     onSelect={(cat: any) => {
                                         const updateRegradeChoices = [...regradeChoices];
                                         updateRegradeChoices[index] = cat;
                                         setRegradeChoices(updateRegradeChoices);
-                                    }}>
+                                    }}
+                                >
                                     <MenuTrigger>
                                         <Text
                                             style={{
                                                 fontSize: 14,
                                                 color: '#000000',
                                                 width: Dimensions.get('window').width > 768 ? '100%' : 200
-                                            }}>
+                                            }}
+                                        >
                                             {regradeChoices[index] === ''
                                                 ? 'Select Option'
                                                 : regradeOptions[regradeChoices[index]]}
@@ -1682,7 +1895,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 maxHeight: '100%',
                                                 width: Dimensions.get('window').width < 768 ? 300 : 400
                                             }
-                                        }}>
+                                        }}
+                                    >
                                         {Object.keys(regradeOptions).map((option: any, i: number) => {
                                             return (
                                                 <MenuOption value={option}>
@@ -1705,10 +1919,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     paddingTop: 25,
                                     paddingBottom: 50,
                                     paddingLeft: Dimensions.get('window').width < 768 ? 20 : 40
-                                }}>
+                                }}
+                            >
                                 <TouchableOpacity
                                     onPress={() => resetChanges(index)}
-                                    style={{ backgroundColor: 'white', borderRadius: 15, width: 120, marginRight: 30 }}>
+                                    style={{ backgroundColor: 'white', borderRadius: 15, width: 120, marginRight: 30 }}
+                                >
                                     <Text
                                         style={{
                                             textAlign: 'center',
@@ -1724,7 +1940,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             fontSize: 12,
                                             width: 120,
                                             textTransform: 'uppercase'
-                                        }}>
+                                        }}
+                                    >
                                         Reset
                                     </Text>
                                 </TouchableOpacity>
@@ -1733,7 +1950,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         setEditQuestionNumber(0);
                                         setEditQuestion({});
                                     }}
-                                    style={{ backgroundColor: 'white', borderRadius: 15, width: 120 }}>
+                                    style={{
+                                        width: 120,
+                                        borderRadius: 15,
+                                        backgroundColor: '#006AFF'
+                                    }}
+                                >
                                     <Text
                                         style={{
                                             textAlign: 'center',
@@ -1742,12 +1964,13 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             fontFamily: 'inter',
                                             height: 35,
                                             color: 'white',
-                                            borderRadius: 15,
-                                            backgroundColor: '#006AFF',
+                                            // borderRadius: 15,
+                                            // backgroundColor: '#006AFF',
                                             fontSize: 12,
-                                            width: 120,
+                                            // width: 120,
                                             textTransform: 'uppercase'
-                                        }}>
+                                        }}
+                                    >
                                         DONE
                                     </Text>
                                 </TouchableOpacity>
@@ -1757,7 +1980,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 );
             })}
 
-            {/* Add Save Changes button here */}
             {props.isOwner ? (
                 <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center' }}>
                     <TouchableOpacity
@@ -1773,7 +1995,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 shuffleQuiz
                             );
                         }}
-                        style={{ backgroundColor: 'white', borderRadius: 15, width: 150 }}>
+                        style={{ backgroundColor: 'white', borderRadius: 15, width: 150 }}
+                    >
                         <Text
                             style={{
                                 textAlign: 'center',
@@ -1787,7 +2010,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 overflow: 'hidden',
                                 height: 35,
                                 textTransform: 'uppercase'
-                            }}>
+                            }}
+                        >
                             UPDATE QUIZ
                         </Text>
                     </TouchableOpacity>
@@ -1802,7 +2026,7 @@ export default Quiz;
 const styles = StyleSheet.create({
     input: {
         width: '50%',
-        // borderBottomColor: '#efefef',
+        // borderBottomColor: '#f2f2f2',
         // borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 12,

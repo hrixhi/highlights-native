@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 
-export const handleImageUpload = async (takePhoto: boolean) => {
+export const handleImageUpload = async (takePhoto: boolean, userId: string) => {
     if (takePhoto) {
         const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -30,7 +30,7 @@ export const handleImageUpload = async (takePhoto: boolean) => {
 
             console.log('Image', file);
 
-            const response = await fileUpload(file, 'jpg');
+            const response = await fileUpload(file, 'jpg', userId);
 
             const { data } = response;
             console.log('Result', data);
@@ -42,7 +42,6 @@ export const handleImageUpload = async (takePhoto: boolean) => {
 
             // const file = blobToFile(img, 'default.jpg');
         } else {
-            alert('Upload cancelled!');
             return null;
         }
     } else {
@@ -74,7 +73,7 @@ export const handleImageUpload = async (takePhoto: boolean) => {
 
             // const file = blobToFile(img, 'default.jpg');
 
-            const response = await fileUpload(file, 'jpg');
+            const response = await fileUpload(file, 'jpg', userId);
 
             const { data } = response;
             console.log('Result', data);
@@ -84,13 +83,12 @@ export const handleImageUpload = async (takePhoto: boolean) => {
                 return null;
             }
         } else {
-            alert('Upload cancelled!');
             return null;
         }
     }
 };
 
-const fileUpload = async (file: any, type: any) => {
+const fileUpload = async (file: any, type: any, userId: string) => {
     // LIVE
     const url = 'https://api.learnwithcues.com/api/upload';
     // DEV
@@ -98,6 +96,7 @@ const fileUpload = async (file: any, type: any) => {
     const formData = new FormData();
     formData.append('attachment', file);
     formData.append('typeOfUpload', type);
+    formData.append('userId', userId);
     const config = {
         headers: {
             'content-type': 'multipart/form-data'
