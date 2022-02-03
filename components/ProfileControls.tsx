@@ -21,6 +21,7 @@ import { Text, View, TouchableOpacity } from './Themed';
 import Alert from '../components/Alert';
 import { TextInput } from './CustomTextInput';
 import FileUpload from './UploadFiles';
+import BottomSheet from './BottomSheet';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -28,6 +29,7 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { handleImageUpload } from '../helpers/ImageUpload'
 
 const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [email, setEmail] = useState('');
@@ -52,6 +54,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [showSavePassword, setShowSavePassword] = useState(false);
     const [reloadFormKey, setReloadFormKey] = useState(Math.random());
     const [meetingProvider, setMeetingProvider] = useState('');
+    const [uploadProfilePicVisible, setUploadProfilePicVisible] = useState(false);
 
     // Alerts
     const passwordUpdatedAlert = PreferredLanguageText('passwordUpdated');
@@ -162,6 +165,22 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         setConfirmNewPasswordError('');
     }, [newPassword, confirmNewPassword]);
+
+    /**
+     * 
+     */
+     const uploadImageHandler = useCallback(
+        async (takePhoto: boolean) => {
+            const url = await handleImageUpload(takePhoto, userId);
+
+            if (url && url !== '') {
+                setAvatar(url)
+            }
+
+            setUploadProfilePicVisible(false);
+        },
+        [userId]
+    );
 
     /**
      * @description Handles submit new password or Update user profile
@@ -490,8 +509,8 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             paddingTop: Dimensions.get('window').width < 768 ? 25 : 50,
                             paddingBottom: 20,
                             maxWidth: 400,
-                            alignSelf: 'center'
-                            // flex: 1
+                            alignSelf: 'center',
+                            flexDirection: 'column'
                         }}
                         key={reloadFormKey.toString()}
                     >
@@ -505,8 +524,8 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }}
                             source={{ uri: avatar ? avatar : 'https://cues-files.s3.amazonaws.com/images/default.png' }}
                         />
-                        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', paddingTop: 15 }}>
-                            {avatar ? (
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', paddingTop: 15 }}>
+                            {avatar && avatar !== '' ? (
                                 <TouchableOpacity
                                     onPress={() => setAvatar(undefined)}
                                     style={{
@@ -524,11 +543,23 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </Text>
                                 </TouchableOpacity>
                             ) : (
-                                <FileUpload
-                                    onUpload={(u: any, t: any) => {
-                                        setAvatar(u);
-                                    }}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => setUploadProfilePicVisible(true)}
+                                >
+                                    <Text
+                                        style={{
+                                            color: '#006AFF',
+                                            lineHeight: 35,
+                                            textAlign: 'right',
+                                            fontSize: 12,
+                                            fontFamily: 'overpass',
+                                            textTransform: 'uppercase',
+                                            paddingLeft: 10
+                                        }}
+                                    >
+                                        {PreferredLanguageText('import')}
+                                    </Text>
+                                </TouchableOpacity>
                             )}
                         </View>
                         <Text
@@ -819,6 +850,73 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 {/* </View> */}
                 {/* </View> */}
             </ScrollView>
+            {uploadProfilePicVisible && (
+                <BottomSheet
+                    snapPoints={[0, 250]}
+                    close={() => {
+                        setUploadProfilePicVisible(false);
+                    }}
+                    isOpen={uploadProfilePicVisible}
+                    title={'Insert image'}
+                    renderContent={() => (
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(true);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Camera{' '}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(false);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Gallery{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
+            )}
         </View>
     );
 };

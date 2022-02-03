@@ -1,6 +1,6 @@
 // REACT
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, Platform, Linking, ScrollView } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Platform, Linking, ScrollView, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
@@ -28,10 +28,14 @@ import { TextInput } from './CustomTextInput';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { Video } from 'expo-av';
+import BottomSheet from './BottomSheet';
+import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 
 // HELPERS
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
+import { handleImageUpload } from '../helpers/ImageUpload';
+import { handleFile } from '../helpers/FileUpload'
 
 const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [loadingSubs, setLoadingSubs] = useState(true);
@@ -61,6 +65,11 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
     const [isFilterChannelDropdownOpen, setIsFilterChannelDropdownOpen] = useState(false);
     const [isNewUsersDropdownOpen, setIsNewUsersDropdownOpen] = useState(false);
     const [isUpdateUsersDropdownOpen, setIsUpdateUsersDropdownOpen] = useState(false);
+    const [uploadFileVisible, setUploadFileVisible] = useState(false);
+    const [importTitle, setImportTitle] = useState('');
+    const [importType, setImportType] = useState('');
+    const [importFileName, setImportFileName] = useState('');
+    const [importUrl, setImportUrl] = useState('');
 
     const audioRef: any = useRef();
     const videoRef: any = useRef();
@@ -82,7 +91,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         }
         return 0;
     });
-    let channelOptions = [{ value: 'All', label: 'All' }];
+    let channelOptions = [{ value: 'All', label: 'All Courses' }];
     props.subscriptions.map((subscription: any) => {
         channelOptions.push({
             value: subscription.channelId,
@@ -109,6 +118,170 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         loadUsers();
         loadChats();
     }, []);
+
+
+    const sendImport = useCallback(() => {
+
+        if (importType === 'image') {
+            let img: any = importUrl;
+            let text: any = '';
+            let audio: any = '';
+            let video: any = '';
+            let file: any = '';
+
+            const obj = { title: importTitle, type: 'jpg', url: importUrl };
+
+            console.log("onSend", {
+                title: importTitle,
+                text,
+                image: img,
+                audio,
+                video,
+                file,
+                saveCue: JSON.stringify(obj)
+            })
+
+            onSend([
+                {
+                    title: importTitle,
+                    text,
+                    image: img,
+                    audio,
+                    video,
+                    file,
+                    saveCue: JSON.stringify(obj)
+                }
+            ]);
+        } else if (importType === 'mp4') {
+            let text: any = '';
+            let img: any = '';
+            let audio: any = '';
+            let video: any = '';
+            let file: any = '';
+
+            video = importUrl;
+
+            const obj = { title: importTitle, type: importType, url: importUrl };
+
+            onSend([
+                {
+                    title: importTitle,
+                    text,
+                    image: img,
+                    audio,
+                    video,
+                    file,
+                    saveCue: JSON.stringify(obj)
+                }
+            ]);
+
+        } else {
+            let text: any = '';
+            let img: any = '';
+            let audio: any = '';
+            let video: any = '';
+            let file: any = '';
+
+            file = importUrl;
+            text = (
+                <TouchableOpacity
+                        onPress={() => {
+                            if (
+                                Platform.OS === 'web' ||
+                                Platform.OS === 'macos' ||
+                                Platform.OS === 'windows'
+                            ) {
+                                window.open(importUrl, '_blank');
+                            } else {
+                                Linking.openURL(importUrl);
+                            }
+                        }}
+                        style={{
+                            backgroundColor: '#006AFF',
+                            borderRadius: 15,
+                            marginLeft: 15,
+                            marginTop: 6
+                        }}
+                    >
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                lineHeight: 34,
+                                color: 'white',
+                                fontSize: 12,
+                                borderWidth: 1,
+                                borderColor: '#006AFF',
+                                paddingHorizontal: 20,
+                                fontFamily: 'inter',
+                                height: 35,
+                                borderRadius: 15,
+                                textTransform: 'uppercase'
+                            }}
+                        >
+                            {importTitle}
+                        </Text>
+                    </TouchableOpacity>
+                );
+
+            const obj = { title: importTitle, type: importType, url: importUrl };
+
+            onSend([
+                {
+                    title: importTitle,
+                    text,
+                    image: img,
+                    audio,
+                    video,
+                    file,
+                    saveCue: JSON.stringify(obj)
+                }
+            ]);
+
+        }
+
+        setImportType('')
+        setImportUrl('')
+        setUploadFileVisible(false);
+
+    }, [importTitle, importUrl, importType])
+
+    /**
+     * 
+     */
+     const uploadImageHandler = useCallback(
+        async (takePhoto: boolean) => {
+            
+            const url = await handleImageUpload(takePhoto, userId);
+
+            setImportUrl(url)
+            setImportType('image')
+            setImportTitle('Image')
+        
+        },
+        [userId]
+    );
+
+    /**
+     * 
+     */
+     const uploadFileHandler = useCallback(
+        async (audioVideo) => {
+            const res = await handleFile(audioVideo, userId);
+
+            console.log('File upload result', res);
+
+            if (!res || res.url === '' || res.type === '') {
+                return;
+            }
+
+            setImportType(audioVideo ? 'mp4' : res.type)
+            setImportTitle(audioVideo ? 'Video' : res.name)
+            setImportFileName(res.name)
+            setImportUrl(res.url)
+
+        },
+        [userId]
+    );
 
     /**
      * @description Opens a chat if "openChat" value set in AsyncStorage. Used to open a specific message from Search
@@ -540,6 +713,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     .then(res => {
                         const tempChat: any[] = [];
                         res.data.message.getMessagesThread.map((msg: any) => {
+                            console.log("Messages", res.data.message.getMessagesThread)
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -601,6 +775,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         });
                         tempChat.reverse();
                         setChat(tempChat);
+                        console.log('tempChat', tempChat)
                         setShowChat(true);
                         props.hideNewChatButton(true);
                     })
@@ -844,6 +1019,219 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         else return date.format('MM/DD/YYYY');
     }
 
+    const renderImportModalContent = () => {
+        if (importType && importUrl) {
+            return <View style={{ paddingHorizontal: 10 }}>
+                {importType === 'image' ? 
+                    <Image
+                        style={{
+                            height: 200,
+                            width: 250,
+                            alignSelf: 'center'
+                        }}
+                        source={{ uri: importUrl }}
+                    /> : importType === 'mp4' ? (
+                        <View style={{ paddingVertical: 15,}}>
+                            <Video
+                                ref={audioRef}
+                                style={{
+                                    
+                                    width: 250,
+                                    height: 150,
+                                    alignSelf: 'center'
+                                }}
+                                source={{
+                                    uri: importUrl
+                                }}
+                                useNativeControls
+                                resizeMode="contain"
+                                isLooping
+                            />
+                        </View>
+                    ) : (
+                        <Text style={{ color: '#000', fontFamily: 'Inter', fontSize: 20, paddingTop: 30, paddingBottom: 30, paddingLeft: 20 }}>
+                            {importFileName}
+                        </Text>
+                    )}
+
+                    {/* <TextInput
+                        value={importTitle}
+                        placeholder={''}
+                        onChangeText={val => setImportTitle(val)}
+                        placeholderTextColor={'#1F1F1F'}
+                        required={true}
+                    /> */}
+
+                    <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                        <TouchableOpacity
+                            style={{
+                                marginTop: 20,
+                                backgroundColor: '#006AFF',
+                                borderRadius: 19,
+                                width: 150,
+                                alignSelf: 'center',
+                                marginRight: 20
+                            }}
+                            onPress={() => {
+                                setImportTitle('')
+                                setImportUrl('')
+                                setImportFileName('')
+                                setUploadFileVisible(false)
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    lineHeight: 34,
+                                    color: '#fff'
+                                }}
+                            >
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={{
+                                marginTop: 20,
+                                backgroundColor: '#006AFF',
+                                borderRadius: 19,
+                                width: 150,
+                                alignSelf: 'center'
+                            }}
+                            onPress={() => {
+                                sendImport()
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    lineHeight: 34,
+                                    color: '#fff'
+                                }}
+                            >
+                                Send
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+            </View>
+        } 
+
+        return <View style={{ paddingHorizontal: 10 }}>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadImageHandler(true);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    Camera{' '}
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadImageHandler(false);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    Image Gallery{' '}
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadFileHandler(false);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    File{' '}
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadFileHandler(true);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    Video{' '}
+                </Text>
+            </TouchableOpacity>
+        </View>
+    }
+
+    const filterChannelLabel = channelOptions.find((channel: any) => channel.value === filterChannelId)?.label
+
     // MAIN RETURN
     return (
         <View>
@@ -882,18 +1270,34 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                 paddingBottom: Dimensions.get('window').width < 768 ? 5 : 15
                             }}
                         >
-                            <Text
-                                style={{
-                                    color: '#006aff',
-                                    fontFamily: 'Inter',
-                                    fontWeight: 'bold',
-                                    fontSize: 30,
-                                    paddingVertical: 6,
-                                    marginHorizontal: 12
-                                }}
-                            >
-                                Inbox
-                            </Text>
+                            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+
+                            
+                                <Text
+                                    style={{
+                                        color: '#006aff',
+                                        fontFamily: 'Inter',
+                                        fontWeight: 'bold',
+                                        fontSize: 30,
+                                        paddingVertical: 6,
+                                        marginHorizontal: 12
+                                    }}
+                                >
+                                    Inbox
+                                </Text>
+                                {!props.showSearchMobile ? (
+                                    <TouchableOpacity
+                                        style={{
+                                            marginRight: 15,
+                                            marginLeft: 'auto',
+                                        }}
+                                        onPress={() => props.setShowSearchMobile(true)}
+                                    >
+                                        <Ionicons name={'search-outline'} size={22} color="black" />
+                                    </TouchableOpacity>
+                                ) : null}
+
+                            </View>
                         </View>
                     )}
                     {/* ) : null} */}
@@ -939,7 +1343,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     lineHeight: 34,
                                                     width: '100%',
                                                     textAlign: 'center',
-                                                    paddingTop: 5
+                                                    paddingTop: 5,
+                                                    paddingLeft: 10
                                                 }}
                                             >
                                                 <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
@@ -952,11 +1357,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 style={{
                                                     flexDirection: 'row',
                                                     backgroundColor: '#fff',
-                                                    maxWidth: 150
+                                                    maxWidth: 150,
+                                                    marginBottom: 15
                                                     // height: isFilterChannelDropdownOpen ? 250 : 50
                                                 }}
                                             >
-                                                <DropDownPicker
+                                                {/* <DropDownPicker
                                                     open={isFilterChannelDropdownOpen}
                                                     value={filterChannelId}
                                                     items={channelOptions}
@@ -984,7 +1390,50 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         zIndex: 1000001,
                                                         elevation: 1000001
                                                     }}
-                                                />
+                                                /> */}
+                                                    <Menu
+                                                        style={{
+                                                            paddingTop: 17
+                                                        }}
+                                                        onSelect={(channel: any) => {
+                                                            console.log('Select', channel)
+                                                            setFilterChannelId(channel)
+                                                        }}
+                                                    >
+                                                        <MenuTrigger>
+                                                            <Text
+                                                                style={{
+                                                                    // fontFamily: "inter",
+                                                                    fontSize: 15,
+                                                                    color: '#000000'
+                                                                }}
+                                                            >
+                                                                {filterChannelLabel ? filterChannelLabel : "Filter Course"}
+                                                                <Ionicons name="chevron-down-outline" size={15} />
+                                                            </Text>
+                                                            </MenuTrigger>
+                                                            <MenuOptions
+                                                                customStyles={{
+                                                                    optionsContainer: {
+                                                                        padding: 10,
+                                                                        borderRadius: 15,
+                                                                        shadowOpacity: 0,
+                                                                        borderWidth: 1,
+                                                                        borderColor: '#f2f2f2',
+                                                                        overflow: 'scroll',
+                                                                        maxHeight: '100%'
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {channelOptions.map((channel: any) => {
+                                                                    return (
+                                                                        <MenuOption value={channel.value}>
+                                                                            <Text>{channel.label}</Text>
+                                                                        </MenuOption>
+                                                                    );
+                                                                })}
+                                                            </MenuOptions>
+                                                        </Menu>
                                             </View>
                                         </View>
                                     ) : null}
@@ -1038,7 +1487,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 overflow: 'hidden',
                                                 height: 35,
                                                 marginTop: 10,
-                                                marginRight: 10
+                                                // marginRight: 10
                                             }}
                                         >
                                             <Text
@@ -1047,8 +1496,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     lineHeight: 34,
                                                     color: '#006AFF',
                                                     fontSize: 12,
-                                                    borderWidth: 1,
-                                                    borderColor: '#006AFF',
+                                                    // borderWidth: 1,
+                                                    // borderColor: '#006AFF',
                                                     paddingHorizontal: 20,
                                                     fontFamily: 'inter',
                                                     height: 35,
@@ -1319,7 +1768,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             zIndex: 5000,
                                             borderColor: '#f2f2f2'
                                         }}
-                                    >
+                                    >   
                                         <GiftedChat
                                             renderMessageAudio={renderMessageAudio}
                                             renderMessageVideo={renderMessageVideo}
@@ -1337,7 +1786,25 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         marginTop: -10
                                                     }}
                                                 >
-                                                    <FileUpload
+                                                    <TouchableOpacity onPress={() => {
+                                                            Keyboard.dismiss()
+                                                            setUploadFileVisible(true)
+                                                        }}>
+                                                        <Text
+                                                            style={{
+                                                                color: '#006AFF',
+                                                                lineHeight: 40,
+                                                                textAlign: 'right',
+                                                                fontSize: 12,
+                                                                fontFamily: 'overpass',
+                                                                textTransform: 'uppercase',
+                                                                paddingLeft: 10
+                                                            }}
+                                                        >
+                                                            <Ionicons name="document-attach-outline" size={18} />
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                    {/* <FileUpload
                                                         chat={true}
                                                         onUpload={(u: any, t: any) => {
                                                             const title = prompt(
@@ -1424,10 +1891,22 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 }
                                                             ]);
                                                         }}
-                                                    />
+                                                    /> */}
                                                 </View>
                                             )}
                                         />
+                                        {uploadFileVisible && (
+                                            <BottomSheet
+                                                snapPoints={[0, 350]}
+                                                close={() => {
+                                                    setUploadFileVisible(false);
+                                                }}
+                                                isOpen={uploadFileVisible}
+                                                title={importType ? 'Send ' + (importType !== 'image' && importType !== 'video' ? 'File' : importType) : 'Import' }
+                                                renderContent={() => renderImportModalContent()}
+                                                header={false}
+                                            />
+                                        )}
                                     </View>
                                 ) : showNewGroup ? (
                                     <View>
@@ -1643,7 +2122,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 width: '100%',
                                                 borderRadius: 1,
                                                 marginTop: 10,
-                                                paddingHorizontal: 10
+                                                paddingHorizontal: 10,
+                                                marginBottom: 100
                                             }}
                                             scrollEnabled={true}
                                             indicatorStyle="black"
@@ -1751,7 +2231,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 paddingHorizontal: 10,
                                                 borderRadius: 1,
                                                 width: '100%',
-                                                maxHeight: width < 1024 ? windowHeight - 104 : windowHeight - 52
+                                                paddingBottom: 60
+                                                // maxHeight: width < 1024 ? windowHeight - 104 : windowHeight - 52
                                             }}
                                         >
                                             {sortChatsByLastMessage.length === 0 ? (
@@ -1926,6 +2407,125 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     </View>
                 </View>
             )}
+            {/* {uploadFileVisible && (
+                <BottomSheet
+                    snapPoints={[0, 400]}
+                    close={() => {
+                        setUploadFileVisible(false);
+                    }}
+                    isOpen={uploadFileVisible}
+                    title={'Send Media/File'}
+                    renderContent={() => (
+                        <View style={{ paddingHorizontal: 10 }}>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(true);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Camera{' '}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadImageHandler(false);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Gallery{' '}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadFileHandler(false);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    File{' '}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 20,
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 150,
+                                    alignSelf: 'center'
+                                }}
+                                onPress={() => {
+                                    uploadFileHandler(true);
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        paddingHorizontal: 25,
+                                        fontFamily: 'inter',
+                                        height: 35,
+                                        lineHeight: 34,
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {' '}
+                                    Audio/Video{' '}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    header={false}
+                />
+            )} */}
         </View>
     );
 };

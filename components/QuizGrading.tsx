@@ -6,6 +6,7 @@ import { RichEditor } from 'react-native-pell-rich-editor';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { Video } from 'expo-av';
 import { Ionicons } from "@expo/vector-icons";
+import RenderHtml from 'react-native-render-html';
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -211,6 +212,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         </View>)
     }
 
+    console.log("problemScores", problemScores)
+
     /**
      * @description Renders Header for question at index
      */
@@ -361,13 +364,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         flex: 1
                                                     }}
                                                 >
-                                                    <RichEditor
+                                                    {/* <RichEditor
                                                         initialContentHTML={content}
                                                         disabled={true}
                                                         style={{
                                                             width: '100%',
                                                             height: '100%',
                                                             flex: 1
+                                                        }}
+                                                    /> */}
+                                                     <RenderHtml
+                                                        source={{
+                                                            html: content
+                                                        }}
+                                                        defaultTextProps={{
+                                                            selectable: true
                                                         }}
                                                     />
                                                 </View>
@@ -379,13 +390,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         flex: 1
                                                     }}
                                                 >
-                                                    <RichEditor
+                                                    {/* <RichEditor
                                                         initialContentHTML={problem.question}
                                                         disabled={true}
                                                         style={{
                                                             width: '100%',
                                                             height: '100%',
                                                             flex: 1
+                                                        }}
+                                                    /> */}
+                                                     <RenderHtml
+                                                        source={{
+                                                            html: problem.question
+                                                        }}
+                                                        defaultTextProps={{
+                                                            selectable: true
                                                         }}
                                                     />
                                                 </View>)
@@ -407,12 +426,13 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             </View>
                                             {!props.isOwner ? null : <TextInput
                                                 editable={props.isOwner ? true : false}
-                                                value={problemScores[index]}
-                                                onChange={(e: any) => {
-                                                    if (Number.isNaN(Number(e.target.value))) return
+                                                value={problemScores[index].toString()}
+                                                onChangeText={(val: any) => {
+                                                    console.log("Value", val)
+                                                    if (Number.isNaN(Number(val))) return
                                                     const updateProblemScores = [...problemScores]
-                                                    updateProblemScores[index] = e.target.value;
-                                                    if (Number(e.target.value) > Number(problem.points)) {
+                                                    updateProblemScores[index] = val;
+                                                    if (Number(val) > Number(problem.points)) {
                                                         alert('Assigned score exceeds total points')
                                                     }
                                                     setProblemScores(updateProblemScores)
@@ -451,9 +471,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 !props.isOwner ? <Text style={{ fontSize: 16, marginTop: 5, marginBottom: 10, paddingTop: props.isOwner ? 12 : 7, paddingRight: 30, textAlign: 'right', fontFamily: "Inter" }}>
                                                     {Number(problemScores[index]).toFixed(1).replace(/\.0+$/,'')} / {Number(problem.points).toFixed(1).replace(/\.0+$/,'')}
                                                 </Text> : null
-                                            }
-
-                                            
+                                            }                                            
                                             </View>
                                         <View/>
                                     </View>
@@ -495,13 +513,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             flex: 1
                                         }}
                                     >
-                                        <RichEditor
+                                        {/* <RichEditor
                                             initialContentHTML={option.option}
                                             disabled={true}
                                             style={{
                                                 width: '100%',
                                                 height: '100%',
                                                 flex: 1
+                                            }}
+                                        /> */}
+                                         <RenderHtml
+                                            source={{
+                                                html: option.option
+                                            }}
+                                            defaultTextProps={{
+                                                selectable: true
                                             }}
                                         />
                                     </View>
@@ -517,17 +543,24 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             style={{
                                                 paddingTop: 10,
                                                 width: '100%',
-                                                height: '100%',
                                                 flex: 1
                                             }}
                                         >
-                                            <RichEditor
+                                            {/* <RichEditor
                                                 initialContentHTML={solutions[index].response}
                                                 disabled={true}
                                                 style={{
                                                     width: '100%',
                                                     height: '100%',
                                                     flex: 1
+                                                }}
+                                            /> */}
+                                             <RenderHtml
+                                                source={{
+                                                    html: solutions[index].response
+                                                }}
+                                                defaultTextProps={{
+                                                    selectable: true
                                                 }}
                                             />
                                         </View>

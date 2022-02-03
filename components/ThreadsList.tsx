@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
     StyleSheet,
     ActivityIndicator,
@@ -7,6 +7,7 @@ import {
     Image,
     Platform,
     Linking,
+    Keyboard,
     TextInput
 } from 'react-native';
 import Alert from '../components/Alert';
@@ -34,9 +35,12 @@ import moment from 'moment';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 import FileUpload from './UploadFiles';
-import ReactPlayer from 'react-native-video';
+import { Video } from 'expo-av';
 import NewPostModal from './NewPostModal';
 import DropDownPicker from 'react-native-dropdown-picker';
+import BottomSheet from './BottomSheet';
+import { handleImageUpload } from '../helpers/ImageUpload';
+import { handleFile } from '../helpers/FileUpload'
 
 const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     // State
@@ -62,6 +66,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     const categoryObject: any = {};
     let filteredThreads: any[] = [];
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+
+    const [uploadFileVisible, setUploadFileVisible] = useState(false);
+    const [importTitle, setImportTitle] = useState('');
+    const [importType, setImportType] = useState('');
+    const [importFileName, setImportFileName] = useState('');
+    const [importUrl, setImportUrl] = useState('');
+
+    const audioRef: any = useRef();
+    const videoRef: any = useRef();
 
     // ALERTS
     const unableToLoadThreadAlert = PreferredLanguageText('unableToLoadThread');
@@ -187,6 +200,161 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         })();
     }, [threads]);
 
+    
+
+    /**
+     * 
+     */
+     const uploadImageHandler = useCallback(
+        async (takePhoto: boolean) => {
+            
+            const url = await handleImageUpload(takePhoto, userId);
+
+            setImportUrl(url)
+            setImportType('image')
+            setImportTitle('Image')
+
+        },
+        [userId]
+    );
+
+    /**
+     * 
+     */
+     const uploadFileHandler = useCallback(
+        async (audioVideo) => {
+            const res = await handleFile(audioVideo, userId);
+
+            console.log('File upload result', res);
+
+            if (!res || res.url === '' || res.type === '') {
+                return;
+            }
+
+            setImportType(audioVideo ? 'mp4' : res.type)
+            setImportTitle(audioVideo ? 'Video' : res.name)
+            setImportFileName(res.name)
+            setImportUrl(res.url)
+
+        },
+        [userId]
+    );
+
+    const sendImport = useCallback(() => {
+
+        if (importType === 'image') {
+            let img: any = importUrl;
+            let text: any = '';
+            let audio: any = '';
+            let video: any = '';
+            let file: any = '';
+
+            const obj = { title: importTitle, type: 'jpg', url: importUrl };
+
+            onSend([
+                {
+                    title: importTitle,
+                    text,
+                    image: img,
+                    audio,
+                    video,
+                    file,
+                    msgObject: JSON.stringify(obj)
+                }
+            ]);
+        } else if (importType === 'mp4') {
+            let text: any = '';
+            let img: any = '';
+            let audio: any = '';
+            let video: any = '';
+            let file: any = '';
+
+            video = importUrl;
+
+            const obj = { title: importTitle, type: importType, url: importUrl };
+
+            onSend([
+                {
+                    title: importTitle,
+                    text,
+                    image: img,
+                    audio,
+                    video,
+                    file,
+                    msgObject: JSON.stringify(obj)
+                }
+            ]);
+
+        } else {
+            let text: any = '';
+            let img: any = '';
+            let audio: any = '';
+            let video: any = '';
+            let file: any = '';
+
+            file = importUrl;
+            text = (
+                <TouchableOpacity
+                        onPress={() => {
+                            if (
+                                Platform.OS === 'web' ||
+                                Platform.OS === 'macos' ||
+                                Platform.OS === 'windows'
+                            ) {
+                                window.open(importUrl, '_blank');
+                            } else {
+                                Linking.openURL(importUrl);
+                            }
+                        }}
+                        style={{
+                            backgroundColor: '#006AFF',
+                            borderRadius: 15,
+                            marginLeft: 15,
+                            marginTop: 6
+                        }}
+                    >
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                lineHeight: 34,
+                                color: 'white',
+                                fontSize: 12,
+                                borderWidth: 1,
+                                borderColor: '#006AFF',
+                                paddingHorizontal: 20,
+                                fontFamily: 'inter',
+                                height: 35,
+                                borderRadius: 15,
+                                textTransform: 'uppercase'
+                            }}
+                        >
+                            {importTitle}
+                        </Text>
+                    </TouchableOpacity>
+                );
+
+            const obj = { title: importTitle, type: importType, url: importUrl };
+
+            onSend([
+                {
+                    title: importTitle,
+                    text,
+                    image: img,
+                    audio,
+                    video,
+                    file,
+                    msgObject: JSON.stringify(obj)
+                }
+            ]);
+
+        }
+
+        setImportType('')
+        setImportUrl('')
+        setUploadFileVisible(false);
+
+    }, [importTitle, importUrl, importType])
+
     /**
      * @description Fetches all the categories for that Channel
      */
@@ -215,6 +383,17 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      */
     const createNewThread = useCallback(
         async (message: any, category: any, isPrivate: any) => {
+            console.log('Create new thread', {
+                message,
+                userId,
+                channelId: props.channelId,
+                isPrivate,
+                anonymous: false,
+                cueId: props.cueId === null ? 'NULL' : props.cueId,
+                parentId: 'INIT',
+                category: category === 'None' ? '' : category
+            });
+
             const server = fetchAPI('');
             server
                 .mutate({
@@ -239,6 +418,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     }
                 })
                 .catch(err => {
+                    console.log('Error', err);
                     Alert(somethingWentWrongAlert, checkConnectionAlert);
                 });
         },
@@ -294,6 +474,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     }
                 })
                 .catch(err => {
+                    console.log('Error', err);
                     Alert(somethingWentWrongAlert, checkConnectionAlert);
                 });
         },
@@ -448,17 +629,19 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         if (props.currentMessage.audio && props.currentMessage.audio !== '') {
             return (
                 <View>
-                    <ReactPlayer
-                        source={{ uri: props.currentMessage.audio }}
-                        // controls={true}
-                        // onContextMenu={(e: any) => e.preventDefault()}
-                        // config={{
-                        //     file: { attributes: { controlsList: 'nodownload' } }
-                        // }}
+                    <Video
+                        ref={audioRef}
                         style={{
                             width: 250,
                             height: 60
                         }}
+                        source={{
+                            uri: props.currentMessage.audio
+                        }}
+                        useNativeControls
+                        resizeMode="contain"
+                        isLooping
+                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -474,15 +657,19 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         if (props.currentMessage.video && props.currentMessage.video !== '') {
             return (
                 <View>
-                    <ReactPlayer
-                        video={{ uri: props.currentMessage.video }}
-                        // controls={true}
-                        // onContextMenu={(e: any) => e.preventDefault()}
-                        // config={{
-                        //     file: { attributes: { controlsList: 'nodownload' } }
-                        // }}
-                        videoWidth={250}
-                        videoHeight={200}
+                    <Video
+                        ref={videoRef}
+                        style={{
+                            width: 250,
+                            height: 250
+                        }}
+                        source={{
+                            uri: props.currentMessage.video
+                        }}
+                        useNativeControls
+                        resizeMode="contain"
+                        isLooping
+                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -654,84 +841,24 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 marginTop: -10
                             }}
                         >
-                            <FileUpload
-                                chat={true}
-                                onUpload={(u: any, t: any) => {
-                                    const title = prompt('Enter title and click on OK to share.');
-                                    if (!title || title === '') return;
-
-                                    let text: any = '';
-                                    let img: any = '';
-                                    let audio: any = '';
-                                    let video: any = '';
-                                    let file: any = '';
-
-                                    if (t === 'png' || t === 'jpeg' || t === 'jpg' || t === 'gif') {
-                                        img = u;
-                                    } else if (t === 'mp3' || t === 'wav' || t === 'mp2') {
-                                        audio = u;
-                                    } else if (t === 'mp4' || t === 'oga' || t === 'mov' || t === 'wmv') {
-                                        video = u;
-                                    } else {
-                                        file = u;
-                                        text = (
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    if (
-                                                        Platform.OS === 'web' ||
-                                                        Platform.OS === 'macos' ||
-                                                        Platform.OS === 'windows'
-                                                    ) {
-                                                        window.open(u, '_blank');
-                                                    } else {
-                                                        Linking.openURL(u);
-                                                    }
-                                                }}
-                                                style={{
-                                                    backgroundColor: 'white',
-                                                    borderRadius: 15,
-                                                    marginLeft: 15,
-                                                    marginTop: 6
-                                                }}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        textAlign: 'center',
-                                                        lineHeight: 34,
-                                                        color: '#006AFF',
-                                                        fontSize: 12,
-                                                        borderWidth: 1,
-                                                        borderColor: '#006AFF',
-                                                        paddingHorizontal: 20,
-                                                        fontFamily: 'inter',
-                                                        height: 35,
-                                                        // paddingTop: 2
-                                                        // width: 125,
-                                                        borderRadius: 15,
-                                                        textTransform: 'uppercase'
-                                                    }}
-                                                >
-                                                    {title}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        );
-                                    }
-
-                                    const obj = { title, type: t, url: u };
-
-                                    onSend([
-                                        {
-                                            title,
-                                            text,
-                                            image: img,
-                                            audio,
-                                            video,
-                                            file,
-                                            msgObject: JSON.stringify(obj)
-                                        }
-                                    ]);
-                                }}
-                            />
+                            <TouchableOpacity onPress={() => {
+                                Keyboard.dismiss()
+                                setUploadFileVisible(true)
+                            }}>
+                                <Text
+                                    style={{
+                                        color: '#006AFF',
+                                        lineHeight: 40,
+                                        textAlign: 'right',
+                                        fontSize: 12,
+                                        fontFamily: 'overpass',
+                                        textTransform: 'uppercase',
+                                        paddingLeft: 10
+                                    }}
+                                >
+                                    <Ionicons name="document-attach-outline" size={18} />
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     )}
                 />
@@ -910,6 +1037,217 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         );
     };
 
+    const renderImportModalContent = () => {
+        if (importType && importUrl) {
+            return <View style={{ paddingHorizontal: 10 }}>
+                {importType === 'image' ? 
+                    <Image
+                        style={{
+                            height: 200,
+                            width: 250,
+                            alignSelf: 'center'
+                        }}
+                        source={{ uri: importUrl }}
+                    /> : importType === 'mp4' ? (
+                        <View style={{ paddingVertical: 15,}}>
+                            <Video
+                                ref={audioRef}
+                                style={{
+                                    
+                                    width: 250,
+                                    height: 150,
+                                    alignSelf: 'center'
+                                }}
+                                source={{
+                                    uri: importUrl
+                                }}
+                                useNativeControls
+                                resizeMode="contain"
+                                isLooping
+                            />
+                        </View>
+                    ) : (
+                        <Text style={{ color: '#000', fontFamily: 'Inter', fontSize: 20, paddingTop: 30, paddingBottom: 30, paddingLeft: 20 }}>
+                            {importFileName}
+                        </Text>
+                    )}
+
+                    {/* <TextInput
+                        value={importTitle}
+                        placeholder={''}
+                        onChangeText={val => setImportTitle(val)}
+                        placeholderTextColor={'#1F1F1F'}
+                        required={true}
+                    /> */}
+
+                    <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                        <TouchableOpacity
+                            style={{
+                                marginTop: 20,
+                                backgroundColor: '#006AFF',
+                                borderRadius: 19,
+                                width: 150,
+                                alignSelf: 'center',
+                                marginRight: 20
+                            }}
+                            onPress={() => {
+                                setImportTitle('')
+                                setImportUrl('')
+                                setImportFileName('')
+                                setUploadFileVisible(false)
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    lineHeight: 34,
+                                    color: '#fff'
+                                }}
+                            >
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={{
+                                marginTop: 20,
+                                backgroundColor: '#006AFF',
+                                borderRadius: 19,
+                                width: 150,
+                                alignSelf: 'center'
+                            }}
+                            onPress={() => {
+                                sendImport()
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    lineHeight: 34,
+                                    color: '#fff'
+                                }}
+                            >
+                                Send
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+            </View>
+        } 
+
+        return <View style={{ paddingHorizontal: 10 }}>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadImageHandler(true);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    Camera{' '}
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadImageHandler(false);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    Image Gallery{' '}
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadFileHandler(false);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    File{' '}
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={{
+                    marginTop: 20,
+                    backgroundColor: '#006AFF',
+                    borderRadius: 19,
+                    width: 150,
+                    alignSelf: 'center'
+                }}
+                onPress={() => {
+                    uploadFileHandler(true);
+                }}
+            >
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingHorizontal: 25,
+                        fontFamily: 'inter',
+                        height: 35,
+                        lineHeight: 34,
+                        color: '#fff'
+                    }}
+                >
+                    {' '}
+                    Video{' '}
+                </Text>
+            </TouchableOpacity>
+        </View>
+    }
+
     // MAIN RETURN
 
     return (
@@ -1014,6 +1352,18 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     categoriesOptions={categoriesOptions}
                     onClose={() => setShowPost(false)}
                     onSend={createNewThread}
+                />
+            )}
+             {uploadFileVisible && (
+                <BottomSheet
+                    snapPoints={[0, 350]}
+                    close={() => {
+                        setUploadFileVisible(false);
+                    }}
+                    isOpen={uploadFileVisible}
+                    title={importType ? 'Send ' + (importType !== 'image' && importType !== 'video' ? 'File' : importType) : 'Import' }
+                    renderContent={() => renderImportModalContent()}
+                    header={false}
                 />
             )}
         </View>

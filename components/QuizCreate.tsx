@@ -673,12 +673,18 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         source={{
                                                             html: content
                                                         }}
+                                                        defaultTextProps={{
+                                                            selectable: true
+                                                        }}
                                                     />
                                                 </View>
                                             ) : (
                                                 <RenderHtml
                                                     source={{
                                                         html: problem.question
+                                                    }}
+                                                    defaultTextProps={{
+                                                        selectable: true
                                                     }}
                                                 />
                                             )}
@@ -1062,6 +1068,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     <RenderHtml
                                                         source={{
                                                             html: option.option
+                                                        }}
+                                                        defaultTextProps={{
+                                                            selectable: true
                                                         }}
                                                     />
                                                 ) : (

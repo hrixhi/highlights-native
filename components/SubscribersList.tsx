@@ -1023,6 +1023,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 marginBottom: 50,
                                 paddingHorizontal: 10
                             }}
+                            indicatorStyle='black'
                         >
                             {filteredSubscribers.map((subscriber: any, index: any) => {
                                 return (
@@ -1143,6 +1144,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             showsVerticalScrollIndicator={true}
                             keyboardDismissMode={'on-drag'}
                             style={{ flex: 1, paddingTop: 12 }}
+                            indicatorStyle='black'
                         >
                             {submittedAt !== '' &&
                             deadline !== '' &&

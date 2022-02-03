@@ -10,7 +10,7 @@ import {
     ScrollView,
     Switch,
     Platform,
-    TextInput as DefaultInput
+    TextInput as DefaultInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,7 +27,7 @@ import {
     meetingRequest,
     startInstantMeeting,
     getOngoingMeetings,
-    createMessage
+    createMessage,
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -54,6 +54,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import NewPostModal from './NewPostModal';
 import AccountPage from './AccountPage';
 import Reanimated from 'react-native-reanimated';
+import Carousel, { Pagination } from 'react-native-snap-carousel';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -70,7 +71,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         Channels: [],
         Classroom: [],
         Messages: [],
-        Threads: []
+        Threads: [],
     });
     const [resultCount, setResultCount] = useState(0);
     const [loadingSearchResults, setLoadingSearchResults] = useState(false);
@@ -98,16 +99,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const sortbyOptions = [
         {
             value: 'Date ↑',
-            label: 'Date ↑'
+            label: 'Date ↑',
         },
         {
             value: 'Date ↓',
-            label: 'Date ↓'
+            label: 'Date ↓',
         },
         {
             value: 'Priority',
-            label: 'Priority'
-        }
+            label: 'Priority',
+        },
     ];
     const [showInstantMeeting, setShowInstantMeeting] = useState(false);
     const [instantMeetingChannelId, setInstantMeetingChannelId] = useState<any>('');
@@ -142,8 +143,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
         inputRange: [0, 1],
-        outputRange: [0.5, 0]
+        outputRange: [0.5, 0],
     });
+
+    const [cuesCarouselData, setCuesCarouselData] = useState<any[]>([]);
+    const [categoryPositionList, setCategoryPositionList] = useState<any[]>([]);
+    const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
+    const [showCategoryList, setShowCategoryList] = useState(false);
+
+    const [xScrollOffset, setXScrollOffset] = useState(0);
+
+    const cuesCarouselRef: any = useRef(null);
 
     // ALERTS
     const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
@@ -239,20 +249,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         setOpenChannelId(props.openChannelId);
     }, [props.openChannelId]);
 
-    console.log('Selected workspace');
-
     /**
      * @description Scrolls to specific channel in Channels ScrollView for openChannelId
      */
     useEffect(() => {
         if (Dimensions.get('window').width < 768) {
-            console.log('Looking for match');
-
             if (openChannelId !== '') {
                 Object.keys(cueMap).map((obj: any) => {
-                    console.log('Obj', obj);
                     if (obj.split('-SPLIT-')[1] === openChannelId) {
-                        console.log('Set selected workspace', obj);
                         setSelectedWorkspace(obj);
                     }
                 });
@@ -295,7 +299,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             scrollViewRef.current.scrollTo({
                 x: 0,
                 y: channelHeightList[matchIndex],
-                animated: true
+                animated: true,
             });
 
             setOpenChannelId('');
@@ -307,14 +311,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     useEffect(() => {
         if (Dimensions.get('window').width < 768) {
-            console.log('Looking for match');
-
             let matchIndex = -1;
             let indexMapKey = '';
 
             if (loadDiscussionForChannelId !== '') {
                 Object.keys(cueMap).map((obj: any, index: number) => {
-                    console.log('Obj', obj);
                     if (obj.split('-SPLIT-')[1] === loadDiscussionForChannelId) {
                         indexMapKey = obj;
                         matchIndex = index;
@@ -327,9 +328,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             //         indexMapKey = key;
             //     }
             // });
-
-            console.log('IndexMapKey', indexMapKey);
-            console.log('MatchIndex', matchIndex);
 
             if (matchIndex === -1 || indexMapKey === '' || !loadDiscussionForChannelId) return;
 
@@ -386,7 +384,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             scrollViewRef.current.scrollTo({
                 x: 0,
                 y: channelHeightList[matchIndex],
-                animated: true
+                animated: true,
             });
 
             setLoadDiscussionForChannelId('');
@@ -511,6 +509,44 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, [sortBy, filterStart, filterEnd]);
 
     /**
+     * @description Setup the data for carousel
+     */
+    useEffect(() => {
+        if (
+            !cueMap ||
+            !cueMap[selectedWorkspace] ||
+            !categoryMap ||
+            cueMap[selectedWorkspace].length === 0 ||
+            categoryMap[selectedWorkspace].length === 0
+        ) {
+            setCuesCarouselData([]);
+            return;
+        }
+
+        const categories = categoryMap[selectedWorkspace];
+
+        let carouselItemData: any[] = [];
+
+        categories.map((cat: any, index: number) => {
+            const categoryCues = cueMap[selectedWorkspace].filter((cue: any, i: any) => {
+                return cue.customCategory.toString().trim() === cat.toString().trim();
+            });
+
+            if (categoryCues.length === 0) {
+                return;
+            }
+            carouselItemData.push({
+                category: cat,
+                index,
+                cues: categoryCues,
+                channelId: selectedWorkspace.split('-SPLIT-')[1],
+            });
+        });
+
+        setCuesCarouselData(carouselItemData);
+    }, [selectedWorkspace, cueMap, categoryMap]);
+
+    /**
      * @description Calls method to fetch any ongoing meetings
      */
     useEffect(() => {
@@ -526,7 +562,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 Channels: [],
                 Classroom: [],
                 Messages: [],
-                Threads: []
+                Threads: [],
             });
             setResultCount(0);
             return;
@@ -549,7 +585,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     `https://api.learnwithcues.com/search`,
                     {
                         term: searchTerm,
-                        userId
+                        userId,
                     },
                     { cancelToken: cancelTokenRef.current.token }
                 )
@@ -567,7 +603,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         Classroom: [...res.data.personalCues, ...res.data.channelCues],
                         Channels: res.data.channels,
                         Threads: res.data.threads,
-                        Messages: res.data.messages
+                        Messages: res.data.messages,
                     };
 
                     setResultCount(totalCount);
@@ -601,10 +637,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     description: instantMeetingDescription,
                     start: startDate.toUTCString(),
                     end: instantMeetingEnd.toUTCString(),
-                    notifyUsers: instantMeetingAlertUsers
-                }
+                    notifyUsers: instantMeetingAlertUsers,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 if (res.data && res.data.channel.startInstantMeeting !== 'error') {
                     if (meetingProvider !== '' && res.data.channel.startInstantMeeting === 'MEETING_LINK_NOT_SET') {
                         Alert(
@@ -622,14 +658,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     setInstantMeetingEnd('');
                     setInstantMeetingAlertUsers(true);
 
-                    window.open(res.data.channel.startInstantMeeting, '_blank');
+                    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                        Linking.openURL(res.data.channel.startInstantMeeting);
+                    } else {
+                        window.open(res.data.channel.startInstantMeeting, '_blank');
+                    }
 
                     getCurrentMeetings();
                 } else {
                     Alert('Something went wrong. Try again.');
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 Alert('Something went wrong.');
             });
     }, [
@@ -640,7 +680,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         instantMeetingChannelId,
         instantMeetingCreatedBy,
         instantMeetingAlertUsers,
-        meetingProvider
+        meetingProvider,
     ]);
 
     /**
@@ -651,13 +691,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         let channelId = '';
 
-        Object.keys(collapseMap).map((key: any) => {
-            if (collapseMap[key] && key.split('-SPLIT-')[0] !== 'Home') {
-                console.log('Active', collapseMap[key]);
-                console.log('Key', key.split('-SPLIT-')[1]);
-                channelId = key.split('-SPLIT-')[1];
-            }
-        });
+        if (Dimensions.get('window').width < 768 && selectedWorkspace !== '') {
+            channelId = selectedWorkspace.split('-SPLIT-')[1];
+        } else {
+            Object.keys(collapseMap).map((key: any) => {
+                if (collapseMap[key] && key.split('-SPLIT-')[0] !== 'Home') {
+                    console.log('Active', collapseMap[key]);
+                    console.log('Key', key.split('-SPLIT-')[1]);
+                    channelId = key.split('-SPLIT-')[1];
+                }
+            });
+        }
 
         if (userId !== '' && channelId !== '') {
             const server = fetchAPI('');
@@ -666,15 +710,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     query: getOngoingMeetings,
                     variables: {
                         userId,
-                        channelId
-                    }
+                        channelId,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data && res.data.channel.ongoingMeetings) {
                         setOngoingMeetings(res.data.channel.ongoingMeetings);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     Alert('Something went wrong.');
                 });
         }
@@ -684,32 +728,25 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Handle create instant meeting for channel owners
      */
     const handleStartMeeting = async (channelId: string, channelCreatedBy: string) => {
-        const u = await AsyncStorage.getItem('user');
-
-        if (u) {
-            const user = JSON.parse(u);
-            if (user.zoomInfo || (meetingProvider && meetingProvider !== '')) {
-                setInstantMeetingChannelId(channelId);
-                setInstantMeetingCreatedBy(channelCreatedBy);
-                const current = new Date();
-                setInstantMeetingStart(current);
-                setInstantMeetingEnd(new Date(current.getTime() + 1000 * 40 * 60));
-                setShowInstantMeeting(true);
-            } else {
-                Alert('You must connect with Zoom to start a meeting.');
-
-                // ZOOM OATH
-
-                const url = 'https://app.learnwithcues.com/zoom_auth';
-
-                if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                    Linking.openURL(url);
-                } else {
-                    window.open(url);
-                }
-            }
+        if (userZoomInfo || (meetingProvider && meetingProvider !== '')) {
+            setInstantMeetingChannelId(channelId);
+            setInstantMeetingCreatedBy(channelCreatedBy);
+            const current = new Date();
+            setInstantMeetingStart(current);
+            setInstantMeetingEnd(new Date(current.getTime() + 1000 * 40 * 60));
+            setShowInstantMeeting(true);
         } else {
-            return;
+            Alert('You must connect with Zoom to start a meeting.');
+
+            // ZOOM OATH
+
+            const url = 'https://app.learnwithcues.com/zoom_auth';
+
+            if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                Linking.openURL(url);
+            } else {
+                window.open(url);
+            }
         }
     };
 
@@ -730,24 +767,29 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         variables: {
                             userId,
                             channelId: instantMeetingChannelId,
-                            isOwner: user._id.toString().trim() === instantMeetingCreatedBy
-                        }
+                            isOwner: user._id.toString().trim() === instantMeetingCreatedBy,
+                        },
                     })
-                    .then(res => {
+                    .then((res) => {
                         if (res.data && res.data.channel.meetingRequest !== 'error') {
                             server.mutate({
                                 mutation: markAttendance,
                                 variables: {
                                     userId: userId,
-                                    channelId: props.channelId
-                                }
+                                    channelId: props.channelId,
+                                },
                             });
-                            window.open(res.data.channel.meetingRequest, '_blank');
+
+                            if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                                Linking.openURL(res.data.channel.meetingRequest);
+                            } else {
+                                window.open(res.data.channel.meetingRequest, '_blank');
+                            }
                         } else {
                             Alert('Classroom not in session. Waiting for instructor.');
                         }
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         Alert('Something went wrong.');
                     });
             }
@@ -757,16 +799,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     /**
      * @description Fetches status of channel and depending on that handles subscription to channel
      */
-    const handleSub = useCallback(async channelId => {
+    const handleSub = useCallback(async (channelId) => {
         const server = fetchAPI('');
         server
             .query({
                 query: checkChannelStatus,
                 variables: {
-                    channelId
-                }
+                    channelId,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 if (res.data.channel && res.data.channel.getChannelStatus) {
                     const channelStatus = res.data.channel.getChannelStatus;
                     switch (channelStatus) {
@@ -789,7 +831,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 console.log(err);
                 Alert(somethingWrongAlert, checkConnectionAlert);
             });
@@ -800,6 +842,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     const createNewThread = useCallback(
         async (message: any, category: any, isPrivate: any) => {
+            console.log('Create new thread', {
+                message,
+                userId,
+                channelId: selectedWorkspace.split('-SPLIT-')[1],
+                isPrivate,
+                anonymous: false,
+                cueId: !props.cueId ? 'NULL' : props.cueId,
+                parentId: 'INIT',
+                category: category === 'None' ? '' : category,
+            });
+
             const server = fetchAPI('');
             server
                 .mutate({
@@ -807,26 +860,28 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     variables: {
                         message,
                         userId,
-                        channelId: props.channelId,
+                        channelId: selectedWorkspace.split('-SPLIT-')[1],
                         isPrivate,
                         anonymous: false,
-                        cueId: props.cueId === null ? 'NULL' : props.cueId,
+                        cueId: !props.cueId ? 'NULL' : props.cueId,
                         parentId: 'INIT',
-                        category: category === 'None' ? '' : category
-                    }
+                        category: category === 'None' ? '' : category,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.thread.writeMessage) {
                         setDiscussionReloadKey(Math.random());
+                        setShowNewPostModal(false);
                     } else {
                         Alert(checkConnectionAlert);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
+                    console.log('Error', err);
                     Alert(somethingWentWrongAlert, checkConnectionAlert);
                 });
         },
-        [props.cueId, props.channelId, userId]
+        [props.cueId, props.channelId, userId, selectedWorkspace]
     );
 
     /**
@@ -844,10 +899,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     variables: {
                         userId: user._id,
                         channelId,
-                        password: pass
-                    }
+                        password: pass,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.subscription && res.data.subscription.subscribe) {
                         const subscriptionStatus = res.data.subscription.subscribe;
                         switch (subscriptionStatus) {
@@ -871,7 +926,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     Alert(somethingWrongAlert, checkConnectionAlert);
                 });
         },
@@ -921,7 +976,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -933,7 +988,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
                             }}
                             onPress={() => {
                                 setShowFilterStartDateAndroid(true);
@@ -952,7 +1007,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     fontFamily: 'inter',
                                     height: 35,
                                     width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1009,7 +1064,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -1021,7 +1076,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
                             }}
                             onPress={() => {
                                 setShowFilterStartDateAndroid(false);
@@ -1040,7 +1095,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     fontFamily: 'inter',
                                     height: 35,
                                     width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1059,11 +1114,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             <View
                 style={{
                     flexDirection: 'row',
-                    marginBottom: 30,
+                    marginBottom: activeTab === 'Content' ? 10 : 30,
                     paddingTop: 10,
                     backgroundColor: '#f2f2f2',
                     flex: 1,
-                    justifyContent: 'center'
+                    justifyContent: 'center',
                     //paddingVertical: 20
                 }}
             >
@@ -1073,14 +1128,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         justifyContent: 'center',
                         maxWidth: 900,
                         flex: 1,
-                        backgroundColor: '#f2f2f2'
+                        backgroundColor: '#f2f2f2',
                     }}
                 >
                     <TouchableOpacity
                         style={{
                             justifyContent: 'center',
                             flexDirection: 'column',
-                            backgroundColor: '#f2f2f2'
+                            backgroundColor: '#f2f2f2',
                         }}
                         onPress={() => {
                             const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1099,7 +1154,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             justifyContent: 'center',
                             flexDirection: 'column',
-                            backgroundColor: '#f2f2f2'
+                            backgroundColor: '#f2f2f2',
                         }}
                         onPress={() => {
                             const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1131,7 +1186,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2'
+                                backgroundColor: '#f2f2f2',
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1150,7 +1205,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2'
+                                backgroundColor: '#f2f2f2',
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1169,7 +1224,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2'
+                                backgroundColor: '#f2f2f2',
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1190,16 +1245,109 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
+    console.log('Horizontal scroll position', xScrollOffset);
+
+    const renderCategorySelectionContent = () => {
+        return (
+            <ScrollView
+                key={xScrollOffset.toString()}
+                style={{
+                    width: '100%',
+                    // height: windowHeight,
+                    backgroundColor: 'white',
+                    borderTopRightRadius: 0,
+                    borderTopLeftRadius: 0,
+                }}
+                contentContainerStyle={
+                    {
+                        // paddingHorizontal: 20
+                    }
+                }
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+                scrollEventThrottle={1}
+                keyboardDismissMode={'on-drag'}
+                overScrollMode={'never'}
+                nestedScrollEnabled={true}
+            >
+                {cuesCarouselData.map((item: any) => {
+                    console.log('Horizontal scroll position', xScrollOffset);
+
+                    let activeCategoryIndex = 0;
+
+                    Object.keys(categoryPositionList).map((catIndex: any) => {
+                        if (categoryPositionList[catIndex] < xScrollOffset) {
+                            activeCategoryIndex = Number(catIndex) + 1;
+                        } else {
+                            return;
+                        }
+                    });
+
+                    console.log('Active scroll index', activeCategoryIndex);
+
+                    console.log('item.index', item.index);
+                    return (
+                        <TouchableOpacity
+                            key={item.index.toString()}
+                            onPress={() => {
+                                if (cuesCarouselRef && cuesCarouselRef.current) {
+                                    cuesCarouselRef.current.scrollTo({
+                                        x: categoryPositionList[item.index] - 15,
+                                        y: 0,
+                                        animated: true,
+                                    });
+                                    // setXScrollOffset(categoryPositionList[item.index] - 15)
+                                    setShowCategoryList(false);
+                                }
+                            }}
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                // paddingHorizontal: 5,
+                                paddingVertical: 10,
+                                marginVertical: 2,
+                                borderLeftColor: '#000000',
+                                borderLeftWidth: activeCategoryIndex.toString() === item.index.toString() ? 3 : 0,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontFamily: 'inter',
+                                    fontSize: 15,
+                                    paddingLeft: 10,
+                                    opacity: activeCategoryIndex.toString() === item.index.toString() ? 1 : 0.7,
+                                }}
+                            >
+                                {item.category === '' ? 'None' : item.category}
+                            </Text>
+                            <Text
+                                style={{
+                                    fontFamily: 'inter',
+                                    fontSize: 15,
+                                    paddingRight: 10,
+                                    opacity: activeCategoryIndex.toString() === item.index.toString() ? 1 : 0.7,
+                                }}
+                            >
+                                {item.cues.length}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
+        );
+    };
+
     const renderFilterModalContent = () => {
         const filterChannelOptions = [
             { value: 'All', label: 'All' },
-            { value: '', label: 'Home' }
+            { value: '', label: 'Home' },
         ];
 
         props.subscriptions.map((sub: any) => {
             filterChannelOptions.push({
                 value: sub.channelName,
-                label: sub.channelName
+                label: sub.channelName,
             });
         });
 
@@ -1210,10 +1358,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     // height: windowHeight,
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
-                    borderTopLeftRadius: 0
+                    borderTopLeftRadius: 0,
                 }}
                 contentContainerStyle={{
-                    paddingHorizontal: 20
+                    paddingHorizontal: 20,
                 }}
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={true}
@@ -1232,7 +1380,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             backgroundColor: 'white',
                             display: 'flex',
                             height: showSortByFilterModal ? 230 : 50,
-                            marginTop: 10
+                            marginTop: 10,
                             // marginRight: 10
                         }}
                     >
@@ -1247,23 +1395,23 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
+                                borderBottomColor: '#f2f2f2',
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
                                 zIndex: 1000001,
-                                elevation: 1000001
+                                elevation: 1000001,
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 1,
-                                    height: 3
+                                    height: 3,
                                 },
                                 shadowOpacity: !showSortByFilterModal ? 0 : 0.08,
                                 shadowRadius: 12,
                                 zIndex: 1000001,
-                                elevation: 1000001
+                                elevation: 1000001,
                             }}
                         />
                     </View>
@@ -1277,7 +1425,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             // paddingTop: 12,
                             backgroundColor: '#fff',
                             marginLeft: 'auto',
-                            alignItems: 'center'
+                            alignItems: 'center',
                         }}
                     >
                         <Text
@@ -1285,7 +1433,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 color: '#000000',
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
                             }}
                         >
                             Start
@@ -1302,7 +1450,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             backgroundColor: '#fff',
                             marginTop: 12,
                             marginLeft: 'auto',
-                            alignItems: 'center'
+                            alignItems: 'center',
                         }}
                     >
                         <Text
@@ -1310,7 +1458,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 fontSize: 14,
                                 fontFamily: 'Inter',
                                 color: '#000000',
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
                             }}
                         >
                             End
@@ -1416,7 +1564,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         // console.log('Ongoing meetings', ongoingMeetings);
         return (
             <View style={{ width: '100%', maxWidth: 900, backgroundColor: '#f2f2f2', paddingBottom: 30 }}>
-                <Text style={{ color: '#1f1f1f', fontSize: 18, fontFamily: 'inter', marginBottom: 20 }}>
+                <Text
+                    style={{ color: '#1f1f1f', fontSize: 18, fontFamily: 'inter', marginBottom: 20, paddingLeft: 10 }}
+                >
                     In Progress
                 </Text>
 
@@ -1432,10 +1582,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         borderLeftWidth: 3,
                         shadowOffset: {
                             width: 2,
-                            height: 2
+                            height: 2,
                         },
                         shadowOpacity: 0.1,
-                        shadowRadius: 10
+                        shadowRadius: 10,
                         // zIndex: 5000000
                     }}
                 >
@@ -1452,7 +1602,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             borderColor: '#f2f2f2',
                             borderRadius: 1,
                             width: '100%',
-                            maxHeight: Dimensions.get('window').width < 1024 ? 400 : 500
+                            maxHeight: Dimensions.get('window').width < 1024 ? 400 : 500,
                         }}
                         indicatorStyle="black"
                     >
@@ -1469,7 +1619,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         borderBottomWidth: ind === ongoingMeetings.length - 1 ? 0 : 1,
                                         // minWidth: 600, // flex: 1,
                                         width: '100%',
-                                        alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center'
+                                        alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
                                     }}
                                     key={ind}
                                 >
@@ -1479,7 +1629,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 fontSize: 13,
                                                 padding: 5,
                                                 fontFamily: 'inter',
-                                                maxWidth: 300
+                                                maxWidth: 300,
                                             }}
                                         >
                                             {meeting.title}
@@ -1489,7 +1639,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 style={{
                                                     fontSize: 12,
                                                     padding: 5,
-                                                    maxWidth: 300
+                                                    maxWidth: 300,
                                                 }}
                                             >
                                                 {meeting.description}
@@ -1502,7 +1652,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             marginLeft: Dimensions.get('window').width < 768 ? 0 : 'auto',
-                                            marginTop: Dimensions.get('window').width < 768 ? 5 : 0
+                                            marginTop: Dimensions.get('window').width < 768 ? 5 : 0,
                                         }}
                                     >
                                         <View style={{ marginRight: 20 }}>
@@ -1510,7 +1660,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 style={{
                                                     fontSize: 12,
                                                     padding: 5,
-                                                    lineHeight: 13
+                                                    lineHeight: 13,
                                                 }}
                                             >
                                                 {startTime} to {endTime}
@@ -1538,7 +1688,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     style: 'cancel',
                                                                     onPress: () => {
                                                                         return;
-                                                                    }
+                                                                    },
                                                                 },
                                                                 {
                                                                     text: 'Okay',
@@ -1556,8 +1706,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                                 Linking.openURL(meeting.joinUrl);
                                                                             }
                                                                         }
-                                                                    }
-                                                                }
+                                                                    },
+                                                                },
                                                             ]
                                                         );
                                                     } else {
@@ -1583,7 +1733,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         fontSize: 12,
                                                         fontFamily: 'inter',
                                                         color: '#006AFF',
-                                                        marginRight: 20
+                                                        marginRight: 20,
                                                     }}
                                                 >
                                                     JOIN {createdBy === userId ? '' : 'MEETING'}
@@ -1603,7 +1753,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             fontSize: 12,
                                                             fontFamily: 'inter',
                                                             color: '#006AFF',
-                                                            marginRight: 20
+                                                            marginRight: 20,
                                                         }}
                                                     >
                                                         COPY INVITE
@@ -1664,7 +1814,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -1676,7 +1826,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
                             }}
                             onPress={() => {
                                 setShowMeetingEndDateAndroid(true);
@@ -1695,7 +1845,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     fontFamily: 'inter',
                                     height: 35,
                                     width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1709,7 +1859,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 borderRadius: 15,
                                 width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
                             }}
                             onPress={() => {
                                 setShowMeetingEndDateAndroid(false);
@@ -1728,7 +1878,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     fontFamily: 'inter',
                                     height: 35,
                                     width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -1778,14 +1928,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     style={{
                         flexDirection: 'column',
                         paddingHorizontal: Dimensions.get('window').width > 768 ? 25 : 0,
-                        backgroundColor: '#ffffff'
+                        backgroundColor: '#ffffff',
                     }}
                 >
                     <ScrollView
                         showsVerticalScrollIndicator={true}
                         horizontal={false}
                         contentContainerStyle={{
-                            width: '100%'
+                            width: '100%',
                         }}
                     >
                         <View
@@ -1795,7 +1945,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginVertical: 20,
                                 // minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
                                 // maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
-                                backgroundColor: '#ffffff'
+                                backgroundColor: '#ffffff',
                             }}
                         >
                             <View style={{ width: '100%', maxWidth: 400, marginTop: 20, backgroundColor: '#ffffff' }}>
@@ -1804,7 +1954,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         fontSize: 14,
                                         fontFamily: 'inter',
                                         color: '#000000',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
                                     }}
                                 >
                                     Topic
@@ -1814,7 +1964,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         // style={{ padding: 10, fontSize: 14 }}
                                         value={instantMeetingTitle}
                                         placeholder={''}
-                                        onChangeText={val => setInstantMeetingTitle(val)}
+                                        onChangeText={(val) => setInstantMeetingTitle(val)}
                                         placeholderTextColor={'#1F1F1F'}
                                     />
                                 </View>
@@ -1826,7 +1976,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         fontSize: 14,
                                         fontFamily: 'inter',
                                         color: '#000000',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
                                     }}
                                 >
                                     Description
@@ -1835,7 +1985,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <TextInput
                                         value={instantMeetingDescription}
                                         placeholder={''}
-                                        onChangeText={val => setInstantMeetingDescription(val)}
+                                        onChangeText={(val) => setInstantMeetingDescription(val)}
                                         placeholderTextColor={'#1F1F1F'}
                                         multiline={true}
                                     />
@@ -1850,7 +2000,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     width: '100%',
-                                    marginBottom: 30
+                                    marginBottom: 30,
                                 }}
                             >
                                 <Text
@@ -1858,7 +2008,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         fontSize: 14,
                                         fontFamily: 'inter',
                                         color: '#000000',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
                                     }}
                                 >
                                     End
@@ -1871,7 +2021,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     width: '100%',
                                     paddingTop: 10,
                                     paddingBottom: 15,
-                                    backgroundColor: '#ffffff'
+                                    backgroundColor: '#ffffff',
                                 }}
                             >
                                 <Text
@@ -1879,7 +2029,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         fontSize: 14,
                                         fontFamily: 'inter',
                                         color: '#000000',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
                                     }}
                                 >
                                     Notify Users
@@ -1889,7 +2039,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     height: 40,
                                     marginRight: 10,
-                                    backgroundColor: '#ffffff'
+                                    backgroundColor: '#ffffff',
                                 }}
                             >
                                 <Switch
@@ -1900,7 +2050,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     style={{ height: 20 }}
                                     trackColor={{
                                         false: '#f2f2f2',
-                                        true: '#006AFF'
+                                        true: '#006AFF',
                                     }}
                                     activeThumbColor="white"
                                 />
@@ -1908,7 +2058,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <View
                                 style={{
                                     width: '100%',
-                                    backgroundColor: '#ffffff'
+                                    backgroundColor: '#ffffff',
                                 }}
                             >
                                 <Text
@@ -1919,7 +2069,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         fontFamily: 'Inter',
                                         paddingBottom: 15,
                                         paddingTop: 10,
-                                        width: '100%'
+                                        width: '100%',
                                     }}
                                 >
                                     NOTE: You can schedule future meetings under Agenda
@@ -1932,7 +2082,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 backgroundColor: '#006AFF',
                                 borderRadius: 19,
                                 width: 120,
-                                alignSelf: 'center'
+                                alignSelf: 'center',
                             }}
                             onPress={() => {
                                 createInstantMeeting();
@@ -1943,7 +2093,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     color: 'white',
                                     padding: 10,
                                     textAlign: 'center',
-                                    fontFamily: 'inter'
+                                    fontFamily: 'inter',
                                 }}
                             >
                                 Create
@@ -1955,28 +2105,249 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
-    console.log('Search results', results);
+    const renderCarouselItem = (obj: any) => {
+        const { item } = obj;
+
+        const { category, index, cues, channelId } = item;
+
+        return (
+            <View
+                style={{
+                    // height: '100%',
+                    width: Dimensions.get('window').width * 0.8,
+                    marginRight: 20,
+                    maxHeight: 450,
+                    borderRadius: 4,
+                    backgroundColor: '#f2f2f2',
+                }}
+                key={index}
+                onLayout={(event) => {
+                    const layout = event.nativeEvent.layout;
+                    const temp1 = [...categoryPositionList];
+                    temp1[index] = layout.x;
+                    setCategoryPositionList(temp1);
+                }}
+            >
+                <Text
+                    style={{
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        paddingLeft: 10,
+                        marginBottom: 15,
+                        color: '#1a1a1a',
+                    }}
+                    ellipsizeMode={'tail'}
+                >
+                    {category}
+                </Text>
+                <ScrollView
+                    horizontal={false}
+                    // key={JSON.stringify(results)}
+                    showsVerticalScrollIndicator={true}
+                    contentContainerStyle={{
+                        flexDirection: 'column',
+                        width: '100%',
+                        justifyContent: 'center',
+                        backgroundColor: '#f2f2f2',
+                        // paddingTop: ,
+                        padding: 5,
+                    }}
+                    indicatorStyle="black"
+                    persistentScrollbar={true}
+                >
+                    {cues.map((cue: any) => {
+                        const { title } = htmlStringParser(
+                            cue.channelId && cue.channelId !== '' ? cue.original : cue.cue
+                        );
+
+                        const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#35AC78'].reverse();
+
+                        const col = colorChoices[cue.color];
+
+                        let showScore = false;
+
+                        if (cue && cue.original) {
+                            // Hide scores if it's a quiz and !releaseSubmission
+                            if (cue.graded && !cue.releaseSubmission) {
+                                // showScore = (false);
+                            } else {
+                                showScore = true;
+                            }
+                        }
+
+                        return (
+                            // <Card
+                            //     cue={cue}
+                            //     channelId={channelId}
+                            //     updateModal={() => {
+                            //         props.openUpdate(
+                            //             cue.key,
+                            //             cue.index,
+                            //             0,
+                            //             cue._id,
+                            //             cue.createdBy ? cue.createdBy : '',
+                            //             cue.channelId ? cue.channelId : ''
+                            //         );
+                            //     }}
+                            // />
+                            <TouchableOpacity
+                                style={{
+                                    height: 60,
+                                    backgroundColor: '#fff',
+                                    borderColor: col,
+                                    borderLeftWidth: 3,
+                                    flexDirection: 'column',
+                                    shadowColor: '#000000',
+                                    shadowOffset: { width: 1, height: 1 },
+                                    shadowOpacity: 0.08,
+                                    shadowRadius: 1,
+                                    elevation: 0,
+                                    zIndex: 500000,
+                                    borderTopColor: '#efefef',
+                                    borderTopWidth: 1,
+                                    borderBottomColor: '#efefef',
+                                    borderBottomWidth: 1,
+                                    marginBottom: 15,
+                                }}
+                                onPress={() => {
+                                    props.openUpdate(
+                                        cue.key,
+                                        cue.index,
+                                        0,
+                                        cue._id,
+                                        cue.createdBy ? cue.createdBy : '',
+                                        cue.channelId ? cue.channelId : ''
+                                    );
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        height: '100%',
+                                        // borderTop
+                                        width: '100%',
+                                        padding: 7,
+                                        paddingHorizontal: 10,
+                                        backgroundColor: '#fff',
+                                    }}
+                                >
+                                    <View
+                                        style={{
+                                            height: '30%',
+                                            backgroundColor: '#fff',
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 10,
+                                                color: '#1F1F1F',
+                                                lineHeight: 12,
+                                                textAlign: 'left',
+                                                paddingVertical: 2,
+                                                flex: 1,
+                                            }}
+                                        >
+                                            {new Date(cue.date).toString().split(' ')[1] +
+                                                ' ' +
+                                                new Date(cue.date).toString().split(' ')[2]}
+                                        </Text>
+                                        {cue.status && cue.status !== 'read' && cue.status !== 'submitted' ? (
+                                            <Ionicons name="alert-circle-outline" size={14} color="#f94144" />
+                                        ) : null}
+                                        {cue.graded && showScore && !(userId === cue.createdBy.toString().trim()) ? (
+                                            <Text
+                                                style={{
+                                                    fontSize: 9,
+                                                    color: '#006AFF',
+                                                    marginLeft: 5,
+                                                    textAlign: 'right',
+                                                }}
+                                            >
+                                                {cue.score}%
+                                            </Text>
+                                        ) : null}
+                                    </View>
+
+                                    <View
+                                        style={{
+                                            backgroundColor: '#fff',
+                                            width: '100%',
+                                            flexDirection: 'row',
+                                            flex: 1,
+                                            height: '70%',
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontFamily: 'inter',
+                                                fontSize: 13,
+                                                lineHeight: 20,
+                                                flex: 1,
+                                                marginTop: 7,
+                                                color: '#000000',
+                                            }}
+                                            numberOfLines={1}
+                                            ellipsizeMode={'tail'}
+                                        >
+                                            {title}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+        );
+    };
+
+
+    const renderMobileCuesCarousel = () => {
+        return (
+            <View style={{ backgroundColor: '#f2f2f2', marginTop: 25 }}>
+                <ScrollView
+                    ref={cuesCarouselRef}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={true}
+                    style={{
+                        minHeight: 500,
+                        flex: 1,
+                        width: '100%',
+                    }}
+                    indicatorStyle="black"
+                    contentContainerStyle={{
+                        backgroundColor: '#f2f2f2',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        paddingLeft: 20,
+                    }}
+                    onScroll={(event: any) => {
+                        setXScrollOffset(event.nativeEvent.contentOffset.x);
+                    }}
+                    onScrollEndDrag={(event: any) => {
+                        setXScrollOffset(event.nativeEvent.contentOffset.x);
+                    }}
+                >
+                    {cuesCarouselData.map((data: any) => {
+                        return renderCarouselItem({ item: data });
+                    })}
+                </ScrollView>
+            </View>
+        );
+    };
 
     /**
      * @description Renders View for search results
      */
     const searchResultsMobile = (
-        <ScrollView
-            horizontal={false}
-            key={JSON.stringify(results)}
-            contentContainerStyle={{
-                flexDirection: 'row',
-                width: '100%',
-                justifyContent: 'center',
-                backgroundColor: '#f2f2f2'
-            }}
-            indicatorStyle="black"
-        >
+        <View>
             <View
                 style={{
                     width: '100%',
                     paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
-                    backgroundColor: '#f2f2f2'
+                    backgroundColor: '#f2f2f2',
                 }}
             >
                 {!loadingSearchResults && resultCount !== 0 ? (
@@ -1985,10 +2356,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             fontSize: 20,
                             paddingVertical: 30,
                             fontFamily: 'inter',
-                            // flex: 1,
-                            lineHeight: 23,
+                            flex: 1,
+                            // lineHeight: 23,
                             color: '#006AFF',
-                            backgroundColor: '#f2f2f2'
+                            backgroundColor: '#f2f2f2',
                         }}
                     >
                         {resultCount} Results
@@ -2008,10 +2379,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 fontSize: 20,
                                 paddingVertical: 50,
                                 textAlign: 'center',
-                                lineHeight: 30,
+                                // lineHeight: 30,
                                 fontFamily: 'inter',
                                 flex: 1,
-                                backgroundColor: '#f2f2f2'
+                                backgroundColor: '#f2f2f2',
                             }}
                         >
                             {searchTerm.trim().length === 0
@@ -2028,36 +2399,65 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 display: 'flex',
                                 flexDirection: 'column',
                                 backgroundColor: '#f2f2f2',
-                                paddingTop: 100
+                                paddingTop: 100,
                             }}
                         >
                             <ActivityIndicator color={'#1F1F1F'} />
                         </View>
                     ) : null}
-                    <View style={{ flexDirection: 'column', backgroundColor: '#f2f2f2' }}>
+                    <ScrollView
+                        horizontal={true}
+                        key={JSON.stringify(results)}
+                        style={{
+                            minHeight: 500,
+                            backgroundColor: '#f2f2f2',
+                        }}
+                        indicatorStyle="black"
+                        contentContainerStyle={{
+                            paddingTop: 30,
+                            backgroundColor: '#f2f2f2',
+                        }}
+                        showsHorizontalScrollIndicator={true}
+                    >
                         {searchOptions.map((option: any, i: number) => {
                             if (results[option].length === 0 || loadingSearchResults) {
                                 return null;
                             }
 
                             return (
-                                <View style={{ backgroundColor: '#f2f2f2', marginBottom: 20 }} key={i}>
+                                <View style={{
+                                    width: Dimensions.get('window').width * 0.8,
+                                    marginRight: 20,
+                                    maxHeight: 450,
+                                    borderRadius: 4,
+                                    backgroundColor: '#f2f2f2',
+                                 }} key={i}>
                                     <Text
                                         style={{
-                                            flex: 1,
-                                            flexDirection: 'row',
-                                            color: '#838383',
-                                            // fontWeight: 'bold',
+                                            fontFamily: 'Inter',
                                             fontSize: 16,
-                                            lineHeight: 25,
-                                            marginBottom: 5,
-                                            fontFamily: 'inter',
-                                            backgroundColor: '#f2f2f2'
+                                            paddingLeft: 10,
+                                            marginBottom: 15,
+                                            color: '#1a1a1a',
                                         }}
                                     >
                                         {option === 'Classroom' ? 'Content' : option}
                                     </Text>
-                                    <ScrollView horizontal={true}>
+                                    <ScrollView 
+                                        horizontal={false}
+                                        // key={JSON.stringify(results)}
+                                        showsVerticalScrollIndicator={true}
+                                        contentContainerStyle={{
+                                            flexDirection: 'column',
+                                            width: '100%',
+                                            justifyContent: 'center',
+                                            backgroundColor: '#f2f2f2',
+                                            // paddingTop: ,
+                                            padding: 5,
+                                        }}
+                                        indicatorStyle="black"
+                                        persistentScrollbar={true}
+                                    >
                                         {results[option].map((obj: any, index: any) => {
                                             let t = '';
                                             let s = '';
@@ -2127,18 +2527,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 }
                                             }
 
-                                            console.log('color code', colorCode);
-
                                             return (
-                                                <View
-                                                    style={{
-                                                        marginBottom: 15,
-                                                        backgroundColor: '#f2f2f2',
-                                                        width: '100%',
-                                                        maxWidth: 150
-                                                    }}
-                                                    key={index}
-                                                >
                                                     <SearchResultCard
                                                         title={t}
                                                         subtitle={s}
@@ -2179,7 +2568,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     'openChat',
                                                                     JSON.stringify({
                                                                         _id: obj.groupId,
-                                                                        users: obj.users
+                                                                        users: obj.users,
                                                                     })
                                                                 );
 
@@ -2194,18 +2583,20 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             }
                                                         }}
                                                     />
-                                                </View>
+
                                             );
                                         })}
                                     </ScrollView>
                                 </View>
                             );
                         })}
-                    </View>
+                    </ScrollView>
                 </View>
             </View>
-        </ScrollView>
+        </View>
     );
+
+    console.log('Ongoing meeting', ongoingMeetings);
 
     /**
      * @description Formats time in email format
@@ -2225,14 +2616,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 width: '100%',
                 height: '100%',
                 bottom: 0,
-                backgroundColor: '#f2f2f2'
+                backgroundColor: '#f2f2f2',
             }}
             key={selectedWorkspace}
         >
             <View
                 style={{
                     paddingHorizontal: 20,
-                    height: 60
+                    height: 60,
                 }}
             >
                 {selectedWorkspace !== '' ? (
@@ -2244,7 +2635,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            marginTop: 10
+                            marginTop: 10,
                         }}
                     >
                         <TouchableOpacity
@@ -2260,7 +2651,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 height: 30,
                                 backgroundColor: 'white',
                                 justifyContent: 'center',
-                                alignItems: 'center'
+                                alignItems: 'center',
                             }}
                         >
                             <Ionicons size={24} name="arrow-back" />
@@ -2273,7 +2664,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     borderRadius: 9,
                                     // marginTop: 2,
                                     marginRight: 5,
-                                    backgroundColor: selectedWorkspace.split('-SPLIT-')[3] || 'black'
+                                    backgroundColor: selectedWorkspace.split('-SPLIT-')[3] || 'black',
                                 }}
                             />
                             <Text
@@ -2284,7 +2675,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     fontFamily: 'Inter',
                                     fontSize: 20,
                                     width: 'auto',
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
                                     // color: selectedWorkspace.split('-SPLIT-')[3]
                                 }}
                             >
@@ -2299,7 +2690,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     position: 'absolute',
                                     marginTop: 9,
                                     marginLeft: 0,
-                                    right: -9
+                                    right: -9,
                                 }}
                                 onPress={() => setShowFilterModal(!showFilterModal)}
                             >
@@ -2329,13 +2720,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     // paddingBottom: 20,
                                     paddingBottom: 8,
                                     marginTop: 10,
-                                    marginRight: 15
+                                    marginRight: 15,
                                 }}
                                 placeholder="Search..."
                                 placeholderTextColor="#656565"
                                 value={searchTerm}
                                 autoFocus={true}
-                                onChangeText={val => setSearchTerm(val)}
+                                onChangeText={(val) => setSearchTerm(val)}
                             />
                         ) : (
                             <Text
@@ -2345,8 +2736,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     fontWeight: 'bold',
                                     fontSize: 30,
                                     paddingVertical: 6,
-                                    marginHorizontal: 12,
-                                    marginTop: 10
+                                    // marginHorizontal: 12,
+                                    marginTop: 10,
                                 }}
                             >
                                 Workspace
@@ -2361,7 +2752,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 // position: 'absolute',
                                 paddingVertical: 6,
                                 marginLeft: 'auto',
-                                marginTop: 10
+                                marginTop: 10,
                                 // paddingBottom: showSearchMobile ? 20 : 0
                             }}
                         >
@@ -2383,7 +2774,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <ScrollView
                         horizontal={false}
                         contentContainerStyle={{
-                            backgroundColor: '#f2f2f2'
+                            backgroundColor: '#f2f2f2',
                         }}
                         indicatorStyle="black"
                     >
@@ -2394,7 +2785,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 flexWrap: 'wrap',
                                 backgroundColor: '#f2f2f2',
                                 paddingHorizontal: 20,
-                                paddingTop: 20
+                                paddingTop: 20,
                             }}
                         >
                             {Object.keys(cueMap).map((key: any, ind: any) => {
@@ -2419,7 +2810,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             // borderLeftWidth: 3,
                                             shadowOffset: {
                                                 width: 5,
-                                                height: 5
+                                                height: 5,
                                             },
                                             overflow: 'hidden',
                                             shadowOpacity: 0.12,
@@ -2428,7 +2819,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             flexDirection: 'row',
                                             paddingVertical: 10,
                                             paddingLeft: 10,
-                                            marginBottom: 20
+                                            marginBottom: 20,
                                         }}
                                     >
                                         {/* <View
@@ -2449,7 +2840,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 fontFamily: 'Inter',
                                                 fontSize: 16,
                                                 width: 'auto',
-                                                fontWeight: 'bold'
+                                                fontWeight: 'bold',
                                                 // color: key.split('-SPLIT-')[3]
                                             }}
                                         >
@@ -2466,7 +2857,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     horizontal={false}
                     contentContainerStyle={{
                         backgroundColor: '#f2f2f2',
-                        paddingTop: 10
+                        paddingTop: 10,
                         // width: '100%',
                         // height: '100%'
                     }}
@@ -2479,7 +2870,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             justifyContent: 'center',
                             backgroundColor: '#f2f2f2',
                             borderColor: '#f2f2f2',
-                            borderBottomWidth: collapseMap[selectedWorkspace]
+                            borderBottomWidth: collapseMap[selectedWorkspace],
                         }}
                         key={collapseMap.toString()}
                     >
@@ -2487,7 +2878,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 width: '100%',
                                 // maxWidth: 900,
-                                backgroundColor: '#f2f2f2'
+                                backgroundColor: '#f2f2f2',
                                 // paddingHorizontal: width < 768 ? 5 : 0
                             }}
                         >
@@ -2521,7 +2912,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             <View
                                                 style={{
                                                     alignItems: 'center',
-                                                    backgroundColor: '#f2f2f2'
+                                                    backgroundColor: '#f2f2f2',
                                                 }}
                                             >
                                                 {selectedWorkspace.split('-SPLIT-')[2] === userId ? (
@@ -2530,7 +2921,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             width: '100%',
                                                             marginBottom: 20,
                                                             backgroundColor: '#f2f2f2',
-                                                            paddingHorizontal: 10
+                                                            paddingHorizontal: 10,
                                                         }}
                                                     >
                                                         <TouchableOpacity
@@ -2548,7 +2939,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                 justifyContent: 'center',
                                                                 flexDirection: 'row',
                                                                 marginLeft: 'auto',
-                                                                borderRadius: 15
+                                                                borderRadius: 15,
                                                             }}
                                                         >
                                                             <Text
@@ -2563,7 +2954,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     fontFamily: 'inter',
                                                                     height: 35,
                                                                     width: 175,
-                                                                    textTransform: 'uppercase'
+                                                                    textTransform: 'uppercase',
                                                                 }}
                                                             >
                                                                 Start Meeting
@@ -2628,7 +3019,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     maxWidth: 400,
                                                     alignSelf: 'center',
                                                     borderTopRightRadius: 10,
-                                                    borderBottomRightRadius: 10
+                                                    borderBottomRightRadius: 10,
                                                 }}
                                             >
                                                 <ChannelSettings
@@ -2652,153 +3043,154 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 paddingBottom: 50,
                                                 paddingHorizontal: 20,
                                                 fontFamily: 'inter',
-                                                flex: 1
+                                                flex: 1,
                                             }}
                                         >
                                             {PreferredLanguageText('noCuesCreated')}
                                         </Text>
                                     ) : (
-                                        <ScrollView
-                                            horizontal={false}
-                                            contentContainerStyle={{
-                                                // maxWidth: '100%',
-                                                backgroundColor: '#f2f2f2',
-                                                paddingHorizontal: 10
-                                            }}
-                                            showsVerticalScrollIndicator={true}
-                                            showsHorizontalScrollIndicator={false}
-                                            key={editFolderChannelId.toString() + cueIds.toString() + cueMap.toString()}
-                                            indicatorStyle="black"
-                                        >
-                                            {categoryMap[selectedWorkspace].map((category: any, i: any) => {
-                                                // Check if even one category exists in cues
+                                        renderMobileCuesCarousel()
+                                        // <ScrollView
+                                        //     horizontal={false}
+                                        //     contentContainerStyle={{
+                                        //         // maxWidth: '100%',
+                                        //         backgroundColor: '#f2f2f2',
+                                        //         paddingHorizontal: 10
+                                        //     }}
+                                        //     showsVerticalScrollIndicator={true}
+                                        //     showsHorizontalScrollIndicator={false}
+                                        //     key={editFolderChannelId.toString() + cueIds.toString() + cueMap.toString()}
+                                        //     indicatorStyle="black"
+                                        // >
+                                        //     {categoryMap[selectedWorkspace].map((category: any, i: any) => {
+                                        //         // Check if even one category exists in cues
 
-                                                const foundCue = cueMap[selectedWorkspace].find(
-                                                    (cue: any) =>
-                                                        cue.customCategory.toString().trim() ===
-                                                        category.toString().trim()
-                                                );
+                                        //         const foundCue = cueMap[selectedWorkspace].find(
+                                        //             (cue: any) =>
+                                        //                 cue.customCategory.toString().trim() ===
+                                        //                 category.toString().trim()
+                                        //         );
 
-                                                if (!foundCue) return null;
+                                        //         if (!foundCue) return null;
 
-                                                return (
-                                                    <View
-                                                        style={{
-                                                            width: '100%',
-                                                            backgroundColor: '#f2f2f2',
-                                                            marginRight: 15,
-                                                            marginBottom: 20
-                                                        }}
-                                                        key={i}
-                                                    >
-                                                        <View
-                                                            style={{
-                                                                backgroundColor: '#f2f2f2',
-                                                                paddingLeft: 5
-                                                            }}
-                                                        >
-                                                            {category === '' ? null : (
-                                                                <Text
-                                                                    style={{
-                                                                        flex: 1,
-                                                                        flexDirection: 'row',
-                                                                        color: '#838383',
-                                                                        fontSize: 16,
-                                                                        lineHeight: 25,
-                                                                        marginBottom: category === '' ? 0 : 5,
-                                                                        fontFamily: 'inter',
-                                                                        backgroundColor: '#f2f2f2'
-                                                                    }}
-                                                                    ellipsizeMode="tail"
-                                                                >
-                                                                    {category === '' ? ' ' : category}
-                                                                </Text>
-                                                            )}
-                                                        </View>
-                                                        <ScrollView
-                                                            horizontal={true}
-                                                            style={{
-                                                                paddingLeft: 5,
-                                                                backgroundColor: '#f2f2f2',
-                                                                width: '100%'
-                                                            }}
-                                                            key={i.toString() + selectedWorkspace.toString()}
-                                                            showsHorizontalScrollIndicator={false}
-                                                        >
-                                                            {cueMap[selectedWorkspace].map((cue: any, index: any) => {
-                                                                if (
-                                                                    cue.customCategory.toString().trim() !==
-                                                                    category.toString().trim()
-                                                                ) {
-                                                                    return null;
-                                                                }
-                                                                return (
-                                                                    <View
-                                                                        style={{
-                                                                            marginBottom: 15,
-                                                                            backgroundColor: '#f2f2f2',
-                                                                            width: '100%',
-                                                                            maxWidth: 130,
-                                                                            marginRight: 15
-                                                                        }}
-                                                                        key={index}
-                                                                    >
-                                                                        <Card
-                                                                            gray={true}
-                                                                            cueIds={cueIds}
-                                                                            onLongPress={() => {
-                                                                                setCueIds([]);
-                                                                                setEditFolderChannelId(
-                                                                                    cue.channelId
-                                                                                        ? cue.channelId
-                                                                                        : 'Home'
-                                                                                );
-                                                                            }}
-                                                                            add={() => {
-                                                                                const temp = JSON.parse(
-                                                                                    JSON.stringify(cueIds)
-                                                                                );
-                                                                                const found = temp.find((i: any) => {
-                                                                                    return i === cue._id;
-                                                                                });
-                                                                                if (!found) {
-                                                                                    temp.push(cue._id);
-                                                                                }
-                                                                                setCueIds(temp);
-                                                                            }}
-                                                                            remove={() => {
-                                                                                const temp = JSON.parse(
-                                                                                    JSON.stringify(cueIds)
-                                                                                );
-                                                                                const upd = temp.filter((i: any) => {
-                                                                                    return i !== cue._id;
-                                                                                });
-                                                                                setCueIds(upd);
-                                                                            }}
-                                                                            editFolderChannelId={editFolderChannelId}
-                                                                            fadeAnimation={props.fadeAnimation}
-                                                                            updateModal={() => {
-                                                                                props.openUpdate(
-                                                                                    cue.key,
-                                                                                    cue.index,
-                                                                                    0,
-                                                                                    cue._id,
-                                                                                    cue.createdBy ? cue.createdBy : '',
-                                                                                    cue.channelId ? cue.channelId : ''
-                                                                                );
-                                                                            }}
-                                                                            cue={cue}
-                                                                            channelId={props.channelId}
-                                                                            subscriptions={props.subscriptions}
-                                                                        />
-                                                                    </View>
-                                                                );
-                                                            })}
-                                                        </ScrollView>
-                                                    </View>
-                                                );
-                                            })}
-                                        </ScrollView>
+                                        //         return (
+                                        //             <View
+                                        //                 style={{
+                                        //                     width: '100%',
+                                        //                     backgroundColor: '#f2f2f2',
+                                        //                     marginRight: 15,
+                                        //                     marginBottom: 20
+                                        //                 }}
+                                        //                 key={i}
+                                        //             >
+                                        //                 <View
+                                        //                     style={{
+                                        //                         backgroundColor: '#f2f2f2',
+                                        //                         paddingLeft: 5
+                                        //                     }}
+                                        //                 >
+                                        //                     {category === '' ? null : (
+                                        //                         <Text
+                                        //                             style={{
+                                        //                                 flex: 1,
+                                        //                                 flexDirection: 'row',
+                                        //                                 color: '#838383',
+                                        //                                 fontSize: 16,
+                                        //                                 lineHeight: 25,
+                                        //                                 marginBottom: category === '' ? 0 : 5,
+                                        //                                 fontFamily: 'inter',
+                                        //                                 backgroundColor: '#f2f2f2'
+                                        //                             }}
+                                        //                             ellipsizeMode="tail"
+                                        //                         >
+                                        //                             {category === '' ? ' ' : category}
+                                        //                         </Text>
+                                        //                     )}
+                                        //                 </View>
+                                        //                 <ScrollView
+                                        //                     horizontal={true}
+                                        //                     style={{
+                                        //                         paddingLeft: 5,
+                                        //                         backgroundColor: '#f2f2f2',
+                                        //                         width: '100%'
+                                        //                     }}
+                                        //                     key={i.toString() + selectedWorkspace.toString()}
+                                        //                     showsHorizontalScrollIndicator={false}
+                                        //                 >
+                                        //                     {cueMap[selectedWorkspace].map((cue: any, index: any) => {
+                                        //                         if (
+                                        //                             cue.customCategory.toString().trim() !==
+                                        //                             category.toString().trim()
+                                        //                         ) {
+                                        //                             return null;
+                                        //                         }
+                                        //                         return (
+                                        //                             <View
+                                        //                                 style={{
+                                        //                                     marginBottom: 15,
+                                        //                                     backgroundColor: '#f2f2f2',
+                                        //                                     width: '100%',
+                                        //                                     maxWidth: 130,
+                                        //                                     marginRight: 15
+                                        //                                 }}
+                                        //                                 key={index}
+                                        //                             >
+                                        //                                 <Card
+                                        //                                     gray={true}
+                                        //                                     cueIds={cueIds}
+                                        //                                     onLongPress={() => {
+                                        //                                         setCueIds([]);
+                                        //                                         setEditFolderChannelId(
+                                        //                                             cue.channelId
+                                        //                                                 ? cue.channelId
+                                        //                                                 : 'Home'
+                                        //                                         );
+                                        //                                     }}
+                                        //                                     add={() => {
+                                        //                                         const temp = JSON.parse(
+                                        //                                             JSON.stringify(cueIds)
+                                        //                                         );
+                                        //                                         const found = temp.find((i: any) => {
+                                        //                                             return i === cue._id;
+                                        //                                         });
+                                        //                                         if (!found) {
+                                        //                                             temp.push(cue._id);
+                                        //                                         }
+                                        //                                         setCueIds(temp);
+                                        //                                     }}
+                                        //                                     remove={() => {
+                                        //                                         const temp = JSON.parse(
+                                        //                                             JSON.stringify(cueIds)
+                                        //                                         );
+                                        //                                         const upd = temp.filter((i: any) => {
+                                        //                                             return i !== cue._id;
+                                        //                                         });
+                                        //                                         setCueIds(upd);
+                                        //                                     }}
+                                        //                                     editFolderChannelId={editFolderChannelId}
+                                        //                                     fadeAnimation={props.fadeAnimation}
+                                        //                                     updateModal={() => {
+                                        //                                         props.openUpdate(
+                                        //                                             cue.key,
+                                        //                                             cue.index,
+                                        //                                             0,
+                                        //                                             cue._id,
+                                        //                                             cue.createdBy ? cue.createdBy : '',
+                                        //                                             cue.channelId ? cue.channelId : ''
+                                        //                                         );
+                                        //                                     }}
+                                        //                                     cue={cue}
+                                        //                                     channelId={props.channelId}
+                                        //                                     subscriptions={props.subscriptions}
+                                        //                                 />
+                                        //                             </View>
+                                        //                         );
+                                        //                     })}
+                                        //                 </ScrollView>
+                                        //             </View>
+                                        //         );
+                                        //     })}
+                                        // </ScrollView>
                                     )}
                                 </View>
                             ) : null}
@@ -2818,7 +3210,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             style={{
                 flexDirection: 'column',
                 width: '100%',
-                bottom: 0
+                bottom: 0,
             }}
         >
             {Dimensions.get('window').width > 768 ? (
@@ -2826,7 +3218,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     style={{
                         paddingHorizontal: 20,
                         paddingTop: 10,
-                        paddingBottom: 15
+                        paddingBottom: 15,
                     }}
                 >
                     <Text
@@ -2836,7 +3228,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             fontWeight: 'bold',
                             fontSize: 30,
                             paddingVertical: 6,
-                            marginHorizontal: 12
+                            marginHorizontal: 12,
                         }}
                     >
                         Workspace
@@ -2852,7 +3244,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     width: '100%',
                     // maxHeight:
                     //     width < 768 ? Dimensions.get('window').height - 115 : Dimensions.get('window').height - 52,
-                    backgroundColor: '#fff'
+                    backgroundColor: '#fff',
                 }}
                 ref={scrollViewRef}
                 indicatorStyle="black"
@@ -2866,7 +3258,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             shadowRadius={collapseMap[key] ? 10 : 0}
                             elevation={500000}
                             containerStyle={{
-                                height: 'auto'
+                                height: 'auto',
                             }}
                             key={ind}
                         >
@@ -2874,11 +3266,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                     borderColor: '#f2f2f2',
-                                    borderTopWidth: ind !== 0 && collapseMap[key] ? 1 : 0
+                                    borderTopWidth: ind !== 0 && collapseMap[key] ? 1 : 0,
                                     // paddingBottom: 10,
                                 }}
                                 key={ind}
-                                onLayout={event => {
+                                onLayout={(event) => {
                                     const layout = event.nativeEvent.layout;
                                     const temp1 = [...channelKeyList];
                                     const temp2 = [...channelHeightList];
@@ -2905,7 +3297,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             paddingBottom: 0,
                                             maxWidth: 900,
                                             alignSelf: 'center',
-                                            width: '100%'
+                                            width: '100%',
                                         }}
                                     >
                                         <TouchableOpacity
@@ -2915,7 +3307,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                                 alignItems: 'center',
                                                 paddingBottom: 20,
-                                                paddingTop: 9
+                                                paddingTop: 9,
                                             }}
                                             onPress={() => {
                                                 const tempCollapse = JSON.parse(JSON.stringify(collapseMap));
@@ -2936,7 +3328,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     borderRadius: 9,
                                                     // marginTop: 2,
                                                     marginRight: 5,
-                                                    backgroundColor: key.split('-SPLIT-')[3]
+                                                    backgroundColor: key.split('-SPLIT-')[3],
                                                 }}
                                             />
                                             <Text
@@ -2947,7 +3339,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     flex: 1,
                                                     backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                                     lineHeight: 18,
-                                                    color: collapseMap[key] ? '#000000' : '#1a3026'
+                                                    color: collapseMap[key] ? '#000000' : '#1a3026',
                                                 }}
                                             >
                                                 {' '}
@@ -2958,7 +3350,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             style={{
                                                 backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                                 paddingTop: 5,
-                                                paddingLeft: 15
+                                                paddingLeft: 15,
                                             }}
                                         >
                                             <View
@@ -2966,7 +3358,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     flexDirection: 'row',
                                                     justifyContent: 'center',
                                                     display: 'flex',
-                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff'
+                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                                 }}
                                             >
                                                 <TouchableOpacity
@@ -2987,7 +3379,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         style={{
                                                             textAlign: 'center',
                                                             lineHeight: 30,
-                                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff'
+                                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                                         }}
                                                     >
                                                         <Ionicons
@@ -3014,7 +3406,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             alignSelf: 'center',
                                             width: '100%',
                                             paddingBottom: 20,
-                                            paddingTop: 9
+                                            paddingTop: 9,
                                         }}
                                     >
                                         <TouchableOpacity
@@ -3022,7 +3414,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 flex: 1,
                                                 flexDirection: 'row',
                                                 backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
-                                                alignItems: 'center'
+                                                alignItems: 'center',
                                             }}
                                             onPress={() => {
                                                 const tempCollapse = JSON.parse(JSON.stringify(collapseMap));
@@ -3042,7 +3434,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     height: 12,
                                                     marginRight: 5,
                                                     borderRadius: 9,
-                                                    backgroundColor: '#000000'
+                                                    backgroundColor: '#000000',
                                                 }}
                                             />
                                             <Text
@@ -3054,7 +3446,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     fontFamily: 'inter',
                                                     flex: 1,
                                                     lineHeight: 18,
-                                                    color: collapseMap[key] ? '#000000' : '#1F1F1F'
+                                                    color: collapseMap[key] ? '#000000' : '#1F1F1F',
                                                 }}
                                             >
                                                 {key}
@@ -3065,7 +3457,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 flexDirection: 'row',
                                                 justifyContent: 'space-evenly',
                                                 backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
-                                                paddingTop: 5
+                                                paddingTop: 5,
                                             }}
                                         >
                                             <View
@@ -3074,7 +3466,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     paddingLeft: 7,
                                                     justifyContent: 'center',
                                                     display: 'flex',
-                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff'
+                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                                 }}
                                             >
                                                 <TouchableOpacity
@@ -3095,7 +3487,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         style={{
                                                             textAlign: 'center',
                                                             lineHeight: 30,
-                                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff'
+                                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
                                                         }}
                                                     >
                                                         <Ionicons
@@ -3121,7 +3513,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         backgroundColor: '#f2f2f2',
                                         borderColor: '#f2f2f2',
                                         borderBottomWidth:
-                                            collapseMap[key] && ind !== Object.keys(cueMap).length - 1 ? 1 : 0
+                                            collapseMap[key] && ind !== Object.keys(cueMap).length - 1 ? 1 : 0,
                                     }}
                                     key={collapseMap.toString()}
                                 >
@@ -3130,7 +3522,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             width: '100%',
                                             maxWidth: 900,
                                             backgroundColor: '#f2f2f2',
-                                            paddingHorizontal: width < 768 ? 20 : 0
+                                            paddingHorizontal: width < 768 ? 20 : 0,
                                         }}
                                     >
                                         {collapseMap[key] ? (
@@ -3158,7 +3550,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         <View
                                                             style={{
                                                                 alignItems: 'center',
-                                                                backgroundColor: '#f2f2f2'
+                                                                backgroundColor: '#f2f2f2',
                                                             }}
                                                         >
                                                             {key.split('-SPLIT-')[2] === userId ? (
@@ -3166,7 +3558,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     style={{
                                                                         width: '100%',
                                                                         marginBottom: 20,
-                                                                        backgroundColor: '#f2f2f2'
+                                                                        backgroundColor: '#f2f2f2',
                                                                     }}
                                                                 >
                                                                     <TouchableOpacity
@@ -3183,7 +3575,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                             marginTop: 20,
                                                                             justifyContent: 'center',
                                                                             flexDirection: 'row',
-                                                                            marginLeft: 'auto'
+                                                                            marginLeft: 'auto',
                                                                         }}
                                                                     >
                                                                         <Text
@@ -3198,7 +3590,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                                 fontFamily: 'inter',
                                                                                 height: 35,
                                                                                 width: 175,
-                                                                                textTransform: 'uppercase'
+                                                                                textTransform: 'uppercase',
                                                                             }}
                                                                         >
                                                                             Start Meeting
@@ -3263,7 +3655,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                 maxWidth: 400,
                                                                 alignSelf: 'center',
                                                                 borderTopRightRadius: 10,
-                                                                borderBottomRightRadius: 10
+                                                                borderBottomRightRadius: 10,
                                                             }}
                                                         >
                                                             <ChannelSettings
@@ -3287,7 +3679,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             paddingBottom: 50,
                                                             paddingHorizontal: 5,
                                                             fontFamily: 'inter',
-                                                            flex: 1
+                                                            flex: 1,
                                                         }}
                                                     >
                                                         {PreferredLanguageText('noCuesCreated')}
@@ -3298,7 +3690,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         contentContainerStyle={{
                                                             // maxWidth: '100%',
                                                             backgroundColor: '#f2f2f2',
-                                                            paddingHorizontal: 20
+                                                            paddingHorizontal: 20,
                                                         }}
                                                         showsHorizontalScrollIndicator={false}
                                                         key={
@@ -3325,14 +3717,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                         width: '100%',
                                                                         maxWidth: 130,
                                                                         backgroundColor: '#f2f2f2',
-                                                                        marginRight: 15
+                                                                        marginRight: 15,
                                                                     }}
                                                                     key={i}
                                                                 >
                                                                     <View
                                                                         style={{
                                                                             backgroundColor: '#f2f2f2',
-                                                                            paddingLeft: 5
+                                                                            paddingLeft: 5,
                                                                         }}
                                                                     >
                                                                         <Text
@@ -3344,7 +3736,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                                 fontSize: 12,
                                                                                 lineHeight: 25,
                                                                                 fontFamily: 'inter',
-                                                                                backgroundColor: '#f2f2f2'
+                                                                                backgroundColor: '#f2f2f2',
                                                                             }}
                                                                             ellipsizeMode="tail"
                                                                         >
@@ -3357,7 +3749,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                             maxWidth: 130,
                                                                             paddingLeft: 5,
                                                                             backgroundColor: '#f2f2f2',
-                                                                            width: '100%'
+                                                                            width: '100%',
                                                                             // height: 190
                                                                         }}
                                                                         key={i.toString() + key.toString()}
@@ -3375,7 +3767,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                                         marginBottom: 15,
                                                                                         backgroundColor: '#f2f2f2',
                                                                                         width: '100%',
-                                                                                        maxWidth: 130
+                                                                                        maxWidth: 130,
                                                                                     }}
                                                                                     key={index}
                                                                                 >
@@ -3471,7 +3863,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         <View
             style={{
                 height: windowHeight,
-                backgroundColor: props.option === 'To Do' ? '#f2f2f2' : '#fff'
+                backgroundColor: props.option === 'To Do' ? '#f2f2f2' : '#fff',
             }}
         >
             {/* {renderInstantMeetingPopup()} */}
@@ -3734,41 +4126,42 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </View>
                 </View>
             </View> */}
-            {// searchTerm === '' ? (
-            props.modalType === 'Create' && (props.option === 'Classroom' || props.option === 'Browse') ? (
-                <Create
-                    key={JSON.stringify(props.customCategories)}
-                    customCategories={props.customCategories}
-                    closeModal={() => props.closeModal()}
-                    closeOnCreate={() => props.closeOnCreate()}
-                    option={props.option}
-                    version={props.version}
-                />
-            ) : (
-                <View
-                    style={{
-                        alignSelf: 'center',
-                        width: '100%',
-                        backgroundColor: props.option === 'To Do' ? '#f2f2f2' : '#fff',
-                        height: width < 768 ? windowHeight - 104 : windowHeight - 52
-                    }}
-                >
-                    {props.option === 'Settings' ? (
-                        <AccountPage
-                            closeModal={() => {}}
-                            saveDataInCloud={() => props.saveDataInCloud()}
-                            reOpenProfile={() => props.reOpenProfile()}
-                            reloadData={() => props.reloadData()}
-                            setShowHelp={(val: any) => props.setShowHelp(val)}
-                            showHelp={props.showHelp}
-                            setShowCreate={(val: any) => props.setShowCreate(val)}
-                            showCreate={props.showCreate}
-                            // closeModal={() => {}}
-                            subscriptions={props.subscriptions}
-                            refreshSubscriptions={props.refreshSubscriptions}
-                        />
-                    ) : null}
-                    {/* {props.option === 'Channels' ? (
+            {
+                // searchTerm === '' ? (
+                props.modalType === 'Create' && (props.option === 'Classroom' || props.option === 'Browse') ? (
+                    <Create
+                        key={JSON.stringify(props.customCategories)}
+                        customCategories={props.customCategories}
+                        closeModal={() => props.closeModal()}
+                        closeOnCreate={() => props.closeOnCreate()}
+                        option={props.option}
+                        version={props.version}
+                    />
+                ) : (
+                    <View
+                        style={{
+                            alignSelf: 'center',
+                            width: '100%',
+                            backgroundColor: props.option === 'To Do' ? '#f2f2f2' : '#fff',
+                            height: width < 768 ? windowHeight - 104 : windowHeight - 52,
+                        }}
+                    >
+                        {props.option === 'Settings' ? (
+                            <AccountPage
+                                closeModal={() => {}}
+                                saveDataInCloud={() => props.saveDataInCloud()}
+                                reOpenProfile={() => props.reOpenProfile()}
+                                reloadData={() => props.reloadData()}
+                                setShowHelp={(val: any) => props.setShowHelp(val)}
+                                showHelp={props.showHelp}
+                                setShowCreate={(val: any) => props.setShowCreate(val)}
+                                showCreate={props.showCreate}
+                                // closeModal={() => {}}
+                                subscriptions={props.subscriptions}
+                                refreshSubscriptions={props.refreshSubscriptions}
+                            />
+                        ) : null}
+                        {/* {props.option === 'Channels' ? (
                         <Channels
                             setShowCreate={(val: any) => props.setShowCreate(val)}
                             showCreate={props.showCreate}
@@ -3777,45 +4170,88 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             refreshSubscriptions={props.refreshSubscriptions}
                         />
                     ) : null} */}
-                    {props.option === 'Classroom' || showSearchMobile
-                        ? Dimensions.get('window').width < 768
-                            ? overviewMobile
-                            : overview
-                        : null}
-                    {props.option === 'To Do' && !showSearchMobile ? (
-                        <CalendarX
-                            tab={props.tab}
-                            version={props.version}
-                            setTab={(val: any) => props.setTab(val)}
-                            filterStart={filterStart}
-                            filterEnd={filterEnd}
-                            cues={props.calendarCues}
-                            subscriptions={props.subscriptions}
-                            openCueFromCalendar={props.openCueFromCalendar}
-                            openDiscussion={props.openDiscussionFromActivity}
-                            openChannel={props.openChannelFromActivity}
-                            openQA={props.openQAFromActivity}
-                            filterByChannel={filterByChannel}
-                            activityChannelId={activityChannelId}
-                            filterEventsType={filterEventsType}
-                            showSearchMobile={showSearchMobile}
-                            setShowSearchMobile={(val: boolean) => setShowSearchMobile(val)}
-                        />
-                    ) : null}
-                    {props.option === 'Inbox' ? (
-                        <Inbox
-                            showDirectory={props.showDirectory}
-                            setShowDirectory={(val: any) => props.setShowDirectory(val)}
-                            subscriptions={props.subscriptions}
-                            refreshUnreadInbox={props.refreshUnreadInbox}
-                            hideNewChatButton={props.hideNewChatButton}
-                        />
-                    ) : null}
-                </View>
-                //     )
-                // ) : (
-                //     searchResults
-            )}
+                        {props.option === 'Classroom' || showSearchMobile
+                            ? Dimensions.get('window').width < 768
+                                ? overviewMobile
+                                : overview
+                            : null}
+                        {Dimensions.get('window').width < 768 &&
+                        selectedWorkspace &&
+                        indexMap[selectedWorkspace] === 0 ? (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setShowCategoryList(true);
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    marginRight:
+                                        Dimensions.get('window').width >= 1100
+                                            ? (Dimensions.get('window').width - 1100) / 2 - 25
+                                            : Dimensions.get('window').width >= 768
+                                            ? 30
+                                            : 24,
+                                    marginBottom: Dimensions.get('window').width < 768 ? 77 : 75,
+                                    right: 0,
+                                    justifyContent: 'center',
+                                    bottom: 0,
+                                    width: 45,
+                                    height: 45,
+                                    borderRadius: 29,
+                                    backgroundColor: '#006aff',
+                                    borderColor: '#f2f2f2',
+                                    borderWidth: 0,
+                                    shadowColor: '#000',
+                                    shadowOffset: {
+                                        width: 4,
+                                        height: 4,
+                                    },
+                                    shadowOpacity: 0.12,
+                                    shadowRadius: 10,
+                                    zIndex: 500000,
+                                }}
+                            >
+                                <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
+                                    <Ionicons name="list-outline" size={25} />
+                                </Text>
+                            </TouchableOpacity>
+                        ) : null}
+                        {props.option === 'To Do' && !showSearchMobile ? (
+                            <CalendarX
+                                tab={props.tab}
+                                version={props.version}
+                                setTab={(val: any) => props.setTab(val)}
+                                filterStart={filterStart}
+                                filterEnd={filterEnd}
+                                cues={props.calendarCues}
+                                subscriptions={props.subscriptions}
+                                openCueFromCalendar={props.openCueFromCalendar}
+                                openDiscussion={props.openDiscussionFromActivity}
+                                openChannel={props.openChannelFromActivity}
+                                openQA={props.openQAFromActivity}
+                                filterByChannel={filterByChannel}
+                                activityChannelId={activityChannelId}
+                                filterEventsType={filterEventsType}
+                                showSearchMobile={showSearchMobile}
+                                setShowSearchMobile={(val: boolean) => setShowSearchMobile(val)}
+                            />
+                        ) : null}
+                        {props.option === 'Inbox' ? (
+                            <Inbox
+                                showDirectory={props.showDirectory}
+                                setShowDirectory={(val: any) => props.setShowDirectory(val)}
+                                subscriptions={props.subscriptions}
+                                refreshUnreadInbox={props.refreshUnreadInbox}
+                                hideNewChatButton={props.hideNewChatButton}
+                                showSearchMobile={showSearchMobile}
+                                setShowSearchMobile={(val: boolean) => setShowSearchMobile(val)}
+                            />
+                        ) : null}
+                    </View>
+                    //     )
+                    // ) : (
+                    //     searchResults
+                )
+            }
             {showFilterModal && (
                 <BottomSheet
                     snapPoints={[0, '55%']}
@@ -3825,6 +4261,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     isOpen={showFilterModal}
                     title={'Filter'}
                     renderContent={() => renderFilterModalContent()}
+                    header={false}
+                    callbackNode={fall}
+                />
+            )}
+            {showCategoryList && (
+                <BottomSheet
+                    snapPoints={[0, '80%']}
+                    close={() => {
+                        setShowCategoryList(false);
+                    }}
+                    isOpen={showCategoryList}
+                    title={'Contents'}
+                    renderContent={() => renderCategorySelectionContent()}
                     header={false}
                     callbackNode={fall}
                 />
@@ -3840,11 +4289,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         top: 0,
                         left: 0,
                         width: '100%',
-                        position: 'absolute'
+                        position: 'absolute',
                     }}
                 ></Reanimated.View>
             ) : null}
-            {showFilterModal ? (
+            {showFilterModal || showCategoryList ? (
                 <Reanimated.View
                     style={{
                         alignItems: 'center',
@@ -3854,7 +4303,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         top: 0,
                         left: 0,
                         width: '100%',
-                        position: 'absolute'
+                        position: 'absolute',
                     }}
                 ></Reanimated.View>
             ) : null}
@@ -4004,7 +4453,7 @@ const styleObject: any = () =>
             lineHeight: 24,
             fontFamily: 'overpass',
             fontWeight: 'bold',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
         },
         allGrayFill: {
             fontSize: 14,
@@ -4015,7 +4464,7 @@ const styleObject: any = () =>
             lineHeight: 24,
             height: 24,
             fontFamily: 'inter',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
         },
         all1: {
             fontSize: 10,
@@ -4025,7 +4474,7 @@ const styleObject: any = () =>
             backgroundColor: '#f2f2f2',
             lineHeight: 20,
             fontFamily: 'inter',
-            textAlign: 'center'
+            textAlign: 'center',
         },
         allGrayFill1: {
             fontSize: 10,
@@ -4034,7 +4483,7 @@ const styleObject: any = () =>
             paddingHorizontal: 7,
             lineHeight: 20,
             fontFamily: 'inter',
-            textAlign: 'center'
+            textAlign: 'center',
         },
         timePicker: {
             width: 125,
@@ -4042,6 +4491,13 @@ const styleObject: any = () =>
             height: 45,
             color: 'black',
             borderRadius: 10,
-            marginLeft: 10
-        }
+            marginLeft: 10,
+        },
+        slider: {
+            marginTop: 15,
+            overflow: 'visible', // for custom animations
+        },
+        sliderContentContainer: {
+            paddingVertical: 10, // for custom animation
+        },
     });

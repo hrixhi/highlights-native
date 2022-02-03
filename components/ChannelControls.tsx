@@ -505,7 +505,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     setIsSubmitting(false);
                     switch (channelCreateStatus) {
                         case "created":
-                            Alert("Channel created successfully")
+                            Alert("Course created successfully")
                             props.closeModal()
                             // Refresh subs
                             props.refreshSubscriptions()

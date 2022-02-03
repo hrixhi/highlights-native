@@ -209,6 +209,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [showAvailableUntilTimeAndroid, setShowAvailableUntilTimeAndroid] = useState(false);
     const [showAvailableUntilDateAndroid, setShowAvailableUntilDateAndroid] = useState(false);
 
+    const [quizEditorRef, setQuizEditorRef] = useState<any>(null);
+
     // ALERTS
     const unableToStartQuizAlert = PreferredLanguageText('unableToStartQuiz');
     const cueDeletedAlert = PreferredLanguageText('cueDeleted');
@@ -443,6 +445,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 }
 
                                 if (solutionsObject.attempts !== undefined) {
+                                    console.log("Quiz Attempts", solutionsObject.attempts)
                                     setQuizAttempts(solutionsObject.attempts);
 
                                     // FInd the active one and set it to quizSolutions
@@ -527,6 +530,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         setLoading(false);
     }, [props.cue, cue, loading, original]);
 
+
     /**
      * @description Imports for local cues
      */
@@ -570,6 +574,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         setSubmissionDraft(obj.submissionDraft);
                     }
 
+                   
+                }
+
+                if (obj.attempts) {
                     setSubmissionAttempts(obj.attempts);
                 }
             }
@@ -582,6 +590,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     useEffect(() => {
         updateStatusAsRead();
     }, [props.cue.status]);
+
+    /**
+     * @description 
+     */
+    useEffect(() => {
+        setViewSubmission(props.viewSubmission);
+    }, [props.viewSubmission])
 
     /**
      * @description Handle Save when props.save
@@ -610,6 +625,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             props.setSave(false);
         }
     }, [props.save, props.channelOwner, props.showOriginal]);
+
+    /**
+     * @description Handle Save when props.save
+     */
+     useEffect(() => {
+        if (props.submit) {
+            handleSubmit()
+            props.setSubmit(false);
+        }
+    }, [props.submit]);
 
     /**
      * @description Handle Delete when props.del
@@ -933,6 +958,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
 
         setEditorFocus(false);
+        props.setEditorFocus(false);
 
         updateAfterFileImport(res.url, res.type);
     }, [RichText, RichText.current]);
@@ -947,6 +973,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
 
         setEditorFocus(false);
+        props.setEditorFocus(false);
 
         updateAfterFileImport(res.url, res.type);
     }, [RichText, RichText.current, userId]);
@@ -990,33 +1017,56 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         [RichText, RichText.current]
     );
 
-    const handleEmoji = useCallback(() => {
-        Keyboard.dismiss();
-        // RichText.current?.blurContentEditor();
-        setEmojiVisible(!emojiVisible);
-        setForeColorVisible(false);
-        setHiliteColorVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, emojiVisible]);
+    
+    const handleEmoji = useCallback(
+        (editorRef: any) => {
+            Keyboard.dismiss();
+            // RichText.current?.blurContentEditor();
+            setEmojiVisible(!emojiVisible);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
 
-    const handleHiliteColor = useCallback(() => {
-        Keyboard.dismiss();
-        setHiliteColorVisible(!hiliteColorVisible);
-        setForeColorVisible(false);
-        setEmojiVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, hiliteColorVisible]);
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, emojiVisible]
+    );
 
-    const handleForeColor = useCallback(() => {
-        Keyboard.dismiss();
-        setForeColorVisible(!foreColorVisible);
-        setHiliteColorVisible(false);
-        setEmojiVisible(false);
-        setInsertImageVisible(false);
-        setInsertLinkVisible(false);
-    }, [RichText, RichText.current, foreColorVisible]);
+
+    const handleHiliteColor = useCallback(
+        (editorRef: any) => {
+            Keyboard.dismiss();
+            setHiliteColorVisible(!hiliteColorVisible);
+            setForeColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, hiliteColorVisible]
+    );
+
+    const handleForeColor = useCallback(
+        (editorRef: any) => {
+            Keyboard.dismiss();
+            setForeColorVisible(!foreColorVisible);
+            setHiliteColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, foreColorVisible]
+    );
 
     // const handleRemoveFormat = useCallback(() => {
     //     RichText.current?.setHiliteColor('#ffffff');
@@ -1024,12 +1074,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     //     // RichText.current?.setFontSize(3);
     // }, [RichText, RichText.current]);
 
-    const handleAddImage = useCallback(async () => {
+    const handleAddImage = useCallback((editorRef: any) => {
         setInsertImageVisible(true);
         setForeColorVisible(false);
         setHiliteColorVisible(false);
         setEmojiVisible(false);
         setInsertLinkVisible(false);
+
+        if (editorRef) {
+            setQuizEditorRef(editorRef);
+        }
     }, []);
 
     const uploadImageHandler = useCallback(
@@ -1037,30 +1091,49 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             const url = await handleImageUpload(takePhoto, userId);
 
             if (url && url !== '') {
-                RichText.current?.insertImage(url);
+                if (quizEditorRef && quizEditorRef.current) {
+                    quizEditorRef.current?.insertImage(url);
+                    setQuizEditorRef(null);
+                } else {
+                    RichText.current?.insertImage(url);
+                }
             }
 
             setInsertImageVisible(false);
         },
-        [RichText, RichText.current, userId]
+        [RichText, RichText.current, quizEditorRef, userId]
     );
 
-    const handleInsertLink = useCallback(() => {
-        setInsertLinkVisible(true);
-        setInsertImageVisible(false);
-        setForeColorVisible(false);
-        setHiliteColorVisible(false);
-        setEmojiVisible(false);
-    }, [RichText, RichText.current]);
 
-    const onInsertLink = useCallback(
-        (title, link) => {
-            RichText.current?.insertLink(title, link);
-            Keyboard.dismiss();
-            setInsertLinkVisible(false);
+    const handleInsertLink = useCallback(
+        (editorRef: any) => {
+            setInsertLinkVisible(true);
+            setInsertImageVisible(false);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setEmojiVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
         },
         [RichText, RichText.current]
     );
+
+    const onInsertLink = useCallback(
+        (title, link) => {
+            if (quizEditorRef && quizEditorRef.current) {
+                quizEditorRef.current?.insertLink(title, link);
+            } else {
+                RichText.current?.insertLink(title, link);
+            }
+
+            Keyboard.dismiss();
+            setInsertLinkVisible(false);
+        },
+        [RichText, RichText.current, quizEditorRef]
+    );
+
 
     /**
      * @description Insert equation into Cue
@@ -2784,7 +2857,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     </View>
                 ) : null}
 
-                {props.cue.submittedAt && props.cue.submittedAt !== '' && !props.cue.graded ? (
+                {/* {props.cue.submittedAt && props.cue.submittedAt !== '' && !props.cue.graded ? (
                     <View style={{ flexDirection: 'row', marginTop: 10 }}>
                         {viewSubmission ? (
                             props.cue.releaseSubmission ||
@@ -2824,25 +2897,26 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 </TouchableOpacity>
                             )
                         ) : (
-                            <TouchableOpacity
-                                onPress={async () => {
-                                    setViewSubmission(true);
-                                }}
-                                style={{
-                                    backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    justifyContent: 'center',
-                                    flexDirection: 'row'
-                                }}
-                            >
-                                <Text>
-                                    <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
-                                </Text>
-                            </TouchableOpacity>
+                            // <TouchableOpacity
+                            //     onPress={async () => {
+                            //         setViewSubmission(true);
+                            //     }}
+                            //     style={{
+                            //         backgroundColor: 'white',
+                            //         overflow: 'hidden',
+                            //         height: 35,
+                            //         justifyContent: 'center',
+                            //         flexDirection: 'row'
+                            //     }}
+                            // >
+                            //     <Text>
+                            //         <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
+                            //     </Text>
+                            // </TouchableOpacity>
+                            null
                         )}
                     </View>
-                ) : null}
+                ) : null} */}
             </View>
         );
     };
@@ -2918,10 +2992,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         );
     };
 
+    console.log("viewSubmission", viewSubmission)
+    console.log("Submission imported", submissionImported)
+
     /**
      * @description Renders main cue content
      */
     const renderMainCueContent = () => {
+
         return (
             <View
                 style={{
@@ -2998,28 +3076,47 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             </View>
                         )
                     ) : (
-                        <View style={{ width: '100%', flexDirection: 'column' }}>
-                            {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
-                            <Quiz
-                                isOwner={isOwner}
-                                submitted={
-                                    isQuiz && props.cue.submittedAt && props.cue.submittedAt !== '' ? true : false
-                                }
-                                graded={props.cue.graded || currentDate >= deadline}
-                                solutions={solutions}
-                                problems={problems}
-                                setSolutions={(s: any) => setSolutions(s)}
-                                shuffleQuiz={shuffleQuiz}
-                                instructions={instructions}
-                                headers={headers}
-                                modifyQuiz={updateQuiz}
-                                unmodifiedProblems={unmodifiedProblems}
-                                duration={duration}
-                                remainingAttempts={remainingAttempts}
-                                quizAttempts={quizAttempts}
-                            />
-                            {renderFooter()}
-                        </View>
+                        <ScrollView
+                            contentContainerStyle={{
+                                paddingBottom: 150,
+                                paddingHorizontal: 10
+                            }}
+                            showsVerticalScrollIndicator={false}
+                            scrollEnabled={true}
+                            scrollEventThrottle={1}
+                            // keyboardDismissMode={'on-drag'}
+                            overScrollMode={'always'}
+                            nestedScrollEnabled={true}
+                        >
+                            <View style={{ width: '100%', flexDirection: 'column' }}>
+                                {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
+                                <Quiz
+                                    isOwner={isOwner}
+                                    submitted={
+                                        isQuiz && props.cue.submittedAt && props.cue.submittedAt !== '' ? true : false
+                                    }
+                                    graded={props.cue.graded || currentDate >= deadline}
+                                    solutions={solutions}
+                                    problems={problems}
+                                    setSolutions={(s: any) => setSolutions(s)}
+                                    shuffleQuiz={shuffleQuiz}
+                                    instructions={instructions}
+                                    headers={headers}
+                                    modifyQuiz={updateQuiz}
+                                    unmodifiedProblems={unmodifiedProblems}
+                                    duration={duration}
+                                    remainingAttempts={remainingAttempts}
+                                    quizAttempts={quizAttempts}
+                                    // New 
+                                    handleAddImage={handleAddImage}
+                                    handleInsertLink={handleInsertLink}
+                                    handleHiliteColor={handleHiliteColor}
+                                    handleForeColor={handleForeColor}
+                                    handleEmoji={handleEmoji}
+                                />
+                                {renderFooter()}
+                            </View>
+                        </ScrollView>
                     )
                 ) : imported ? (
                     type === 'mp4' ||
@@ -3071,9 +3168,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             />
                         </View>
                     )
-                ) : (
-                    renderRichEditorOriginalCue()
-                )}
+                ) : // renderRichEditorOriginalCue()
+                null}
                 {!props.showOriginal && submissionImported && !viewSubmission ? (
                     submissionType === 'mp4' ||
                     submissionType === 'oga' ||
@@ -3103,7 +3199,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         </View>
                     ) : (
                         <View
-                            style={{}}
+                            style={{ flex: 1 }}
                             key={
                                 JSON.stringify(submissionImported) +
                                 JSON.stringify(viewSubmission) +
@@ -3111,8 +3207,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             }
                         >
                             <WebView
-                                style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
-                                source={{ uri: originalPdfviewerURL }}
+                                // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
+                                source={{ uri: submissionPdfviewerURL }}
                             />
                             {renderFooter()}
                         </View>
@@ -3120,19 +3216,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 ) : null}
 
                 {props.showOriginal ? null : (
-                    <View style={{ width: '100%', paddingBottom: 50, display: 'flex', flexDirection: 'column' }}>
-                        {!viewSubmission ? (
-                            submissionImported ? null : (
-                                <View>
-                                    {props.cue.releaseSubmission ||
-                                    (!allowLateSubmission && new Date() > deadline) ||
-                                    (allowLateSubmission && new Date() > availableUntil)
-                                        ? null
-                                        : renderRichEditorModified()}
-                                    {renderFooter()}
-                                </View>
-                            )
-                        ) : (
+                    <View style={{ width: '100%', paddingBottom: 50, display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        {!viewSubmission ? null : (
                             <View
                                 key={
                                     JSON.stringify(submissionImported) +
@@ -3157,11 +3242,27 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
         if (!isOwner && props.cue.channelId && props.cue.channelId !== '') {
             return (
-                <RenderHtml
-                    source={{
-                        html: initialOriginal
+                <ScrollView
+                    contentContainerStyle={{
+                        paddingBottom: 150,
+                        paddingHorizontal: 10
                     }}
-                />
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={true}
+                    scrollEventThrottle={1}
+                    // keyboardDismissMode={'on-drag'}
+                    overScrollMode={'always'}
+                    nestedScrollEnabled={true}
+                >
+                    <RenderHtml
+                        source={{
+                            html: initialOriginal,
+                        }}
+                        defaultTextProps={{
+                            selectable: true
+                        }}
+                    />
+                </ScrollView>
             );
         }
 
@@ -3403,8 +3504,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const renderViewSubmission = () => {
         const attempt = submissionAttempts[submissionAttempts.length - 1];
 
+        console.log("submission Attempts", submissionAttempts)
+        console.log("Attempt", attempt)
+
+
+        console.log("submissionPdfviewerURL", submissionPdfviewerURL)
+
         return (
-            <View style={{ width: '100%', marginTop: 20 }}>
+            <View style={{ width: '100%', marginTop: 20, flex: 1, height: '100%', flexDirection: 'column' }}>
                 {/* Render Tabs to switch between original submission and Annotations only if submission was HTML and not a file upload */}
                 {/* {attempt.url !== undefined ? null : <View style={{ flexDirection: "row", width: '100%', justifyContent: 'center' }}>
                 <TouchableOpacity
@@ -3432,6 +3539,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     </Text>
                 </TouchableOpacity>
             </View>} */}
+            {props.showOptions ||
+                        props.showComments ||
+                        isOwner ||
+                        props.showOriginal ||
+                        props.viewStatus ||
+                        !submission ||
+                        isQuiz
+                            ? null
+                        : renderSubmissionHistory()}
                 {attempt.url !== undefined ? (
                     attempt.type === 'mp4' ||
                     attempt.type === 'oga' ||
@@ -3477,11 +3593,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         </View>
                     ) : (
                         <View
-                            style={{ width: '100%', marginTop: 25 }}
+                            style={{ width: '100%', marginTop: 25, flex: 1 }}
                             key={
                                 JSON.stringify(viewSubmission) +
                                 JSON.stringify(attempt) +
                                 JSON.stringify(props.showOriginal) +
+                                JSON.stringify(props.showOptions) +
                                 JSON.stringify(submissionAttempts)
                             }
                         >
@@ -3519,13 +3636,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     JSON.stringify(props.showOriginal) +
                                     JSON.stringify(submissionAttempts)
                                 }
-                                style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
+                                // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
                                 source={{ uri: submissionPdfviewerURL }}
+                                style={{ height: 500, width: '100%', flex: 1 }}
                             />
                         </View>
                     )
                 ) : (
-                    <View style={{ width: '100%', marginTop: 25 }} key={JSON.stringify(attempt)}>
+                    <View style={{ width: '100%', marginTop: 25, flex: 1 }} key={JSON.stringify(attempt)}>
                         {viewSubmissionTab === 'mySubmission' ? (
                             <Text className="mce-content-body htmlParser" style={{ width: '100%', color: 'black' }}>
                                 {/* {parser(attempt.html)} */}
@@ -3538,9 +3656,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             //     style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
                             //     key={viewSubmissionTab}></div>
                             <WebView
-                                key={viewSubmissionTab}
+                                // key={viewSubmissionTab}
                                 source={{ uri: submissionPdfviewerURL }}
-                                style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
+                                style={{ height: 500, width: '100%', flex: 1 }}
                             />
                         )}
                     </View>
@@ -3657,7 +3775,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 initialContentHTML={initialSubmissionDraft}
                                 initialHeight={400}
                                 onScroll={() => Keyboard.dismiss()}
-                                placeholder={PreferredLanguageText('title')}
+                                placeholder={'Submission Title'}
                                 onChange={text => {
                                     const modifedText = text.split('&amp;').join('&');
                                     setSubmissionDraft(modifedText);
@@ -4220,7 +4338,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 backgroundColor: 'white',
                                 justifyContent: width < 768 ? 'flex-start' : 'flex-end',
                                 alignItems: 'center',
-                                marginLeft: 'auto'
+                                marginLeft: isOwner ? 'auto' : 0
                             }}
                         >
                             {isOwner ? (
@@ -4245,7 +4363,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     fontSize: 14,
                                     color: '#1F1F1F',
                                     textAlign: 'left',
-                                    paddingHorizontal: 10,
+                                    paddingHorizontal: isOwner ? 10 : 0,
                                     fontFamily: 'Inter'
                                 }}
                             >
@@ -5327,6 +5445,28 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         );
     }
 
+    const wrapMainCueContentWithScrollView = () => {
+        console.log("Rendering wrapMainCueContentWithScrollView");
+        return isQuiz || imported || !props.showOriginal || (!props.showOriginal && viewSubmission) ? (
+            <ScrollView
+                contentContainerStyle={{
+                    paddingBottom: 150,
+                    paddingHorizontal: 10
+                }}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+                scrollEventThrottle={1}
+                // keyboardDismissMode={'on-drag'}
+                overScrollMode={'always'}
+                nestedScrollEnabled={true}
+            >
+                {renderMainCueContent()}
+            </ScrollView>
+        ) : (
+            renderRichEditorOriginalCue()
+        );
+    };
+
     // MAIN RETURN
     return (
         <View
@@ -5339,7 +5479,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 height: '100%'
             }}
         >
-            {props.showOriginal &&
+            {(props.showOriginal &&
             ((remainingAttempts !== 0 &&
                 !(!allowLateSubmission && new Date() > deadline) &&
                 !(allowLateSubmission && new Date() > availableUntil) &&
@@ -5347,21 +5487,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 !isOwner &&
                 isQuiz) ||
                 !isQuiz ||
-                isOwner) ? (
-                <ScrollView
-                    contentContainerStyle={{
-                        paddingBottom: 150,
-                        paddingHorizontal: 10
-                    }}
-                    showsVerticalScrollIndicator={false}
-                    scrollEnabled={true}
-                    scrollEventThrottle={1}
-                    // keyboardDismissMode={'on-drag'}
-                    overScrollMode={'always'}
-                    nestedScrollEnabled={true}
-                >
-                    {renderMainCueContent()}
-                </ScrollView>
+                isOwner) || (!props.showOriginal && !props.showOptions && viewSubmission)) ? (
+                wrapMainCueContentWithScrollView()
             ) : (
                 <Animated.View
                     style={{
@@ -5441,70 +5568,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         </TouchableOpacity> */}
                         </View>
                     ) : null}
-                    {props.showOptions ||
-                    props.showComments ||
-                    isOwner ||
-                    props.showOriginal ||
-                    props.viewStatus ||
-                    !submission ||
-                    isQuiz
-                        ? null
-                        : renderSubmissionHistory()}
-
-                    {props.showOptions || props.showComments || viewSubmission ? null : (
-                        <View
-                            style={{
-                                width: '100%',
-                                display: 'flex',
-                                flexDirection: Dimensions.get('window').width < 768 ? 'column-reverse' : 'row',
-                                marginBottom: 5,
-                                backgroundColor: 'white',
-                                borderBottomColor: '#f2f2f2'
-                            }}
-                            onTouchStart={() => Keyboard.dismiss()}
-                        >
-                            <View
-                                style={{
-                                    flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-                                    flex: 1
-                                }}
-                            >
-                                {(!props.showOriginal &&
-                                    props.cue.submission &&
-                                    !submissionImported &&
-                                    showImportOptions) ||
-                                (props.showOriginal && showImportOptions && (isOwner || !props.cue.channelId)) ? (
-                                    <FileUpload
-                                        back={() => setShowImportOptions(false)}
-                                        onUpload={(u: any, t: any) => {
-                                            if (props.showOriginal) {
-                                                setOriginal(
-                                                    JSON.stringify({
-                                                        url: u,
-                                                        type: t,
-                                                        title
-                                                    })
-                                                );
-                                            } else {
-                                                setSubmissionDraft(
-                                                    JSON.stringify({
-                                                        url: u,
-                                                        type: t,
-                                                        title: submissionTitle,
-                                                        annotations: ''
-                                                    })
-                                                );
-                                                setSubmissionImported(true);
-                                                setSubmissionType(t);
-                                                setSubmissionUrl(u);
-                                            }
-                                            setShowImportOptions(false);
-                                        }}
-                                    />
-                                ) : null}
-                            </View>
-                        </View>
-                    )}
                     <ScrollView
                         contentContainerStyle={{
                             paddingBottom: 150,
@@ -5606,6 +5669,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         isOwner={false}
                                         headers={headers}
                                         attempts={quizAttempts}
+                                        // 
+                                        handleAddImage={handleAddImage}
+                                        handleInsertLink={handleInsertLink}
+                                        handleHiliteColor={handleHiliteColor}
+                                        handleForeColor={handleForeColor}
+                                        handleEmoji={handleEmoji}
                                     />
                                 ) : (remainingAttempts === 0 ||
                                       props.cue.releaseSubmission ||
@@ -5653,6 +5722,30 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 </Animated.View>
             )}
 
+            {!props.showOriginal &&
+            !props.showOptions &&
+            !viewSubmission &&
+            !submissionImported &&
+            !isQuiz &&
+            !isOwner &&
+            !cueGraded &&
+            !props.cue.releaseSubmission &&
+            !(
+                remainingAttempts === 0 ||
+                props.cue.releaseSubmission ||
+                (!allowLateSubmission && new Date() > deadline) ||
+                (allowLateSubmission && new Date() > availableUntil)
+            ) ? (
+                <React.Fragment>
+                    {props.cue.releaseSubmission ||
+                    (!allowLateSubmission && new Date() > deadline) ||
+                    (allowLateSubmission && new Date() > availableUntil)
+                        ? null
+                        : renderRichEditorModified()}
+                    {renderFooter()}
+                </React.Fragment>
+            ) : null}
+
             {emojiVisible && (
                 <BottomSheet
                     snapPoints={[0, 350]}
@@ -5667,7 +5760,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             )}
             {insertImageVisible && (
                 <BottomSheet
-                    snapPoints={[0, 200]}
+                    snapPoints={[0, isQuiz ? 250 : 200]}
                     close={() => {
                         setInsertImageVisible(false);
                     }}
@@ -5734,7 +5827,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             )}
             {insertLinkVisible && (
                 <BottomSheet
-                    snapPoints={[0, 350]}
+                    snapPoints={[0, isQuiz ? 400 : 350]}
                     close={() => {
                         setInsertLinkVisible(false);
                     }}
@@ -5746,7 +5839,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             )}
             {hiliteColorVisible && (
                 <BottomSheet
-                    snapPoints={[0, 350]}
+                    snapPoints={[0, isQuiz ? 400 :  350]}
                     close={() => {
                         setHiliteColorVisible(false);
                     }}
@@ -5793,7 +5886,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             )}
             {foreColorVisible && (
                 <BottomSheet
-                    snapPoints={[0, 350]}
+                    snapPoints={[0, isQuiz ? 400 : 350]}
                     close={() => {
                         setForeColorVisible(false);
                     }}

@@ -13,13 +13,13 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
     const colorScheme = 'dark';
     const styleObject = styles(colorScheme, props.colorCode || 'black');
     return (
-        <View style={styleObject.swiper}>
+        // <View style={styleObject.swiper}>
             <TouchableOpacity
                 key={'textPage'}
                 onPress={() => {
                     props.onPress();
                 }}
-                style={styleObject.card}
+                style={styleObject.swiper}
             >
                 <View style={styleObject.text}>
                     <View style={styleObject.dateContainer}>
@@ -31,10 +31,11 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                     </View>
                     <View
                         style={{
+                            backgroundColor: '#fff',
                             width: '100%',
+                            flexDirection: 'row',
                             flex: 1,
-                            height: '100%',
-                            flexDirection: 'row'
+                            height: '70%',
                         }}
                     >
                         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -43,11 +44,11 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                                 numberOfLines={1}
                                 style={{
                                     fontFamily: 'inter',
-                                    fontSize: 12,
+                                    fontSize: 13,
                                     lineHeight: 20,
                                     flex: 1,
-                                    marginTop: 5,
-                                    color: '#000000'
+                                    marginTop: 7,
+                                    color: '#000000',
                                 }}
                             >
                                 {props.title}
@@ -82,7 +83,7 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                     </View>
                 </View>
             </TouchableOpacity>
-        </View>
+        // </View>
     );
 };
 
@@ -91,45 +92,53 @@ export default SearchResultCard;
 const styles: any = (colorScheme: any, col: any) =>
     StyleSheet.create({
         swiper: {
+            height: 60,
             backgroundColor: '#fff',
-            borderRadius: 1,
-            maxWidth: 130,
-            width: 130,
             borderColor: col,
             borderLeftWidth: 3,
-            flexDirection: 'row',
-            shadowOffset: {
-                width: 2,
-                height: 2
-            },
-            overflow: 'hidden',
-            shadowOpacity: 0.07,
-            shadowRadius: 7,
-            zIndex: 500000
+            flexDirection: 'column',
+            shadowColor: '#000000',
+            shadowOffset: { width: 1, height: 1 },
+            shadowOpacity: 0.08,
+            shadowRadius: 1,
+            elevation: 0,
+            zIndex: 500000,
+            borderTopColor: '#efefef',
+            borderTopWidth: 1,
+            borderBottomColor: '#efefef',
+            borderBottomWidth: 1,
+            marginBottom: 15,
         },
-        card: {
-            height: '100%',
-            width: 130,
-            minWidth: 130,
-            padding: 10,
-            paddingHorizontal: 10,
-            backgroundColor: '#fff'
-        },
+        // card: {
+        //     height: '100%',
+        //     // borderTop
+        //     width: '100%',
+        //     padding: 7,
+        //     paddingHorizontal: 10,
+        //     backgroundColor: '#fff',
+        // },
         text: {
-            backgroundColor: 'white'
+            height: '100%',
+            // borderTop
+            width: '100%',
+            padding: 7,
+            paddingHorizontal: 10,
+            backgroundColor: '#fff',
         },
         dateContainer: {
-            fontSize: 10,
-            marginBottom: 5,
-            color: '#f2f2f2',
-            backgroundColor: 'white',
+            height: '30%',
+            backgroundColor: '#fff',
             display: 'flex',
-            flexDirection: 'row'
+            flexDirection: 'row',
+            alignItems: 'center',
         },
         date: {
-            fontSize: 9,
-            color: colorScheme === 'light' ? '#f2f2f2' : '#1F1F1F',
-            lineHeight: 10
+            fontSize: 10,
+            color: '#1F1F1F',
+            lineHeight: 12,
+            textAlign: 'left',
+            paddingVertical: 2,
+            flex: 1,
         },
         title: {
             fontFamily: 'overpass',

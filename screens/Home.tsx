@@ -1456,7 +1456,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, [cues, updateModalKey, updateModalIndex]);
 
     const closeModal = useCallback(async () => {
-        loadData();
+        await loadData();
 
         setModalType('');
 
@@ -2168,7 +2168,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         loadData();
                                     }}
                                     closeModal={() => {
-                                        setShowHome(true);
+                                        // setShowHome(true);
                                         closeModal();
                                     }}
                                     saveDataInCloud={async () => await saveDataInCloud()}

@@ -1,6 +1,6 @@
 // REACT
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, ActivityIndicator, Dimensions, KeyboardAvoidingView, StyleSheet, Platform } from 'react-native';
+import { Animated, ActivityIndicator, Dimensions, Easing, KeyboardAvoidingView, StyleSheet, Platform, } from 'react-native';
 
 // API
 import { fetchAPI } from '../graphql/FetchAPI';
@@ -29,6 +29,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SubscribersList from './SubscribersList';
 import { Ionicons } from '@expo/vector-icons';
 // import { SortableContainer, SortableElement, SortableHandle, arrayMove } from 'react-sortable-hoc';
+import SortableList from 'react-native-sortable-list';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import InsetShadow from 'react-native-inset-shadow';
 
@@ -50,12 +51,33 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [channelOwner, setChannelOwner] = useState(false);
     const [viewStatus, setViewStatus] = useState(false);
     const [submission, setSubmission] = useState(props.cue && props.cue.submission ? props.cue.submission : false);
+    const [allowLateSubmission, setAllowLateSubmission] = useState(
+        props.cue.availableUntil && props.cue.availableUntil !== ''
+    );
+    const current = new Date();
+    const dead =
+        props.cue.deadline && props.cue.deadline !== ''
+            ? props.cue.deadline === 'Invalid Date'
+                ? new Date(current.getTime() + 1000 * 60 * 60 * 24)
+                : new Date(props.cue.deadline)
+            : new Date(current.getTime() + 1000 * 60 * 60 * 24);
+    const until =
+            props.cue.availableUntil && props.cue.availableUntil !== ''
+                ? props.cue.availableUntil === 'Invalid Date'
+                    ? new Date(current.getTime() + 1000 * 60 * 60 * 48)
+                    : new Date(props.cue.availableUntil)
+                : new Date(current.getTime() + 1000 * 60 * 60 * 48);
+    const [availableUntil, setAvailableUntil] = useState<Date>(until);
+    const [deadline, setDeadline] = useState<Date>(dead);
     const [showOriginal, setShowOriginal] = useState(true);
     const [isQuiz, setIsQuiz] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [save, setSave] = useState(false);
     const [del, setDel] = useState(false);
+    const [submit, setSubmit] = useState(false);
+    const [viewSubmission, setViewSubmission] = useState((props.cue.submittedAt !== null && props.cue.submittedAt !== undefined) ||
+    (props.cue.graded && props.cue.releaseSubmission));
     const [showFolder, setShowFolder] = useState(false);
     const [createNewFolder, setCreateNewFolder] = useState(false);
     const [newFolderTitle, setNewFolderTitle] = useState('');
@@ -112,6 +134,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             checkReleaseSubmissionStatus(cueId);
         }
     }, [cueId]);
+
+    console.log("Allow submit", ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil))
 
     /**
      * @description Filter out all channel Cues that already have a folderID
@@ -548,284 +572,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             });
     }, [cueId]);
 
-    /**
-     * @description Handle used to drage cues for sorting
-     */
-    // const DragHandle = SortableHandle(() => (
-    //     <Text style={{ marginRight: 5, marginTop: 3, cursor: 'pointer' }}>
-    //         {' '}
-    //         <Ionicons name="swap-horizontal-outline" size={14} color="#000000" />{' '}
-    //     </Text>
-    // ));
-
-    /**
-     * @description Sortable Cue for Create Folder
-     */
-    // const SortableItem = SortableElement(({ value, sortIndex }: any) => {
-    //     const { title } = htmlStringParser(value.channelId && value.channelId !== '' ? value.original : value.cue);
-
-    //     const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#3abb83'].reverse();
-
-    //     const col = colorChoices[value.color];
-
-    //     return (
-    //         <View
-    //             style={{
-    //                 height: '100%',
-    //                 backgroundColor: '#fff',
-    //                 borderRadius: 1,
-    //                 maxWidth: 130,
-    //                 width: 130,
-    //                 borderColor: col,
-    //                 borderLeftWidth: 3,
-    //                 flexDirection: 'row',
-    //                 shadowOffset: {
-    //                     width: 2,
-    //                     height: 2
-    //                 },
-    //                 overflow: 'hidden',
-    //                 shadowOpacity: 0.07,
-    //                 shadowRadius: 7,
-    //                 zIndex: 500000,
-    //                 marginRight: 15
-    //             }}>
-    //             <View
-    //                 key={'textPage'}
-    //                 style={{
-    //                     maxWidth: 210,
-    //                     height: '100%',
-    //                     width: '100%',
-    //                     padding: 7,
-    //                     paddingHorizontal: 10,
-    //                     backgroundColor: '#fff'
-    //                 }}>
-    //                 <View
-    //                     style={{
-    //                         height: '30%',
-    //                         backgroundColor: '#fff',
-    //                         display: 'flex',
-    //                         flexDirection: 'row',
-    //                         alignItems: 'center'
-    //                     }}>
-    //                     <Text style={styles.date2}>
-    //                         {new Date(value.date).toString().split(' ')[1] +
-    //                             ' ' +
-    //                             new Date(value.date).toString().split(' ')[2]}
-    //                     </Text>
-
-    //                     {value._id === props.cue._id ? null : (
-    //                         <TouchableOpacity
-    //                             onPress={() => {
-    //                                 const temp = [...channelCues];
-    //                                 temp.push(value);
-    //                                 setChannelCues(temp);
-
-    //                                 const sCues = selectedCues.filter((c: any) => c._id !== value._id);
-    //                                 setSelectedCues(sCues);
-    //                             }}>
-    //                             <Text style={{ color: '#f94144' }}>
-    //                                 <Ionicons name="remove-circle-outline" size={16} />
-    //                             </Text>
-    //                         </TouchableOpacity>
-    //                     )}
-    //                 </View>
-
-    //                 <View
-    //                     style={{
-    //                         backgroundColor: '#fff',
-    //                         width: '100%',
-    //                         flexDirection: 'row',
-    //                         flex: 1,
-    //                         height: '70%',
-    //                         alignItems: 'center'
-    //                     }}>
-    //                     <DragHandle />
-
-    //                     <Text
-    //                         ellipsizeMode={'tail'}
-    //                         numberOfLines={1}
-    //                         style={{
-    //                             fontFamily: 'inter',
-    //                             fontSize: 12,
-    //                             lineHeight: 20,
-    //                             flex: 1,
-    //                             marginTop: 5,
-    //                             color: '#000000'
-    //                         }}>
-    //                         {title}
-    //                     </Text>
-    //                 </View>
-    //             </View>
-    //         </View>
-    //     );
-    // });
-
-    /**
-     * @description Sortable Cue for Update Folder
-     * Needs to be stylisticaly same as SortableItem
-     */
-    // const SortableItemUpdate = SortableElement(({ value, sortIndex }: any) => {
-    //     const { title } = htmlStringParser(value.channelId && value.channelId !== '' ? value.original : value.cue);
-
-    //     const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#3abb83'].reverse();
-
-    //     const col = colorChoices[value.color];
-
-    //     return (
-    //         <View
-    //             style={{
-    //                 height: '100%',
-    //                 backgroundColor: '#fff',
-    //                 borderRadius: 1,
-    //                 maxWidth: 130,
-    //                 width: 130,
-    //                 borderColor: col,
-    //                 borderLeftWidth: 3,
-    //                 flexDirection: 'row',
-    //                 shadowOffset: {
-    //                     width: 2,
-    //                     height: 2
-    //                 },
-    //                 overflow: 'hidden',
-    //                 shadowOpacity: 0.07,
-    //                 shadowRadius: 7,
-    //                 zIndex: 500000,
-    //                 marginRight: 15
-    //             }}>
-    //             <View
-    //                 key={'textPage'}
-    //                 style={{
-    //                     maxWidth: 210,
-    //                     height: '100%',
-    //                     width: '100%',
-    //                     padding: 7,
-    //                     paddingHorizontal: 10,
-    //                     backgroundColor: '#fff'
-    //                 }}>
-    //                 <View
-    //                     style={{
-    //                         height: '30%',
-    //                         backgroundColor: '#fff',
-    //                         display: 'flex',
-    //                         flexDirection: 'row',
-    //                         alignItems: 'center'
-    //                     }}>
-    //                     <Text style={styles.date2}>
-    //                         {new Date(value.date).toString().split(' ')[1] +
-    //                             ' ' +
-    //                             new Date(value.date).toString().split(' ')[2]}
-    //                     </Text>
-
-    //                     {value._id === props.cue._id ? null : (
-    //                         <TouchableOpacity
-    //                             onPress={() => {
-    //                                 const temp = [...channelCues];
-    //                                 temp.push(value);
-    //                                 setChannelCues(temp);
-
-    //                                 const sCues = folderCuesToDisplay.filter((c: any) => c._id !== value._id);
-    //                                 setFolderCuesToDisplay(sCues);
-    //                             }}>
-    //                             <Text style={{ color: '#f94144' }}>
-    //                                 <Ionicons name="remove-circle-outline" size={16} />
-    //                             </Text>
-    //                         </TouchableOpacity>
-    //                     )}
-    //                 </View>
-
-    //                 <View
-    //                     style={{
-    //                         backgroundColor: '#fff',
-    //                         width: '100%',
-    //                         flexDirection: 'row',
-    //                         flex: 1,
-    //                         height: '70%',
-    //                         alignItems: 'center'
-    //                     }}>
-    //                     <DragHandle />
-
-    //                     <Text
-    //                         ellipsizeMode={'tail'}
-    //                         numberOfLines={1}
-    //                         style={{
-    //                             fontFamily: 'inter',
-    //                             fontSize: 12,
-    //                             lineHeight: 20,
-    //                             flex: 1,
-    //                             marginTop: 5,
-    //                             color: value._id === props.cue._id ? '#006AFF' : '#000000'
-    //                         }}>
-    //                         {title}
-    //                     </Text>
-    //                 </View>
-    //             </View>
-    //         </View>
-    //     );
-    // });
-
-    /**
-     * @description Renders the Selected Cues as sortable for Create Folder
-     */
-    // const SortableList = SortableContainer(({ items }: any) => {
-    //     return (
-    //         <ScrollView
-    //             style={{
-    //                 width: '100%',
-    //                 maxWidth: 900,
-    //                 backgroundColor: '#f2f2f2',
-    //                 borderTopLeftRadius: 0,
-    //                 borderTopRightRadius: 0,
-    //                 paddingBottom: 15
-    //             }}
-    //             horizontal={true}
-    //             showsHorizontalScrollIndicator={true}>
-    //             {items.map((value: any, index: number) => (
-    //                 <SortableItem key={`item-${index}`} index={index} sortIndex={index} value={value} />
-    //             ))}
-    //         </ScrollView>
-    //     );
-    // });
-
-    /**
-     * @description Renders the Selected Cues as sortable for Update Folder
-     */
-    // const SortableListUpdate = SortableContainer(({ items }: any) => {
-    //     return (
-    //         <ScrollView
-    //             style={{
-    //                 width: '100%',
-    //                 maxWidth: 900,
-    //                 backgroundColor: '#f2f2f2',
-    //                 borderTopLeftRadius: 0,
-    //                 borderTopRightRadius: 0,
-    //                 paddingBottom: 15
-    //             }}
-    //             horizontal={true}
-    //             showsHorizontalScrollIndicator={true}>
-    //             {items.map((value: any, index: number) => (
-    //                 <SortableItemUpdate key={`item-${index}`} index={index} sortIndex={index} value={value} />
-    //             ))}
-    //         </ScrollView>
-    //     );
-    // });
-
-    /**
-     *
-     * @description Used to sort the selected cues for Create Folder
-     */
-    // const onSortEnd = ({ oldIndex, newIndex }: any) => {
-    //     setSelectedCues(arrayMove(selectedCues, oldIndex, newIndex));
-    // };
-
-    /**
-     *
-     *
-     *
-     * @description Used to sort the selected cues for Update Folder
-     */
-    // const onSortEndUpdate = ({ oldIndex, newIndex }: any) => {
-    //     setFolderCuesToDisplay(arrayMove(folderCuesToDisplay, oldIndex, newIndex));
-    // };
 
     /**
      * @description Tabs (Content, Options, Submission, etc)
@@ -925,7 +671,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 <View
                     style={{
                         zIndex: 500001,
-                        flex: 1,
+                        // flex: 1,
                         flexDirection: 'column',
                         alignItems: 'center',
                         backgroundColor: '#f2f2f2',
@@ -956,10 +702,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             backgroundColor: '#f2f2f2',
                             borderTopLeftRadius: 0,
                             borderTopRightRadius: 0,
-                            paddingBottom: 15
+                            paddingBottom: 7
                         }}
                         horizontal={true}
                         showsHorizontalScrollIndicator={true}
+                        indicatorStyle='black'
                     >
                         {folderCuesToDisplay.map((cue: any) => {
                             if (!cue || !cue.channelId) return;
@@ -981,7 +728,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             return (
                                 <View
                                     style={{
-                                        height: '100%',
+                                        height: 60,
                                         backgroundColor: '#fff',
                                         borderRadius: 1,
                                         maxWidth: 130,
@@ -1055,6 +802,249 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         );
     };
 
+
+    const renderNewFolderListRow = (row: any) => {
+        
+        const { key, index, data, disabled, active } = row;
+
+        const { title } = htmlStringParser(data.channelId && data.channelId !== '' ? data.original : data.cue)
+
+        const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#3abb83'].reverse();
+
+        const col = colorChoices[data.color];
+
+        return (
+            <View
+                style={{
+                    height: 60,
+                    backgroundColor: '#fff',
+                    borderRadius: 1,
+                    maxWidth: 130,
+                    width: 130,
+                    borderColor: col,
+                    borderLeftWidth: 3,
+                    flexDirection: 'row',
+                    shadowOffset: {
+                        width: 2,
+                        height: 2
+                    },
+                    overflow: 'hidden',
+                    shadowOpacity: 0.07,
+                    shadowRadius: 7,
+                    zIndex: 500000,
+                    marginRight: 15
+                }}>
+                <View
+                    key={'textPage'}
+                    style={{
+                        maxWidth: 210,
+                        height: '100%',
+                        width: '100%',
+                        padding: 7,
+                        paddingHorizontal: 10,
+                        backgroundColor: '#fff'
+                    }}>
+                    <View
+                        style={{
+                            height: '33%',
+                            backgroundColor: '#fff',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center'
+                        }}>
+                        <Text style={styles.date2}>
+                            {new Date(data.date).toString().split(' ')[1] +
+                                ' ' +
+                                new Date(data.date).toString().split(' ')[2]}
+                        </Text>
+
+                        {data._id === props.cue._id ? null : (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    const temp = [...channelCues];
+                                    temp.push(data);
+                                    setChannelCues(temp);
+
+                                    const sCues = selectedCues.filter((c: any) => c._id !== data._id);
+                                    setSelectedCues(sCues);
+                                }}>
+                                <Text style={{ color: '#f94144' }}>
+                                    <Ionicons name="remove-circle-outline" size={16} />
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    <View
+                        style={{
+                            backgroundColor: '#fff',
+                            width: '100%',
+                            flexDirection: 'row',
+                            flex: 1,
+                            height: '67%',
+                            alignItems: 'center'
+                        }}>
+                        {DragHandle}
+
+                        <Text
+                            ellipsizeMode={'tail'}
+                            numberOfLines={1}
+                            style={{
+                                fontFamily: 'inter',
+                                fontSize: 12,
+                                lineHeight: 20,
+                                flex: 1,
+                                marginTop: 5,
+                                color: '#000000'
+                            }}>
+                            {title}
+
+                        </Text>
+                    </View>
+                </View>
+            </View>
+        );
+    }
+
+    const renderEditFolderListRow = (row: any) => {
+
+        const { key, index, data, disabled, active } = row;
+
+        const { title } = htmlStringParser(data.channelId && data.channelId !== '' ? data.original : data.cue)
+
+        const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#3abb83'].reverse();
+
+        const col = colorChoices[data.color];
+
+        return (
+            <View
+                style={{
+                    height: 60,
+                    backgroundColor: '#fff',
+                    borderRadius: 1,
+                    maxWidth: 130,
+                    width: 130,
+                    borderColor: col,
+                    borderLeftWidth: 3,
+                    flexDirection: 'row',
+                    shadowOffset: {
+                        width: 2,
+                        height: 2
+                    },
+                    overflow: 'hidden',
+                    shadowOpacity: 0.07,
+                    shadowRadius: 7,
+                    zIndex: 500000,
+                    marginRight: 15
+                }}
+            >
+                <View
+                    key={'textPage'}
+                    style={{
+                        maxWidth: 210,
+                        height: '100%',
+                        width: '100%',
+                        padding: 7,
+                        paddingHorizontal: 10,
+                        backgroundColor: '#fff'
+                    }}
+                >
+                    <View
+                        style={{
+                            height: '33%',
+                            backgroundColor: '#fff',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text style={styles.date2}>
+                            {new Date(data.date).toString().split(' ')[1] +
+                                ' ' +
+                                new Date(data.date).toString().split(' ')[2]}
+                        </Text>
+
+                        {/* {data._id === props.cue._id ? null : ( */}
+                        <TouchableOpacity
+                            onPress={() => {
+                                const temp = [...channelCues];
+                                temp.push(data);
+                                setChannelCues(temp);
+
+                                const sCues = folderCuesToDisplay.filter((c: any) => c._id !== data._id);
+                                setFolderCuesToDisplay(sCues);
+                            }}
+                        >
+                            <Text style={{ color: '#f94144' }}>
+                                <Ionicons name="remove-circle-outline" size={16} />
+                            </Text>
+                        </TouchableOpacity>
+                        {/* )} */}
+                    </View>
+
+                    <View
+                        style={{
+                            backgroundColor: '#fff',
+                            width: '100%',
+                            flexDirection: 'row',
+                            flex: 1,
+                            height: '67%',
+                            alignItems: 'center'
+                        }}
+                    >
+                        {DragHandle}
+
+                        <Text
+                            ellipsizeMode={'tail'}
+                            numberOfLines={1}
+                            style={{
+                                fontFamily: 'inter',
+                                fontSize: 12,
+                                lineHeight: 20,
+                                flex: 1,
+                                marginTop: 5,
+                                color: data._id === props.cue._id ? '#006AFF' : '#000000'
+                            }}
+                        >
+                            {title}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+        );
+    }
+
+    const DragHandle = (
+        <Text style={{ marginRight: 5, marginTop: 3 }}>
+            {' '}
+            <Ionicons name="swap-horizontal-outline" size={14} color="#000000" />{' '}
+        </Text>
+    );
+    
+    
+    const renderNewFolderSelectionList = () => {
+        
+        return (<SortableList
+            horizontal={true}
+            style={{
+                width: '100%',
+                height: 100,
+            }}
+            data={selectedCues}
+            renderRow={renderNewFolderListRow} />)
+    }
+
+    const renderEditFolderSelectionList = () => {
+        return (<SortableList
+            horizontal={true}
+            style={{
+                width: '100%',
+                height: 100,
+            }}
+            data={folderCuesToDisplay}
+            renderRow={renderEditFolderListRow} />)
+    }
+
     /**
      * @description method to render the cue selections for new folder
      * Two Sections (First section shows all options and the second one shows the selected cues)
@@ -1068,14 +1058,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 shadowRadius={10}
                 elevation={500000}
                 containerStyle={{
-                    height: 'auto'
+                    height: 180
                 }}
             >
                 <View style={{ width: '100%', flexDirection: 'column', paddingHorizontal: 10 }}>
                     {/* Section 1: Shows all cues from Channel */}
                     <View
                         style={{
-                            flex: 1,
+                            // flex: 1,
                             flexDirection: 'row',
                             justifyContent: 'center',
                             backgroundColor: '#f2f2f2',
@@ -1091,10 +1081,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     backgroundColor: '#f2f2f2',
                                     borderTopLeftRadius: 0,
                                     borderTopRightRadius: 0,
-                                    paddingBottom: 15
+                                    paddingBottom: 15,
                                 }}
                                 horizontal={true}
                                 showsHorizontalScrollIndicator={true}
+                                indicatorStyle='black'
                             >
                                 {channelCues.map((cue: any) => {
                                     const { title } = htmlStringParser(
@@ -1114,7 +1105,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     return (
                                         <View
                                             style={{
-                                                height: '100%',
+                                                height: 60,
                                                 backgroundColor: '#fff',
                                                 borderRadius: 1,
                                                 maxWidth: 130,
@@ -1231,7 +1222,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                     {/* Section 2 */}
 
-                    {channelCues.length !== 0 ? (
+                    {channelCues.length === 0 && selectedCues.length === 0 ? null : selectedCues.length !== 0 ? (
                         <View
                             style={{
                                 flex: 1,
@@ -1242,15 +1233,24 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 paddingBottom: 14
                             }}
                         >
-                            {/* <SortableList
-                                axis={'x'}
-                                lockAxis={'x'}
-                                items={selectedCues}
-                                onSortEnd={onSortEnd}
-                                useDragHandle
-                            /> */}
+                            {renderNewFolderSelectionList()}
                         </View>
-                    ) : null}
+                    ) : (
+                        <View style={{ backgroundColor: '#f2f2f2' }}>
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    color: '#000000',
+                                    textAlign: 'center',
+                                    fontFamily: 'inter',
+                                    backgroundColor: '#f2f2f2',
+                                    paddingVertical: 20
+                                }}
+                            >
+                                No selection.
+                            </Text>
+                        </View>
+                    )}
                 </View>
             </InsetShadow>
         );
@@ -1269,14 +1269,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 shadowRadius={10}
                 elevation={500000}
                 containerStyle={{
-                    height: 'auto'
+                    height: 180
                 }}
             >
                 <View style={{ width: '100%', flexDirection: 'column', paddingHorizontal: 10 }}>
                     {/* Section 1: Shows all cues from Channel */}
                     <View
                         style={{
-                            flex: 1,
+                            // flex: 1,
                             flexDirection: 'row',
                             justifyContent: 'center',
                             backgroundColor: '#f2f2f2',
@@ -1297,6 +1297,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 }}
                                 horizontal={true}
                                 showsHorizontalScrollIndicator={true}
+                                indicatorStyle='black'
                                 // showsVerticalScrollIndicator={false}
                             >
                                 {channelCues.map((cue: any) => {
@@ -1317,7 +1318,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     return (
                                         <View
                                             style={{
-                                                height: '100%',
+                                                height: 60,
                                                 backgroundColor: '#fff',
                                                 borderRadius: 1,
                                                 maxWidth: 130,
@@ -1433,25 +1434,33 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     </View>
 
                     {/* Section 2 */}
-
-                    <View
-                        style={{
-                            flex: 1,
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                            backgroundColor: '#f2f2f2',
-                            paddingTop: 7,
-                            paddingBottom: 14
-                        }}
-                    >
-                        {/* <SortableListUpdate
-                            items={folderCuesToDisplay}
-                            onSortEnd={onSortEndUpdate}
-                            useDragHandle={true}
-                            axis={'x'}
-                            lockAxis={'x'}
-                        /> */}
-                    </View>
+                    {folderCuesToDisplay.length !== 0 ? (
+                        <View
+                            style={{
+                                // flex: 1,
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                backgroundColor: '#f2f2f2',
+                                paddingTop: 7,
+                                paddingBottom: 14
+                            }}
+                        >
+                            {renderEditFolderSelectionList()}
+                        </View>) : (<View style={{ backgroundColor: '#f2f2f2' }}>
+                            <Text
+                                style={{
+                                    fontSize: 14,
+                                    color: '#000000',
+                                    textAlign: 'center',
+                                    fontFamily: 'inter',
+                                    backgroundColor: '#f2f2f2',
+                                    paddingVertical: 20
+                                }}
+                            >
+                                No selection.
+                            </Text>
+                        </View>)
+                    }
                 </View>
             </InsetShadow>
         );
@@ -1506,6 +1515,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         channelId={props.channelId}
                         save={save}
                         del={del}
+                        submit={submit}
+                        viewSubmission={viewSubmission}
                         customCategories={props.customCategories}
                         cue={props.cue}
                         cueIndex={props.cueIndex}
@@ -1528,6 +1539,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         reloadStatuses={reloadStatuses}
                         setSave={(save: boolean) => setSave(save)}
                         setDelete={(del: boolean) => setDel(del)}
+                        setSubmit={(submit: boolean) => setSubmit(submit)}
+                        setViewSubmission={(view: boolean) => setViewSubmission(view)}
                     />
                     {!Number.isNaN(Number(cueId)) || !props.channelId ? (
                         <View style={{ flex: 1, backgroundColor: 'white' }} />
@@ -1629,7 +1642,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             setEditFolder(true);
                         }}
                         style={{
-                            backgroundColor: '#000',
+                            backgroundColor: '#fff',
                             paddingLeft: 0
                         }}
                     >
@@ -1640,7 +1653,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 textTransform: 'uppercase',
                                 fontSize: 12,
                                 fontFamily: 'overpass',
-                                color: '#fff',
+                                color: '#000',
                                 fontWeight: 'bold'
                             }}
                         >
@@ -1775,6 +1788,16 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                                 const server = fetchAPI('');
 
+                                if (selectedCues.length < 2) {
+                                    Alert('Folder must contain at least 2 items.');
+                                    return;
+                                }
+
+                                console.log("Argument",  {
+                                    title: newFolderTitle,
+                                    cueIds: selectedCues.map((cue: any) => cue._id)
+                                })
+
                                 server
                                     .mutate({
                                         mutation: creatFolder,
@@ -1805,7 +1828,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                             disabled={selectedCues.length < 2 || creatingFolder}
                             style={{
-                                backgroundColor: '#000',
+                                backgroundColor: '#fff',
                                 paddingLeft: 0
                             }}
                         >
@@ -1816,7 +1839,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     textTransform: 'uppercase',
                                     fontSize: 12,
                                     fontFamily: 'overpass',
-                                    color: '#fff'
+                                    color: '#000'
                                 }}
                             >
                                 {creatingFolder ? '...' : 'Create'}
@@ -1829,7 +1852,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 setSelectedCues([]);
                             }}
                             style={{
-                                backgroundColor: '#000',
+                                backgroundColor: '#fff',
                                 paddingLeft: 0
                             }}
                         >
@@ -1840,7 +1863,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     textTransform: 'uppercase',
                                     fontSize: 12,
                                     fontFamily: 'overpass',
-                                    color: '#fff',
+                                    color: '#000',
                                     fontWeight: 'bold'
                                 }}
                             >
@@ -1861,6 +1884,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 setUpdatingFolder(true);
 
                                 const cueIds = folderCuesToDisplay.map((cue: any) => cue._id);
+
+                                if (cueIds.length < 2) {
+                                    Alert('Folder must contain at least 2 items.');
+                                    return;
+                                }
 
                                 server
                                     .mutate({
@@ -1898,7 +1926,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                             disabled={folderCuesToDisplay.length < 2 || updatingFolder}
                             style={{
-                                backgroundColor: '#000',
+                                backgroundColor: '#fff',
                                 paddingLeft: 0
                             }}
                         >
@@ -1909,7 +1937,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     textTransform: 'uppercase',
                                     fontSize: 12,
                                     fontFamily: 'overpass',
-                                    color: '#fff',
+                                    color: '#000',
                                     fontWeight: 'bold'
                                 }}
                             >
@@ -1948,7 +1976,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     });
                             }}
                             style={{
-                                backgroundColor: '#000',
+                                backgroundColor: '#fff',
                                 paddingLeft: 0
                             }}
                         >
@@ -1959,7 +1987,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     textTransform: 'uppercase',
                                     fontSize: 12,
                                     fontFamily: 'overpass',
-                                    color: '#fff',
+                                    color: '#000',
                                     fontWeight: 'bold'
                                 }}
                             >
@@ -1978,7 +2006,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 setFolderCuesToDisplay(cuesInOrder);
                             }}
                             style={{
-                                backgroundColor: '#000',
+                                backgroundColor: '#fff',
                                 paddingLeft: 0
                             }}
                         >
@@ -1989,7 +2017,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     textTransform: 'uppercase',
                                     fontSize: 12,
                                     fontFamily: 'overpass',
-                                    color: '#fff',
+                                    color: '#000',
                                     fontWeight: 'bold'
                                 }}
                             >
@@ -2107,8 +2135,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 <TextInput
                                     value={newFolderTitle}
                                     style={{
-                                        color: '#fff',
-                                        backgroundColor: '#1F1F1F',
+                                        color: '#000',
+                                        backgroundColor: '#f2f2f2',
                                         borderRadius: 15,
                                         fontSize: 12,
                                         paddingVertical: 3,
@@ -2119,37 +2147,52 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         minWidth: 200,
                                         width: 200,
                                         maxWidth: '100%',
-                                        height: 30
+                                        height: 30,
                                     }}
                                     autoCompleteType={'xyz'}
-                                    placeholderTextColor={'#fff'}
+                                    placeholderTextColor={'#000'}
                                     placeholder={'Folder Title'}
-                                    onChange={(e: any) => setNewFolderTitle(e.target.value)}
+                                    onChangeText={(val: any) => setNewFolderTitle(val)}
                                 />
                             </View>
                         ) : null}
 
                         {editFolder ? (
+                            <View
+                                style={{
+                                    flex: 1,
+                                    height: 52,
+                                    backgroundColor: '#ffffff',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    minWidth: 200,
+                                    width: 200,
+                                    maxWidth: '100%'
+                                }}
+                            >
                             <TextInput
                                 value={updateFolderTitle}
                                 style={{
-                                    color: '#fff',
-                                    backgroundColor: '#1F1F1F',
-                                    borderRadius: 15,
-                                    fontSize: 12,
-                                    paddingBottom: 5,
-                                    paddingTop: 4,
-                                    paddingHorizontal: 16,
-                                    marginTop: 2,
-                                    marginLeft: 10,
-                                    marginRight: 2,
-                                    maxWidth: 225
+                                    color: '#000',
+                                        backgroundColor: '#f2f2f2',
+                                        borderRadius: 15,
+                                        fontSize: 12,
+                                        paddingVertical: 3,
+                                        paddingHorizontal: 8,
+                                        marginTop: 7,
+                                        marginLeft: 10,
+                                        marginRight: 2,
+                                        minWidth: 200,
+                                        width: 200,
+                                        maxWidth: '100%',
+                                        height: 30,
                                 }}
                                 autoCompleteType={'xyz'}
-                                placeholderTextColor={'#fff'}
+                                placeholderTextColor={'#000'}
                                 placeholder={'Folder Title'}
-                                onChange={(e: any) => setUpdateFolderTitle(e.target.value)}
+                                onChangeText={(val: any) => setUpdateFolderTitle(val)}
                             />
+                            </View>
                         ) : null}
 
                         {/* BUTTONS */}
@@ -2191,6 +2234,61 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                     </TouchableOpacity>
                                 ) : null}
+                                {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) ?
+                                    <TouchableOpacity
+                                    onPress={async () => {
+                                        setViewSubmission(!viewSubmission)
+                                       
+                                    }}
+                                    style={{
+                                        paddingLeft: 0,
+                                        backgroundColor: '#ffffff',
+                                        marginLeft: 20
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            lineHeight: 34,
+                                            backgroundColor: '#ffffff',
+                                            fontWeight: 'bold',
+                                            textTransform: 'uppercase',
+                                            fontSize: 12,
+                                            fontFamily: 'overpass',
+                                            color: '#000'
+                                        }}
+                                    >
+                                        {viewSubmission ? "NEW SUBMISSION" : "VIEW SUBMISSION"}
+                                    </Text>
+                                </TouchableOpacity> : null
+                                }
+                                {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) && !viewSubmission ?
+                                    <TouchableOpacity
+                                    onPress={async () => {
+                                        setSubmit(true);
+                                       
+                                    }}
+                                    disabled={props.cue.releaseSubmission}
+                                    style={{
+                                        paddingLeft: 0,
+                                        backgroundColor: '#ffffff',
+                                        marginLeft: 20
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            lineHeight: 34,
+                                            backgroundColor: '#ffffff',
+                                            fontWeight: 'bold',
+                                            textTransform: 'uppercase',
+                                            fontSize: 12,
+                                            fontFamily: 'overpass',
+                                            color: '#000'
+                                        }}
+                                    >
+                                        SUBMIT
+                                    </Text>
+                                </TouchableOpacity> : null
+                                }
                                 {((channelOwner && showOriginal) ||
                                     (channelOwner && showOptions) ||
                                     !props.channelId) &&

@@ -1066,6 +1066,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         source={{
                             html: instructions
                         }}
+                        defaultTextProps={{
+                            selectable: true
+                        }}
                     />
                 ) : null}
             </View>
@@ -1228,6 +1231,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     source={{
                                                         html: content
                                                     }}
+                                                    defaultTextProps={{
+                                                        selectable: true
+                                                    }}
                                                 />
                                             </View>
                                         ) : (
@@ -1235,6 +1241,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 <RenderHtml
                                                     source={{
                                                         html: problem.question
+                                                    }}
+                                                    defaultTextProps={{
+                                                        selectable: true
                                                     }}
                                                 />
                                             </View>
@@ -1641,6 +1650,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     source={{
                                                         html: option.option
                                                     }}
+                                                    defaultTextProps={{
+                                                        selectable: true
+                                                    }}
                                                 />
                                             </View>
                                         )}
@@ -1651,7 +1663,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             <View
                                 style={{
                                     width: '100%',
-                                    paddingLeft: 40
+                                    paddingLeft: props.isOwner ? 40 : 0
                                 }}
                             >
                                 {props.isOwner ? (
@@ -1678,7 +1690,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 backgroundColor: '#fff',
                                                 maxHeight: 40,
                                                 height: 40,
-                                                display: solutionEditorRefs[index] ? 'flex' : 'none'
+                                                display: solutionEditorRefs[problemIndex] ? 'flex' : 'none'
                                             }}
                                             flatContainerStyle={{
                                                 paddingHorizontal: 12
@@ -1775,7 +1787,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             horizontal={false}
                                             style={{
                                                 backgroundColor: '#f2f2f2',
-                                                height: 100,
+                                                height: 150,
                                                 borderColor: '#f2f2f2',
                                                 borderWidth: 1
                                             }}
@@ -1798,7 +1810,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     display: 'flex',
                                                     flex: 1,
                                                     height: '100%',
-                                                    minHeight: 100,
+                                                    minHeight: 150,
                                                     borderColor: '#f2f2f2',
                                                     borderBottomWidth: 1
                                                 }}
@@ -1821,16 +1833,20 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     props.setSolutions(updatedSolution);
                                                 }}
                                                 // onHeightChange={handleHeightChange}
-                                                // onFocus={() => {
-                                                //     const updateSolutionEditorRefs: boolean[] = [...solutionEditorRefs];
-                                                //     updateSolutionEditorRefs[index] = true;
-                                                //     setSolutionEditorRefs(updateSolutionEditorRefs);
-                                                // }}
-                                                // onBlur={() => {
-                                                //     const updateSolutionEditorRefs: boolean[] = [...solutionEditorRefs];
-                                                //     updateSolutionEditorRefs[index] = false;
-                                                //     setSolutionEditorRefs(updateSolutionEditorRefs);
-                                                // }}
+                                                onFocus={() => {
+                                                    const updateSolutionEditorRefs: boolean[] = [
+                                                        ...solutionEditorRefs
+                                                    ];
+                                                    updateSolutionEditorRefs[problemIndex] = true;
+                                                    setSolutionEditorRefs(updateSolutionEditorRefs);
+                                                }}
+                                                onBlur={() => {
+                                                    const updateSolutionEditorRefs: boolean[] = [
+                                                        ...solutionEditorRefs
+                                                    ];
+                                                    updateSolutionEditorRefs[problemIndex] = false;
+                                                    setSolutionEditorRefs(updateSolutionEditorRefs);
+                                                }}
                                                 allowFileAccess={true}
                                                 allowFileAccessFromFileURLs={true}
                                                 allowUniversalAccessFromFileURLs={true}

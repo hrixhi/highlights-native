@@ -6,6 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const sheetRef: any = useRef();
     const [callbackNode, setCallbackNode] = useState<any>(null);
+
+    const [reloadKey, setReloadKey] = useState('');
+
     useEffect(() => {
         // console.log('On change callback node', callbackNode);
         setCallbackNode(props.callbackNode);
@@ -19,9 +22,14 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
         }
     }, [props.isOpen, sheetRef]);
 
+    useEffect(() => {
+        setReloadKey(props.reloadKey);
+    }, [props.reloadKey]);
+
     const renderContent = () => {
         return (
             <View
+                key={reloadKey}
                 style={{
                     width: '100%',
                     height: '100%',

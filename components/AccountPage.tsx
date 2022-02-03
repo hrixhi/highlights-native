@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Walkthrough from './Walkthrough';
 import Channels from './Channels';
 
+
 const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [activeTab, setActiveTab] = useState('profile');
     const windowHeight =
@@ -126,6 +127,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <TouchableOpacity
                 onPress={() => {
                     if (activeTab === 'profile') {
+                        Linking.openURL('https://www.learnwithcues.com/help')
                     } else {
                         setShowAddCourseModal(true);
                     }

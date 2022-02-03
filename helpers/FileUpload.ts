@@ -41,12 +41,12 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
 
             if (!fileInfo.exists || !fileInfo.size) {
                 Alert('Error parsing file. Try a different video.');
-                return { type: '', url: '' };
+                return { type: '', url: '', name: '' };
             }
 
             if (!isLessThanTheMB(fileInfo.size, 20)) {
                 Alert('File must be less than 20 mb');
-                return { type: '', url: '' };
+                return { type: '', url: '', name: '' };
             }
 
             const file = {
@@ -65,19 +65,20 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
             if (data.status === 'success') {
                 return {
                     url: data.url,
-                    type: 'mp4'
+                    type: 'mp4',
+                    name: 'default.mp4'
                 };
             } else {
-                return { type: '', url: '' };
+                return { type: '', url: '', name: '' };
             }
         } else {
-            return { type: '', url: '' };
+            return { type: '', url: '', name: '' };
         }
     } else {
         const res: any = await DocumentPicker.getDocumentAsync();
 
         if (res.type === 'cancel' || res.type !== 'success') {
-            return { type: '', url: '' };
+            return { type: '', url: '', name: '' };
         }
 
         let { name, size, uri } = res;
@@ -86,7 +87,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
         let type = nameParts[nameParts.length - 1];
         if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
             Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
-            return { type: '', url: '' };
+            return { type: '', url: '', name };
         }
 
         // const { file } = res;
@@ -109,7 +110,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
 
         if (type === 'wma' || type === 'avi') {
             alert('This video format is not supported. Upload mp4 or ogg.');
-            return { type: '', url: '' };
+            return { type: '', url: '', name: '' };
         }
 
         if (type === 'mpga') {
@@ -125,7 +126,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
 
         if (type === 'svg') {
             alert('This file type is not supported.');
-            return { type: '', url: '' };
+            return { type: '', url: '', name: '' };
         }
 
         const file = {
@@ -146,10 +147,11 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
         if (data.status === 'success') {
             return {
                 url: data.url,
-                type
+                type,
+                name
             };
         } else {
-            return { type: '', url: '' };
+            return { type: '', url: '', name: '' };
         }
     }
 };
