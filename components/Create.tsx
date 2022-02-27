@@ -58,6 +58,9 @@ import ColorPicker from './ColorPicker';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
 
+import Reanimated from 'react-native-reanimated';
+import { getDropdownHeight } from '../helpers/DropdownHeight';
+
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
     const [cue, setCue] = useState('<h1>Title</h1>');
@@ -75,7 +78,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [channelOptions, setChannelOptions] = useState<any[]>([]);
     const [showOptions, setShowOptions] = useState(false);
     const [channelId, setChannelId] = useState<any>('');
-    const [selectedChannel, setSelectedChannel] = useState<any>('Home');
+    const [selectedChannel, setSelectedChannel] = useState<any>('My Notes');
     const [endPlayAt, setEndPlayAt] = useState(new Date(current.getTime() + 1000 * 60 * 60));
     const [playChannelCueIndef, setPlayChannelCueIndef] = useState(true);
     const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#35AC78'].reverse();
@@ -85,6 +88,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const scrollRef: any = useRef();
     const [init, setInit] = useState(false);
     const [role, setRole] = useState('');
+    const [allowQuizCreation, setAllowQuizCreation] = useState(false);
     const [submission, setSubmission] = useState(false);
     const [deadline, setDeadline] = useState(new Date(current.getTime() + 1000 * 60 * 60 * 24));
     const [initiateAt, setInitiateAt] = useState(new Date(current.getTime()));
@@ -184,6 +188,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     // HOOK
 
     console.log('URL', url);
+    
+    const fall = new Reanimated.Value(1);
+
+    const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
+        inputRange: [0, 1],
+        outputRange: [0.5, 0]
+    });
+
 
     /**
      * @description Event listener for dimensions change
@@ -212,6 +224,19 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             setTitle('');
         }
     }, [cue]);
+
+    useEffect(() => {
+
+        console.log("Set create option", props.createOption)
+
+        if (props.createOption === 'books') {
+            setShowBooks(true)
+        } else if (props.createOption === 'quiz') {
+            console.log('set as quiz')
+            setIsQuiz(true);
+            setSubmission(true);
+        }
+    }, [props.createOption])
 
     /**
      * @description Loads webviewer for Imports
@@ -251,9 +276,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             }
         })();
 
-        console.log('Imported', imported);
-        console.log('import type', type);
-
         // WebViewer(
         //     {
         //         licenseKey: 'xswED5JutJBccg0DZhBM',
@@ -282,6 +304,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             const parsedUser = JSON.parse(uString);
             if (parsedUser.role) {
                 setRole(parsedUser.role);
+            }
+            if (parsedUser.allowQuizCreation) {
+                setAllowQuizCreation(parsedUser.allowQuizCreation)
             }
             if (parsedUser._id) {
                 setUserId(parsedUser._id);
@@ -382,9 +407,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }).start();
     }, []);
 
+    console.log("create option", props.createOption)
+
+    console.log("Is quiz", isQuiz)
+
     useEffect(() => {
-        if (selectedChannel === 'Home') {
-            setSelectedChannel('Home');
+        if (selectedChannel === 'My Notes') {
+            setSelectedChannel('My Notes');
             setChannelId('');
             setCustomCategories(localCustomCategories);
             setCustomCategory('None');
@@ -395,7 +424,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             setSelected([]);
             setSubscribers([]);
             setProblems([]);
-            setIsQuiz(false);
+            // console.log('Set not quiz')
+            // setIsQuiz(false);
             setTimer(false);
         } else {
             // const match = channels.find((c: any) => {
@@ -952,8 +982,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         setChannels(res.data.channel.findByUserId);
                         const options = [
                             {
-                                value: 'Home',
-                                label: 'Home'
+                                value: 'My Notes',
+                                label: 'My Notes'
                             }
                         ];
 
@@ -1242,7 +1272,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onChange={(event, selectedDate) => {
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
-
                             setInitiateAt(roundedValue);
                         }}
                     />
@@ -1255,7 +1284,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowInitiateAtDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowInitiateAtDateAndroid(false);
@@ -1275,14 +1307,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(true);
@@ -1294,15 +1326,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1329,16 +1358,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -1369,7 +1395,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowInitiateAtTimeAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowInitiateAtTimeAndroid(false);
                             setInitiateAt(currentDate);
@@ -1428,14 +1457,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
-                                width: 150,
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(false);
@@ -1447,15 +1476,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1482,16 +1508,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -1523,7 +1546,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowDeadlineTimeAndroid(false)
+                                return};
                             const currentDate: any = selectedDate;
                             setShowDeadlineTimeAndroid(false);
                             setDeadline(currentDate);
@@ -1567,7 +1592,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowAvailableUntilDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowAvailableUntilDateAndroid(false);
@@ -1587,14 +1615,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowAvailableUntilDateAndroid(true);
@@ -1606,15 +1634,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1641,16 +1666,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -1673,6 +1695,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }}
                     />
                 )}
+
                 {Platform.OS === 'android' && showAvailableUntilTimeAndroid && (
                     <DateTimePicker
                         themeVariant="light"
@@ -1681,7 +1704,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowAvailableUntilTimeAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowAvailableUntilTimeAndroid(false);
                             setAvailableUntil(currentDate);
@@ -1698,7 +1724,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             style={{
                 flex: 1
             }}
-            keyboardVerticalOffset={dimensions.window.width < 768 ? 50 : 30}
+            keyboardVerticalOffset={dimensions.window.width < 768 ? (Platform.OS === 'ios' ? 50 : 30) : 30}
         >
             <View style={{ flex: 1 }}>
                 <Animated.View
@@ -1707,60 +1733,38 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         backgroundColor: 'white',
                         opacity: modalAnimation,
                         maxWidth: 900,
-                        paddingTop: 10,
+                        paddingVertical: 10,
                         paddingHorizontal: dimensions.window.width < 1024 ? 10 : 0,
-                        display: editorFocus ? 'none' : 'flex'
+                        display: editorFocus ? 'none' : 'flex',
+                        shadowOffset: {
+                            width: 2,
+                            height: 2
+                        },
+                        // overflow: 'hidden',
+                        shadowOpacity: 0.07,
+                        shadowRadius: 7,
+                        zIndex: 500000,
                     }}
                 >
                     <View
                         style={{
-                            flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-                            paddingBottom: showOptions ? 20 : 40
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            // paddingBottom: showOptions ? 20 : 0,
+                            width: '100%',
                         }}
                     >
                         {props.option === 'Browse' && !showOptions ? null : (
-                            // <TouchableOpacity
-                            //     onPress={() => {
-                            //         if (showOptions) {
-                            //             setShowOptions(false);
-                            //         } else if (showBooks) {
-                            //             setShowBooks(false);
-                            //         } else {
-                            //             props.closeModal();
-                            //         }
-                            //     }}
-                            //     style={{
-                            //         // position: 'absolute',
-                            //         left: 0,
-                            //         borderRadius: 20,
-                            //         width: 30,
-                            //         height: 30,
-                            //         backgroundColor: 'white',
-                            //         justifyContent: 'center',
-                            //         alignItems: 'center',
-                            //         shadowOffset: {
-                            //             width: 3,
-                            //             height: 3
-                            //         },
-                            //         marginVertical: 5,
-                            //         marginLeft: 10,
-                            //         // overflow: 'hidden',
-                            //         shadowOpacity: 0.12,
-                            //         shadowRadius: 8
-                            //     }}
-                            // >
-                            //     <Ionicons size={24} name="arrow-back" />
-                            // </TouchableOpacity>
                             <TouchableOpacity
                                 style={{
                                     paddingTop: 10,
-                                    marginRight: 20
+                                    // marginRight: 20
+                                    position: 'absolute',
+                                    left: 0
                                 }}
                                 onPress={() => {
                                     if (showOptions) {
                                         setShowOptions(false);
-                                    } else if (showBooks) {
-                                        setShowBooks(false);
                                     } else {
                                         props.closeModal();
                                     }
@@ -1771,9 +1775,22 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 </Text>
                             </TouchableOpacity>
                         )}
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', flex: 1, paddingTop: 10 }}>
+                        <Text
+                            style={{
+                                fontFamily: 'Inter',
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                paddingTop: 5,
+                                textAlign: 'center',
+                                marginTop: 10,
+                                marginBottom: 10
+                            }}
+                        >
+                            {props.createOption === 'quiz' ? 'New quiz' : (props.createOption === 'content' ? (role === 'instructor' ? 'New content' : 'New note') : 'Browse Books')}
+                        </Text>
+                        <View style={{ position: 'absolute', right: 0, paddingTop: 10, }}>
                             {/* QUIZ BUTTON FOR INSTRUCTORS */}
-                            {!imported && !showOptions && !isQuiz && !showBooks && props.version !== 'read' ? (
+                            {/* {!imported && !showOptions && !isQuiz && !showBooks ? (
                                 <TouchableOpacity
                                     style={{
                                         borderRadius: 15,
@@ -1787,25 +1804,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             textAlign: 'center',
                                             lineHeight: 28,
-                                            color: '#006AFF',
-                                            borderColor: '#006AFF',
-                                            borderWidth: 1,
+                                            color: '#000',
                                             marginTop: 2,
                                             fontSize: 12,
                                             borderRadius: 15,
-                                            paddingHorizontal: Dimensions.get('window').width < 768 ? 15 : 20,
-                                            marginRight: Dimensions.get('window').width < 768 ? 15 : 20,
+                                            // paddingHorizontal: 10,
+                                            marginRight: 15,
                                             fontFamily: 'inter',
                                             overflow: 'hidden',
-                                            height: 30,
+                                            // height: 30, 
                                             textTransform: 'uppercase'
                                         }}
                                     >
                                         Browse Books
                                     </Text>
                                 </TouchableOpacity>
-                            ) : null}
-                            {role === 'instructor' &&
+                            ) : null} */}
+                            {/* {allowQuizCreation &&
                             !imported &&
                             !showOptions &&
                             !showBooks &&
@@ -1828,24 +1843,22 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             textAlign: 'center',
                                             lineHeight: 28,
-                                            color: '#006AFF',
-                                            borderColor: '#006AFF',
-                                            borderWidth: 1,
+                                            color: '#000',
                                             marginTop: 2,
                                             fontSize: 12,
                                             borderRadius: 15,
-                                            paddingHorizontal: Dimensions.get('window').width < 768 ? 15 : 20,
-                                            marginRight: Dimensions.get('window').width < 768 ? 15 : 20,
+                                            // paddingHorizontal: 10,
+                                            marginRight: 15,
                                             fontFamily: 'inter',
                                             overflow: 'hidden',
-                                            height: 30,
+                                            // height: 30,
                                             textTransform: 'uppercase'
                                         }}
                                     >
                                         {isQuiz ? 'Clear' : 'Create Quiz'}
                                     </Text>
                                 </TouchableOpacity>
-                            ) : null}
+                            ) : null} */}
                             {showOptions || showBooks ? null : (
                                 <TouchableOpacity
                                     onPress={async () => {
@@ -1875,15 +1888,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             textAlign: 'center',
                                             lineHeight: 28,
-                                            color: '#fff',
-                                            backgroundColor: '#006AFF',
-                                            marginTop: 2,
+                                            color: '#006AFF',
+                                            // backgroundColor: '#006AFF',
+                                            marginTop: 5,
                                             fontSize: 12,
                                             borderRadius: 15,
-                                            paddingHorizontal: Dimensions.get('window').width < 768 ? 15 : 20,
+                                            paddingHorizontal: 10,
                                             fontFamily: 'inter',
                                             overflow: 'hidden',
-                                            height: 30,
+                                            // height: 30,
                                             textTransform: 'uppercase'
                                         }}
                                     >
@@ -1893,16 +1906,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             )}
                         </View>
                     </View>
-                    {!showOptions
-                        ? // <FormulaGuide
-                          //     value={equation}
-                          //     onChange={setEquation}
-                          //     show={showEquationEditor}
-                          //     onClose={() => setShowEquationEditor(false)}
-                          //     onInsertEquation={insertEquation}
-                          // />
-                          null
-                        : null}
                 </Animated.View>
                 <Animated.View
                     style={{
@@ -1918,7 +1921,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     display: 'flex',
                                     flexDirection: 'column',
                                     marginHorizontal: 10,
-                                    alignSelf: 'center'
+                                    alignSelf: 'center',
+                                    paddingTop: 20
                                 }}
                             >
                                 {channels.length !== 0 ? (
@@ -1964,12 +1968,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     style={{
                                                         backgroundColor: 'white',
                                                         display: 'flex',
-                                                        height: isChannelDropdownOpen ? 280 : 50,
+                                                        height: isChannelDropdownOpen ? getDropdownHeight(channelOptions.length) : 50,
                                                         maxWidth: 400
                                                     }}
                                                 >
                                                     <DropDownPicker
-                                                        listMode="SCROLLVIEW"
+                                                        listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                                         open={isChannelDropdownOpen}
                                                         value={selectedChannel}
                                                         items={channelOptions}
@@ -2043,12 +2047,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             onValueChange={() => {
                                                                 setLimitedShare(!limitedShare);
                                                             }}
-                                                            style={{ height: 20 }}
+                                                            thumbColor={'#f4f4f6'}
                                                             trackColor={{
-                                                                false: '#f2f2f2',
+                                                                false: '#f4f4f6',
                                                                 true: '#006AFF'
                                                             }}
-                                                            activeThumbColor="white"
+                                                            style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                         />
                                                     </View>
                                                     {channelId !== '' && limitedShare ? (
@@ -2063,7 +2067,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 style={{
                                                                     backgroundColor: 'white',
                                                                     display: 'flex',
-                                                                    height: isUsersDropdownOpen ? 280 : 50,
+                                                                    height: isUsersDropdownOpen ? getDropdownHeight(subscribers.length) : 50,
                                                                     maxWidth: 400
                                                                 }}
                                                             >
@@ -2090,7 +2094,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     />
                                                                 </label> */}
                                                                 <DropDownPicker
-                                                                    listMode="SCROLLVIEW"
+                                                                    listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                                                     multiple={true}
                                                                     open={isUsersDropdownOpen}
                                                                     value={selected}
@@ -2167,31 +2171,33 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             onValueChange={() => {
                                                                 setSubmission(!submission);
                                                             }}
-                                                            style={{ height: 20 }}
+                                                            thumbColor={'#f4f4f6'}
                                                             trackColor={{
-                                                                false: '#f2f2f2',
+                                                                false: '#f4f4f6',
                                                                 true: '#006AFF'
                                                             }}
-                                                            activeThumbColor="white"
+                                                            style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                         />
                                                     </View>
                                                     <View style={{ width: '100%', marginBottom: 15 }}>
-                                                        <View style={{}}>
+
                                                             {submission ? (
                                                                 <View
                                                                     style={{
-                                                                        width: '100%',
-                                                                        display: 'flex',
-                                                                        flexDirection: 'row',
-                                                                        backgroundColor: 'white',
-                                                                        alignItems: 'center'
+                                                                        width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                                                                        flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                                                                        paddingTop: 12,
+                                                                        backgroundColor: '#fff',
+                                                                        // marginLeft: 'auto',
+                                                                        alignItems: Platform.OS === 'ios' ?  'center' : 'flex-start'
                                                                     }}
                                                                 >
-                                                                    <Text style={styles.text}>Available</Text>
+                                                                    <Text style={styles.text}>Available {Platform.OS === 'android'
+                                                                        ? ': ' + moment(new Date(initiateAt)).format('MMMM Do YYYY, h:mm a')
+                                                                        : null}</Text>
                                                                     {renderInitiateAtDateTimePicker()}
                                                                 </View>
                                                             ) : null}
-                                                        </View>
                                                     </View>
 
                                                     {/* Add it here */}
@@ -2203,13 +2209,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     style={{
                                                                         width: '100%',
                                                                         display: 'flex',
-                                                                        flexDirection: 'row',
+                                                                        flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
                                                                         backgroundColor: 'white',
-                                                                        alignItems: 'center'
+                                                                        alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start'
                                                                     }}
                                                                 >
                                                                     <Text style={styles.text}>
-                                                                        {PreferredLanguageText('deadline')}
+                                                                        {PreferredLanguageText('deadline')} {Platform.OS === 'android'
+                                                                            ? ': ' + moment(new Date(deadline)).format('MMMM Do YYYY, h:mm a')
+                                                                            : null}
                                                                     </Text>
                                                                     {renderDeadlineDateTimePicker()}
                                                                 </View>
@@ -2261,12 +2269,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             <Switch
                                                                 value={graded}
                                                                 onValueChange={() => setGraded(!graded)}
-                                                                style={{ height: 20 }}
+                                                                thumbColor={'#f4f4f6'}
                                                                 trackColor={{
-                                                                    false: '#f2f2f2',
+                                                                    false: '#f4f4f6',
                                                                     true: '#006AFF'
                                                                 }}
-                                                                activeThumbColor="white"
+                                                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                             />
                                                         </View>
                                                     </View>
@@ -2356,12 +2364,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 onValueChange={() =>
                                                                     setAllowLateSubmission(!allowLateSubmission)
                                                                 }
-                                                                style={{ height: 20 }}
+                                                                thumbColor={'#f4f4f6'}
                                                                 trackColor={{
-                                                                    false: '#f2f2f2',
+                                                                    false: '#f4f4f6',
                                                                     true: '#006AFF'
                                                                 }}
-                                                                activeThumbColor="white"
+                                                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                             />
                                                         </View>
                                                     </View>
@@ -2371,13 +2379,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 style={{
                                                                     width: '100%',
                                                                     display: 'flex',
-                                                                    flexDirection: 'row',
+                                                                    flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
                                                                     backgroundColor: 'white',
-                                                                    alignItems: 'center'
-                                                                    // marginLeft: 50,
+                                                                    alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start',
+                                                                    paddingTop: Platform.OS === 'ios' ? 0 : 10
                                                                 }}
                                                             >
-                                                                <Text style={styles.text}>Ends on</Text>
+                                                                <Text style={styles.text}>Ends on {Platform.OS === 'android'
+                                                                        ? ': ' + moment(new Date(availableUntil)).format('MMMM Do YYYY, h:mm a')
+                                                                        : null}</Text>
                                                                 {renderAvailableUntilDateTimePicker()}
                                                                 {/* <MobiscrollDatePicker
                                                                     controls={['date', 'time']}
@@ -2463,12 +2473,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 }
                                                                 setUnlimitedAttempts(!unlimitedAttempts);
                                                             }}
-                                                            style={{ height: 20 }}
+                                                            thumbColor={'#f4f4f6'}
                                                             trackColor={{
-                                                                false: '#f2f2f2',
+                                                                false: '#f4f4f6',
                                                                 true: '#006AFF'
                                                             }}
-                                                            activeThumbColor="white"
+                                                            style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                         />
                                                     </View>
                                                     {!unlimitedAttempts ? (
@@ -2585,12 +2595,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     ) : (
                                                         <View
                                                             style={{
-                                                                height: isCategoryDropdownOpen ? 250 : 50,
+                                                                height: isCategoryDropdownOpen ? getDropdownHeight(categoriesOptions.length) : 50,
                                                                 marginBottom: isCategoryDropdownOpen ? 20 : 0
                                                             }}
                                                         >
                                                             <DropDownPicker
-                                                                listMode="SCROLLVIEW"
+                                                                listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                                                 open={isCategoryDropdownOpen}
                                                                 value={customCategory}
                                                                 items={categoriesOptions}
@@ -3063,12 +3073,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         }
                                                         setTimer(!timer);
                                                     }}
-                                                    style={{ height: 20 }}
+                                                    thumbColor={'#f4f4f6'}
                                                     trackColor={{
-                                                        false: '#f2f2f2',
+                                                        false: '#f4f4f6',
                                                         true: '#006AFF'
                                                     }}
-                                                    activeThumbColor="white"
+                                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                 />
                                             </View>
                                             {timer ? (
@@ -3216,12 +3226,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 <Switch
                                                     value={shuffleQuiz}
                                                     onValueChange={() => setShuffleQuiz(!shuffleQuiz)}
-                                                    style={{ height: 20 }}
+                                                    thumbColor={'#f4f4f6'}
                                                     trackColor={{
-                                                        false: '#f2f2f2',
+                                                        false: '#f4f4f6',
                                                         true: '#006AFF'
                                                     }}
-                                                    activeThumbColor="white"
+                                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                 />
                                             </View>
                                         </View>
@@ -3642,7 +3652,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     style={{
                         display: isQuiz || imported || showBooks || showOptions ? 'none' : 'flex',
                         height: '100%',
-                        marginTop: editorFocus ? 0 : 10
+                        // marginTop: editorFocus ? 0 : 10
                     }}
                 >
                     {isQuiz || imported || showBooks || showOptions ? null : (
@@ -3710,15 +3720,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             >
                                 <RichEditor
                                     key={reloadEditorKey.toString()}
-                                    // containerStyle={{
-                                    //     height,
-                                    //     backgroundColor: '#fff',
-                                    //     padding: 3,
-                                    //     paddingTop: 5,
-                                    //     paddingBottom: 10,
-                                    //     // borderRadius: 15,
-                                    //     display: isQuiz || imported ? 'none' : 'flex'
-                                    // }}
                                     ref={RichText}
                                     useContainer={true}
                                     style={{
@@ -3869,6 +3870,35 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     )}
                 </View>
             </View>
+            {emojiVisible || insertImageVisible || insertLinkVisible || hiliteColorVisible || foreColorVisible ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: animatedShadowOpacity,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute'
+                    }}
+                >
+                    <TouchableOpacity
+                    style={{
+                        backgroundColor: 'transparent',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    onPress={() => {
+                        setEmojiVisible(false)
+                        setInsertImageVisible(false)
+                        setInsertLinkVisible(false)
+                        setHiliteColorVisible(false)
+                        setForeColorVisible(false)
+                    }}>
+                    </TouchableOpacity>
+                </Reanimated.View>
+            ) : null}
             {emojiVisible && (
                 <BottomSheet
                     snapPoints={[0, 350]}
@@ -3879,6 +3909,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     title={'Select emoji'}
                     renderContent={() => <EmojiView onSelect={insertEmoji} />}
                     header={false}
+                    callbackNode={fall}
                 />
             )}
             {insertImageVisible && (
@@ -3946,6 +3977,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         </View>
                     )}
                     header={false}
+                    callbackNode={fall}
                 />
             )}
             {insertLinkVisible && (
@@ -3958,6 +3990,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     title={'Insert Link'}
                     renderContent={() => <InsertLink onInsertLink={onInsertLink} />}
                     header={false}
+                    callbackNode={fall}
                 />
             )}
             {hiliteColorVisible && (
@@ -4005,6 +4038,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         </View>
                     )}
                     header={false}
+                    callbackNode={fall}
                 />
             )}
             {foreColorVisible && (
@@ -4052,6 +4086,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         </View>
                     )}
                     header={false}
+                    callbackNode={fall}
                 />
             )}
         </KeyboardAvoidingView>

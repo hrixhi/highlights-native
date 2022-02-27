@@ -18,23 +18,24 @@ export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeNa
                 <Stack.Screen
                     name="Root"
                     options={{ title: 'Cues!' }}
-                    component={() => (
-                        <SafeAreaProvider>
+                >
+                    {
+                        props => <SafeAreaProvider>
                             <View
                                 style={{
                                     height: '100%',
                                     width: '100%',
                                     justifyContent: 'center',
                                     flexDirection: 'row',
-                                    backgroundColor: '#000',
+                                    backgroundColor: '#fff',
                                     flex: 1
                                 }}
                             >
-                                <Home />
+                                <Home {...props} />
                             </View>
                         </SafeAreaProvider>
-                    )}
-                />
+                    }
+                </Stack.Screen>
 
                 {/* In case navigation ends up at a wrong location */}
                 <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />

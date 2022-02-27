@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
     StyleSheet,
     ActivityIndicator,
-    ScrollView,
+    // ScrollView,
     Dimensions,
     Image,
     Platform,
@@ -10,6 +10,9 @@ import {
     Keyboard,
     TextInput
 } from 'react-native';
+
+import { ScrollView } from 'react-native-gesture-handler';
+
 import Alert from '../components/Alert';
 import { View, Text, TouchableOpacity } from './Themed';
 import _ from 'lodash';
@@ -41,6 +44,8 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import BottomSheet from './BottomSheet';
 import { handleImageUpload } from '../helpers/ImageUpload';
 import { handleFile } from '../helpers/FileUpload'
+import Reanimated from 'react-native-reanimated';
+import { getDropdownHeight } from '../helpers/DropdownHeight';
 
 const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     // State
@@ -81,6 +86,14 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
     const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
 
+    const fall = new Reanimated.Value(1);
+
+    const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
+        inputRange: [0, 1],
+        outputRange: [0.5, 0]
+    });
+
+
     useEffect(() => {
         const channelCategories: any[] = [];
         threads.map(item => {
@@ -91,8 +104,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         Object.keys(categoryObject).map(key => {
             channelCategories.push(key);
         });
-
-        console.log('categories', channelCategories);
 
         const options = [
             {
@@ -106,8 +117,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 label: category
             });
         });
-
-        console.log('Categories options', options);
 
         props.setNewPostCategories(options);
     }, [threads]);
@@ -210,6 +219,12 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             
             const url = await handleImageUpload(takePhoto, userId);
 
+            if (!url) {
+                console.log("url", url)
+                setImportType('')
+                return 
+            }
+
             setImportUrl(url)
             setImportType('image')
             setImportTitle('Image')
@@ -224,8 +239,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      const uploadFileHandler = useCallback(
         async (audioVideo) => {
             const res = await handleFile(audioVideo, userId);
-
-            console.log('File upload result', res);
 
             if (!res || res.url === '' || res.type === '') {
                 return;
@@ -383,16 +396,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      */
     const createNewThread = useCallback(
         async (message: any, category: any, isPrivate: any) => {
-            console.log('Create new thread', {
-                message,
-                userId,
-                channelId: props.channelId,
-                isPrivate,
-                anonymous: false,
-                cueId: props.cueId === null ? 'NULL' : props.cueId,
-                parentId: 'INIT',
-                category: category === 'None' ? '' : category
-            });
 
             const server = fetchAPI('');
             server
@@ -695,15 +698,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      * @description Renders the Filter Dropdown and the New Post button
      */
     const renderThreadHeader = () => {
-        const filterDropdownHeight =
-            Object.keys(categoryChoices).length * 60 > 260 ? 250 : Object.keys(categoryChoices).length * 60;
+        // const filterDropdownHeight =
+        //     Object.keys(categoryChoices).length * 60 > 260 ? 250 : Object.keys(categoryChoices).length * 60;
 
         return (
             <View
                 style={{
-                    backgroundColor: '#f2f2f2',
+                    backgroundColor: '#fff',
                     flexDirection: 'column-reverse',
-                    paddingBottom: 20,
+                    paddingBottom: props.cueId === null && categoryChoices.length > 1 ? 20 : 0,
                     paddingHorizontal: 20,
                     width: '100%',
                     maxWidth: 900,
@@ -713,55 +716,51 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 {props.cueId === null && categoryChoices.length > 1 ? (
                     <View
                         style={{
-                            backgroundColor: '#f2f2f2',
-                            height: isFilterDropdownOpen ? filterDropdownHeight : 50,
+                            backgroundColor: '#fff',
+                            height: isFilterDropdownOpen ? getDropdownHeight(categoryChoices.length) : 50,
                             maxWidth: '100%',
-                            marginTop: 20
+                            // marginTop: 20
                         }}
                     >
                         <DropDownPicker
-                            listMode="SCROLLVIEW"
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={isFilterDropdownOpen}
                             value={filterChoice}
                             items={categoryChoices}
                             setOpen={setIsFilterDropdownOpen}
                             setValue={setFilterChoice}
-                            zIndex={1000001}
+                            scrollViewProps={{
+                                nestedScrollEnabled: true,
+                            }}
                             style={{
                                 borderWidth: 0,
-                                // borderBottomWidth: 1,
-                                // borderBottomColor: '#f2f2f2',
-                                backgroundColor: '#f2f2f2',
-                                borderBottomColor: '#d9dcdf',
-                                borderBottomWidth: 2
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#f2f2f2',
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001,
-                                // backgroundColor: '#f2f2f2',
+                                // elevation: !showFrequencyDropdown ? 0 : 2
+                            }}
+                            containerStyle={{
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 1,
                                     height: 3
                                 },
                                 shadowOpacity: !isFilterDropdownOpen ? 0 : 0.08,
-                                shadowRadius: 12
-                            }}
-                            containerStyle={{
-                                // backgroundColor: '#f2f2f2',
-                                borderRadius: 0
+                                shadowRadius: 12,
                             }}
                         />
                     </View>
                 ) : null}
-                {showComments ? (
+                {/* {showComments ? (
                     <View
                         style={{
                             flex: 1,
-                            justifyContent: 'flex-end',
+                            justifyContent: 'center',
                             flexDirection: 'row',
-                            backgroundColor: '#f2f2f2'
+                            backgroundColor: '#fff'
                         }}
                     >
                         <TouchableOpacity
@@ -780,7 +779,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 justifyContent: 'center',
                                 flexDirection: 'row',
                                 borderRadius: 15,
-                                right: 0
+                                // right: 0
                             }}
                         >
                             <Text
@@ -803,7 +802,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             </Text>
                         </TouchableOpacity>
                     </View>
-                ) : null}
+                ) : null} */}
             </View>
         );
     };
@@ -819,12 +818,13 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     maxWidth: 900,
                     borderRadius: 1,
                     padding: 10,
-                    minHeight: 400,
+                    minHeight: Dimensions.get('window').height - (Platform.OS === 'ios' ? 300 : 250),
                     borderLeftWidth: 3,
-                    borderLeftColor: props.channelColor
+                    borderLeftColor: props.channelColor,
                 }}
             >
                 <GiftedChat
+                    bottomOffset={Platform.OS === "ios" ? 120 : 40}
                     renderMessageAudio={renderMessageAudio}
                     renderMessageVideo={renderMessageVideo}
                     renderUsernameOnMessage={true}
@@ -836,19 +836,19 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     }}
                     renderBubble={renderBubble}
                     renderActions={() => (
-                        <View
-                            style={{
-                                marginTop: -10
-                            }}
-                        >
-                            <TouchableOpacity onPress={() => {
-                                Keyboard.dismiss()
-                                setUploadFileVisible(true)
-                            }}>
+                        // <View>
+                            <TouchableOpacity 
+                                style={{
+                                    paddingBottom: 10
+                                }}
+                                onPress={() => {
+                                    Keyboard.dismiss()
+                                    setUploadFileVisible(true)
+                                }}>
                                 <Text
                                     style={{
                                         color: '#006AFF',
-                                        lineHeight: 40,
+                                        // lineHeight: 40,
                                         textAlign: 'right',
                                         fontSize: 12,
                                         fontFamily: 'overpass',
@@ -856,10 +856,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         paddingLeft: 10
                                     }}
                                 >
-                                    <Ionicons name="document-attach-outline" size={18} />
+                                    <Ionicons name="add-outline" size={27} />
                                 </Text>
                             </TouchableOpacity>
-                        </View>
+                        // </View>
                     )}
                 />
             </View>
@@ -878,11 +878,17 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     maxWidth: 900,
                     borderRadius: 1,
                     borderLeftWidth: threads.length === 0 ? 0 : 3,
-                    borderLeftColor: props.channelColor
+                    borderLeftColor: props.channelColor,
+                    maxHeight: Dimensions.get('window').height - 300,
+                    // borderTopColor: '#f2f2f2',
+                    // borderBottomColor: '#f2f2f2',
+                    // borderTopWidth: 1,
+                    // borderBottomWidth: 1,
+                    
                 }}
             >
                 {threads.length === 0 ? (
-                    <View style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
+                    <View style={{ flex: 1, backgroundColor: '#fff' }}>
                         <Text
                             style={{
                                 width: '100%',
@@ -891,7 +897,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 paddingVertical: 50,
                                 fontFamily: 'inter',
                                 flex: 1,
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
                                 paddingHorizontal: 20
                             }}
                         >
@@ -925,8 +931,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 <TouchableOpacity
                                     onPress={() => loadCueDiscussions(thread._id)}
                                     style={{
-                                        // backgroundColor: '#f2f2f2',
+                                        // backgroundColor: '#fff',
                                         flexDirection: 'row',
+                                        alignItems: 'center',
                                         borderColor: '#f2f2f2',
                                         paddingVertical: 5,
                                         // borderRightWidth: 1,
@@ -938,8 +945,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     <View style={{ backgroundColor: '#fff', padding: 5 }}>
                                         <Image
                                             style={{
-                                                height: 35,
-                                                width: 35,
+                                                height: 50,
+                                                width: 50,
                                                 marginTop: 5,
                                                 marginLeft: 5,
                                                 marginBottom: 5,
@@ -953,7 +960,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             }}
                                         />
                                     </View>
-                                    <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 10 }}>
+                                    <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 5 }}>
                                         <Text
                                             style={{ fontSize: 15, padding: 5, fontFamily: 'inter', marginTop: 5 }}
                                             ellipsizeMode="tail"
@@ -961,7 +968,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             {thread.anonymous ? 'Anonymous' : thread.fullName}
                                         </Text>
                                         <Text
-                                            style={{ fontSize: 12, margin: 5, fontWeight: 'bold', lineHeight: 18 }}
+                                            style={{ fontSize: 13, margin: 5, fontWeight: 'bold', lineHeight: 18 }}
                                             ellipsizeMode="tail"
                                             numberOfLines={2}
                                         >
@@ -969,15 +976,20 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         </Text>
                                     </View>
                                     <View style={{ justifyContent: 'center', flexDirection: 'column' }}>
-                                        <View
+                                        <Text
                                             style={{
-                                                flexDirection: 'row',
-                                                backgroundColor: '#fff',
-                                                paddingLeft: 10,
-                                                alignItems: 'center'
+                                                fontSize: 12,
+                                                padding: 5,
+                                                lineHeight: 13,
+                                                fontWeight: 'bold',
+                                                paddingBottom: 10,
+                                                color: thread.unreadThreads > 0 ? '#006AFF' : '#000000'
                                             }}
+                                            ellipsizeMode="tail"
                                         >
-                                            {thread.isPrivate ? (
+                                            {emailTimeDisplay(thread.time)}
+                                        </Text>
+                                        {thread.isPrivate ? (
                                                 <Text
                                                     style={{
                                                         fontSize: 13,
@@ -989,8 +1001,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 >
                                                     <Ionicons name="eye-off-outline" size={18} />
                                                 </Text>
-                                            ) : null}
-                                            {thread.unreadThreads > 0 ? (
+                                        ) : null}
+                                        {thread.unreadThreads > 0 ? (
                                                 <View
                                                     style={{
                                                         width: 16,
@@ -1007,26 +1019,19 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                         {thread.unreadThreads}
                                                     </Text>
                                                 </View>
-                                            ) : null}
-                                            <Text
-                                                style={{
-                                                    fontSize: 12,
-                                                    padding: 5,
-                                                    lineHeight: 13,
-                                                    fontWeight: 'bold',
-                                                    color: thread.unreadThreads > 0 ? '#006AFF' : '#000000'
-                                                }}
-                                                ellipsizeMode="tail"
-                                            >
-                                                {emailTimeDisplay(thread.time)}
-                                            </Text>
-                                            <Text
-                                                style={{ fontSize: 13, padding: 5, lineHeight: 13 }}
-                                                ellipsizeMode="tail"
-                                            >
-                                                <Ionicons name="chevron-forward-outline" size={18} color="#006AFF" />
-                                            </Text>
-                                        </View>
+                                        ) : null}
+                                        {/* <View
+                                            style={{
+                                                flexDirection: 'row',
+                                                backgroundColor: '#fff',
+                                                paddingLeft: 10,
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            
+                                            
+
+                                        </View> */}
                                     </View>
                                 </TouchableOpacity>
                             );
@@ -1253,13 +1258,12 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     return (
         <View
             style={{
-                backgroundColor: '#f2f2f2',
+                backgroundColor: '#fff',
                 width: '100%',
-                paddingTop: 0,
                 justifyContent: 'center',
                 flexDirection: 'row',
                 flex: 1,
-                height: '100%'
+                height: '100%',
                 // maxHeight: '100%'
             }}
         >
@@ -1267,7 +1271,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 style={{
                     width: '100%',
                     maxWidth: 900,
-                    backgroundColor: '#f2f2f2',
+                    backgroundColor: '#fff',
                     borderRadius: 1,
                     flex: 1,
                     height: '100%'
@@ -1275,7 +1279,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             >
                 {!showThreadCues || showPost ? renderThreadHeader() : null}
                 {/* <Collapse isOpened={showComfments} style={{ flex: 1 }}> */}
-                <View style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
+                <View style={{ flex: 1, backgroundColor: '#fff' }}>
                     {loading ? (
                         <View
                             style={{
@@ -1284,7 +1288,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 justifyContent: 'center',
                                 flex: 1,
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2'
+                                backgroundColor: '#fff'
                             }}
                         >
                             <ActivityIndicator color={'#1F1F1F'} />
@@ -1293,16 +1297,11 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         <View
                             style={{
                                 width: '100%',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
                                 flex: 1,
                                 flexDirection: 'column',
-                                borderRadius: 1
-                                // shadowOffset: {
-                                //     width: threads.length === 0 ? 0 : 2,
-                                //     height: threads.length === 0 ? 0 : 2
-                                // },
-                                // shadowOpacity: 0.1,
-                                // shadowRadius: threads.length === 0 ? 0 : 10
+                                borderRadius: 1,
+                                // marginTop: 20
                             }}
                             key={JSON.stringify(filteredThreads) + JSON.stringify(showPost)}
                         >
@@ -1366,6 +1365,29 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     header={false}
                 />
             )}
+             {uploadFileVisible ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: 0.3,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute'
+                    }}
+                >
+                    <TouchableOpacity style={{
+                        backgroundColor: 'transparent',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    onPress={() => setUploadFileVisible(false)}
+                    >
+                    </TouchableOpacity>
+                </Reanimated.View>
+            ) : null}
         </View>
     );
 };

@@ -17,7 +17,6 @@ const isLessThanTheMB = (fileSize: number, smallerThanSizeMB: number) => {
 
 export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
     // e.preventDefault();
-    console.log('Initiate document picker');
     if (audioVideoOnly) {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -58,10 +57,11 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
 
             // const file = blobToFile(img, 'default.jpg');
 
+            alert("Upload in progress! Large files may take longer to process.")
+
             const response = await fileUpload(file, 'mp4', userId);
 
             const { data } = response;
-            console.log('Result', data);
             if (data.status === 'success') {
                 return {
                     url: data.url,
@@ -109,15 +109,13 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
         }
 
         if (type === 'wma' || type === 'avi') {
-            alert('This video format is not supported. Upload mp4 or ogg.');
+            alert('This video format is not supported. Upload mp4.');
             return { type: '', url: '', name: '' };
         }
 
         if (type === 'mpga') {
             type = 'mp3';
         }
-
-        console.log('File type', type);
 
         // if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
         //     alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
@@ -136,14 +134,13 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
             type: 'application/' + type
         };
 
-        console.log('File to upload', file);
-
+        alert("Upload in progress! Large files may take longer to process.")
+        
         // return { type: '', url: '' };
 
         const response = await fileUpload(file, type, userId);
 
         const { data } = response;
-        console.log('Result', data);
         if (data.status === 'success') {
             return {
                 url: data.url,

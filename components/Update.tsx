@@ -19,6 +19,7 @@ import {
     getReleaseSubmissionStatus
 } from '../graphql/QueriesAndMutations';
 
+
 // COMPONENTS
 import Alert from '../components/Alert';
 import { View, TouchableOpacity, Text } from '../components/Themed';
@@ -75,6 +76,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [showComments, setShowComments] = useState(false);
     const [save, setSave] = useState(false);
     const [del, setDel] = useState(false);
+    const [shareFeedback, setShareFeedback] = useState(false);
     const [submit, setSubmit] = useState(false);
     const [viewSubmission, setViewSubmission] = useState((props.cue.submittedAt !== null && props.cue.submittedAt !== undefined) ||
     (props.cue.graded && props.cue.releaseSubmission));
@@ -107,7 +109,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
     const unableToLoadCommentsAlert = PreferredLanguageText('unableToLoadComments');
 
-    console.log('Props.cue', props.cue);
+    console.log("Props cue", props.cue)
 
     // HOOKS
 
@@ -582,7 +584,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 paddingLeft: Dimensions.get('window').width < 1024 ? 0 : 20,
                 flexDirection: 'row',
                 flex: 1,
-                backgroundColor: '#000',
+                // backgroundColor: '#000',
                 paddingTop: Dimensions.get('window').width < 1024 ? 9 : 12,
                 height: 48,
                 justifyContent: Dimensions.get('window').width < 1024 ? 'center' : 'flex-start'
@@ -1541,6 +1543,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         setDelete={(del: boolean) => setDel(del)}
                         setSubmit={(submit: boolean) => setSubmit(submit)}
                         setViewSubmission={(view: boolean) => setViewSubmission(view)}
+                        // refreshAfterSubmittingQuiz={() => props.refreshAfterSubmittingQuiz()}
                     />
                     {!Number.isNaN(Number(cueId)) || !props.channelId ? (
                         <View style={{ flex: 1, backgroundColor: 'white' }} />
@@ -1619,6 +1622,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         cue={props.cue}
                                         updateCueWithReleaseSubmission={updateCueWithReleaseSubmission}
                                         reloadStatuses={reloadStatuses}
+                                        shareFeedback={shareFeedback}
+                                        setShareFeedback={(feedback: boolean) => setShareFeedback(feedback)}
                                     />
                                 </View>
                             </ScrollView>
@@ -1636,7 +1641,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         return (
             <React.Fragment>
                 {/* Edit folder button */}
-                {channelOwner && folderId !== '' && !editFolder && showOriginal ? (
+                {channelOwner && folderId !== '' && !editFolder && showOriginal && props.channelId ? (
                     <TouchableOpacity
                         onPress={async () => {
                             setEditFolder(true);
@@ -1662,7 +1667,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     </TouchableOpacity>
                 ) : null}
                 {/* Create new folder button */}
-                {channelOwner && folderId === '' && !createNewFolder && !editFolder && showOriginal ? (
+                {channelOwner && folderId === '' && !createNewFolder && !editFolder && showOriginal && props.channelId ? (
                     <TouchableOpacity
                         onPress={() => {
                             setCreateNewFolder(true);
@@ -1793,10 +1798,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     return;
                                 }
 
-                                console.log("Argument",  {
-                                    title: newFolderTitle,
-                                    cueIds: selectedCues.map((cue: any) => cue._id)
-                                })
+                                if (newFolderTitle.trim() === '') {
+                                    Alert('Folder title cannot be empty.');
+                                    return;
+                                }
 
                                 server
                                     .mutate({
@@ -1890,6 +1895,12 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     return;
                                 }
 
+                                if (updateFolderTitle.trim() === '') {
+                                    Alert('Folder title cannot be empty.');
+                                    return;
+                                }
+
+
                                 server
                                     .mutate({
                                         mutation: updateFolder,
@@ -1946,34 +1957,51 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={async () => {
-                                const server = fetchAPI('');
-
-                                setDeletingFolder(true);
-
-                                server
-                                    .mutate({
-                                        mutation: deleteFolder,
-                                        variables: {
-                                            folderId
-                                        }
-                                    })
-                                    .then(async res => {
-                                        // Update cue locally with the new Unread count so that the Unread count reflects in real time
-                                        if (!res.data.folder.delete) {
-                                            Alert('Could not delete list. Try again.');
-                                            setDeletingFolder(false);
+                                Alert('Delete folder?', '', [
+                                    {
+                                        text: 'Cancel',
+                                        style: 'cancel',
+                                        onPress: () => {
                                             return;
                                         }
+                                    },
+                                    {
+                                        text: 'Yes',
+                                        onPress: () => {
+                                            const server = fetchAPI('');
 
-                                        setDeletingFolder(false);
-                                        setFolderId('');
+                                            setDeletingFolder(true);
 
-                                        props.refreshCues();
-                                    })
-                                    .catch(e => {
-                                        Alert('Could not create folder. Try again.');
-                                        setDeletingFolder(false);
-                                    });
+                                            server
+                                                .mutate({
+                                                    mutation: deleteFolder,
+                                                    variables: {
+                                                        folderId
+                                                    }
+                                                })
+                                                .then(async res => {
+                                                    // Update cue locally with the new Unread count so that the Unread count reflects in real time
+                                                    if (!res.data.folder.delete) {
+                                                        Alert('Could not delete list. Try again.');
+                                                        setDeletingFolder(false);
+                                                        return;
+                                                    }
+
+                                                    setDeletingFolder(false);
+                                                    setEditFolder(false);
+                                                    setFolderId('');
+
+                                                    fetchChannelFolders();
+
+                                                    props.refreshCues();
+                                                })
+                                                .catch(e => {
+                                                    Alert('Could not create folder. Try again.');
+                                                    setDeletingFolder(false);
+                                                });
+                                        }
+                                    }
+                                ]);
                             }}
                             style={{
                                 backgroundColor: '#fff',
@@ -2108,7 +2136,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text>
                                 <Ionicons
                                     name="arrow-back-outline"
-                                    size={Dimensions.get('window').width > 768 ? 30 : 26}
+                                    size={Dimensions.get('window').width > 768 ? 30 : 27}
                                     color={'#000'}
                                 />
                             </Text>
@@ -2149,7 +2177,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         maxWidth: '100%',
                                         height: 30,
                                     }}
-                                    autoCompleteType={'xyz'}
                                     placeholderTextColor={'#000'}
                                     placeholder={'Folder Title'}
                                     onChangeText={(val: any) => setNewFolderTitle(val)}
@@ -2187,7 +2214,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         maxWidth: '100%',
                                         height: 30,
                                 }}
-                                autoCompleteType={'xyz'}
                                 placeholderTextColor={'#000'}
                                 placeholder={'Folder Title'}
                                 onChangeText={(val: any) => setUpdateFolderTitle(val)}
@@ -2234,6 +2260,36 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </Text>
                                     </TouchableOpacity>
                                 ) : null}
+
+                                {channelOwner && !showOriginal && !showOptions &&
+                                !editFolder &&
+                                !createNewFolder ? (
+                                    <TouchableOpacity
+                                        onPress={async () => {
+                                            setShareFeedback(true)
+                                        }}
+                                        style={{
+                                            paddingLeft: 0,
+                                            backgroundColor: '#ffffff',
+                                            marginLeft: 20
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                lineHeight: 34,
+                                                backgroundColor: '#ffffff',
+                                                fontWeight: 'bold',
+                                                textTransform: 'uppercase',
+                                                fontSize: 12,
+                                                fontFamily: 'overpass',
+                                                color: '#000'
+                                            }}
+                                        >
+                                            {props.cue.releaseSubmission ? 'HIDE' : 'SHARE'} FEEDBACK
+                                        </Text>
+                                    </TouchableOpacity>
+                                ) : null}
+
                                 {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) ?
                                     <TouchableOpacity
                                     onPress={async () => {
@@ -2422,7 +2478,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     style={{
                         position: 'absolute',
                         zIndex: 1000,
-                        backgroundColor: '#000',
+                        // backgroundColor: '#000',
                         bottom: 0,
                         width: '100%',
                         paddingTop: 5,
@@ -2453,35 +2509,37 @@ export default Update;
 const styles: any = StyleSheet.create({
     all: {
         fontSize: Dimensions.get('window').width < 1024 ? 12 : 14,
-        color: '#fff',
+        color: '#000',
         height: 25,
-        backgroundColor: '#000',
+        // backgroundColor: '#000',
         lineHeight: 25,
         fontFamily: 'overpass',
         textTransform: 'uppercase',
         fontWeight: 'bold'
     },
     allBlueTabButton: {
-        backgroundColor: '#006AFF',
+        backgroundColor: '#000',
         borderRadius: 20,
         height: 25,
         maxHeight: 25,
         lineHeight: 24,
-        paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15
+        paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
+        marginHorizontal: 2,
     },
     tabButton: {
-        backgroundColor: '#000',
+        // backgroundColor: '#000',
         height: 25,
         maxHeight: 25,
         lineHeight: 24,
         borderRadius: 20,
-        paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15
+        color: '#000000',
+        paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
+        marginHorizontal: 2,
     },
     allGrayFill: {
         fontSize: Dimensions.get('window').width < 1024 ? 12 : 14,
         color: '#fff',
-        // borderRadius: 12,
-        backgroundColor: '#006AFF',
+        backgroundColor: '#000',
         lineHeight: 24,
         height: 25,
         fontFamily: 'inter',

@@ -16,6 +16,7 @@ import alert from './Alert';
 // import { Popup } from '@mobiscroll/react5';
 // import '@mobiscroll/react/dist/css/mobiscroll.react.min.css';
 import BottomSheet from './BottomSheet';
+import Reanimated from 'react-native-reanimated';
 
 const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +26,13 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
     const [results, setResults] = useState<any[]>([]);
     const [selectedBook, setSelectedBook] = useState<any>(null);
     const [retrievingBook, setRetrievingBook] = useState<any>('');
+
+    const fall = new Reanimated.Value(1);
+
+    const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
+        inputRange: [0, 1],
+        outputRange: [0.5, 0]
+    });
 
     // HOOKS
 
@@ -127,7 +135,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
     return (
         <View
             style={{
-                height: '100%'
+                height: '100%',
             }}
         >
             <ScrollView
@@ -135,9 +143,11 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     {
                         // flex: 1,
                         // height: '100%'
+                        paddingTop: 50,
+                        paddingBottom: 150
                     }
                 }
-                style={{ marginBottom: 150 }}
+                // style={{ marginBottom: 150 }}
                 indicatorStyle="black"
             >
                 <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center' }}>
@@ -219,7 +229,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             width: '100%',
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            flexWrap: 'wrap'
+                            flexWrap: 'wrap',
                         }}
                     >
                         {results.length === 0 ? (
@@ -229,22 +239,22 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         width: '100%',
                                         color: '#393939',
                                         textAlign: 'center',
-                                        fontSize: 30,
+                                        fontSize: 24,
                                         paddingTop: 50,
                                         paddingBottom: 50,
-                                        paddingHorizontal: 5,
+                                        paddingHorizontal: 20,
                                         fontFamily: 'inter',
                                         flex: 1
                                     }}
                                 >
-                                    Browse through over 5 million books & texts
+                                    Search through over 5 million books & texts
                                 </Text>
                             ) : (
                                 <Text
                                     style={{
                                         width: '100%',
                                         textAlign: 'center',
-                                        fontSize: 30,
+                                        fontSize: 24,
                                         color: '#1f1f1f',
                                         paddingTop: 50,
                                         paddingBottom: 50,
@@ -389,6 +399,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     header={false}
                     isOpen={selectedBook !== null}
                     title={selectedBook ? selectedBook.title : ''}
+                    callbackNode={fall}
                     renderContent={() => (
                         <View>
                             {!retrievingBook && selectedBook ? (
@@ -516,6 +527,21 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         </View>
                     )}
                 />
+            ) : null}
+
+            {selectedBook ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: animatedShadowOpacity,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute'
+                    }}
+                ></Reanimated.View>
             ) : null}
         </View>
     );

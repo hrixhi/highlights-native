@@ -7,11 +7,13 @@ import {
     Image,
     Dimensions,
     Linking,
-    ScrollView,
-    Switch,
+    // ScrollView,
+    // Switch,
     Platform,
     TextInput as DefaultInput,
+    Keyboard,
 } from 'react-native';
+import { ScrollView, Switch } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import _ from 'lodash';
@@ -61,9 +63,15 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
 
+import logo from '../components/default-images/cues-logo-black-exclamation-hidden.jpg';
+import { contentsModalHeight, getDropdownHeight } from '../helpers/DropdownHeight';
+
+
 const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const styles = styleObject();
     const [userId, setUserId] = useState('');
+    const [role, setRole] = useState('');
+    const [allowQuizCreation, setAllowQuizCreation] = useState(false);
     const scrollViewRef: any = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [collapseMap, setCollapseMap] = useState<any>({});
@@ -95,7 +103,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     let cancelTokenRef: any = useRef({});
     const tabs = ['Content', 'Discuss', 'Meet', 'Scores', 'Settings'];
     const width = Dimensions.get('window').width;
-    const windowHeight = width < 768 ? Dimensions.get('window').height - 0 : Dimensions.get('window').height;
+    const windowHeight = Dimensions.get('window').height;
     const sortbyOptions = [
         {
             value: 'Date ↑',
@@ -124,6 +132,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
     const [showSearchMobile, setShowSearchMobile] = useState<any>('');
     const [showFilterModal, setShowFilterModal] = useState(false);
+    const [showNewContentModal, setShowNewContentModal] = useState(false);
     const [showSortByFilterModal, setShowSortByFilterModal] = useState(false);
     const [showFilterStartDateAndroid, setShowFilterStartDateAndroid] = useState(false);
     const [showFilterEndDateAndroid, setShowFilterEndDateAndroid] = useState(false);
@@ -134,6 +143,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [showNewPostModal, setShowNewPostModal] = useState(false);
     const [newPostCategories, setNewPostCategories] = useState<any[]>([]);
     const [discussionReloadKey, setDiscussionReloadKey] = useState(Math.random());
+
+    const [showWorkspaceOptionsModal, setShowWorkspaceOptionsModal] = useState(false)
 
     const currentTime = new Date();
     const [meetingEndTime, setMeetingEndTime] = useState(new Date(currentTime.getTime() + 1000 * 40 * 60));
@@ -213,6 +224,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     // HOOKS
 
+    useEffect(() => {
+        if (props.option === 'Search') {
+            setShowSearchMobile(true);
+        } else {
+            setShowSearchMobile(false);
+        }
+    }, [props.option])
+
     /**
      * @description Fetch meeting provider for org
      */
@@ -233,6 +252,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     useEffect(() => {
         props.setSelectedWorkspace(selectedWorkspace);
+        setCategoryPositionList([])
+        console.log("Selected workspace", selectedWorkspace)
+
     }, [selectedWorkspace]);
 
     /**
@@ -404,15 +426,22 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 if (user.zoomInfo) {
                     setUserZoomInfo(user.zoomInfo);
                 }
+
+                if (user.role) {
+                    setRole(user.role);
+                }
+                if (user.allowQuizCreation) {
+                    setAllowQuizCreation(true);
+                }
             }
         })();
 
         const temp: any = {};
         const tempCat: any = {};
         const mycues: any[] = [];
-        temp['Home'] = [];
+        temp['My Notes'] = [];
         const tempCollapse: any = {};
-        tempCollapse['Home'] = false;
+        tempCollapse['My Notes'] = false;
         const tempIndexes: any = {};
 
         let dateFilteredCues: any[] = [];
@@ -495,18 +524,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             });
         }
 
-        temp['Home'] = mycues;
+        temp['My Notes'] = mycues;
         if (!cat['']) {
             delete cat[''];
         }
-        tempCat['Home'] = Object.keys(cat);
-        tempIndexes['Home'] = 0;
+        tempCat['My Notes'] = Object.keys(cat);
+        tempIndexes['My Notes'] = 0;
 
         setCueMap(temp);
         setCollapseMap(tempCollapse);
         setCategoryMap(tempCat);
         setIndexMap(tempIndexes);
-    }, [sortBy, filterStart, filterEnd]);
+    }, [sortBy, filterStart, filterEnd, props.subscriptions]);
 
     /**
      * @description Setup the data for carousel
@@ -557,7 +586,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Fetches search results for search term
      */
     useEffect(() => {
-        if (searchTerm.trim() === '') {
+        if (searchTerm.trim().length < 3) {
+            setLoadingSearchResults(false)
+            cancelTokenRef.current = axios.CancelToken.source();
             setResults({
                 Channels: [],
                 Classroom: [],
@@ -695,7 +726,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             channelId = selectedWorkspace.split('-SPLIT-')[1];
         } else {
             Object.keys(collapseMap).map((key: any) => {
-                if (collapseMap[key] && key.split('-SPLIT-')[0] !== 'Home') {
+                if (collapseMap[key] && key.split('-SPLIT-')[0] !== 'My Notes') {
                     console.log('Active', collapseMap[key]);
                     console.log('Key', key.split('-SPLIT-')[1]);
                     channelId = key.split('-SPLIT-')[1];
@@ -745,7 +776,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             if (Platform.OS === 'ios' || Platform.OS === 'android') {
                 Linking.openURL(url);
             } else {
-                window.open(url);
+                window.open(url, '_blank');
             }
         }
     };
@@ -961,7 +992,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowFilterStartDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowFilterStartDateAndroid(false);
@@ -972,7 +1006,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {Platform.OS === 'android' ? (
                     <View
                         style={{
-                            width: '100%',
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
@@ -981,14 +1014,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowFilterStartDateAndroid(true);
@@ -998,16 +1031,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
+                                    borderRadius: 15
                                 }}
                             >
                                 Set Date
@@ -1020,6 +1050,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     console.log('New post categories', newPostCategories);
+    console.log('categoryPositionList', categoryPositionList)
 
     const renderFilterEndDateTimePicker = () => {
         return (
@@ -1047,7 +1078,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowFilterEndDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowFilterEndDateAndroid(false);
 
@@ -1060,7 +1094,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {Platform.OS === 'android' ? (
                     <View
                         style={{
-                            width: '100%',
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
@@ -1069,14 +1102,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
-                                width: 150,
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowFilterStartDateAndroid(false);
@@ -1086,16 +1119,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
+                                    borderRadius: 15
                                 }}
                             >
                                 Set Date
@@ -1114,9 +1144,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             <View
                 style={{
                     flexDirection: 'row',
-                    marginBottom: activeTab === 'Content' ? 10 : 30,
-                    paddingTop: 10,
-                    backgroundColor: '#f2f2f2',
+                    marginBottom: 10,
+                    // paddingTop: 10,
+                    backgroundColor: '#fff',
                     flex: 1,
                     justifyContent: 'center',
                     //paddingVertical: 20
@@ -1126,16 +1156,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     style={{
                         flexDirection: 'row',
                         justifyContent: 'center',
-                        maxWidth: 900,
+                        width: '100%',
                         flex: 1,
-                        backgroundColor: '#f2f2f2',
+                        backgroundColor: '#fff',
                     }}
                 >
                     <TouchableOpacity
                         style={{
                             justifyContent: 'center',
                             flexDirection: 'column',
-                            backgroundColor: '#f2f2f2',
+                            backgroundColor: '#fff',
+                            width: '18%'
                         }}
                         onPress={() => {
                             const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1143,18 +1174,35 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setIndexMap(temp);
                         }}
                     >
-                        <Text style={activeTab === 'Content' ? styles.allGrayFill1 : styles.all1}>
+                        <Text style={{
+                            fontSize: 10,
+                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                            height: 20,
+                            paddingHorizontal: 7,
+                            lineHeight: 20,
+                            fontFamily: 'inter',
+                            textAlign: 'center'
+                        }}>
                             <Ionicons name="library-outline" size={18} style={{ marginBottom: 5 }} />
                         </Text>
-                        <Text style={activeTab === 'Content' ? styles.allGrayFill1 : styles.all1}>
-                            {props.version === 'read' ? 'Read' : 'Library'}
+                        <Text style={{
+                            fontSize: 10,
+                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                            height: 20,
+                            paddingHorizontal: 7,
+                            lineHeight: 20,
+                            fontFamily: 'inter',
+                            textAlign: 'center'
+                        }}>
+                            Library
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={{
                             justifyContent: 'center',
                             flexDirection: 'column',
-                            backgroundColor: '#f2f2f2',
+                            backgroundColor: '#fff',
+                            width: '18%'
                         }}
                         onPress={() => {
                             const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1162,31 +1210,34 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setIndexMap(temp);
                         }}
                     >
-                        <Text style={activeTab === 'Discuss' ? styles.allGrayFill1 : styles.all1}>
+                        <Text style={{
+                            fontSize: 10,
+                            color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                            height: 20,
+                            paddingHorizontal: 7,
+                            lineHeight: 20,
+                            fontFamily: 'inter',
+                            textAlign: 'center'
+                        }}>
                             <Ionicons name="chatbubbles-outline" size={18} />
                         </Text>
-                        <Text style={activeTab === 'Discuss' ? styles.allGrayFill1 : styles.all1}>Discussion</Text>
+                        <Text style={{
+                            fontSize: 10,
+                            color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                            height: 20,
+                            paddingHorizontal: 7,
+                            lineHeight: 20,
+                            fontFamily: 'inter',
+                            textAlign: 'center'
+                        }}>Discussion</Text>
                     </TouchableOpacity>
-                    {/* <TouchableOpacity
-                    style={{
-                        justifyContent: "center",
-                        flexDirection: "column",
-                        backgroundColor: '#f2f2f2'
-                    }}
-                    onPress={() => handleEnterClassroom()}>
-                    <Text style={activeTab === 'Meet' ? styles.allGrayFill1 : styles.all1}>
-                        <Ionicons name='videocam-outline' size={18} />
-                    </Text>
-                    <Text style={activeTab === 'Meet' ? styles.allGrayFill1 : styles.all1}>
-                        Meet
-                    </Text>
-                </TouchableOpacity> */}
                     {props.version !== 'read' ? (
                         <TouchableOpacity
                             style={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
+                                width: '18%'
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1194,10 +1245,26 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 setIndexMap(temp);
                             }}
                         >
-                            <Text style={activeTab === 'Meet' ? styles.allGrayFill1 : styles.all1}>
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}>
                                 <Ionicons name="videocam-outline" size={18} />
                             </Text>
-                            <Text style={activeTab === 'Meet' ? styles.allGrayFill1 : styles.all1}>Meetings</Text>
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}>Meetings</Text>
                         </TouchableOpacity>
                     ) : null}
                     {props.version !== 'read' ? (
@@ -1205,7 +1272,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
+                                width: '18%'
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1213,10 +1281,26 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 setIndexMap(temp);
                             }}
                         >
-                            <Text style={activeTab === 'Scores' ? styles.allGrayFill1 : styles.all1}>
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}>
                                 <Ionicons name="bar-chart-outline" size={18} />
                             </Text>
-                            <Text style={activeTab === 'Scores' ? styles.allGrayFill1 : styles.all1}>Scores</Text>
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}>Scores</Text>
                         </TouchableOpacity>
                     ) : null}
                     {key.split('-SPLIT-')[2] === userId ? (
@@ -1224,7 +1308,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
+                                width: '18%'
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1232,10 +1317,26 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 setIndexMap(temp);
                             }}
                         >
-                            <Text style={activeTab === 'Settings' ? styles.allGrayFill1 : styles.all1}>
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}>
                                 <Ionicons name="build-outline" size={18} />
                             </Text>
-                            <Text style={activeTab === 'Settings' ? styles.allGrayFill1 : styles.all1}>
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}>
                                 {props.version === 'read' ? 'Edit' : 'Settings'}
                             </Text>
                         </TouchableOpacity>
@@ -1247,13 +1348,230 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     console.log('Horizontal scroll position', xScrollOffset);
 
+    const renderWorkspaceOptionsList = () => {
+
+        const activeTab = tabs[indexMap[selectedWorkspace]];
+
+        return (
+            <View
+                style={{
+                    width: '100%',
+                    backgroundColor: 'white',
+                    borderTopRightRadius: 0,
+                    borderTopLeftRadius: 0,
+                    paddingTop: 20
+                }}
+            >
+                <TouchableOpacity
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#fff',
+                            width: '100%',
+                            marginBottom: 18,
+                            paddingLeft: 15,
+                            borderLeftColor: selectedWorkspace.split('-SPLIT-')[3],
+                            // borderLeftWidth: activeTab === 'Content' ? 3 : 0,
+                        }}
+                        onPress={() => {
+                            const temp = JSON.parse(JSON.stringify(indexMap));
+                            temp[selectedWorkspace] = 0;
+                            setIndexMap(temp);
+                            setShowWorkspaceOptionsModal(false);
+                        }}
+                    >
+                        <Text style={{
+                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center',
+                        }}>
+                            <Ionicons name="library-outline" size={22} />
+                        </Text>
+                        <Text style={{
+                            fontSize: 17,
+                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center',
+                            paddingLeft: 14,
+                            paddingVertical: 3
+                        }}>
+                            Library
+                        </Text>
+
+                        {activeTab === 'Content' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#fff',
+                            width: '100%',
+                            marginBottom: 18,
+                            paddingLeft: 15,
+                            borderLeftColor: selectedWorkspace.split('-SPLIT-')[3],
+                            // borderLeftWidth: activeTab === 'Discuss' ? 3 : 0,
+                        }}
+                        onPress={() => {
+                            const temp = JSON.parse(JSON.stringify(indexMap));
+                            temp[selectedWorkspace] = 1;
+                            setIndexMap(temp);
+                            setShowWorkspaceOptionsModal(false);
+                        }}
+                    >
+                        <Text style={{
+                            color:activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center'
+                        }}>
+                            <Ionicons name="chatbubbles-outline" size={22} />
+                        </Text>
+                        <Text style={{
+                            fontSize: 17,
+                            color:activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center',
+                            paddingLeft: 14,
+                            paddingVertical: 3
+                        }}>Discussion</Text>
+                        {activeTab === 'Discuss' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
+
+                    </TouchableOpacity>
+                    {props.version !== 'read' ? (
+                        <TouchableOpacity
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#fff',
+                                width: '100%',
+                                marginBottom: 18,
+                                paddingLeft: 15,
+                                borderLeftColor: selectedWorkspace.split('-SPLIT-')[3],
+                                // borderLeftWidth: activeTab === 'Meet' ? 3 : 0,
+                            }}
+                            onPress={() => {
+                                const temp = JSON.parse(JSON.stringify(indexMap));
+                                temp[selectedWorkspace] = 2;
+                                setIndexMap(temp);
+                                setShowWorkspaceOptionsModal(false);
+                            }}
+                        >
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center'
+                            }}>
+                                <Ionicons name="videocam-outline" size={22} />
+                            </Text>
+                            <Text style={{
+                                fontSize: 17,
+                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingLeft: 14,
+                                paddingVertical: 3
+                            }}>Meetings</Text>
+                            {activeTab === 'Meet' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
+
+                        </TouchableOpacity>
+                    ) : null}
+                    {props.version !== 'read' ? (
+                        <TouchableOpacity
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#fff',
+                                width: '100%',
+                                marginBottom: 18,
+                                paddingLeft: 15,
+                                borderLeftColor: selectedWorkspace.split('-SPLIT-')[3],
+                                // borderLeftWidth: activeTab === 'Scores' ? 3 : 0,
+                            }}
+                            onPress={() => {
+                                const temp = JSON.parse(JSON.stringify(indexMap));
+                                temp[selectedWorkspace] = 3;
+                                setIndexMap(temp);
+                                setShowWorkspaceOptionsModal(false);
+                            }}
+                        >
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center'
+                            }}>
+                                <Ionicons name="bar-chart-outline" size={22} />
+                            </Text>
+                            <Text style={{
+                                fontSize: 17,
+                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingLeft: 14,
+                                paddingVertical: 3
+                            }}>Scores</Text>
+                            {activeTab === 'Scores' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
+
+                        </TouchableOpacity>
+                    ) : null}
+                    {selectedWorkspace.split('-SPLIT-')[2] === userId ? (
+                        <TouchableOpacity
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#fff',
+                                width: '100%',
+                                marginBottom: 12,
+                                paddingLeft: 15,
+                                borderLeftColor: selectedWorkspace.split('-SPLIT-')[3],
+                                // borderLeftWidth: activeTab === 'Settings' ? 3 : 0,
+                                
+                            }}
+                            onPress={() => {
+                                const temp = JSON.parse(JSON.stringify(indexMap));
+                                temp[selectedWorkspace] = 4;
+                                setIndexMap(temp);
+                                setShowWorkspaceOptionsModal(false);
+                            }}
+                        >   
+                            <Text style={{
+                                fontSize: 10,
+                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingVertical: 3
+                            }}>
+                                <Ionicons name="build-outline" size={22} />
+                            </Text>
+                            <Text style={{
+                                fontSize: 17,
+                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingLeft: 14
+                            }}>
+                                Settings
+                            </Text>
+                            {activeTab === 'Settings' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
+                        </TouchableOpacity>
+                    ) : null}
+            </View>
+        );
+    }
+
+    // console.log("Cues carousel data", cuesCarouselData)
+
     const renderCategorySelectionContent = () => {
+        console.log('New post categories', newPostCategories);
+        console.log('categoryPositionList', categoryPositionList)
         return (
             <ScrollView
                 key={xScrollOffset.toString()}
                 style={{
                     width: '100%',
                     // height: windowHeight,
+                    height: categoryPositionList.length * 40 > 500 ? 500 : categoryPositionList.length * 40,
+                    // maxHeight: 500,
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0,
@@ -1338,10 +1656,113 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
+    const renderNewContentModalOptions = () => {
+        return <View style={{ 
+            paddingHorizontal: '20%'
+        }}>
+            <TouchableOpacity
+                style={{
+                    // marginTop: 20,
+                    backgroundColor: '#eeeeee',
+                    borderRadius: 19,
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
+                onPress={() => {
+                    setShowNewContentModal(false)
+                    props.openCreate('content')
+                }}
+            >
+                <Ionicons name='create-outline' size={20} color={'#000'} />
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        // paddingHorizontal: 25,
+                        paddingLeft: 10,
+                        fontFamily: 'inter',
+                        height: 40,
+                        lineHeight: 40,
+                        color: '#000',
+                        fontSize: 16
+                    }}
+                >
+                    {role === 'instructor' ? 'New content' : 'New note' }
+                </Text>
+            </TouchableOpacity>
+
+            {allowQuizCreation ? <TouchableOpacity
+                style={{
+                    marginTop: 25,
+                    backgroundColor: '#eeeeee',
+                    borderRadius: 19,
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
+                onPress={() => { 
+                    setShowNewContentModal(false)
+                    props.openCreate('quiz')
+                }}
+            >
+                <Ionicons name='checkbox-outline' size={20} color={'#000'} />
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingLeft: 10,
+                        fontFamily: 'inter',
+                        height: 40,
+                        lineHeight: 40,
+                        color: '#000',
+                        fontSize: 16
+                    }}
+                >
+                    Create quiz
+                </Text>
+            </TouchableOpacity> : null}
+
+            {allowQuizCreation ? <TouchableOpacity
+                style={{
+                    marginTop: 25,
+                    backgroundColor: '#eeeeee',
+                    borderRadius: 19,
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
+                onPress={() => {
+                    setShowNewContentModal(false)
+                    props.openCreate('books')
+                }}
+            >
+                <Ionicons name='book-outline' size={20} color={'#000'} />
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        paddingLeft: 10,
+                        fontFamily: 'inter',
+                        height: 40,
+                        lineHeight: 40,
+                        color: '#000',
+                        fontSize: 16
+                    }}
+                >
+                    Browse books
+                </Text>
+            </TouchableOpacity> : null}
+        </View>
+    }
+
     const renderFilterModalContent = () => {
         const filterChannelOptions = [
             { value: 'All', label: 'All' },
-            { value: '', label: 'Home' },
+            { value: '', label: 'My Notes' },
         ];
 
         props.subscriptions.map((sub: any) => {
@@ -1379,19 +1800,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             backgroundColor: 'white',
                             display: 'flex',
-                            height: showSortByFilterModal ? 230 : 50,
+                            height: showSortByFilterModal ? getDropdownHeight(sortbyOptions.length) : 50,
                             marginTop: 10,
                             // marginRight: 10
                         }}
                     >
                         <DropDownPicker
-                            listMode="SCROLLVIEW"
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={showSortByFilterModal}
                             value={sortBy}
                             items={sortbyOptions}
                             setOpen={setShowSortByFilterModal}
                             setValue={setSortBy}
-                            zIndex={1000001}
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
@@ -1399,8 +1819,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001,
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
@@ -1410,8 +1828,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 },
                                 shadowOpacity: !showSortByFilterModal ? 0 : 0.08,
                                 shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001,
                             }}
                         />
                     </View>
@@ -1421,7 +1837,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <View
                         style={{
                             width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            flexDirection: 'row',
                             // paddingTop: 12,
                             backgroundColor: '#fff',
                             marginLeft: 'auto',
@@ -1446,7 +1862,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <View
                         style={{
                             width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            flexDirection: 'row',
                             backgroundColor: '#fff',
                             marginTop: 12,
                             marginLeft: 'auto',
@@ -1561,9 +1977,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const renderOngoingMeetings = (createdBy: string, colorCode: string) => {
-        // console.log('Ongoing meetings', ongoingMeetings);
+        console.log('Ongoing meetings', ongoingMeetings);
         return (
-            <View style={{ width: '100%', maxWidth: 900, backgroundColor: '#f2f2f2', paddingBottom: 30 }}>
+            <View style={{ width: '100%', maxWidth: 900, backgroundColor: '#fff', paddingBottom: 30 }}>
                 <Text
                     style={{ color: '#1f1f1f', fontSize: 18, fontFamily: 'inter', marginBottom: 20, paddingLeft: 10 }}
                 >
@@ -1578,14 +1994,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         maxHeight: 500,
                         paddingHorizontal: 10,
                         borderRadius: 1,
-                        borderLeftColor: colorCode,
-                        borderLeftWidth: 3,
-                        shadowOffset: {
-                            width: 2,
-                            height: 2,
-                        },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 10,
+                        borderColor: '#f2f2f2',
+                        // borderTopWidth: 1,
+                        // borderBottomWidth: 1
+                        // borderLeftColor: colorCode,
+                        // borderLeftWidth: 3,
+                        // shadowOffset: {
+                        //     width: 2,
+                        //     height: 2,
+                        // },
+                        // shadowOpacity: 0.1,
+                        // shadowRadius: 10,
                         // zIndex: 5000000
                     }}
                 >
@@ -1616,7 +2035,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                                         borderColor: '#f2f2f2',
                                         paddingVertical: 8,
-                                        borderBottomWidth: ind === ongoingMeetings.length - 1 ? 0 : 1,
+                                        borderBottomWidth: (ind === ongoingMeetings.length - 1) ? 0 : 1,
                                         // minWidth: 600, // flex: 1,
                                         width: '100%',
                                         alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
@@ -1626,7 +2045,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <View style={{}}>
                                         <Text
                                             style={{
-                                                fontSize: 13,
+                                                fontSize: 14,
                                                 padding: 5,
                                                 fontFamily: 'inter',
                                                 maxWidth: 300,
@@ -1658,7 +2077,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         <View style={{ marginRight: 20 }}>
                                             <Text
                                                 style={{
-                                                    fontSize: 12,
+                                                    fontSize: 13,
                                                     padding: 5,
                                                     lineHeight: 13,
                                                 }}
@@ -1670,7 +2089,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             <TouchableOpacity
                                                 onPress={() => {
                                                     if (meetingProvider !== '' && meeting.joinUrl) {
-                                                        if (Platform.OS == 'web') {
+                                                        if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                                             window.open(meeting.joinUrl, '_blank');
                                                         } else {
                                                             Linking.openURL(meeting.joinUrl);
@@ -1694,13 +2113,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     text: 'Okay',
                                                                     onPress: () => {
                                                                         if (createdBy === userId) {
-                                                                            if (Platform.OS == 'web') {
+                                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                                                                 window.open(meeting.startUrl, '_blank');
                                                                             } else {
                                                                                 Linking.openURL(meeting.startUrl);
                                                                             }
                                                                         } else {
-                                                                            if (Platform.OS == 'web') {
+                                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                                                                 window.open(meeting.joinUrl, '_blank');
                                                                             } else {
                                                                                 Linking.openURL(meeting.joinUrl);
@@ -1712,13 +2131,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         );
                                                     } else {
                                                         if (createdBy === userId) {
-                                                            if (Platform.OS == 'web') {
+                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                                                 window.open(meeting.startUrl, '_blank');
                                                             } else {
                                                                 Linking.openURL(meeting.startUrl);
                                                             }
                                                         } else {
-                                                            if (Platform.OS == 'web') {
+                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                                                 window.open(meeting.joinUrl, '_blank');
                                                             } else {
                                                                 Linking.openURL(meeting.joinUrl);
@@ -1797,7 +2216,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowMeetingEndDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowMeetingEndDateAndroid(false);
 
@@ -1814,19 +2236,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
                         }}
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
-                                width: 150,
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowMeetingEndDateAndroid(true);
@@ -1836,16 +2258,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15,
+                                    borderRadius: 15
                                 }}
                             >
                                 Set Date
@@ -1853,13 +2272,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
-                                width: 150,
+                                marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
+                                borderColor: '#006AFF',
+                                marginLeft: 50
                             }}
                             onPress={() => {
                                 setShowMeetingEndDateAndroid(false);
@@ -1869,15 +2290,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15,
                                 }}
                             >
@@ -1910,7 +2328,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowMeetingEndTimeAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowMeetingEndTimeAndroid(false);
                             setMeetingEndTime(currentDate);
@@ -1934,8 +2355,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <ScrollView
                         showsVerticalScrollIndicator={true}
                         horizontal={false}
-                        contentContainerStyle={{
+                        style={{
                             width: '100%',
+                            height: '100%'
                         }}
                     >
                         <View
@@ -1946,6 +2368,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 // minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
                                 // maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
                                 backgroundColor: '#ffffff',
+                                paddingBottom: Platform.OS === 'android' ? 200 : 0
                             }}
                         >
                             <View style={{ width: '100%', maxWidth: 400, marginTop: 20, backgroundColor: '#ffffff' }}>
@@ -1993,14 +2416,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             </View>
                             <View
                                 style={{
-                                    fontSize: 14,
-                                    fontFamily: 'inter',
-                                    color: '#000000',
-                                    fontWeight: 'bold',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    width: '100%',
-                                    marginBottom: 30,
+                                    width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                                    flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                                    paddingTop: 12,
+                                    backgroundColor: '#fff',
+                                    marginLeft: 'auto',
+                                    alignItems: Platform.OS === 'ios' ?  'center' : 'flex-start'
                                 }}
                             >
                                 <Text
@@ -2011,7 +2432,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         fontWeight: 'bold',
                                     }}
                                 >
-                                    End
+                                    End {Platform.OS === 'android'
+                                    ? ': ' + moment(new Date(meetingEndTime)).format('MMMM Do YYYY, h:mm a')
+                                    : null}
                                 </Text>
 
                                 {renderMeetingEndDateTimePicker()}
@@ -2019,7 +2442,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <View
                                 style={{
                                     width: '100%',
-                                    paddingTop: 10,
+                                    paddingTop: 30,
                                     paddingBottom: 15,
                                     backgroundColor: '#ffffff',
                                 }}
@@ -2037,9 +2460,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             </View>
                             <View
                                 style={{
-                                    height: 40,
-                                    marginRight: 10,
-                                    backgroundColor: '#ffffff',
+                                    backgroundColor: 'white', flexDirection: 'column', alignItems: 'flex-start'
                                 }}
                             >
                                 <Switch
@@ -2047,12 +2468,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     onValueChange={() => {
                                         setInstantMeetingAlertUsers(!instantMeetingAlertUsers);
                                     }}
-                                    style={{ height: 20 }}
+                                    thumbColor={'#f4f4f6'}
                                     trackColor={{
-                                        false: '#f2f2f2',
-                                        true: '#006AFF',
+                                        false: '#f4f4f6',
+                                        true: '#006AFF'
                                     }}
-                                    activeThumbColor="white"
+                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                 />
                             </View>
                             <View
@@ -2075,30 +2496,32 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     NOTE: You can schedule future meetings under Agenda
                                 </Text>
                             </View>
-                        </View>
-
-                        <TouchableOpacity
-                            style={{
-                                backgroundColor: '#006AFF',
-                                borderRadius: 19,
-                                width: 120,
-                                alignSelf: 'center',
-                            }}
-                            onPress={() => {
-                                createInstantMeeting();
-                            }}
-                        >
-                            <Text
+                            <TouchableOpacity
                                 style={{
-                                    color: 'white',
-                                    padding: 10,
-                                    textAlign: 'center',
-                                    fontFamily: 'inter',
+                                    backgroundColor: '#006AFF',
+                                    borderRadius: 19,
+                                    width: 120,
+                                    alignSelf: 'center',
+                                    marginTop: 30
+                                }}
+                                onPress={() => {
+                                    createInstantMeeting();
                                 }}
                             >
-                                Create
-                            </Text>
-                        </TouchableOpacity>
+                                <Text
+                                    style={{
+                                        color: 'white',
+                                        padding: 10,
+                                        textAlign: 'center',
+                                        fontFamily: 'inter',
+                                    }}
+                                >
+                                    Create
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        
                     </ScrollView>
                 </View>
             </View>
@@ -2114,9 +2537,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             <View
                 style={{
                     // height: '100%',
-                    width: Dimensions.get('window').width * 0.8,
+                    width: 195,
                     marginRight: 20,
-                    maxHeight: 450,
+                    height: '100%',
                     borderRadius: 4,
                     backgroundColor: '#f2f2f2',
                 }}
@@ -2130,10 +2553,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             >
                 <Text
                     style={{
-                        fontFamily: 'Inter',
-                        fontSize: 16,
+                        fontFamily: 'overpass',
+                        fontSize: 14,
                         paddingLeft: 10,
-                        marginBottom: 15,
+                        marginBottom: 5,
                         color: '#1a1a1a',
                     }}
                     ellipsizeMode={'tail'}
@@ -2152,6 +2575,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         // paddingTop: ,
                         padding: 5,
                     }}
+                    nestedScrollEnabled={true}
                     indicatorStyle="black"
                     persistentScrollbar={true}
                 >
@@ -2310,13 +2734,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <ScrollView
                     ref={cuesCarouselRef}
                     horizontal={true}
-                    showsHorizontalScrollIndicator={true}
+                    showsHorizontalScrollIndicator={false}
                     style={{
-                        minHeight: 500,
+                        minHeight: Dimensions.get('window').height - (Platform.OS === 'ios' ? 300 : 280),
                         flex: 1,
                         width: '100%',
                     }}
-                    indicatorStyle="black"
+                    // indicatorStyle="black"
                     contentContainerStyle={{
                         backgroundColor: '#f2f2f2',
                         display: 'flex',
@@ -2342,7 +2766,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Renders View for search results
      */
     const searchResultsMobile = (
-        <View>
+        <View style={{
+            height: Dimensions.get('window').height,
+            backgroundColor: '#f2f2f2',
+        }}>
             <View
                 style={{
                     width: '100%',
@@ -2376,18 +2803,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 width: '100%',
                                 color: '#1F1F1F',
-                                fontSize: 20,
+                                fontSize: 21,
                                 paddingVertical: 50,
                                 textAlign: 'center',
-                                // lineHeight: 30,
+                                lineHeight: 30,
                                 fontFamily: 'inter',
-                                flex: 1,
                                 backgroundColor: '#f2f2f2',
                             }}
                         >
-                            {searchTerm.trim().length === 0
-                                ? 'Search for content, messages, discussion threads, or courses'
-                                : 'No results.'}
+                            {searchTerm.trim().length > 3 && (
+                                results[searchOptions[0]].length === 0 &&
+                                results[searchOptions[1]].length === 0 &&
+                                results[searchOptions[2]].length === 0 &&
+                                results[searchOptions[3]].length === 0
+                            )
+                                ? 'No results.' : 'Search for content, messages, discussion threads, or courses'}
                         </Text>
                     ) : null}
                     {loadingSearchResults ? (
@@ -2399,7 +2829,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 display: 'flex',
                                 flexDirection: 'column',
                                 backgroundColor: '#f2f2f2',
-                                paddingTop: 100,
+                                paddingVertical: 100,
                             }}
                         >
                             <ActivityIndicator color={'#1F1F1F'} />
@@ -2409,11 +2839,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         horizontal={true}
                         key={JSON.stringify(results)}
                         style={{
-                            minHeight: 500,
+                            maxHeight: Dimensions.get('window').height - 300,
                             backgroundColor: '#f2f2f2',
                         }}
                         indicatorStyle="black"
                         contentContainerStyle={{
+                            paddingBottom: 20,
                             paddingTop: 30,
                             backgroundColor: '#f2f2f2',
                         }}
@@ -2426,9 +2857,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                             return (
                                 <View style={{
-                                    width: Dimensions.get('window').width * 0.8,
+                                    width: 200,
                                     marginRight: 20,
-                                    maxHeight: 450,
+                                    // maxHeight: 450,
                                     borderRadius: 4,
                                     backgroundColor: '#f2f2f2',
                                  }} key={i}>
@@ -2450,6 +2881,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         contentContainerStyle={{
                                             flexDirection: 'column',
                                             width: '100%',
+                                            maxWidth: 190,
                                             justifyContent: 'center',
                                             backgroundColor: '#f2f2f2',
                                             // paddingTop: ,
@@ -2609,6 +3041,25 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         else return date.format('MM/DD/YYYY');
     }
 
+   
+
+    const getActiveTab = () => {
+        const activeTab = tabs[indexMap[selectedWorkspace]];
+
+        switch (activeTab) {
+            case 'Content':
+                return 'Library'
+            case 'Discuss':
+                return 'Discussion'
+            case 'Meet':
+                return 'Meetings'
+            case 'Scores':
+                return 'Scores'
+            default: 
+                return 'Settings'
+        }
+    }
+
     const overviewMobile = (
         <View
             style={{
@@ -2616,26 +3067,28 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 width: '100%',
                 height: '100%',
                 bottom: 0,
-                backgroundColor: '#f2f2f2',
+                backgroundColor: selectedWorkspace ? '#f2f2f2' : 'white',
             }}
             key={selectedWorkspace}
         >
             <View
                 style={{
                     paddingHorizontal: 20,
-                    height: 60,
+                    // height: 60,
+                    // paddingVertical: 10,
+                    paddingTop: 15,
+                    paddingBottom: 10
                 }}
             >
                 {selectedWorkspace !== '' ? (
                     <View
                         style={{
                             paddingVertical: 6,
-                            marginHorizontal: 12,
+                            // marginHorizontal: 12,
                             backgroundColor: '#fff',
                             flexDirection: 'row',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            marginTop: 10,
                         }}
                     >
                         <TouchableOpacity
@@ -2654,10 +3107,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 alignItems: 'center',
                             }}
                         >
-                            <Ionicons size={24} name="arrow-back" />
+                            <Ionicons size={27} name="arrow-back-outline" />
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <View
+                            {/* <View
                                 style={{
                                     width: 12,
                                     height: 12,
@@ -2666,8 +3119,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     marginRight: 5,
                                     backgroundColor: selectedWorkspace.split('-SPLIT-')[3] || 'black',
                                 }}
-                            />
-                            <Text
+                            /> */}
+                            {/* <Text
                                 ellipsizeMode={'tail'}
                                 numberOfLines={1}
                                 style={{
@@ -2680,7 +3133,44 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 }}
                             >
                                 {selectedWorkspace.split('-SPLIT-')[0]}
+                            </Text> */}
+                            {selectedWorkspace === 'My Notes' ? 
+                            <Text
+                                ellipsizeMode={'tail'}
+                                numberOfLines={1}
+                                style={{
+                                    marginLeft: 5,
+                                    fontFamily: 'Inter',
+                                    fontSize: 20,
+                                    width: 'auto',
+                                    fontWeight: 'bold',
+                                    // color: selectedWorkspace.split('-SPLIT-')[3]
+                                }}
+                            >
+                                My Notes
                             </Text>
+                            : <TouchableOpacity style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }} onPress={() => setShowWorkspaceOptionsModal(true)}>
+                                <Text
+                                    ellipsizeMode={'tail'}
+                                    numberOfLines={1}
+                                    style={{
+                                        marginLeft: 5,
+                                        fontFamily: 'Inter',
+                                        fontSize: 20,
+                                        width: 'auto',
+                                        fontWeight: 'bold',
+                                        marginRight: 5
+                                        // color: selectedWorkspace.split('-SPLIT-')[3]
+                                    }}
+                                >
+                                    {getActiveTab()}
+                                </Text>
+                                <Ionicons size={20} name="chevron-down-outline" style={{ paddingTop: 2 }} />
+                            </TouchableOpacity>}
                         </View>
 
                         {/* Filter icon */}
@@ -2688,39 +3178,129 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <TouchableOpacity
                                 style={{
                                     position: 'absolute',
-                                    marginTop: 9,
                                     marginLeft: 0,
-                                    right: -9,
+                                    right: -1,
                                 }}
                                 onPress={() => setShowFilterModal(!showFilterModal)}
                             >
                                 <Ionicons
-                                    name={showFilterModal ? 'close-outline' : 'filter-outline'}
-                                    size={22}
+                                    name={'filter-outline'}
+                                    size={23}
                                     color="black"
                                 />
                             </TouchableOpacity>
                         ) : null}
+                        {indexMap[selectedWorkspace] === 1 || (indexMap[selectedWorkspace] === 2 && selectedWorkspace.split('-SPLIT-')[2] === userId) ? (
+                            <TouchableOpacity
+                                style={{
+                                    position: 'absolute',
+                                    marginLeft: 0,
+                                    right: -1,
+                                }}
+                                onPress={() => {
+                                    if (indexMap[selectedWorkspace] === 1) {
+                                        setShowNewPostModal(!showNewPostModal)
+                                    } else {
+                                        setShowInstantMeeting(!showInstantMeeting)
+                                    }
+                                }}
+                            >
+                                <Ionicons
+                                    name={'add-outline'}
+                                    size={27}
+                                    color="black"
+                                />
+                            </TouchableOpacity>
+                        ) : null}
+                        {
+                            indexMap[selectedWorkspace] === 3 && selectedWorkspace.split('-SPLIT-')[2] === userId ?
+                                (<TouchableOpacity
+                                    style={{
+                                        position: 'absolute',
+                                        marginLeft: 0,
+                                        right: -1,
+                                    }}
+                                    onPress={() => {
+                                        if (indexMap[selectedWorkspace] === 1) {
+                                            setShowNewPostModal(!showNewPostModal)
+                                        } else {
+                                            setShowInstantMeeting(!showInstantMeeting)
+                                        }
+                                    }}
+                                >
+                                <Ionicons name='download-outline' size={23}  color="black" />
+                                </TouchableOpacity>)
+                            : null
+                        }
                     </View>
                 ) : (
-                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingBottom: 10 }}>
+
+                        {!showSearchMobile ? <Text style={{
+                            fontSize: 22,
+                            color: '#000',
+                            fontFamily: 'Inter',
+                            fontWeight: 'bold'
+                        }}>
+                            Your Workspace
+                        </Text> : null
+                        }
+
+                        {!showSearchMobile ? <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', }}>
+                            <TouchableOpacity onPress={() => {
+                                // props.openCreate()
+                                setShowNewContentModal(true)
+                            }}>
+                                <Ionicons name={'add-outline'} size={28} color="black" />
+                            </TouchableOpacity>
+                        </View> : null}
+
+
+                        {showSearchMobile ? <DefaultInput
+                                style={{
+                                    paddingHorizontal: 10,
+                                    width: 300,
+                                    color: '#000',
+                                    fontSize: 14,
+                                    flex: 1,
+                                    paddingVertical: 8,
+                                    // marginTop: 10,
+                                    marginRight: searchTerm === '' ? 0 : 15,
+                                    backgroundColor: '#f2f2f2',
+                                    borderRadius: 18
+                                }}
+                                placeholder="Search..."
+                                placeholderTextColor="#656565"
+                                value={searchTerm}
+                                autoFocus={false}
+                                onChangeText={(val) => setSearchTerm(val)}
+                                onFocus={() => setShowSearchMobile(true)}
+                            /> : null}
+
+
+                        {/* {showSearchMobile ? null : <Image
+                            source={logo}
+                            style={{
+                                width: 60,
+                                marginTop: 10,
+                                height: 30,
+                                marginRight: 13
+                            }}
+                            resizeMode={'contain'}
+                        />}
                         {showSearchMobile ? (
                             <DefaultInput
                                 style={{
                                     paddingHorizontal: 10,
                                     width: 300,
-                                    // backgroundColor: '#',
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#656565',
-                                    // borderRadius: 10,
                                     color: '#000',
-                                    fontSize: 20,
+                                    fontSize: 14,
                                     flex: 1,
-                                    // paddingVertical: 6
-                                    // paddingBottom: 20,
-                                    paddingBottom: 8,
+                                    paddingVertical: 8,
                                     marginTop: 10,
                                     marginRight: 15,
+                                    backgroundColor: '#f2f2f2',
+                                    borderRadius: 18
                                 }}
                                 placeholder="Search..."
                                 placeholderTextColor="#656565"
@@ -2729,39 +3309,61 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 onChangeText={(val) => setSearchTerm(val)}
                             />
                         ) : (
-                            <Text
+                            <DefaultInput
                                 style={{
-                                    color: '#006aff',
-                                    fontFamily: 'Inter',
-                                    fontWeight: 'bold',
-                                    fontSize: 30,
-                                    paddingVertical: 6,
-                                    // marginHorizontal: 12,
+                                    paddingHorizontal: 10,
+                                    width: 300,
+                                    color: '#000',
+                                    fontSize: 14,
+                                    flex: 1,
+                                    paddingVertical: 8,
                                     marginTop: 10,
+                                    marginRight: 15,
+                                    backgroundColor: '#f2f2f2',
+                                    borderRadius: 18
                                 }}
-                            >
-                                Workspace
-                            </Text>
-                        )}
-                        <TouchableOpacity
+                                placeholder="Search..."
+                                placeholderTextColor="#656565"
+                                value={searchTerm}
+                                autoFocus={false}
+                                onChangeText={(val) => setSearchTerm(val)}
+                                onFocus={() => setShowSearchMobile(true)}
+                            />
+                        )} */}
+                        {/* {showSearchMobile ? null : <TouchableOpacity
                             onPress={() => {
-                                setShowSearchMobile(!showSearchMobile);
-                                setSearchTerm('');
+                                props.setShowSettings(true)
                             }}
                             style={{
                                 // position: 'absolute',
                                 paddingVertical: 6,
                                 marginLeft: 'auto',
-                                marginTop: 10,
-                                // paddingBottom: showSearchMobile ? 20 : 0
                             }}
                         >
                             <Ionicons
-                                name={showSearchMobile ? 'close-outline' : 'search-outline'}
-                                size={showSearchMobile ? 25 : 22}
+                                // name={showSearchMobile ? 'close-outline' : 'search-outline'}
+                                size={20}
+                                name={'settings-outline'}
                                 color="black"
                             />
-                        </TouchableOpacity>
+                        </TouchableOpacity>} */}
+                        {showSearchMobile && searchTerm !== '' ? <TouchableOpacity
+                            onPress={() => {
+                                // setShowSearchMobile(!showSearchMobile);
+                                Keyboard.dismiss()
+                                setSearchTerm('');
+                            }}
+                            style={{
+                                marginLeft: 'auto',
+
+                            }}
+                        >
+                            <Ionicons
+                                size={22}
+                                name={'close-outline'}
+                                color="black"
+                            />
+                        </TouchableOpacity> : null}
                     </View>
                 )}
             </View>
@@ -2773,19 +3375,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 ) : (
                     <ScrollView
                         horizontal={false}
-                        contentContainerStyle={{
-                            backgroundColor: '#f2f2f2',
-                        }}
                         indicatorStyle="black"
+                        contentContainerStyle={{
+                            paddingBottom: 30
+                        }}
                     >
                         <View
                             style={{
                                 width: '100%',
+                                height: '100%',
                                 flexDirection: 'row',
                                 flexWrap: 'wrap',
-                                backgroundColor: '#f2f2f2',
-                                paddingHorizontal: 20,
-                                paddingTop: 20,
+                                borderTopColor: '#f2f2f2',
+                                // borderTopWidth: 1,
                             }}
                         >
                             {Object.keys(cueMap).map((key: any, ind: any) => {
@@ -2793,18 +3395,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <TouchableOpacity
                                         onPress={() => {
                                             setSelectedWorkspace(key);
-                                            // props.setSelectedWorkspace(key);
                                         }}
                                         key={ind}
                                         style={{
                                             height: 60,
                                             backgroundColor: '#fff',
                                             // borderRadius: 17,
-                                            borderLeftColor: key.split('-SPLIT-')[3] || 'black',
-                                            borderLeftWidth: 3,
+                                            borderTopColor: '#f2f2f2',
+                                            // borderTopWidth: ind === 0 ? 1 : 0,
+                                            borderBottomColor: '#f2f2f2',
+                                            borderBottomWidth: 1,
                                             marginRight: ind % 2 === 0 ? 20 : 0,
                                             // maxWidth: '100%',
-                                            width: (Dimensions.get('window').width - 60) / 2,
+                                            width: '100%',
                                             // marginRight: '5%',
                                             // borderColor: key.split('-SPLIT-')[3],
                                             // borderLeftWidth: 3,
@@ -2819,26 +3422,26 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             flexDirection: 'row',
                                             paddingVertical: 10,
                                             paddingLeft: 10,
-                                            marginBottom: 20,
                                         }}
                                     >
-                                        {/* <View
+                                        <View
                                         style={{
-                                            width: 12,
-                                            height: 12,
+                                            width: 11,
+                                            height: 11,
                                             borderRadius: 9,
                                             // marginTop: 2,
-                                            marginRight: 5,
+                                            marginLeft: 10,
+                                            marginRight: 8,
                                             backgroundColor: key.split('-SPLIT-')[3] || 'black'
                                         }}
-                                    /> */}
+                                      />
                                         <Text
                                             ellipsizeMode={'tail'}
                                             numberOfLines={1}
                                             style={{
                                                 marginLeft: 2,
                                                 fontFamily: 'Inter',
-                                                fontSize: 16,
+                                                fontSize: 17,
                                                 width: 'auto',
                                                 fontWeight: 'bold',
                                                 // color: key.split('-SPLIT-')[3]
@@ -2856,35 +3459,39 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <ScrollView
                     horizontal={false}
                     contentContainerStyle={{
-                        backgroundColor: '#f2f2f2',
+                        backgroundColor: '#fff',
                         paddingTop: 10,
-                        // width: '100%',
-                        // height: '100%'
+                    }}
+                    style={{
+                        height: '100%',
                     }}
                     indicatorStyle="black"
+                    alwaysBounceVertical={false}
+                    // decelerationRate={0}
+                    bounces={false}
                 >
-                    {selectedWorkspace.split('-SPLIT-')[0] !== 'Home' ? renderTabs(selectedWorkspace) : null}
+                    {/* {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? renderTabs(selectedWorkspace) : null} */}
                     <View
                         style={{
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            backgroundColor: '#f2f2f2',
+                            backgroundColor: tabs[indexMap[selectedWorkspace]] === 'Content' ? '#f2f2f2' : '#fff',
                             borderColor: '#f2f2f2',
-                            borderBottomWidth: collapseMap[selectedWorkspace],
+                            borderBottomWidth: collapseMap[selectedWorkspace] ? 1 : 0,
                         }}
                         key={collapseMap.toString()}
                     >
                         <View
                             style={{
                                 width: '100%',
-                                // maxWidth: 900,
-                                backgroundColor: '#f2f2f2',
-                                // paddingHorizontal: width < 768 ? 5 : 0
+                                backgroundColor: tabs[indexMap[selectedWorkspace]] === 'Content' ? '#f2f2f2' : '#fff',
+                                // This changes the height for all
+                                height: tabs[indexMap[selectedWorkspace]] === 'Settings' ? 'auto' : windowHeight - (Platform.OS === 'android' ? 90 : 200)
                             }}
                         >
                             {[selectedWorkspace] ? (
                                 <View
-                                    style={{ width: '100%', paddingBottom: 25, backgroundColor: '#f2f2f2' }}
+                                    style={{ width: '100%', backgroundColor: tabs[indexMap[selectedWorkspace]] === 'Content' ? '#f2f2f2' : '#fff', height: '100%' }}
                                     key={
                                         editFolderChannelId.toString() +
                                         cueIds.toString() +
@@ -2912,57 +3519,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             <View
                                                 style={{
                                                     alignItems: 'center',
-                                                    backgroundColor: '#f2f2f2',
+                                                    backgroundColor: '#fff',
+                                                    paddingTop: 20
                                                 }}
                                             >
-                                                {selectedWorkspace.split('-SPLIT-')[2] === userId ? (
-                                                    <View
-                                                        style={{
-                                                            width: '100%',
-                                                            marginBottom: 20,
-                                                            backgroundColor: '#f2f2f2',
-                                                            paddingHorizontal: 10,
-                                                        }}
-                                                    >
-                                                        <TouchableOpacity
-                                                            onPress={() =>
-                                                                handleStartMeeting(
-                                                                    selectedWorkspace.split('-SPLIT-')[1],
-                                                                    selectedWorkspace.split('-SPLIT-')[2]
-                                                                )
-                                                            }
-                                                            style={{
-                                                                backgroundColor: '#f2f2f2',
-                                                                overflow: 'hidden',
-                                                                height: 35,
-                                                                // marginTop: 20,
-                                                                justifyContent: 'center',
-                                                                flexDirection: 'row',
-                                                                marginLeft: 'auto',
-                                                                borderRadius: 15,
-                                                            }}
-                                                        >
-                                                            <Text
-                                                                style={{
-                                                                    textAlign: 'center',
-                                                                    lineHeight: 34,
-                                                                    color: '#fff',
-                                                                    borderRadius: 15,
-                                                                    backgroundColor: '#006AFF',
-                                                                    fontSize: 12,
-                                                                    paddingHorizontal: 20,
-                                                                    fontFamily: 'inter',
-                                                                    height: 35,
-                                                                    width: 175,
-                                                                    textTransform: 'uppercase',
-                                                                }}
-                                                            >
-                                                                Start Meeting
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                ) : null}
-
                                                 {ongoingMeetings.length > 0
                                                     ? renderOngoingMeetings(
                                                           selectedWorkspace.split('-SPLIT-')[2],
@@ -3016,7 +3576,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             <View
                                                 style={{
                                                     width: '100%',
-                                                    maxWidth: 400,
+                                                    // maxWidth: 400,
                                                     alignSelf: 'center',
                                                     borderTopRightRadius: 10,
                                                     borderBottomRightRadius: 10,
@@ -3527,7 +4087,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     >
                                         {collapseMap[key] ? (
                                             <View
-                                                style={{ width: '100%', paddingBottom: 25, backgroundColor: '#f2f2f2' }}
+                                                style={{ width: '100%', paddingBottom: 25, backgroundColor: '#f2f2f2',  }}
                                                 key={
                                                     editFolderChannelId.toString() +
                                                     cueIds.toString() +
@@ -4136,6 +4696,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         closeOnCreate={() => props.closeOnCreate()}
                         option={props.option}
                         version={props.version}
+                        createOption={props.createOption}
                     />
                 ) : (
                     <View
@@ -4143,10 +4704,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             alignSelf: 'center',
                             width: '100%',
                             backgroundColor: props.option === 'To Do' ? '#f2f2f2' : '#fff',
-                            height: width < 768 ? windowHeight - 104 : windowHeight - 52,
+                            height: width < 768 ? windowHeight - (Platform.OS === 'android' ? 90 : 104) : windowHeight - 52,
                         }}
                     >
-                        {props.option === 'Settings' ? (
+                        {props.option === 'Account' ? (
                             <AccountPage
                                 closeModal={() => {}}
                                 saveDataInCloud={() => props.saveDataInCloud()}
@@ -4170,14 +4731,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             refreshSubscriptions={props.refreshSubscriptions}
                         />
                     ) : null} */}
-                        {props.option === 'Classroom' || showSearchMobile
+                        {props.option === 'Classroom' || showSearchMobile 
                             ? Dimensions.get('window').width < 768
                                 ? overviewMobile
                                 : overview
                             : null}
                         {Dimensions.get('window').width < 768 &&
                         selectedWorkspace &&
-                        indexMap[selectedWorkspace] === 0 ? (
+                        indexMap[selectedWorkspace] === 0 && categoryPositionList.length > 5 ? (
                             <TouchableOpacity
                                 onPress={() => {
                                     setShowCategoryList(true);
@@ -4190,27 +4751,28 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             : Dimensions.get('window').width >= 768
                                             ? 30
                                             : 24,
-                                    marginBottom: Dimensions.get('window').width < 768 ? 77 : 75,
+                                    marginBottom: Dimensions.get('window').width < 768 ? 60 : 75,
                                     right: 0,
                                     justifyContent: 'center',
                                     bottom: 0,
                                     width: 45,
                                     height: 45,
                                     borderRadius: 29,
-                                    backgroundColor: '#006aff',
+                                    backgroundColor: '#fff',
                                     borderColor: '#f2f2f2',
                                     borderWidth: 0,
                                     shadowColor: '#000',
                                     shadowOffset: {
-                                        width: 4,
-                                        height: 4,
+                                        width: 2,
+                                        height: 2,
                                     },
-                                    shadowOpacity: 0.12,
+                                    shadowOpacity: 0.08,
                                     shadowRadius: 10,
                                     zIndex: 500000,
+                                    elevation: 5
                                 }}
                             >
-                                <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
+                                <Text style={{ color: '#000', width: '100%', textAlign: 'center' }}>
                                     <Ionicons name="list-outline" size={25} />
                                 </Text>
                             </TouchableOpacity>
@@ -4243,13 +4805,27 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 refreshUnreadInbox={props.refreshUnreadInbox}
                                 hideNewChatButton={props.hideNewChatButton}
                                 showSearchMobile={showSearchMobile}
-                                setShowSearchMobile={(val: boolean) => setShowSearchMobile(val)}
                             />
                         ) : null}
                     </View>
                     //     )
                     // ) : (
                     //     searchResults
+                )
+            }
+            {
+                showNewContentModal && (
+                    <BottomSheet
+                        snapPoints={[0, 400]}
+                        close={() => {
+                            setShowNewContentModal(false);
+                        }}
+                        isOpen={showNewContentModal}
+                        title={''}
+                        renderContent={() => renderNewContentModalOptions()}
+                        header={false}
+                        callbackNode={fall}
+                    />
                 )
             }
             {showFilterModal && (
@@ -4267,7 +4843,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             )}
             {showCategoryList && (
                 <BottomSheet
-                    snapPoints={[0, '80%']}
+                    snapPoints={[0, contentsModalHeight(categoryPositionList.length)]}
                     close={() => {
                         setShowCategoryList(false);
                     }}
@@ -4279,7 +4855,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 />
             )}
 
-            {showNewPostModal || showInstantMeeting ? (
+            {showWorkspaceOptionsModal && (
+                <BottomSheet
+                    snapPoints={[0, (Platform.OS === 'ios' ? '55%' : '60%')]}
+                    close={() => {
+                        setShowWorkspaceOptionsModal(false);
+                    }}
+                    isOpen={showWorkspaceOptionsModal}
+                    title={selectedWorkspace.split('-SPLIT-')[0]}
+                    renderContent={() => renderWorkspaceOptionsList()}
+                    header={false}
+                    callbackNode={fall}
+                />
+            )}
+
+            {showNewPostModal || showInstantMeeting || showWorkspaceOptionsModal || showNewContentModal ? (
                 <Reanimated.View
                     style={{
                         alignItems: 'center',
@@ -4291,7 +4881,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         width: '100%',
                         position: 'absolute',
                     }}
-                ></Reanimated.View>
+                >
+                    <TouchableOpacity style={{
+                        backgroundColor: 'transparent',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    onPress={() => {
+                        setShowNewPostModal(false)
+                        setShowInstantMeeting(false)
+                        setShowWorkspaceOptionsModal(false)
+                        setShowNewContentModal(false)
+                    }}
+                    >
+                    </TouchableOpacity>
+                </Reanimated.View>
             ) : null}
             {showFilterModal || showCategoryList ? (
                 <Reanimated.View
@@ -4305,7 +4909,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         width: '100%',
                         position: 'absolute',
                     }}
-                ></Reanimated.View>
+                >
+                    <TouchableOpacity style={{
+                        backgroundColor: 'transparent',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    onPress={() => {
+                        setShowCategoryList(false)
+                        setShowFilterModal(false)
+                    }}
+                    >
+                    </TouchableOpacity>
+                </Reanimated.View>
             ) : null}
             {showNewPostModal && (
                 <NewPostModal
@@ -4336,106 +4952,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     callbackNode={fall}
                 />
             ) : null}
-            {/* <Popup
-                isOpen={showFilterPopup}
-                buttons={[
-                    {
-                        text: 'OK',
-                        handler: function(event) {
-                            setShowFilterPopup(false);
-                        }
-                    },
-                    {
-                        text: 'RESET',
-                        handler: function(event) {
-                            setFilterStart(null);
-                            setFilterEnd(null);
-                            setFilterByChannel('All');
-                            setFilterEventsType('All');
-                            setShowFilterPopup(false);
-                        }
-                    }
-                ]}
-                themeVariant="light"
-                theme="ios"
-                onClose={() => setShowFilterPopup(false)}
-                responsive={{
-                    small: {
-                        display: 'center'
-                    },
-                    medium: {
-                        display: 'center'
-                    }
-                }}>
-                <View
-                    style={{ flexDirection: 'column', padding: 25, backgroundColor: 'none' }}
-                    className="mbsc-align-center mbsc-padding">
-                    {props.option === 'Classroom' ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
-                            <Text style={{ fontSize: 10, color: '#000000', paddingLeft: 5, paddingBottom: 10 }}>
-                                Sort By
-                            </Text>
-
-                            <label style={{ width: 200, backgroundColor: 'white' }}>
-                                <Select
-                                    touchUi={true}
-                                    theme="ios"
-                                    themeVariant="light"
-                                    value={sortBy}
-                                    onChange={(val: any) => {
-                                        setSortBy(val.value);
-                                    }}
-                                    responsive={{
-                                        small: {
-                                            display: 'bubble'
-                                        },
-                                        medium: {
-                                            touchUi: false
-                                        }
-                                    }}
-                                    dropdown={false}
-                                    data={sortbyOptions}
-                                />
-                            </label>
-                        </div>
-                    ) : null}
-
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
-                        <Text style={{ fontSize: 10, color: '#000000', paddingLeft: 5, paddingBottom: 10 }}>
-                            Filter
-                        </Text>
-
-                        <label style={{ width: 200, backgroundColor: 'white' }}>
-                            <Datepicker
-                                theme="ios"
-                                themeVariant="light"
-                                controls={['calendar']}
-                                select="range"
-                                touchUi={true}
-                                inputProps={{
-                                    placeholder: 'Select'
-                                }}
-                                responsive={{
-                                    small: {
-                                        display: 'bubble'
-                                    },
-                                    medium: {
-                                        touchUi: false
-                                    }
-                                }}
-                                value={[filterStart, filterEnd]}
-                                onChange={(val: any) => {
-                                    console.log('Selected', val);
-                                    setFilterStart(val.value[0]);
-                                    setFilterEnd(val.value[1]);
-                                }}
-                            />
-                        </label>
-                    </div>
-
-                    {props.option === 'To Do' ? renderEventFilters() : null}
-                </View>
-            </Popup> */}
         </View>
     );
 };

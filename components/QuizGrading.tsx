@@ -20,8 +20,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [comment, setComment] = useState(props.comment ? props.comment : "");
     const [headers, setHeaders] = useState<any>(props.headers)
 
-    console.log("PROPS SOLUTIONS", props.solutions)
-
     if (!props.solutions) {
         return null;
     }
@@ -211,8 +209,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
         </View>)
     }
-
-    console.log("problemScores", problemScores)
 
     /**
      * @description Renders Header for question at index
@@ -428,7 +424,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 editable={props.isOwner ? true : false}
                                                 value={problemScores[index].toString()}
                                                 onChangeText={(val: any) => {
-                                                    console.log("Value", val)
                                                     if (Number.isNaN(Number(val))) return
                                                     const updateProblemScores = [...problemScores]
                                                     updateProblemScores[index] = val;
@@ -657,12 +652,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 fontFamily: 'overpass',
                                 maxWidth: '100%', marginBottom: 10, marginTop: 10,
                                 borderRadius: 1,
-                                paddingTop: 13, paddingBottom: 13, fontSize: 14, borderBottom: '1px solid #C1C9D2',
+                                paddingTop: 13, paddingBottom: 13, fontSize: 14, borderBottomWidth: 1, borderBottomColor: '#f2f2f2'
                             }}
                             placeholder={'Feedback'}
                             placeholderTextColor="#66737C"
                             maxHeight={200}
-                            minHeight={45}
+                            minHeight={100}
                             enableScrollToCaret
                             // ref={}
                         />

@@ -129,11 +129,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const responseListener: any = useRef();
 
     const [option, setOption] = useState('To Do');
-    const [options] = useState(
-        version === 'read'
-            ? ['To Do', 'Classroom', 'Browse', 'Channels', 'Settings']
-            : ['To Do', 'Classroom', 'Inbox', 'Channels', 'Settings']
-    );
+    const [options] = useState(['To Do', 'Classroom', 'Search', 'Inbox', 'Account']);
+
+    const [createOption, setCreateOption] = useState('');
+
+    // const [showSettings, setShowSettings] = useState(false);
 
     const [showHome, setShowHome] = useState(true);
     const [hideNewChatButton, setHideNewChatButton] = useState(false);
@@ -159,6 +159,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             }
         })();
     }, []);
+
+    console.log("Selected workspace", selectedWorkspace)
 
     useEffect(() => {
         (async () => {
@@ -216,7 +218,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         }
                     })
                     .then(async (r: any) => {
-                        console.log('Res', r.data.user.loginFromSso);
                         if (
                             r.data &&
                             r.data.user.loginFromSso &&
@@ -913,9 +914,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             return;
         }
 
-        let redirect = AuthSession.makeRedirectUri().toString();
-
-        console.log('Redirect URL', redirect);
+        let redirect = AuthSession.makeRedirectUri(
+        {
+            useProxy: true
+        }
+        ).toString();
 
         const split = email.toLowerCase().split('@');
 
@@ -934,13 +937,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         // window.location.href = r.data.user.getSsoLinkNative;
                         const url = r.data.user.getSsoLinkNative;
 
-                        console.log('URL', url);
+                        let result = await AuthSession.startAsync({ authUrl: url });
 
-                        let result = await AuthSession.startAsync({ authUrl: url, returnUrl: redirect });
+                        // Alert(`Result ${result.type}`, `${JSON.stringify(result)}`)
+                        if (result.type === 'success') {
+                            let code = JSON.parse(JSON.stringify(result)).params.code;
 
-                        let code = JSON.parse(JSON.stringify(result)).params.code;
+                            setSsoCode(code);
+                        } 
 
-                        setSsoCode(code);
                     }
                 }
             })
@@ -1064,6 +1069,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         res.data.cue.getCuesFromCloud.map((cue: any) => {
                             const channelId = cue.channelId && cue.channelId !== '' ? cue.channelId : 'local';
                             delete cue.__typename;
+                            if (channelId === '60c16dcdd79a074f7318dd3f' && cue._id === '621b27af9a4afc0cf34ee36b') {
+                                console.log('Updated cue', cue)
+                            } 
                             if (allCues[channelId]) {
                                 allCues[channelId].push({ ...cue });
                             } else {
@@ -1164,7 +1172,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         _id: cue._id.toString(),
                         color: cue.color.toString(),
                         date: new Date(cue.date).toISOString(),
-                        gradeWeight: cue.submission ? cue.gradeWeight.toString() : undefined,
+                        gradeWeight: cue.submission && cue.gradeWeight ? cue.gradeWeight.toString() : undefined,
                         endPlayAt: cue.endPlayAt && cue.endPlayAt !== '' ? new Date(cue.endPlayAt).toISOString() : '',
                         allowedAttempts:
                             cue.allowedAttempts && cue.allowedAttempts !== null ? cue.allowedAttempts.toString() : null
@@ -1315,7 +1323,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const openUpdate = useCallback(
         (key, index, pageNumber, _id, by, channId) => {
-            console.log('Open update');
             setUpdateModalKey(key);
             setUpdateModalIndex(index);
             setPageNumber(pageNumber);
@@ -1480,15 +1487,47 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const getNavbarIconName = (op: string) => {
         switch (op) {
             case 'To Do':
-                return option === op ? 'calendar' : 'calendar-outline';
+                return option === op ? 'home' : 'home-outline';
             case 'Classroom':
-                return option === op ? 'apps' : 'apps-outline';
+                return option === op ? 'library' : 'library-outline';
+            case 'Search':
+                return option === op ? 'search' : 'search-outline'
             case 'Inbox':
                 return option === op ? 'chatbubble' : 'chatbubble-outline';
             default:
                 return option === op ? 'person' : 'person-outline';
         }
     };
+
+    const getNavbarIconColor = (op: string) => {
+        if (op === option) {
+            if (op === 'Classroom' && selectedWorkspace !== '') {
+                return selectedWorkspace.split('-SPLIT-')[3]
+            } else {
+                return '#000'   
+            }
+        } 
+        return '#575655'
+    }
+
+    const getNavbarText = (op: string) => {
+        switch (op) {
+            case 'To Do':
+                return 'Home'
+            case 'Classroom':
+                if (selectedWorkspace !== '') {
+                    return selectedWorkspace.split('-SPLIT-')[0]
+                } else {
+                    return 'Workspace'
+                }
+            case 'Search':
+                return 'Search'
+            case 'Inbox':
+                return 'Inbox'
+            default:
+                return 'Account';
+        }
+    }
 
     const cuesArray: any[] = [];
 
@@ -2032,7 +2071,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         </View>
                     </KeyboardAvoidingView>
                 ) : null}
-                {showHome &&
+                {/* {showHome &&
                 !loadingCues &&
                 !loadingUser &&
                 !loadingSubs &&
@@ -2040,11 +2079,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 !saveDataInProgress &&
                 !syncingCues &&
                 ((option === 'Classroom' && modalType !== 'Create' && !selectedWorkspace) ||
-                    // (option === 'To Do' && tab !== 'Add') ||
                     (option === 'Inbox' && !showDirectory && !hideNewChatButton) ||
                     (option === 'Channels' && !showCreate)) ? (
-                    // ||
-                    // (option === 'Settings' && !showHelp)
                     <TouchableOpacity
                         onPress={() => {
                             if (option === 'Classroom') {
@@ -2064,8 +2100,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 // setMenuCollapsed(true)
                             } else if (option === 'Channels') {
                                 setShowCreate(true);
-                            } else if (option === 'Settings') {
-                                setShowHelp(true);
                             } else {
                                 setShowDirectory(true);
                             }
@@ -2082,9 +2116,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             right: 0,
                             justifyContent: 'center',
                             bottom: 0,
-                            width: 58,
-                            height: 58,
-                            borderRadius: 29,
+                            width: Dimensions.get('window').width > 350 ? 62 :  58,
+                            height: Dimensions.get('window').width > 350 ? 62 :  58,
+                            borderRadius: Dimensions.get('window').width > 350 ? 32 : 29,
                             backgroundColor: '#006aff',
                             borderColor: '#f2f2f2',
                             borderWidth: 0,
@@ -2100,17 +2134,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     >
                         <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
                             {option === 'Classroom' ? (
-                                <Ionicons name="pencil-outline" size={25} />
+                                <Ionicons name="pencil-outline" size={Dimensions.get('window').width > 350 ? 26 : 25} />
                             ) : option === 'Channels' ? (
-                                <Ionicons name="add-outline" size={35} />
+                                <Ionicons name="add-outline" size={Dimensions.get('window').width > 350 ? 36 : 35} />
                             ) : option === 'Inbox' ? (
-                                <Ionicons name="person-add-outline" size={21} />
+                                <Ionicons name="person-add-outline" size={Dimensions.get('window').width > 350 ? 22 : 21} />
                             ) : (
-                                <Ionicons name="help-outline" size={21} />
+                                null
                             )}
                         </Text>
                     </TouchableOpacity>
-                ) : null}
+                ) : null} */}
                 {showHome && !showLoginWindow ? (
                     <View
                         style={{
@@ -2179,7 +2213,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     reloadData={() => {
                                         loadDataFromCloud();
                                     }}
-                                    openCreate={() => {
+                                    openCreate={(createOption: string) => {
                                         setCueId('');
                                         setModalType('');
                                         setCreatedBy('');
@@ -2190,8 +2224,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             }
                                             loadData(true);
                                         }
+                                        setCreateOption(createOption)
                                         openModal('Create');
                                     }}
+                                    createOption={createOption}
                                     cues={dateFilteredCues}
                                     setChannelId={(id: string) => setChannelId(id)}
                                     setChannelCreatedBy={(id: any) => setChannelCreatedBy(id)}
@@ -2311,45 +2347,46 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             target={target}
                             openCue={(cueId: string) => openCueFromCalendar(channelId, cueId, channelCreatedBy)}
                             refreshCues={loadNewChannelCues}
+                            // refreshAfterSubmittingQuiz={refreshAfterSubmittingQuiz}
                         />
                     ) : null}
                 </View>
 
-                {showHome ? (
+                {showHome && !showLoginWindow ? (
                     <View
                         style={{
                             position: 'absolute',
-                            backgroundColor: '#000',
+                            backgroundColor: '#fff',
                             alignSelf: 'flex-end',
                             width: '100%',
-                            paddingTop: 10,
+                            paddingTop: 12,
                             paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
-                            paddingHorizontal: Dimensions.get('window').width < 1024 ? 20 : 40,
+                            paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            height: Dimensions.get('window').width < 1024 ? 54 : 68,
+                            height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
                             shadowColor: '#000',
                             shadowOffset: {
                                 width: 0,
                                 height: -3
                             },
-                            shadowOpacity: 0.04,
-                            shadowRadius: 10,
+                            bottom: 0,
+                            right: 0,
+                            shadowOpacity: 0.06,
+                            shadowRadius: 6,
                             zIndex: showLoginWindow ? 40 : 100,
                             elevation: showLoginWindow ? 40 : 100,
                             borderTopColor: '#f2f2f2',
-                            borderTopWidth: 1
+                            borderTopWidth: 1,
+                            // elevation: 10,
                         }}
                     >
                         {options.map((op: any, ind: number) => {
-                            if (op === 'Channels') {
-                                return;
-                            }
                             return (
                                 <TouchableOpacity
                                     style={{
-                                        backgroundColor: '#000',
-                                        width: '25%',
+                                        backgroundColor: '#fff',
+                                        width: '20%',
                                         flexDirection: 'column',
                                         justifyContent: 'center',
                                         alignItems: 'center'
@@ -2379,28 +2416,18 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 >
                                     <Ionicons
                                         name={getNavbarIconName(op)}
-                                        style={{ color: op === option ? '#006AFF' : '#A0A0A0' }}
-                                        size={26}
+                                        style={{ color: getNavbarIconColor(op), marginBottom: 6 }}
+                                        size={23}
                                     />
-                                    {/* {Dimensions.get('window').width < 768 ? (
-                                        <Text
-                                            style={{
-                                                color: op === option ? '#000000' : '#656565',
-                                                fontSize: 10,
-                                                marginTop: 3,
-                                                fontFamily: 'System',
-                                                fontWeight: '500'
-                                            }}
-                                        >
-                                            {op === 'Classroom'
-                                                ? 'Workspace'
-                                                : op === 'To Do'
-                                                ? 'Agenda'
-                                                : op === 'Settings'
-                                                ? 'Account'
-                                                : op}
-                                        </Text>
-                                    ) : null} */}
+                                    <Text style={{
+                                        fontSize: 10,
+                                        color: getNavbarIconColor(op),
+                                        fontWeight: 'bold',
+                                        fontFamily: 'Inter'
+                                        
+                                    }}>
+                                        {getNavbarText(op)}
+                                    </Text>
 
                                     {/* <Text style={op === option ? styles('').allGrayFill : styles('').all}>
                                         {op === 'Classroom'

@@ -18,13 +18,6 @@ const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any)
             }}
             onTouchMove={() => Keyboard.dismiss()}
         >
-            {/* <ScrollView
-                style={{
-                    width: '100%',
-                    paddingHorizontal: 0,
-                    backgroundColor: 'white'
-                }}
-            > */}
             <ChannelControls
                 subscriptions={props.subscriptions}
                 closeModal={() => props.closeModal()}
@@ -34,7 +27,6 @@ const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any)
                 showAddCourseModal={props.showAddCourseModal}
                 closeAddCourseModal={props.closeAddCourseModal}
             />
-            {/* </ScrollView> */}
         </View>
     );
 };

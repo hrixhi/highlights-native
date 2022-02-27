@@ -67,8 +67,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [optionEditorRefs, setOptionEditorRefs] = useState<boolean[]>([]);
     const [solutionEditorRefs, setSolutionEditorRefs] = useState<boolean[]>([]);
 
-    console.log('Quiz component props', props);
-
     // HOOKS
 
     /**
@@ -538,7 +536,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
      * @description Renders Audio/Video player for quiz problems
      */
     const renderAudioVideoPlayer = (url: string, type: string) => {
-        console.log('Video URL', url);
         return (
             <Video
                 // ref={audioRef}
@@ -832,10 +829,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         setSolutions(updatedSolution);
         props.setSolutions(updatedSolution);
     };
-
-    // let solutionRefs: any[] = [];
-    console.log('Quiz Problems', problems);
-    console.log('Solutions', solutions);
 
     if (problems.length !== solutions.length && !props.isOwner) {
         return <View />;

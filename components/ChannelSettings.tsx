@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 // API
 import { fetchAPI } from '../graphql/FetchAPI';
 import {
-    findChannelById, getOrganisation, getSubscribers, getUserCount, subscribe, unsubscribe, updateChannel, getChannelColorCode, duplicateChannel, resetAccessCode, getChannelModerators
+    findChannelById, getOrganisation, getSubscribers, getUserCount, subscribe, unsubscribe, updateChannel, getChannelColorCode, duplicateChannel, resetAccessCode, getChannelModerators, deleteChannel
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -33,6 +33,7 @@ import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 // import ReactTagInput from "@pathofdev/react-tag-input";
 // import "@pathofdev/react-tag-input/build/index.css";
+import { getDropdownHeight } from '../helpers/DropdownHeight';
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -394,7 +395,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         }
                     })
                     .catch(e => {
-                        alert("Could not Channel data. Check connection.")
+                        alert("Could not fetch course data. Check connection.")
                     })
 
                     // get subs
@@ -460,12 +461,12 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const handleDuplicate = useCallback(() => {
 
         if (duplicateChannelName.toString().trim() === '') {
-            alert('Enter duplicate channel name.')
+            alert('Enter duplicate course name.')
             return
         }
 
         if (duplicateChannelColor === "") {
-            alert('Pick duplicate channel color.')
+            alert('Pick duplicate course color.')
             return
         }
 
@@ -483,7 +484,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 }
             }).then((res2) => {
                 if (res2.data && res2.data.channel.duplicate === "created") {
-                    alert("Channel duplicated successfully.")
+                    alert("Course duplicated successfully.")
                     // Refresh Subscriptions for user
                     props.refreshSubscriptions()
                     props.closeModal()
@@ -530,7 +531,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
      */
     const handleSubmit = useCallback(() => {
         if (name.toString().trim() === '') {
-            alert('Enter channel name.')
+            alert('Enter course name.')
             return
         }
 
@@ -646,25 +647,24 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     /**
      * @description Handle delete channel (Note: Only temporary channels can be deleted)
      */
-    const handleDelete = useCallback(() => {
+     const handleDelete = useCallback(async () => {
         const server = fetchAPI('')
-        const subs = JSON.parse(JSON.stringify(originalSubs))
-        subs.push(owner)
-        subs.map((o: any) => {
-            server.mutate({
-                mutation: unsubscribe,
-                variables: {
-                    channelId: props.channelId,
-                    keepContent: false,
-                    userId: o.id
-                }
-            })
+        server.mutate({
+            mutation: deleteChannel,
+            variables: {
+                channelId: props.channelId,
+            }
+        }).then((res: any) => {
+            Alert("Deleted Course successfully.")
+            props.refreshSubscriptions()
         })
-        Alert("Deleted Channel successfully.")
-        props.closeModal()
-        // Force reload
-        props.refreshSubscriptions()
-    }, [props.channelId, originalSubs, owner])
+        .catch((e: any) => {
+            Alert("Failed to delete Course.")
+            console.log("Error", e)
+        })
+
+        
+    }, [props.channelId])
 
     // FUNCTIONS 
 
@@ -784,7 +784,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 justifyContent: "center",
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "#f2f2f2",
+                backgroundColor: "#fff",
                 paddingVertical: 100
             }}>
             <ActivityIndicator color={"#1F1F1F"} />
@@ -800,13 +800,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             borderColor: props.channelColor,
             borderTopRightRadius: 10,
             borderBottomRightRadius: 10,
-            shadowOffset: {
-                width: 2,
-                height: 2,
-            },
-            shadowOpacity: 0.1,
-            shadowRadius: 10,
-            zIndex: 5000000
+            // shadowOffset: {
+            //     width: 2,
+            //     height: 2,
+            // },
+            // shadowOpacity: 0.1,
+            // shadowRadius: 10,
+            // zIndex: 5000000
         }}>
             <View style={styles.screen} >
                 <View style={{
@@ -843,7 +843,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             flex: 1,
                             lineHeight: 25
                         }}>
-                        Duplicate Channel
+                        Duplicate Course
                     </Text>
                     <ScrollView
                         onScroll={() => {
@@ -1180,13 +1180,15 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             borderColor: props.channelColor,
             borderTopRightRadius: 10,
             borderBottomRightRadius: 10,
-            shadowOffset: {
-                width: 2,
-                height: 2,
-            },
-            shadowOpacity: 0.1,
-            shadowRadius: 10,
+            // shadowOffset: {
+            //     width: 2,
+            //     height: 2,
+            // },
+            // shadowOpacity: 0.1,
+            // shadowRadius: 10,
+            backgroundColor: '#fff',
             zIndex: 5000000,
+            // marginTop: 20,
         }}>
             <View style={styles.screen} >
                 <View style={{ backgroundColor: 'white', paddingTop: 20, paddingHorizontal: 10, }}>
@@ -1418,7 +1420,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <View style={{
                             flexDirection: 'column', marginTop: 25,
                         }}>
-                            <View style={{ maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? 250 : 50, }}>
+                            <View style={{ maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? getDropdownHeight(options.length) : 50, }}>
                                 <DropDownPicker
                                     multiple={true}
                                     open={isViewersDropdownOpen}
@@ -1465,7 +1467,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         }}>
                             Editors
                         </Text>
-                        <View style={{ height: isEditorsDropdownOpen ? 250 : 50, }}>
+                        <View style={{ height: isEditorsDropdownOpen ? getDropdownHeight(moderatorOptions.length) : 50, }}>
 
                        
                         <DropDownPicker
@@ -1599,7 +1601,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 temporary ?
                                     <TouchableOpacity
                                         onPress={() => {
-                                            Alert("Delete channel?", "", [
+                                            Alert("Delete course?", "", [
                                                 {
                                                     text: "Cancel",
                                                     style: "cancel",
@@ -1620,15 +1622,18 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             borderRadius: 15,
                                             overflow: 'hidden',
                                             height: 35,
-                                            marginTop: 15,
+                                            marginTop: 15
                                         }}
                                     >
                                         <Text style={{
                                             textAlign: 'center',
                                             lineHeight: 34,
-                                            color: '#000000',
+                                            color: '#006AFF',
+                                            borderWidth: 1,
+                                            borderRadius: 15,
+                                            borderColor: '#006AFF',
+                                            backgroundColor: '#fff',
                                             fontSize: 12,
-                                            backgroundColor: '#f2f2f2',
                                             paddingHorizontal: 20,
                                             fontFamily: 'inter',
                                             height: 35,

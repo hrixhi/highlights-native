@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, Fragment } from 'react';
-import { StyleSheet, LogBox } from 'react-native';
+import { StyleSheet, LogBox, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
@@ -40,7 +40,7 @@ export default function App() {
             <Fragment>
                 <SafeAreaView style={{ flex: 0, backgroundColor: 'white' }} />
                 <SafeAreaView style={styles.font}>
-                    <StatusBar style="dark" />
+                    <StatusBar style={'dark'} />
                     <MenuProvider>
                         <LanguageProvider>
                             <Navigation colorScheme={colorScheme} />
@@ -55,7 +55,7 @@ export default function App() {
 const styles: any = StyleSheet.create({
     font: {
         maxHeight: '100%',
-        backgroundColor: '#000',
+        backgroundColor: '#fff',
         flex: 1
     }
 });

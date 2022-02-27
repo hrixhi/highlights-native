@@ -93,6 +93,7 @@ const styles: any = (colorScheme: any, col: any) =>
     StyleSheet.create({
         swiper: {
             height: 60,
+            maxWidth: 190,
             backgroundColor: '#fff',
             borderColor: col,
             borderLeftWidth: 3,

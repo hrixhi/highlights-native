@@ -28,12 +28,10 @@ export const handleImageUpload = async (takePhoto: boolean, userId: string) => {
                 type: 'application/' + result.type
             };
 
-            console.log('Image', file);
-
             const response = await fileUpload(file, 'jpg', userId);
 
             const { data } = response;
-            console.log('Result', data);
+
             if (data.status === 'success') {
                 return data.url;
             } else {
@@ -69,14 +67,12 @@ export const handleImageUpload = async (takePhoto: boolean, userId: string) => {
                 type: 'application/' + result.type
             };
 
-            console.log('Image', file);
-
             // const file = blobToFile(img, 'default.jpg');
 
             const response = await fileUpload(file, 'jpg', userId);
 
             const { data } = response;
-            console.log('Result', data);
+
             if (data.status === 'success') {
                 return data.url;
             } else {

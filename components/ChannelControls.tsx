@@ -1,6 +1,6 @@
 // REACT
 import React, { useState, useEffect, useCallback } from 'react';
-import { ActivityIndicator, Dimensions, Image, StyleSheet } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, StyleSheet, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -26,6 +26,8 @@ import Reanimated from 'react-native-reanimated';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
+import { getDropdownHeight } from '../helpers/DropdownHeight';
+
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -622,6 +624,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             <View style={{ backgroundColor: 'white', }}>
                 <View style={{ backgroundColor: 'white', maxWidth: 320, height: isRoleDropdownOpen ? 210 : 50 }}>
                     <DropDownPicker
+                        listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                         open={isRoleDropdownOpen}
                         value={activeRole}
                         items={filterRoleOptions}
@@ -649,6 +652,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             elevation: 1000001
                         }}
                     />
+
                 </View>
             </View>
 
@@ -656,6 +660,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 <View style={{ backgroundColor: 'white', paddingRight: 20 }}>
                     <View style={{ backgroundColor: 'white', maxWidth: 150, height: isGradeDropdownOpen ? 250 : 50  }}>
                         <DropDownPicker
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={isGradeDropdownOpen}
                             value={activeGrade}
                             items={filterGradeOptions}
@@ -688,6 +693,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 <View style={{ backgroundColor: 'white',  }}>
                     <View style={{ backgroundColor: 'white', maxWidth: 150, height: isSectionDropdownOpen ? 250 : 50, }}>
                         <DropDownPicker
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={isSectionDropdownOpen}
                             value={activeSection}
                             items={filterSectionOptions}
@@ -817,7 +823,6 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         value={name}
                         placeholder={''}
                         textContentType={"none"}
-                        autoCompleteType={'xyz'}
                         onChangeText={val => {
                             setName(val)
                             setPasswordRequired(false)
@@ -828,7 +833,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     />
                 </View>
 
-                {!school ? <View style={{ backgroundColor: 'white' }}>
+                {/* {!school ? <View style={{ backgroundColor: 'white' }}>
                     <Text style={{
                         fontSize: 14,
                         color: '#000000'
@@ -857,7 +862,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         enableScrollToCaret
                         // ref={}
                     />
-                </View> : null} 
+                </View> : null}  */}
 
 
                 <View style={{ backgroundColor: 'white' }}>
@@ -871,7 +876,6 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     <TextInput
                         value={password}
                         textContentType={"none"}
-                        autoCompleteType={'xyz'}
                         placeholder={"Optional"}
                         onChangeText={val => setPassword(val)}
                         placeholderTextColor={'#1F1F1F'}
@@ -914,7 +918,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     activeThumbColor="white"
                                 />
                             </View>
-                            <Text style={{ color: '#1F1F1F', fontSize: 12 }}>
+                            <Text style={{ color: '#1F1F1F', fontSize: 12, paddingTop: 10 }}>
                                 Courses that are not temporary can only be deleted by the school administrator.
                             </Text>
                         </View>
@@ -1029,8 +1033,9 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 {school ? <View style={{
                     flexDirection: 'column', marginTop: 25,
                 }}>
-                    <View style={{ maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? 250 : 50, }}>
+                    <View style={{ maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? getDropdownHeight(options.length) : 50, }}>
                                 <DropDownPicker
+                                    listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                     multiple={true}
                                     open={isViewersDropdownOpen}
                                     value={selectedValues}
@@ -1076,37 +1081,38 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 </Text> : null}
                 {school ? 
                
-               <View style={{ height: isEditorsDropdownOpen ? 250 : 50, }}>
+               <View style={{ height: isEditorsDropdownOpen ? getDropdownHeight(moderatorOptions.length) : 50, }}>
 
                        
                <DropDownPicker
-                   multiple={true}
-                   open={isEditorsDropdownOpen}
-                   value={selectedModerators}
-                   items={moderatorOptions}
-                   setOpen={setIsEditorsDropdownOpen}
-                   setValue={setSelectedModerators}
-                   style={{
-                       borderWidth: 0,
-                       borderBottomWidth: 1,
-                       borderBottomColor: '#f2f2f2'
-                   }}
-                   dropDownContainerStyle={{
-                       borderWidth: 0,
-                       zIndex: 1000001,
-                       elevation: 1000001
-                   }}
-                   containerStyle={{
-                       shadowColor: '#000',
-                       shadowOffset: {
-                           width: 1,
-                           height: 3
-                       },
-                       shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.08,
-                       shadowRadius: 12,
-                       zIndex: 1000001,
-                       elevation: 1000001
-                   }}
+                    listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
+                    multiple={true}
+                    open={isEditorsDropdownOpen}
+                    value={selectedModerators}
+                    items={moderatorOptions}
+                    setOpen={setIsEditorsDropdownOpen}
+                    setValue={setSelectedModerators}
+                    style={{
+                        borderWidth: 0,
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#f2f2f2'
+                    }}
+                    dropDownContainerStyle={{
+                        borderWidth: 0,
+                        zIndex: 1000001,
+                        elevation: 1000001
+                    }}
+                    containerStyle={{
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 1,
+                            height: 3
+                        },
+                        shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.08,
+                        shadowRadius: 12,
+                        zIndex: 1000001,
+                        elevation: 1000001
+                    }}
                />
                 </View>
                 : null}
@@ -1176,7 +1182,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     return (
         <View style={{
             width: '100%',
-            maxHeight: Dimensions.get("window").width < 768 ? Dimensions.get("window").height - 120 : Dimensions.get("window").height - 52,
+            maxHeight: Dimensions.get("window").width < 768 ? Dimensions.get("window").height - (Platform.OS === 'android' ? 90 : 120) : Dimensions.get("window").height - 52,
             height: '100%',
             backgroundColor: props.showCreate ? "#fff" : '#f2f2f2',
         }} key={1}>
@@ -1190,13 +1196,27 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         
                     }}
                 >
+                    {/* <TouchableOpacity
+                        style={{
+                            // marginRight: 15,
+                            position: 'absolute',
+                            // marginRight: 'auto',
+                            left: 0,
+                            paddingLeft: 20,
+                            paddingTop: 15
+                        }}
+                        onPress={() => props.setShowSettings(false)}
+                    >
+                        <Ionicons name={'arrow-back-outline'} size={25} color="black" />
+                    </TouchableOpacity> */}
+
                     <TouchableOpacity
                         style={{
-                            // backgroundColor: activeTab === 'agenda' ? '#000' : '#fff',
-                            paddingVertical: 6,
+                            paddingTop: 6,
+                            paddingBottom: 4,
                             marginHorizontal: 12,
-                            borderBottomColor: '#006aff',
-                            // borderBottomWidth: activeTab === 'profile' ? 3 : 0
+                            // borderBottomColor: '#006aff',
+                            // borderBottomWidth: activeTab === 'courses' ? 2 : 0
                         }}
                         disabled={true}
                         // onPress={() => setActiveTab('profile')}
@@ -1209,23 +1229,23 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 fontSize: Dimensions.get('window').width < 768 ? 20 : 30
                             }}
                         >
-                            Account
+                            Profile
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={{
-                            // backgroundColor: activeTab === 'activity' ? '#000' : '#fff',
-                            paddingVertical: 6,
+                            paddingTop: 6,
+                            paddingBottom: 4,
                             marginHorizontal: 12,
-                            borderBottomColor: '#006aff',
-                            borderBottomWidth: 3
+                            borderBottomColor: '#000',
+                            borderBottomWidth: 2
                         }}
                         // onPress={() => setActiveTab('courses')}
                         disabled={true}
                     >
                         <Text
                             style={{
-                                color: '#006aff',
+                                color: '#000',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold',
                                 fontSize: Dimensions.get('window').width < 768 ? 20 : 30
@@ -1263,7 +1283,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 {/* Main Content */}
                 {!props.showCreate ?
                     <View style={{
-                        backgroundColor: '#f2f2f2',
+                        backgroundColor: '#fff',
                         width: '100%',
                         minHeight: Dimensions.get("window").height - 52
                     }}
@@ -1285,7 +1305,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View> : <View
                             style={{
                                 borderColor: '#f2f2f2',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 borderRadius: 1,
                                 shadowColor: "#000",
@@ -1340,6 +1360,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             style={{
                                                 backgroundColor: '#fff',
                                                 flexDirection: 'row',
+                                                alignItems: 'center',
                                                 borderColor: '#f2f2f2',
                                                 borderBottomWidth: ind === channels.length - 1 ? 0 : 1,
                                                 width: '100%',
@@ -1347,11 +1368,11 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             }}
                                             key={ind}
                                             >
-                                            <View style={{ backgroundColor: '#fff', padding: 5 }}>
+                                            <View style={{ backgroundColor: '#fff', padding: 5, paddingLeft: 15 }}>
                                                 <Image
                                                     style={{
-                                                        height: 35,
-                                                        width: 35,
+                                                        height: 40,
+                                                        width: 40,
                                                         marginTop: 5,
                                                         marginLeft: 5,
                                                         marginBottom: 5,
@@ -1361,11 +1382,11 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     source={{ uri: channel.createdByAvatar ? channel.createdByAvatar : 'https://cues-files.s3.amazonaws.com/images/default.png' }}
                                                 />
                                             </View>
-                                            <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 10 }}>
-                                                <Text style={{ fontSize: 15, padding: 5, fontFamily: 'inter', marginTop: 5 }} ellipsizeMode='tail'>
+                                            <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 5 }}>
+                                                <Text style={{ fontSize: 15, padding: 5, fontFamily: 'inter', }} ellipsizeMode='tail'>
                                                     {channel.name}
                                                 </Text>
-                                                <Text style={{ fontSize: 11, padding: 5, fontWeight: 'bold' }} ellipsizeMode='tail'>
+                                                <Text style={{ fontSize: 13, padding: 5, fontWeight: 'bold' }} ellipsizeMode='tail'>
                                                     {channel.createdByUsername}
                                                 </Text>
                                             </View>
@@ -1416,7 +1437,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             {
                 props.showAddCourseModal ?
                     <BottomSheet 
-                        snapPoints={[0, windowHeight - 35]}
+                        snapPoints={[0, windowHeight - (Platform.OS === 'android' ? 0 : 30
+                        )]}
                         close={() => {
                             props.closeAddCourseModal()
                         }}

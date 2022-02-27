@@ -4,12 +4,13 @@ import {
     Animated,
     Dimensions,
     StyleSheet,
-    ScrollView,
+    // ScrollView,
     Platform,
-    Switch,
+    // Switch,
     Linking
 } from 'react-native';
 import { TextInput } from './CustomTextInput';
+import { ScrollView, Switch } from 'react-native-gesture-handler';
 import Alert from './Alert';
 import { Text, View, TouchableOpacity } from './Themed';
 import { fetchAPI } from '../graphql/FetchAPI';
@@ -44,6 +45,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 
 import Reanimated from 'react-native-reanimated';
+import { getDropdownHeight } from '../helpers/DropdownHeight';
 
 const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [modalAnimation] = useState(new Animated.Value(1));
@@ -78,7 +80,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [meetingProvider, setMeetingProvider] = useState('');
     const [unreadCount, setUnreadCount] = useState<any>(0);
     const [loadingEvents, setLoadingEvents] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState('Home');
+    const [selectedChannel, setSelectedChannel] = useState('My Events');
 
     const [selectedStartDay, setSelectedStartDay] = useState<any>(`${start.getDay() + 1}`);
     const [selectedDays, setSelectedDays] = useState<any[]>([selectedStartDay]);
@@ -114,7 +116,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const channelOptions = [
         {
             value: '',
-            label: 'Home'
+            label: 'My Events'
         }
     ];
 
@@ -155,7 +157,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         setSelectedStartDay(startDay.toString());
         setSelectedDays([startDay.toString()]);
 
-        // }
     }, [start]);
 
     /**
@@ -172,6 +173,21 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }
         })();
     }, []);
+
+    const renderTimeMessage = () => {
+        const currentTime = new Date()
+
+        if (currentTime.getHours() < 12 && currentTime.getHours() >= 4) {
+            return 'Good Morning'
+        } else if (currentTime.getHours() >= 12 && currentTime.getHours() < 17) {
+            return 'Good Afternoon' 
+        } else {
+            return 'Good Evening'
+        }
+    }
+
+   
+
 
     const loadChannels = useCallback(async () => {
         const uString: any = await AsyncStorage.getItem('user');
@@ -339,12 +355,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     shadowOffset={2}
                     shadowOpacity={0.12}
                     shadowRadius={10}
-                    elevation={500000}
+                    // elevation={500000}
                     containerStyle={{
                         height: 'auto'
                     }}
                 >
-                    <ScrollView horizontal={false} showsVerticalScrollIndicator={true} indicatorStyle={'black'}>
+                    <ScrollView style={{
+                        height: Dimensions.get('window').height * 0.8
+                    }} horizontal={false} showsVerticalScrollIndicator={true} indicatorStyle={'black'}>
                         {activity.map((act: any, index) => {
                             const { cueId, channelId, createdBy, target, threadId } = act;
 
@@ -426,7 +444,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         width: '100%',
                                         paddingVertical: 5,
                                         backgroundColor: 'white',
-                                        height: 90
+                                        height: 90,
+                                        paddingLeft: 5
                                         // borderLeftWidth: 3,
                                         // borderLeftColor: act.colorCode
                                     }}
@@ -445,10 +464,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     width: 9,
                                                     height: 9,
                                                     borderRadius: 6,
-                                                    // marginTop: 2,
                                                     marginRight: 5,
-                                                    // paddingTop: 5,
-                                                    backgroundColor: act.colorCode
+                                                    backgroundColor: act.colorCode,
+                                                    marginLeft: 5
                                                 }}
                                             />
                                             <Text
@@ -464,7 +482,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         </View>
                                         <Text
                                             style={{
-                                                fontSize: 12,
+                                                fontSize: 13,
                                                 padding: 5,
                                                 lineHeight: 18,
                                                 fontWeight: 'bold'
@@ -508,7 +526,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         >
                                             {emailTimeDisplay(act.date)}
                                         </Text>
-                                        <Text
+                                        {/* <Text
                                             style={{
                                                 fontSize: 13,
                                                 padding: 5,
@@ -517,7 +535,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             ellipsizeMode="tail"
                                         >
                                             <Ionicons name="chevron-forward-outline" size={18} color="#006AFF" />
-                                        </Text>
+                                        </Text> */}
                                     </View>
                                 </TouchableOpacity>
                             );
@@ -556,8 +574,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     //     ]);
     //   }, []);
 
-    console.log('Start', start.toUTCString());
-
     /**
      * @description Handle Create event
      */
@@ -594,20 +610,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         if (u) {
             const user = JSON.parse(u);
 
-            console.log('Create Arguments', {
-                title,
-                userId: user._id,
-                start: start.toUTCString(),
-                end: end.toUTCString(),
-                channelId,
-                meeting,
-                description,
-                recordMeeting,
-                frequency: freq,
-                repeatTill: repeat,
-                repeatDays
-            });
-
             const server = fetchAPI('');
             server
                 .mutate({
@@ -627,7 +629,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 })
                 .then(res => {
-                    console.log('Res', res);
                     if (res.data && res.data.date.createV1 === 'SUCCESS') {
                         loadEvents();
                         setTitle('');
@@ -755,6 +756,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const loadEvents = useCallback(async () => {
         setLoadingEvents(true);
+        console.log("Begin loading events", moment(new Date()).format('mm:ss a'))
 
         const u = await AsyncStorage.getItem('user');
         let parsedUser: any = {};
@@ -774,6 +776,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             })
             .then(res => {
                 if (res.data.date && res.data.date.getCalendar) {
+                    console.log("total Fetched events", res.data.date.getCalendar.length)
                     const parsedEvents: any[] = [];
                     res.data.date.getCalendar.map((e: any) => {
                         const { title } = htmlStringParser(e.title);
@@ -880,6 +883,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     setAllItems(allEvents);
                 }
 
+                console.log("End loading events", moment(new Date()).format('mm:ss a'))
+
                 setLoadingEvents(false);
 
                 modalAnimation.setValue(0);
@@ -911,6 +916,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         return time;
     };
 
+    console.log("Show start time android", showStartTimeAndroid)
+    console.log("Show end time android", showEndTimeAndroid)
+
     const renderStartDateTimePicker = () => {
         return (
             <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
@@ -937,7 +945,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowStartDateAndroid(false);
+                                return;
+                            };
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowStartDateAndroid(false);
@@ -957,14 +968,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(true);
@@ -976,15 +987,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -993,13 +1001,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
-                                width: 150,
+                                marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
+                                marginLeft: 50
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(false);
@@ -1011,16 +1021,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -1051,7 +1058,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowStartTimeAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowStartTimeAndroid(false);
                             setStart(currentDate);
@@ -1088,7 +1098,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowEndDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowEndDateAndroid(false);
 
@@ -1110,14 +1123,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
-                                width: 150,
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(false);
@@ -1129,15 +1142,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1146,13 +1156,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
-                                width: 150,
+                                marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
+                                marginLeft: 50
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(false);
@@ -1164,15 +1176,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1205,7 +1214,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowEndTimeAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowEndTimeAndroid(false);
                             setEnd(currentDate);
@@ -1242,7 +1254,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowRepeatTillDateAndroid(false);
+                                return
+                            };
                             const currentDate: any = selectedDate;
 
                             const roundedValue = roundSeconds(currentDate);
@@ -1255,7 +1270,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {Platform.OS === 'android' ? (
                     <View
                         style={{
-                            width: '100%',
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
@@ -1264,14 +1278,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowRepeatTillDateAndroid(true);
@@ -1280,15 +1294,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1327,7 +1338,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowFilterStartDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowFilterStartDateAndroid(false);
@@ -1338,7 +1352,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {Platform.OS === 'android' ? (
                     <View
                         style={{
-                            width: '100%',
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
@@ -1352,7 +1365,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
                                 flexDirection: 'row'
                             }}
@@ -1366,15 +1378,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1413,7 +1422,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowFilterEndDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowFilterEndDateAndroid(false);
 
@@ -1426,7 +1438,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {Platform.OS === 'android' ? (
                     <View
                         style={{
-                            width: '100%',
+                            // width: '100%',
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
@@ -1438,7 +1450,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 backgroundColor: 'white',
                                 overflow: 'hidden',
                                 height: 35,
-                                width: 150,
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
@@ -1452,15 +1463,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -1563,7 +1571,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <TouchableOpacity
                         style={{ marginRight: 15 }}
                         onPress={() => {
-                            if (Platform.OS == 'web') {
+                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                 window.open(editEvent.zoomStartUrl, '_blank');
                             } else {
                                 Linking.openURL(editEvent.zoomStartUrl);
@@ -1764,10 +1772,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             textAlign: 'center',
                             lineHeight: 35,
-                            color: '#2f2f3c',
                             fontSize: 11,
-                            backgroundColor: '#f4f4f6',
+                            borderColor: '#006AFF',
+                            borderWidth: 1,
                             paddingHorizontal: 25,
+                            color: '#006AFF',
                             fontFamily: 'inter',
                             height: 35,
                             width: 200,
@@ -1796,10 +1805,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 textAlign: 'center',
                                 lineHeight: 35,
-                                color: '#2f2f3c',
                                 fontSize: 11,
-                                backgroundColor: '#f4f4f6',
+                                borderColor: '#006AFF',
+                                borderWidth: 1,
                                 paddingHorizontal: 25,
+                                color: '#006AFF',
                                 fontFamily: 'inter',
                                 height: 35,
                                 width: 200,
@@ -1868,7 +1878,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 style={{
                     height: 80,
                     backgroundColor: 'white',
-                    marginTop: 10,
+                    marginTop: 20,
                     marginBottom: 15,
                     marginRight: Dimensions.get('window').width > 768 ? 20 : 10,
                     // padding: 10,
@@ -1887,13 +1897,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     onSelectEvent(item);
                 }}
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: (Platform.OS === 'android' ? 7 : 10) }}>
                     <View
                         style={{
                             width: 9,
                             height: 9,
                             borderRadius: 6,
-                            marginRight: 5,
+                            marginRight: 7,
                             backgroundColor: item.color
                         }}
                     />
@@ -1917,8 +1927,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             item.description !== '' ||
                             (item.submitted !== null && userId !== '' && userId !== item.createdBy) ||
                             (isMeeting && new Date() > startTime && new Date() < endTime)
-                                ? 5
-                                : 10
+                                ? Platform.OS === 'android' ? 3 : 5
+                                : (Platform.OS === 'android' ? 7 : 10),
+                            paddingLeft: 17
                     }}
                 >
                     {displayDate}{' '}
@@ -1927,9 +1938,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {item.description && item.description !== '' ? (
                     <Text
                         style={{
-                            paddingTop: 5,
+                            paddingTop: Platform.OS === 'android' ? 3 : 5,
                             color: '#a2a2ac',
-                            paddingRight: 10
+                            paddingRight: 10,
+                            paddingLeft: 17
                         }}
                         numberOfLines={1}
                     >
@@ -1943,7 +1955,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             color: item.submitted ? '#35AC78' : !assingmentDue ? '#006AFF' : '#F94144',
                             paddingTop: 5,
                             fontSize: 13,
-                            fontFamily: 'inter'
+                            fontFamily: 'inter',
+                            paddingLeft: 17
                             // color: '#a2a2ac'
                         }}
                     >
@@ -1957,7 +1970,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             color: '#006AFF',
                             paddingTop: 5,
                             fontSize: 13,
-                            fontFamily: 'inter'
+                            fontFamily: 'inter',
+                            paddingLeft: 17
                         }}
                     >
                         {'IN PROGRESS'}
@@ -1987,10 +2001,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             const user = JSON.parse(uString);
 
             const timeString = datesEqual(event.start, event.end)
-                ? moment(new Date(event.start)).format('MMMM Do YYYY, h:mm a')
-                : moment(new Date(event.start)).format('MMMM Do YYYY, h:mm a') +
+                ? moment(new Date(event.start)).format('MMMM Do YY, h:mm a')
+                : moment(new Date(event.start)).format('MMMM Do YY, h:mm a') +
                   ' to ' +
-                  moment(new Date(event.end)).format('MMMM Do YYYY, h:mm a');
+                  moment(new Date(event.end)).format('MMMM Do YY, h:mm a');
 
             const descriptionString = event.description ? event.description + '- ' + timeString : '' + timeString;
 
@@ -2060,7 +2074,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             {
                                 text: 'Yes',
                                 onPress: async () => {
-                                    if (Platform.OS == 'web') {
+                                    if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                         window.open(meetingLink, '_blank');
                                     } else {
                                         Linking.openURL(meetingLink);
@@ -2079,7 +2093,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const windowHeight =
-        Dimensions.get('window').width < 768 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
+        Dimensions.get('window').width < 768 && Platform.OS === 'ios' ? Dimensions.get('window').height - 81 : Dimensions.get('window').height - 30;
 
     const yesterday = moment().subtract(1, 'day');
     const disablePastDt = (current: any) => {
@@ -2102,20 +2116,20 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 </View>
                 <View
                     style={{
-                        backgroundColor: 'white',
-                        height: 40,
-                        marginRight: 10
+                        backgroundColor: 'white', flexDirection: 'column', alignItems: 'flex-start'
                     }}
                 >
                     <Switch
                         value={recurring}
                         onValueChange={() => setRecurring(!recurring)}
-                        style={{ height: 20 }}
+                        // style={{ height: 20 }}
+                        thumbColor={'#f4f4f6'}
                         trackColor={{
                             false: '#f4f4f6',
                             true: '#006AFF'
                         }}
-                        activeThumbColor="white"
+                        style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
+                        // activeThumbColor="white"
                     />
                 </View>
             </View>
@@ -2125,7 +2139,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <View
                         style={{
                             width: '100%',
-                            paddingTop: width < 768 ? 20 : 40,
+                            paddingTop: 40,
                             paddingBottom: 15,
                             backgroundColor: 'white'
                         }}
@@ -2136,12 +2150,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             backgroundColor: 'white',
                             display: 'flex',
-                            height: showFrequencyDropdown ? 300 : 50
+                            height: showFrequencyDropdown ? getDropdownHeight(eventFrequencyOptions.length) : 50,
+                            zIndex: showFrequencyDropdown ? 1 : 0
                             // marginRight: 10
+                            
                         }}
                     >
                         <DropDownPicker
-                            listMode="SCROLLVIEW"
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={showFrequencyDropdown}
                             value={frequency}
                             items={eventFrequencyOptions.map((item: any) => {
@@ -2150,18 +2166,20 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     value: item.value
                                 };
                             })}
+                            scrollViewProps={{
+                                nestedScrollEnabled: true,
+                            }}
                             setOpen={setShowFrequencyDropdown}
                             setValue={setFrequency}
-                            zIndex={1000001}
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
+                                borderBottomColor: '#f2f2f2',
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
@@ -2171,8 +2189,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 },
                                 shadowOpacity: !showFrequencyDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
                             }}
                         />
                     </View>
@@ -2230,19 +2246,20 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <View
                     style={{
                         width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                        display: 'flex',
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingTop: 12,
+                        paddingTop: 40,
                         backgroundColor: '#fff',
-                        marginLeft: 'auto',
-                        zIndex: 100
+                        // marginLeft: 'auto',
+                        // zIndex: 100
                     }}
                 >
                     <Text style={styles.text}>
                         End date
                         {/* {PreferredLanguageText("repeatTill")}{" "} */}
                         {Platform.OS === 'android'
-                            ? ': ' + moment(new Date(repeatTill)).format('MMMM Do YYYY, h:mm a')
+                            ? ': ' + moment(new Date(repeatTill)).format('MMMM Do YYYY')
                             : null}
                     </Text>
                     <View
@@ -2260,8 +2277,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             ) : null}
         </View>
     );
-
-    console.log('Channel id', channelId);
 
     const renderMeetingOptions = () => {
         return channelId !== '' || editChannelName !== '' ? (
@@ -2286,11 +2301,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <Text style={styles.text}>Meeting</Text>
                         </View>
 
+                        {editEvent ||
+                                    ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') &&
+                                        !meetingProvider) ? null : 
                         <View
                             style={{
-                                backgroundColor: 'white',
-                                height: 40,
-                                marginRight: 10
+                                backgroundColor: 'white', flexDirection: 'column', alignItems: 'flex-start', 
                             }}
                         >
                             <Switch
@@ -2298,19 +2314,19 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 onValueChange={() => {
                                     setIsMeeting(!isMeeting);
                                 }}
-                                style={{ height: 20 }}
+                                thumbColor={'#f4f4f6'}
                                 trackColor={{
                                     false: '#f4f4f6',
                                     true: '#006AFF'
                                 }}
+                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                 disabled={
                                     editEvent ||
                                     ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') &&
                                         !meetingProvider)
                                 }
-                                activeThumbColor="white"
                             />
-                        </View>
+                        </View>}
                     </View>
                 ) : null}
             </View>
@@ -2325,13 +2341,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     // height: windowHeight,
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
-                    borderTopLeftRadius: 0
+                    borderTopLeftRadius: 0,
+                    zIndex: 10000
                 }}
                 showsVerticalScrollIndicator={true}
-                scrollEnabled={true}
-                scrollEventThrottle={1}
+                // scrollEnabled={true}
+                // scrollEventThrottle={1}
                 keyboardDismissMode={'on-drag'}
-                overScrollMode={'never'}
+                // overScrollMode={'never'}
                 nestedScrollEnabled={true}
                 indicatorStyle={'black'}
             >
@@ -2414,7 +2431,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 paddingTop: 12,
                                 backgroundColor: '#fff',
                                 marginLeft: 'auto',
-                                alignItems: 'center'
+                                alignItems: Platform.OS === 'ios' ?  'center' : 'flex-start'
                             }}
                         >
                             <Text style={styles.text}>
@@ -2432,7 +2449,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 backgroundColor: '#fff',
                                 marginTop: 12,
                                 marginLeft: 'auto',
-                                alignItems: 'center'
+                                alignItems: Platform.OS === 'ios' ?  'center' : 'flex-start'
                             }}
                         >
                             <Text style={styles.text}>
@@ -2461,35 +2478,37 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     style={{
                                         flexDirection: 'row',
                                         display: 'flex',
-                                        height: showChannelDropdown ? 260 : 50
+                                        height: showChannelDropdown ? getDropdownHeight(channelOptions.length) : 50,
+                                        zIndex: showChannelDropdown ? 1 : 0,
                                     }}
                                 >
                                     <DropDownPicker
-                                        listMode="SCROLLVIEW"
+                                        listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                         open={showChannelDropdown}
                                         value={selectedChannel}
                                         items={channelOptions}
                                         setOpen={setShowChannelDropdown}
+                                        scrollViewProps={{
+                                            nestedScrollEnabled: true,
+                                        }}
                                         setValue={(val: any) => {
                                             setSelectedChannel(val);
 
-                                            console.log('Value', val);
-
-                                            if (val === 'Home') {
+                                            if (val === 'My Events') {
                                                 setChannelId('');
                                             } else {
                                                 setChannelId(val);
                                             }
                                         }}
-                                        zIndex={999999}
                                         style={{
                                             borderWidth: 0,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#f2f2f2'
+                                            borderBottomColor: '#f2f2f2',
+                                            // elevation: !showChannelDropdown ? 0 : 2
                                         }}
                                         dropDownContainerStyle={{
                                             borderWidth: 0,
-                                            zIndex: 999999
+                                            // elevation: !showChannelDropdown ? 0 : 2
                                         }}
                                         containerStyle={{
                                             shadowColor: '#000',
@@ -2499,7 +2518,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             },
                                             shadowOpacity: !showChannelDropdown ? 0 : 0.08,
                                             shadowRadius: 12,
-                                            zIndex: 999999
                                         }}
                                     />
                                 </View>
@@ -2535,7 +2553,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 // textTransform: 'uppercase',
                                 lineHeight: 20,
                                 fontFamily: 'Inter',
-                                paddingBottom: 15
+                                paddingVertical: 15
                             }}
                         >
                             Zoom meeting will be automatically created and attendances will be captured for online
@@ -2551,7 +2569,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <View
                             style={{
                                 marginVertical: 10,
-                                flexDirection: 'column',
+                                flexDirection: 'row',
                                 alignItems: 'center',
                                 padding: 10,
                                 backgroundColor: '#f3f3f3',
@@ -2575,7 +2593,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     if (Platform.OS === 'ios' || Platform.OS === 'android') {
                                         Linking.openURL(url);
                                     } else {
-                                        window.open(url);
+                                        window.open(url, '_blank');
                                     }
                                 }}
                                 style={{
@@ -2656,7 +2674,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const renderFilterModalContent = () => {
         const filterChannelOptions = [
             { value: 'All', label: 'All' },
-            { value: '', label: 'Home' }
+            { value: '', label: 'My Events' }
         ];
 
         props.subscriptions.map((sub: any) => {
@@ -2680,16 +2698,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     // height: windowHeight,
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
-                    borderTopLeftRadius: 0
+                    borderTopLeftRadius: 0,
+                    zIndex: 10000
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 20
                 }}
                 showsVerticalScrollIndicator={false}
-                scrollEnabled={true}
-                scrollEventThrottle={1}
-                keyboardDismissMode={'on-drag'}
-                overScrollMode={'never'}
                 nestedScrollEnabled={true}
             >
                 <View style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
@@ -2707,27 +2722,29 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             backgroundColor: 'white',
                             display: 'flex',
-                            height: showFilterByChannelDropdown ? 250 : 50,
-                            marginTop: 10
+                            height: showFilterByChannelDropdown ? getDropdownHeight(filterChannelOptions.length) : 50,
+                            marginTop: 10,
                         }}
                     >
                         <DropDownPicker
-                            listMode="SCROLLVIEW"
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={showFilterByChannelDropdown}
                             value={filterByChannel}
                             items={filterChannelOptions}
                             setOpen={setShowFilterByChannelDropdown}
                             setValue={setFilterByChannel}
-                            zIndex={1000001}
+                            scrollViewProps={{
+                                nestedScrollEnabled: true,
+                            }}
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
+                                borderBottomColor: '#f2f2f2',
+                                // elevation: !showFilterByChannelDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                                // elevation: !showFilterByChannelDropdown ? 0 : 2
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
@@ -2737,13 +2754,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 },
                                 shadowOpacity: !showFilterByChannelDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
                             }}
                         />
                     </View>
                 </View>
-                <View style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
+                {activeTab === 'agenda' ? <View style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
                     <Text
                         style={{
                             fontSize: 14,
@@ -2759,28 +2774,30 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             backgroundColor: 'white',
                             display: 'flex',
-                            height: showFilterTypeDropdown ? 230 : 50,
-                            marginTop: 10
-                            // marginRight: 10
+                            height: showFilterTypeDropdown ? getDropdownHeight(typeOptions.length) : 50,
+                            marginTop: 10,
+                            // zIndex: showFilterTypeDropdown ? 1 : 0,
                         }}
                     >
                         <DropDownPicker
-                            listMode="SCROLLVIEW"
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={showFilterTypeDropdown}
                             value={filterEventsType}
                             items={typeOptions}
                             setOpen={setShowFilterTypeDropdown}
                             setValue={setFilterEventsType}
-                            zIndex={1000001}
+                            scrollViewProps={{
+                                nestedScrollEnabled: true,
+                            }}
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
+                                borderBottomColor: '#f2f2f2',
+                                // elevation: !showFilterTypeDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                                // elevation: !showFilterTypeDropdown ? 0 : 2
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
@@ -2790,27 +2807,24 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 },
                                 shadowOpacity: !showFilterTypeDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
                             }}
                         />
                     </View>
-                </View>
-                <View style={{ backgroundColor: '#fff', width: '100%' }}>
+                </View> : null}
+                <View style={{ backgroundColor: '#fff', width: '100%', display: 'flex', flexDirection: 'column' }}>
                     <View
                         style={{
                             width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            flexDirection: 'row',
                             // paddingTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: 'auto',
                             alignItems: 'center'
                         }}
                     >
                         <Text style={styles.text}>
                             Start
                             {Platform.OS === 'android'
-                                ? ': ' + moment(new Date(filterStart)).format('MMMM Do YYYY, h:mm a')
+                                ? ': ' + moment(new Date(filterStart)).format('MMMM Do YYYY')
                                 : null}
                         </Text>
                         {renderFilterStartDateTimePicker()}
@@ -2818,17 +2832,16 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <View
                         style={{
                             width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            flexDirection: 'row',
                             backgroundColor: '#fff',
                             marginTop: 12,
-                            marginLeft: 'auto',
                             alignItems: 'center'
                         }}
                     >
                         <Text style={styles.text}>
                             End
                             {Platform.OS === 'android'
-                                ? ': ' + moment(new Date(filterEnd)).format('MMMM Do YYYY, h:mm a')
+                                ? ': ' + moment(new Date(filterEnd)).format('MMMM Do YYYY')
                                 : null}
                         </Text>
                         {renderFilterEndDateTimePicker()}
@@ -2856,12 +2869,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 style={{
                     flexDirection: 'row',
                     // justifyContent: 'center',
-                    paddingHorizontal: 20,
-                    paddingTop: 10,
-                    paddingBottom: 15
+                    alignItems: 'center',
+                    // paddingHorizontal: 20,
+                    paddingTop: 15,
+                    paddingBottom: 10
                 }}
             >
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     style={{
                         // backgroundColor: activeTab === 'agenda' ? '#000' : '#fff',
                         paddingVertical: 6,
@@ -2902,29 +2916,142 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         Activity
                     </Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
+                {activeTab === 'activity' ? 
+                    <TouchableOpacity
+                        style={{
+                            marginRight: 15,
+                            marginLeft: 10
+                        }}
+                        onPress={() => setActiveTab('agenda')}
+                    >
+                        <Ionicons name={'arrow-back-outline'} size={27} color="black" />
+                    </TouchableOpacity>
+                    :
+                    <Text style={{
+                        fontSize: 22,
+                        color: '#000',
+                        fontFamily: 'Inter',
+                        marginLeft: 20
+                    }}>
+                        {renderTimeMessage()}
+                    </Text>
+                }
 
-                <View style={{ display: 'flex', flexDirection: 'row', marginLeft: 'auto', marginTop: 9 }}>
-                    {!props.showSearchMobile ? (
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', marginRight: 20 }}>
+
+                    {activeTab === 'activity' ? null : <TouchableOpacity
+                        style={{
+                            marginRight: 20,
+                           
+                        }}
+                        onPress={() => setActiveTab('activity')}
+                    >
+                        {unreadCount && unreadCount > 0 ? <View
+                            style={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: 7,
+                                backgroundColor: '#f94144',
+                                position: 'absolute',
+                                top: -1,
+                                right: -2
+                            }}
+                        /> : null}
+                        <Ionicons name={'notifications-outline'} style={{
+                             color: activeTab === 'activity' ? '#006AFF' : 'black'
+                        }} size={23} color="black" />
+                    </TouchableOpacity>}
+
+
+                    {/* {!props.showSearchMobile && activeTab !== 'activity' ? (
                         <TouchableOpacity
                             style={{
-                                marginRight: 15
+                                marginRight: 17
                             }}
                             onPress={() => props.setShowSearchMobile(true)}
                         >
                             <Ionicons name={'search-outline'} size={22} color="black" />
                         </TouchableOpacity>
-                    ) : null}
+                    ) : null} */}
 
-                    {!showFilterModal ? (
-                        <TouchableOpacity onPress={() => setShowFilterModal(!showFilterModal)}>
-                            <Ionicons name={'filter-outline'} size={22} color="black" />
-                        </TouchableOpacity>
-                    ) : null}
+                    {activeTab === 'activity' && unreadCount && unreadCount > 0 ? <TouchableOpacity style={{
+                        marginRight: 15
+                    }} onPress={ async () => {
+
+                        Alert('Mark as Read?', '', [
+                            {
+                                text: 'Cancel',
+                                style: 'cancel',
+                                onPress: () => {
+                                    return;
+                                }
+                            },
+                            {
+                                text: 'Yes',
+                                onPress: async () => {
+                                    const uString: any = await AsyncStorage.getItem('user');
+                                    if (uString) {
+                                        const user = JSON.parse(uString);
+                                        const server = fetchAPI(user._id);
+                                        server
+                                            .mutate({
+                                                mutation: markActivityAsRead,
+                                                variables: {
+                                                    userId: user._id,
+                                                    markAllRead: true
+                                                }
+                                            })
+                                            .then(res => {
+                                                if (res.data.activity.markActivityAsRead) {
+                                                    server
+                                                        .query({
+                                                            query: getActivity,
+                                                            variables: {
+                                                                userId: user._id
+                                                            }
+                                                        })
+                                                        .then(res => {
+                                                            if (res.data && res.data.activity.getActivity) {
+                                                                const tempActivity = res.data.activity.getActivity;
+                                                                let unread = 0;
+                                                                tempActivity.map((act: any) => {
+                                                                    if (act.status === 'unread') {
+                                                                        unread++;
+                                                                    }
+                                                                });
+                                                                setUnreadCount(unread);
+                                                                setActivity(tempActivity);
+                                                            }
+                                                        });
+                                                }
+                                            })
+                                            .catch(err => {});
+                                    }
+                                }
+                            }
+                        ])
+                        
+                    }}>
+                        <Ionicons name={'checkmark-done-outline'} size={23} color="black" />
+                    </TouchableOpacity> : null}
+
+                    
+                    <TouchableOpacity style={{
+                        marginRight: activeTab === 'agenda' ? 15 : 0,
+                    }} onPress={() => setShowFilterModal(!showFilterModal)}>
+                        <Ionicons name={'filter-outline'} size={23} color="black" />
+                    </TouchableOpacity>
+
+                    {activeTab === 'agenda' ? <TouchableOpacity onPress={() => setShowAddEvent(true)}>
+                        <Ionicons name={'add-outline'} size={28} color="black" />
+                    </TouchableOpacity> : null}
+
+
                 </View>
             </View>
             <View
-                style={{ flex: 1, marginBottom: Dimensions.get('window').width < 1024 ? 12 : 0 }}
+                style={{ flex: 1, marginBottom: Dimensions.get('window').width < 1024 ? 24 : 0 }}
                 key={activeTab.toString() + channels.length.toString()}
             >
                 {activeTab === 'agenda' ? (
@@ -2934,6 +3061,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </View>
                     ) : (
                         <Agenda
+                            initialNumToRender={10}
                             showClosingKnob={true}
                             items={items}
                             loadItemsForMonth={loadItemsForMonth}
@@ -2943,7 +3071,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             pastScrollRange={12}
                             futureScrollRange={12}
                             theme={{
-                                agendaKnobColor: '#F4F4F6', // knob color
+                                agendaKnobColor: '#e0e0e0', // knob color
                                 agendaTodayColor: '#006AFF', // today in list
                                 todayTextColor: '#006AFF',
                                 selectedDayBackgroundColor: '#006AFF', // calendar sel date
@@ -2967,12 +3095,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 title={
                     editEvent && editChannelName
                         ? `${editEvent && editEvent.meeting ? 'Meeting' : 'Event'} for ${editChannelName}`
-                        : 'Create an event'
+                        : 'New event'
                 }
                 renderContent={() => renderEventModalContent()}
                 header={true}
                 callbackNode={fall}
-            />
+            /> 
 
             {showAddEvent ? (
                 <Reanimated.View
@@ -3001,11 +3129,21 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         width: '100%',
                         position: 'absolute'
                     }}
-                ></Reanimated.View>
+                >
+                    <TouchableOpacity style={{
+                        backgroundColor: 'transparent',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    onPress={() => setShowFilterModal(false)}
+                    >
+                    </TouchableOpacity>
+                </Reanimated.View>
             ) : null}
 
-            <BottomSheet
-                snapPoints={[0, '55%']}
+            {activeTab === 'agenda' ? 
+                <BottomSheet
+                snapPoints={[0, Platform.OS === 'ios' ? (activeTab !== 'agenda' ? '45%' : '55%') : '65%' ]}
                 close={() => {
                     setShowFilterModal(false);
                 }}
@@ -3014,9 +3152,24 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 renderContent={() => renderFilterModalContent()}
                 header={false}
                 callbackNode={fall}
-            />
+            /> : null}
+            
+            {
+                activeTab !== 'agenda' ? 
+                <BottomSheet
+                    snapPoints={[0, Platform.OS === 'ios' ? '45%' : '55%' ]}
+                    close={() => {
+                        setShowFilterModal(false);
+                    }}
+                    isOpen={showFilterModal}
+                    title={'Filter'}
+                    renderContent={() => renderFilterModalContent()}
+                    header={false}
+                    callbackNode={fall}
+                /> : null
+            }
 
-            {activeTab === 'agenda' ? (
+            {/* {activeTab === 'agenda' ? (
                 <TouchableOpacity
                     onPress={() => {
                         setShowAddEvent(true);
@@ -3033,9 +3186,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         right: 0,
                         justifyContent: 'center',
                         bottom: 0,
-                        width: 58,
-                        height: 58,
-                        borderRadius: 29,
+                        width: Dimensions.get('window').width > 350 ? 62 :  58,
+                        height: Dimensions.get('window').width > 350 ? 62 :  58,
+                        borderRadius: Dimensions.get('window').width > 350 ? 31 : 29,
                         backgroundColor: '#006aff',
                         borderColor: '#f2f2f2',
                         borderWidth: 0,
@@ -3050,12 +3203,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }}
                 >
                     <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
-                        <Ionicons name="add-outline" size={35} />
+                        <Ionicons name="add-outline" size={Dimensions.get('window').width > 350 ? 36 : 35} />
                     </Text>
                 </TouchableOpacity>
-            ) : null}
+            ) : null} */}
 
-            {activeTab === 'activity' ? (
+            {/* {activeTab === 'activity' && unreadCount && unreadCount > 0 ? (
                 <TouchableOpacity
                     onPress={async () => {
                         const uString: any = await AsyncStorage.getItem('user');
@@ -3139,27 +3292,29 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         Mark as Read
                     </Text>
                 </TouchableOpacity>
-            ) : null}
+            ) : null} */}
         </Animated.View>
     );
 };
 
-export default React.memo(CalendarX, (prev, next) => {
-    return _.isEqual(
-        {
-            ...prev.tab,
-            ...prev.cues,
-            ...prev.showSearchMobile,
-            ...prev.setShowSearchMobile
-        },
-        {
-            ...next.tab,
-            ...next.cues,
-            ...next.showSearchMobile,
-            ...next.setShowSearchMobile
-        }
-    );
-});
+// export default React.memo(CalendarX, (prev, next) => {
+//     return _.isEqual(
+//         {
+//             ...prev.tab,
+//             ...prev.cues,
+//             ...prev.showSearchMobile,
+//             ...prev.setShowSearchMobile
+//         },
+//         {
+//             ...next.tab,
+//             ...next.cues,
+//             ...next.showSearchMobile,
+//             ...next.setShowSearchMobile
+//         }
+//     );
+// });
+
+export default CalendarX
 
 const styles: any = StyleSheet.create({
     eventTitle: {

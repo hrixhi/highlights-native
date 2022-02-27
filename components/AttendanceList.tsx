@@ -29,6 +29,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     const [start, setStart] = useState<any>(null);
     const [attendanceTotalMap, setAttendanceTotalMap] = useState<any>({});
     const [exportAoa, setExportAoa] = useState<any[]>();
+    const [userId, setUserId] = useState('')
 
     // HOOKS
 
@@ -52,6 +53,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 if (user._id.toString().trim() === props.channelCreatedBy) {
                     setIsOwner(true);
                 }
+                setUserId(user._id);
             }
         })();
     }, [props.channelCreatedBy, props.channelId]);
@@ -264,33 +266,404 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     console.log('Past meetings', pastMeetings);
     console.log('Past attendances', channelAttendances);
 
+    const renderViewerAttendanceList = () => {
+
+        const studentCount = attendanceTotalMap[userId];
+        const userAttendance = channelAttendances.find((att: any) => {
+            return att.userId === userId
+        });
+
+        return <View
+            style={{
+                width: '100%',
+                backgroundColor: 'white',
+                paddingTop: 10,
+                maxHeight: 450,
+                borderRadius: 1,
+                zIndex: 5000000
+            }}
+            key={JSON.stringify(channelAttendances)}>
+            <ScrollView
+                horizontal={false}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+            >
+                {/* Row 1 with total */}
+                <View
+                    style={{
+                        minHeight: 70,
+                        flexDirection: 'row',
+                        overflow: 'hidden',
+                        paddingBottom: 10,
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#f2f2f2',
+                        alignItems: 'center'
+                    }}
+                    key={'-'}
+                >
+                    <View style={{
+                        width: '50%',
+                        borderBottomColor: '#f2f2f2',
+                    }}>
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                color: '#000000',
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}
+                        >
+                            Total
+                        </Text>
+                    </View>
+                    <View style={{
+                        width: '50%',
+                        borderBottomColor: '#f2f2f2',
+                    }}>
+                        <Text
+                            style={{
+                                fontSize: 13,
+                                color: '#000000',
+                                fontFamily: 'inter',
+                                textAlign: 'center'
+                            }}
+                        >
+                            {studentCount} / {pastMeetings.length}
+                        </Text>
+                    </View>
+                </View>
+                {/* Render all channel attendances */}
+                {
+                    pastMeetings.map((meeting: any, col: number) => {
+                        
+                        const { start, end } = meeting;
+                        
+                        const attendanceObject = userAttendance.attendances.find((s: any) => {
+                            return s.dateId.toString().trim() === meeting.dateId.toString().trim();
+                        });
+
+                        return <View
+                            style={{
+                                minHeight: 70,
+                                flexDirection: 'row',
+                                overflow: 'hidden',
+                                // paddingBottom: 10,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#f2f2f2',
+                                alignItems: 'center',
+                                width: '100%',
+                            }}
+                            key={'-'}
+                        >
+                            <View style={{ width: '50%', alignContent: 'center', justifyContent: 'center' }}>
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        fontSize: 12,
+                                        color: '#000000',
+                                        marginBottom: 5
+                                    }}
+                                >
+                                    {moment(new Date(start)).format('MMMM Do')}
+                                </Text>
+                                <Text
+                                    style={{
+                                        textAlign: 'center',
+                                        fontSize: 12,
+                                        color: '#000000',
+                                        marginBottom: 5
+                                    }}
+                                >
+                                    {moment(new Date(start)).format('h:mm')} -{' '}
+                                    {moment(new Date(end)).format('h:mm')}
+                                </Text>
+                            </View>
+                            <View style={{ width: '50%',  alignContent: 'center', justifyContent: 'center' }}>
+                                <View style={{}}>
+                                    <View
+                                        style={{
+                                            marginBottom: 5,
+                                            width: '100%',
+                                            flexDirection: 'row',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <Text>
+                                            {attendanceObject ? (
+                                                <Ionicons
+                                                    name="checkmark-outline"
+                                                    size={15}
+                                                    color={'#006AFF'}
+                                                />
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </Text>
+                                    </View>
+                                    {attendanceObject ? (
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 12,
+                                                color: '#000000',
+                                                width: '100%'
+                                            }}
+                                        >
+                                            {attendanceObject.joinedAt
+                                                ? moment(new Date(attendanceObject.joinedAt)).format(
+                                                    'h:mm a'
+                                                )
+                                                : ''}
+                                        </Text>
+                                    ) : null}
+                                </View>
+                            </View>
+
+
+                        </View>
+                        
+                    })
+                }
+            </ScrollView>
+        </View>
+    }
+
+    const renderOwnerAttendanceList = () => {
+        return <View
+            style={{
+                width: '100%',
+                backgroundColor: 'white',
+                paddingTop: 10,
+                maxHeight: 450,
+                borderRadius: 1,
+                zIndex: 5000000
+            }}
+            key={JSON.stringify(channelAttendances)}
+        >
+            <ScrollView
+                showsHorizontalScrollIndicator={true}
+                horizontal={true}
+                contentContainerStyle={{
+                    // height: '100%',
+                    // maxHeight: 450,
+                    flexDirection: 'column'
+                }}
+                nestedScrollEnabled={true}
+            >
+                <View>
+                    <View
+                        style={{
+                            minHeight: 70,
+                            flexDirection: 'row',
+                            overflow: 'hidden',
+                            paddingBottom: 10,
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#f2f2f2'
+                        }}
+                        key={'-'}
+                    >
+                        {isOwner ? <View style={styles.col} key={'0,0'} /> : null}
+                        <View style={styles.col} key={'0,0'}>
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    color: '#000000',
+                                    fontFamily: 'inter',
+                                    textAlign: 'center'
+                                }}
+                            >
+                                Total
+                            </Text>
+                        </View>
+                        {pastMeetings.map((meeting: any, col: number) => {
+                            const { title, start, end } = meeting;
+                            return (
+                                <View style={styles.col} key={col.toString()}>
+                                    <Text
+                                        style={{
+                                            textAlign: 'center',
+                                            fontSize: 13,
+                                            color: '#000000',
+                                            fontFamily: 'inter'
+                                        }}
+                                    >
+                                        {title}
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            textAlign: 'center',
+                                            fontSize: 12,
+                                            color: '#000000',
+                                            marginBottom: 5
+                                        }}
+                                    >
+                                        {moment(new Date(start)).format('MMMM Do')}
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            textAlign: 'center',
+                                            fontSize: 12,
+                                            color: '#000000',
+                                            marginBottom: 5
+                                        }}
+                                    >
+                                        {moment(new Date(start)).format('h:mm')} -{' '}
+                                        {moment(new Date(end)).format('h:mm')}
+                                    </Text>
+                                </View>
+                            );
+                        })}
+                    </View>
+                </View>
+                <ScrollView
+                    showsVerticalScrollIndicator={true}
+                    horizontal={false}
+                    contentContainerStyle={
+                        {
+                            // height: '100%'
+                        }
+                    }
+                    nestedScrollEnabled={true}
+                >
+                    {channelAttendances.map((channelAttendance: any, row: number) => {
+                        const studentCount = attendanceTotalMap[channelAttendance.userId];
+
+                        return (
+                            <View style={styles.row} key={row}>
+                                {isOwner ? (
+                                    <View style={styles.col}>
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 13,
+                                                color: '#000000',
+                                                fontFamily: 'inter'
+                                            }}
+                                        >
+                                            {channelAttendance.fullName}
+                                        </Text>
+                                    </View>
+                                ) : null}
+                                <View style={styles.col}>
+                                    <Text
+                                        style={{
+                                            textAlign: 'center',
+                                            fontSize: 13,
+                                            color: '#000000',
+                                            fontFamily: 'inter'
+                                        }}
+                                    >
+                                        {studentCount} / {pastMeetings.length}
+                                    </Text>
+                                </View>
+                                {pastMeetings.map((meeting: any, col: number) => {
+                                    const attendanceObject = channelAttendance.attendances.find((s: any) => {
+                                        return s.dateId.toString().trim() === meeting.dateId.toString().trim();
+                                    });
+                                    return (
+                                        <View style={styles.col} key={row.toString() + '-' + col.toString()}>
+                                            <TouchableOpacity
+                                                disabled={!isOwner}
+                                                onPress={() =>
+                                                    onChangeAttendance(
+                                                        meeting.dateId,
+                                                        channelAttendance.userId,
+                                                        attendanceObject ? false : true
+                                                    )
+                                                }
+                                                style={{
+                                                    marginBottom: 5,
+                                                    width: '100%',
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                <Text>
+                                                    {attendanceObject ? (
+                                                        <Ionicons
+                                                            name="checkmark-outline"
+                                                            size={15}
+                                                            color={'#006AFF'}
+                                                        />
+                                                    ) : isOwner ? (
+                                                        <Ionicons
+                                                            name="checkmark-outline"
+                                                            size={15}
+                                                            color={'#e0e0e0'}
+                                                        />
+                                                    ) : (
+                                                        '-'
+                                                    )}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            {attendanceObject ? (
+                                                <Text
+                                                    style={{
+                                                        textAlign: 'center',
+                                                        fontSize: 12,
+                                                        color: '#000000',
+                                                        width: '100%'
+                                                    }}
+                                                >
+                                                    {attendanceObject.joinedAt
+                                                        ? moment(new Date(attendanceObject.joinedAt)).format(
+                                                            'h:mm a'
+                                                        )
+                                                        : ''}
+                                                </Text>
+                                            ) : null}
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        );
+                    })}
+                </ScrollView>
+            </ScrollView>
+        </View>
+    }
+
     // MAIN RETURN
     return (
         <View
             style={{
-                backgroundColor: '#f2f2f2',
+                backgroundColor: '#fff',
                 width: '100%'
             }}
         >
-            {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
-                <Text
-                    style={{
-                        color: '#1f1f1f',
-                        fontSize: 18,
-                        fontFamily: 'inter',
-                        marginBottom: 10,
-                        paddingHorizontal: 10
-                    }}
-                >
-                    Past meetings
-                </Text>
-            )}
-            <Text style={{ width: '100%', textAlign: 'center' }}>
-                {/* <Ionicons name='chevron-down' size={15} color={'#e0e0e0'} /> */}
-            </Text>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',  paddingHorizontal: 10 }}>
+                {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
+                    <Text
+                        style={{
+                            color: '#1f1f1f',
+                            fontSize: 18,
+                            fontFamily: 'inter',
+                        }}
+                    >
+                        Past meetings
+                    </Text>
+                )}
+                {pastMeetings.length === 0 || channelAttendances.length === 0 || !isOwner ? null : (
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: '#fff',
+                            overflow: 'hidden',
+                            // height: 35,
+                            justifyContent: 'center',
+                            flexDirection: 'row',
+                            marginLeft: 'auto',
+                        }}
+                        onPress={() => {
+                            exportAttendance();
+                        }}
+                    >
+                        <Ionicons name='download-outline' size={23} color="#006AFF" />
+                    </TouchableOpacity>
+                )}
+            </View>
             <View
                 style={{
-                    backgroundColor: '#f2f2f2',
+                    backgroundColor: '#fff',
                     flexDirection: 'row',
                     paddingBottom: 20,
                     width: '100%',
@@ -298,13 +671,13 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 }}
             >
                 {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
-                    <View style={{ backgroundColor: '#f2f2f2' }}>
+                    <View style={{ backgroundColor: '#fff' }}>
                         <View
                             style={{
                                 display: 'flex',
                                 width: '100%',
                                 flexDirection: 'row',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
                                 alignItems: 'center',
                                 borderBottomColor: '#d9dcdf',
                                 borderBottomWidth: 1
@@ -335,40 +708,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         </View>
                     </View>
                 )}
-                <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#f2f2f2' }} />
-                {pastMeetings.length === 0 || channelAttendances.length === 0 || !isOwner ? null : (
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: '#f2f2f2',
-                            overflow: 'hidden',
-                            height: 35,
-                            justifyContent: 'center',
-                            flexDirection: 'row',
-                            marginRight: 10
-                        }}
-                        onPress={() => {
-                            exportAttendance();
-                        }}
-                    >
-                        <Text
-                            style={{
-                                textAlign: 'center',
-                                lineHeight: 34,
-                                color: '#006AFF',
-                                fontSize: 12,
-                                borderColor: '#006AFF',
-                                borderWidth: 1,
-                                paddingHorizontal: 20,
-                                fontFamily: 'inter',
-                                height: 35,
-                                borderRadius: 15,
-                                textTransform: 'uppercase'
-                            }}
-                        >
-                            EXPORT
-                        </Text>
-                    </TouchableOpacity>
-                )}
+                {/* <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#fff' }} /> */}
+                
             </View>
 
             {channelAttendances.length === 0 || pastMeetings.length === 0 || loadingAttendances || loadingMeetings ? (
@@ -380,16 +721,16 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             justifyContent: 'center',
                             display: 'flex',
                             flexDirection: 'column',
-                            backgroundColor: '#f2f2f2',
+                            backgroundColor: '#fff',
                             borderTopRightRadius: 0,
                             borderTopLeftRadius: 0,
                             paddingVertical: 100
                         }}
                     >
-                        <ActivityIndicator color={'#1F1F1F'} />
+                        {/* <ActivityIndicator color={'#1F1F1F'} /> */}
                     </View>
                 ) : (
-                    <View style={{ backgroundColor: '#f2f2f2' }}>
+                    <View style={{ backgroundColor: '#fff' }}>
                         <Text
                             style={{
                                 width: '100%',
@@ -405,207 +746,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     </View>
                 )
             ) : (
-                <View
-                    style={{
-                        width: '100%',
-                        backgroundColor: 'white',
-                        paddingTop: 10,
-                        maxHeight: 450,
-                        // paddingHorizontal: 10,
-                        borderRadius: 1,
-                        borderLeftColor: props.channelColor,
-                        borderLeftWidth: 3,
-                        shadowOffset: {
-                            width: 2,
-                            height: 2
-                        },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 10,
-                        zIndex: 5000000
-                    }}
-                    key={JSON.stringify(channelAttendances)}
-                >
-                    <ScrollView
-                        showsHorizontalScrollIndicator={true}
-                        horizontal={true}
-                        contentContainerStyle={{
-                            // height: '100%',
-                            // maxHeight: 450,
-                            flexDirection: 'column'
-                        }}
-                        nestedScrollEnabled={true}
-                    >
-                        <View>
-                            <View
-                                style={{
-                                    minHeight: 70,
-                                    flexDirection: 'row',
-                                    overflow: 'hidden',
-                                    paddingBottom: 10,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#f2f2f2'
-                                }}
-                                key={'-'}
-                            >
-                                {isOwner ? <View style={styles.col} key={'0,0'} /> : null}
-                                <View style={styles.col} key={'0,0'}>
-                                    <Text
-                                        style={{
-                                            fontSize: 13,
-                                            color: '#000000',
-                                            fontFamily: 'inter',
-                                            textAlign: 'center'
-                                        }}
-                                    >
-                                        Total
-                                    </Text>
-                                </View>
-                                {pastMeetings.map((meeting: any, col: number) => {
-                                    const { title, start, end } = meeting;
-                                    return (
-                                        <View style={styles.col} key={col.toString()}>
-                                            <Text
-                                                style={{
-                                                    textAlign: 'center',
-                                                    fontSize: 13,
-                                                    color: '#000000',
-                                                    fontFamily: 'inter'
-                                                }}
-                                            >
-                                                {title}
-                                            </Text>
-                                            <Text
-                                                style={{
-                                                    textAlign: 'center',
-                                                    fontSize: 12,
-                                                    color: '#000000',
-                                                    marginBottom: 5
-                                                }}
-                                            >
-                                                {moment(new Date(start)).format('MMMM Do')}
-                                            </Text>
-                                            <Text
-                                                style={{
-                                                    textAlign: 'center',
-                                                    fontSize: 12,
-                                                    color: '#000000',
-                                                    marginBottom: 5
-                                                }}
-                                            >
-                                                {moment(new Date(start)).format('h:mm')} -{' '}
-                                                {moment(new Date(end)).format('h:mm')}
-                                            </Text>
-                                        </View>
-                                    );
-                                })}
-                            </View>
-                        </View>
-                        <ScrollView
-                            showsVerticalScrollIndicator={true}
-                            horizontal={false}
-                            contentContainerStyle={
-                                {
-                                    // height: '100%'
-                                }
-                            }
-                            nestedScrollEnabled={true}
-                        >
-                            {channelAttendances.map((channelAttendance: any, row: number) => {
-                                const studentCount = attendanceTotalMap[channelAttendance.userId];
-
-                                return (
-                                    <View style={styles.row} key={row}>
-                                        {isOwner ? (
-                                            <View style={styles.col}>
-                                                <Text
-                                                    style={{
-                                                        textAlign: 'center',
-                                                        fontSize: 13,
-                                                        color: '#000000',
-                                                        fontFamily: 'inter'
-                                                    }}
-                                                >
-                                                    {channelAttendance.fullName}
-                                                </Text>
-                                            </View>
-                                        ) : null}
-                                        <View style={styles.col}>
-                                            <Text
-                                                style={{
-                                                    textAlign: 'center',
-                                                    fontSize: 13,
-                                                    color: '#000000',
-                                                    fontFamily: 'inter'
-                                                }}
-                                            >
-                                                {studentCount} / {pastMeetings.length}
-                                            </Text>
-                                        </View>
-                                        {pastMeetings.map((meeting: any, col: number) => {
-                                            const attendanceObject = channelAttendance.attendances.find((s: any) => {
-                                                return s.dateId.toString().trim() === meeting.dateId.toString().trim();
-                                            });
-                                            return (
-                                                <View style={styles.col} key={row.toString() + '-' + col.toString()}>
-                                                    <TouchableOpacity
-                                                        disabled={!isOwner}
-                                                        onPress={() =>
-                                                            onChangeAttendance(
-                                                                meeting.dateId,
-                                                                channelAttendance.userId,
-                                                                attendanceObject ? false : true
-                                                            )
-                                                        }
-                                                        style={{
-                                                            marginBottom: 5,
-                                                            width: '100%',
-                                                            flexDirection: 'row',
-                                                            justifyContent: 'center'
-                                                        }}
-                                                    >
-                                                        <Text>
-                                                            {attendanceObject ? (
-                                                                <Ionicons
-                                                                    name="checkmark-outline"
-                                                                    size={15}
-                                                                    color={'#006AFF'}
-                                                                />
-                                                            ) : isOwner ? (
-                                                                <Ionicons
-                                                                    name="checkmark-outline"
-                                                                    size={15}
-                                                                    color={'#e0e0e0'}
-                                                                />
-                                                            ) : (
-                                                                '-'
-                                                            )}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                    {attendanceObject ? (
-                                                        <Text
-                                                            style={{
-                                                                textAlign: 'center',
-                                                                fontSize: 12,
-                                                                color: '#000000',
-                                                                width: '100%'
-                                                            }}
-                                                        >
-                                                            {attendanceObject.joinedAt
-                                                                ? moment(new Date(attendanceObject.joinedAt)).format(
-                                                                      'h:mm a'
-                                                                  )
-                                                                : ''}
-                                                        </Text>
-                                                    ) : null}
-                                                </View>
-                                            );
-                                        })}
-                                    </View>
-                                );
-                            })}
-                        </ScrollView>
-                    </ScrollView>
-                </View>
+                (isOwner ? renderOwnerAttendanceList() : renderViewerAttendanceList())
             )}
         </View>
     );

@@ -260,7 +260,6 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             action={'message_send'}
                             back={() => setShowImportOptions(false)}
                             onUpload={(u: any, t: any) => {
-                                console.log(t)
                                 const obj = { url: u, type: t, title }
                                 setMessage(JSON.stringify(obj))
                                 setShowImportOptions(false)

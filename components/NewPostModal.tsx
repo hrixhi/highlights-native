@@ -1,7 +1,8 @@
 // // REACT
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Switch, TextInput, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, TextInput, Dimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { ScrollView, Switch } from 'react-native-gesture-handler';
 
 // // COMPONENTS
 import { View, Text, TouchableOpacity } from './Themed';
@@ -11,6 +12,7 @@ import BottomSheet from './BottomSheet';
 // import { Select } from '@mobiscroll/react';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { getDropdownHeight } from '../helpers/DropdownHeight';
 
 const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [message, setMessage] = useState('');
@@ -18,19 +20,19 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [addCustomCategory, setAddCustomCategory] = useState(false);
     const [isPrivate, setIsPrivate] = useState(false);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
-    const [dropdownHeight, setDropdownHeight] = useState(250);
+    // const [dropdownHeight, setDropdownHeight] = useState(250);
 
     const styles = styleObject();
 
     const width = Dimensions.get('window').width;
 
-    useEffect(() => {
-        setDropdownHeight(
-            Object.keys(props.categoriesOptions).length * 60 + 50 > 260
-                ? 250
-                : Object.keys(props.categoriesOptions).length * 60 + 50
-        );
-    }, [props.categoriesOptions]);
+    // useEffect(() => {
+    //     setDropdownHeight(
+    //         Object.keys(props.categoriesOptions).length * 60 + 50 > 260
+    //             ? 250
+    //             : Object.keys(props.categoriesOptions).length * 60 + 50
+    //     );
+    // }, [props.categoriesOptions]);
 
     // console.log('Dropdown height', dropdownHeight);
 
@@ -80,7 +82,6 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         }}
                     >
                         <View
-                            key={dropdownHeight}
                             style={{
                                 maxWidth: 400,
                                 width: '85%',
@@ -111,11 +112,11 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             ) : (
                                 <View
                                     style={{
-                                        height: isCategoryDropdownOpen ? dropdownHeight : 50
+                                        height: isCategoryDropdownOpen ? getDropdownHeight(props.categoriesOptions.length) : 50
                                     }}
                                 >
                                     <DropDownPicker
-                                        listMode="SCROLLVIEW"
+                                        listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                         open={isCategoryDropdownOpen}
                                         value={customCategory}
                                         items={props.categoriesOptions}
@@ -248,10 +249,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         </Text>
                         <View
                             style={{
-                                backgroundColor: '#ffffff',
-                                height: 40,
-                                marginRight: 10,
-                                marginTop: 10
+                                backgroundColor: 'white', flexDirection: 'column', alignItems: 'flex-start', paddingTop: 15
                             }}
                         >
                             <Switch
@@ -259,12 +257,12 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 onValueChange={() => {
                                     setIsPrivate(!isPrivate);
                                 }}
-                                style={{ height: 20 }}
-                                trackColor={{
-                                    false: '#F8F9FA',
-                                    true: '#006AFF'
-                                }}
-                                activeThumbColor="white"
+                                thumbColor={'#f4f4f6'}
+                                    trackColor={{
+                                        false: '#f4f4f6',
+                                        true: '#006AFF'
+                                    }}
+                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                             />
                         </View>
                     </View>

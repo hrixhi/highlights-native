@@ -18,6 +18,8 @@ import {
     getSharedWith,
     markAsRead,
     shareCueWithMoreIds,
+    unshareCueWithIds,
+    shareWithAll,
     start,
     submit,
     modifyQuiz,
@@ -63,6 +65,7 @@ import { handleFile } from '../helpers/FileUpload';
 import { handleImageUpload } from '../helpers/ImageUpload';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { htmlStringParser } from '../helpers/HTMLParser';
+import { getDropdownHeight } from '../helpers/DropdownHeight';
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
@@ -123,7 +126,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [deadline, setDeadline] = useState<Date>(dead);
     const [initiateAt, setInitiateAt] = useState<Date>(initiate);
     const [gradeWeight, setGradeWeight] = useState<any>(props.cue.gradeWeight ? props.cue.gradeWeight : 0);
-    const [graded, setGraded] = useState(props.cue.gradeWeight && props.cue.gradeWeight !== 0 ? true : false);
+    const [graded, setGraded] = useState(props.cue.gradeWeight);
     const currentDate = new Date();
     const [submitted, setSubmitted] = useState(false);
     const [imported, setImported] = useState(false);
@@ -139,6 +142,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [channels, setChannels] = useState<any[]>([]);
     const [shareWithChannelId, setShareWithChannelId] = useState('None');
     const [selected, setSelected] = useState<any[]>([]);
+    const [originalSelected, setOriginalSelected] = useState<any[]>([]);
     const [subscribers, setSubscribers] = useState<any[]>([]);
     const [original, setOriginal] = useState(!props.cue.channelId ? props.cue.cue : props.cue.original);
     const [initialOriginal, setInitialOriginal] = useState(!props.cue.channelId ? props.cue.cue : props.cue.original);
@@ -208,6 +212,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const [showAvailableUntilTimeAndroid, setShowAvailableUntilTimeAndroid] = useState(false);
     const [showAvailableUntilDateAndroid, setShowAvailableUntilDateAndroid] = useState(false);
+    const [isRestrictAccessDropdownOpen, setIsRestrictAccessDropdownOpen] = useState(false);
 
     const [quizEditorRef, setQuizEditorRef] = useState<any>(null);
 
@@ -414,7 +419,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 setQuizId(obj.quizId);
 
                                 const solutionsObject = cue ? JSON.parse(cue) : {};
-                                // console.log('SolutionsObject', solutionsObject);
 
                                 if (solutionsObject.solutions) {
                                     setSolutions(solutionsObject.solutions);
@@ -613,12 +617,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 },
                 {
                     text: 'Yes',
-                    onPress: () => {
-                        if (props.showOriginal) {
-                            handleUpdateContent();
-                        } else {
-                            handleUpdateDetails();
-                        }
+                    onPress: async () => {
+                            await handleUpdateContent();
+                            await handleUpdateDetails();
+                            await handleRestrictAccessUpdate();
                     }
                 }
             ]);
@@ -642,7 +644,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     useEffect(() => {
         if (props.del) {
             handleDelete();
-            // props.setDelete(false);
+            props.setDelete(false);
         }
     }, [props.del]);
 
@@ -858,34 +860,30 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     })
                     .then((res: any) => {
                         if (res.data && res.data.cue.getSharedWith) {
-                            const sharedWith = res.data.cue.getSharedWith;
-                            const shared: any[] = [];
-                            const ids: any[] = [];
-                            sharedWith.map((s: any) => {
-                                shared.push({
-                                    value: s.value,
-                                    label: s.label
-                                });
-                                if (s.isFixed) {
-                                    ids.push(s.value);
-                                }
-                            });
-                            const sharedWithoutOwner: any = [];
-                            shared.map((i: any) => {
-                                if (user._id !== i.value) {
-                                    sharedWithoutOwner.push(i);
-                                }
+                            const format = res.data.cue.getSharedWith.map((sub: any) => {
+                                return {
+                                    value: sub.value,
+                                    label: sub.label,
+                                };
                             });
 
-                            const idswithoutOwner: any = [];
-                            ids.map((i: any) => {
-                                if (user._id !== i) {
-                                    idswithoutOwner.push(i);
-                                }
+                            setSubscribers(format);
+
+                            console.log("Subscribers", subscribers)
+                            
+                            // clear selected
+                            const sel = res.data.cue.getSharedWith.filter((item: any) => {
+                                return item.sharedWith;
                             });
-                            setSubscribers(sharedWithoutOwner);
-                            setSelected(idswithoutOwner);
-                            setKey(key);
+
+                            const formatSel = sel.map((sub: any) => {
+                                return sub.value
+                            });
+
+                            console.log("Format Selected", selected)
+
+                            setSelected(formatSel);
+                            setOriginalSelected(formatSel);
                         }
                     })
                     .catch((err: any) => console.log(err));
@@ -951,8 +949,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const handleUploadFile = useCallback(async () => {
         const res = await handleFile(false, userId);
 
-        console.log('File upload result', res);
-
         if (!res || res.url === '' || res.type === '') {
             return;
         }
@@ -965,8 +961,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const handleUploadAudioVideo = useCallback(async () => {
         const res = await handleFile(true, userId);
-
-        console.log('File upload result', res);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -1449,6 +1443,75 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         setUpdatingCueContent(false);
     }, [title, original, imported, type, url, isQuiz]);
 
+        /**
+     * @description Handle changes to restrict access
+     */
+    const handleRestrictAccessUpdate = useCallback(async () => {
+        // If restrict access initially and it is now turned off
+        const server = fetchAPI('');
+         
+        if (props.cue.limitedShares && !limitedShares) {
+            server.mutate({
+                mutation: shareWithAll,
+                variables: {
+                    cueId: props.cue._id
+                }
+            }).then((res: any) => {
+                loadChannelsAndSharedWith()
+            }).catch((e: any) => {
+                console.log("Error", e)
+            })
+        } else if (limitedShares) {
+            const toAdd: string[] = [];
+            const toRemove: string[] = [];
+    
+            originalSelected.map((userId: string) => {
+                if (!selected.includes(userId)) {
+                    toRemove.push(userId)
+                }
+            })
+    
+            selected.map((userId: string) => {
+                if (!originalSelected.includes(userId)) {
+                    toAdd.push(userId)
+                }
+            })
+    
+            if (toAdd.length > 0) {
+                server.mutate({
+                    mutation: shareCueWithMoreIds,
+                    variables: {
+                        userIds: toAdd,
+                        cueId: props.cue._id
+                    }
+                }).then((res: any) => {
+                    console.log("Res", res);
+                }).catch((e: any) => {
+                    console.log("Error", e)
+                })
+            }
+                
+    
+            if (toRemove.length > 0) {
+                server.mutate({
+                    mutation: unshareCueWithIds,
+                    variables: {
+                        userIds: toRemove,
+                        cueId: props.cue._id
+                    }
+                }).then((res: any) => {
+                    console.log("Res", res);
+                }).catch((e: any) => {
+                    console.log("Error", e)
+                })
+            }
+                
+            setOriginalSelected(selected)
+    
+        }
+             
+    }, [props.cue, originalSelected, selected, limitedShares])
+
     /**
      * @description Handle update cue details
      */
@@ -1492,7 +1555,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             deadline: submission ? deadline.toISOString() : '',
             initiateAt: submission ? initiateAt.toISOString() : '',
             allowedAttempts: unlimitedAttempts ? null : allowedAttempts,
-            availableUntil: submission && allowLateSubmission ? availableUntil.toISOString() : ''
+            availableUntil: submission && allowLateSubmission ? availableUntil.toISOString() : '',
+            limitedShares
         };
 
         subCues[props.cueKey][props.cueIndex] = saveCue;
@@ -1516,7 +1580,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         unlimitedAttempts,
         allowLateSubmission,
         availableUntil,
-        isOwner
+        isOwner,
+        graded,
+        limitedShares
     ]);
 
     /**
@@ -1590,7 +1656,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     /**
      * @description Submit quiz when time gets over
      */
-    const submitQuizEndTime = useCallback(async () => {
+    /**
+     * @description Submit quiz when time gets over
+     */
+     const submitQuizEndTime = useCallback(async () => {
         const u: any = await AsyncStorage.getItem('user');
         if (u) {
             const parsedUser = JSON.parse(u);
@@ -1602,6 +1671,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 solutions,
                 initiatedAt
             });
+
+            console.log("Submit Quiz", {
+                cue: saveCue,
+                cueId: props.cue._id,
+                userId: parsedUser._id,
+                quizId
+            })
 
             const server = fetchAPI('');
             server
@@ -1630,10 +1706,96 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
     }, [cue, props.cue, isQuiz, quizId, initiatedAt, solutions]);
 
+    const submitResponse = useCallback(() => {
+        let now = new Date();
+        // one minute of extra time to submit
+        now.setMinutes(now.getMinutes() - 1);
+
+        Alert(
+            now >= deadline ? 'Submit Late?' : 'Submit?',
+            now >= deadline ? 'The deadline for this submission has already passed' : '',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                    onPress: () => {
+                        return;
+                    }
+                },
+                {
+                    text: 'Okay',
+                    onPress: async () => {
+                        setIsSubmitting(true);
+                        const u: any = await AsyncStorage.getItem('user');
+                        if (u) {
+                            const parsedUser = JSON.parse(u);
+                            if (!parsedUser.email || parsedUser.email === '') {
+                                // cannot submit
+                                return;
+                            }
+                            let saveCue = '';
+                            if (isQuiz) {
+                                saveCue = JSON.stringify({
+                                    solutions,
+                                    initiatedAt
+                                });
+                            } else {
+                                saveCue = submissionDraft;
+                            }
+
+                            const server = fetchAPI('');
+                            server
+                                .mutate({
+                                    mutation: submit,
+                                    variables: {
+                                        cue: saveCue,
+                                        cueId: props.cue._id,
+                                        userId: parsedUser._id,
+                                        quizId: isQuiz ? quizId : null
+                                    }
+                                })
+                                .then((res: any) => {
+                                    if (res.data.cue.submitModification) {
+                                        setIsSubmitting(false);
+                                        Alert(submissionCompleteAlert, new Date().toString(), [
+                                            {
+                                                text: 'Okay',
+                                                onPress: () => props.closeModal()
+                                            }
+                                        ]);
+                                    } else {
+                                        Alert('Submission failed. Try again. ');
+                                        setIsSubmitting(false);
+                                    }
+                                })
+                                .catch((err: any) => {
+                                    setIsSubmitting(false);
+                                    Alert(somethingWentWrongAlert, tryAgainLaterAlert);
+                                });
+                        }
+                    }
+                }
+            ]
+        );
+    }, [
+        props.cue,
+        cue,
+        submissionTitle,
+        submissionType,
+        submissionUrl,
+        submissionImported,
+        isQuiz,
+        quizId,
+        initiatedAt,
+        solutions,
+        deadline,
+        submissionDraft
+    ]);
+    
     /**
      * @description Handle Submit for Submissions and Quizzes
      */
-    const handleSubmit = useCallback(async () => {
+     const handleSubmit = useCallback(async () => {
         if (!isQuiz && submissionImported && submissionTitle === '') {
             Alert('Your submission has no title');
             return;
@@ -1678,18 +1840,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
 
         if (requiredMissing) {
-            Alert('A required question is missing a response.');
-            return;
-        }
-
-        let now = new Date();
-        // one minute of extra time to submit
-        now.setMinutes(now.getMinutes() - 1);
-
-        Alert(
-            now >= deadline ? 'Submit Late?' : 'Submit?',
-            now >= deadline ? 'The deadline for this submission has already passed' : '',
-            [
+            Alert('A required question is missing a response.', 'Would you still like to submit?', [
                 {
                     text: 'Cancel',
                     style: 'cancel',
@@ -1698,62 +1849,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     }
                 },
                 {
-                    text: 'Okay',
-                    onPress: async () => {
-                        setIsSubmitting(true);
-                        const u: any = await AsyncStorage.getItem('user');
-                        if (u) {
-                            const parsedUser = JSON.parse(u);
-                            if (!parsedUser.email || parsedUser.email === '') {
-                                // cannot submit
-                                return;
-                            }
-                            let saveCue = '';
-                            if (isQuiz) {
-                                saveCue = JSON.stringify({
-                                    solutions,
-                                    initiatedAt
-                                });
-                            } else {
-                                saveCue = submissionDraft;
-                            }
-
-                            console.log('Save cue', saveCue);
-
-                            const server = fetchAPI('');
-                            server
-                                .mutate({
-                                    mutation: submit,
-                                    variables: {
-                                        cue: saveCue,
-                                        cueId: props.cue._id,
-                                        userId: parsedUser._id,
-                                        quizId: isQuiz ? quizId : null
-                                    }
-                                })
-                                .then(res => {
-                                    if (res.data.cue.submitModification) {
-                                        setIsSubmitting(false);
-                                        Alert(submissionCompleteAlert, new Date().toString(), [
-                                            {
-                                                text: 'Okay',
-                                                onPress: () => props.closeModal()
-                                            }
-                                        ]);
-                                    } else {
-                                        Alert('Submission failed. Try again. ');
-                                        setIsSubmitting(false);
-                                    }
-                                })
-                                .catch(err => {
-                                    setIsSubmitting(false);
-                                    Alert(somethingWentWrongAlert, tryAgainLaterAlert);
-                                });
-                        }
+                    text: 'Yes',
+                    onPress: () => {
+                        submitResponse();
                     }
                 }
-            ]
-        );
+            ]);
+        } else {
+            submitResponse();
+        }
     }, [
         props.cue,
         cue,
@@ -1869,7 +1973,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     customCategory: customCategory === 'None' ? '' : customCategory,
                     shuffle,
                     createdBy: selectedChannelOwner ? selectedChannelOwner.id : props.cue.createdBy,
-                    gradeWeight: gradeWeight.toString(),
+                    gradeWeight: graded ? gradeWeight : null,
                     submission,
                     deadline: submission ? deadline.toISOString() : '',
                     endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : ''
@@ -2984,16 +3088,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 {!isOwner ? (
                     <Text style={{ fontFamily: 'Inter', fontSize: 14 }}>
                         {allowedAttempts && allowedAttempts !== null
-                            ? 'Attempts: ' + (remainingAttempts >= 0 ? remainingAttempts : '0')
+                            ? 'Attempts left: ' + (remainingAttempts >= 0 ? remainingAttempts : '0')
                             : 'Unlimited Attempts'}
                     </Text>
                 ) : null}
             </View>
         );
     };
-
-    console.log("viewSubmission", viewSubmission)
-    console.log("Submission imported", submissionImported)
 
     /**
      * @description Renders main cue content
@@ -3503,12 +3604,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderViewSubmission = () => {
         const attempt = submissionAttempts[submissionAttempts.length - 1];
-
-        console.log("submission Attempts", submissionAttempts)
-        console.log("Attempt", attempt)
-
-
-        console.log("submissionPdfviewerURL", submissionPdfviewerURL)
 
         return (
             <View style={{ width: '100%', marginTop: 20, flex: 1, height: '100%', flexDirection: 'column' }}>
@@ -4045,49 +4140,41 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         </View>
                     ) : null}
                     {limitedShares ? (
-                        <View
-                            style={{
-                                flexDirection: 'column',
-                                overflow: 'scroll',
-                                maxWidth: 400,
-                                height: 120
-                            }}
-                        >
-                            <View
-                                key={JSON.stringify(selected)}
-                                style={{
-                                    width: '90%',
-                                    padding: 5,
-                                    height: 'auto',
-                                    minWidth: 300
-                                }}
-                            >
-                                {/* <Select
+                        <View style={{
+                            flexDirection: 'column', marginTop: 25,
+                        }}>
+                            <View style={{ maxWidth: 320, width: '100%', height: isRestrictAccessDropdownOpen ? getDropdownHeight(subscribers.length) : 50, }}>
+                                <DropDownPicker
+                                    multiple={true}
+                                    open={isRestrictAccessDropdownOpen}
                                     value={selected}
-                                    isMulti
-                                    styles={reactSelectStyles}
-                                    isClearable={selected.some((v: any) => !v.isFixed)}
-                                    name="Share With"
-                                    className="basic-multi-select"
-                                    classNamePrefix="select"
-                                    onChange={onChange}
-                                    options={subscribers}
-                                /> */}
-                                <ScrollView
-                                    style={{
-                                        width: '100%',
-                                        padding: 5,
-                                        backgroundColor: '#fff'
+                                    items={subscribers}
+                                    setOpen={setIsRestrictAccessDropdownOpen}
+                                    setValue={(val: any) => {
+                                        setSelected(val)
                                     }}
-                                >
-                                    <MultiSelectComponent
-                                        selected={selected}
-                                        onAddNew={(e: any) => {
-                                            onAddNew(e);
-                                        }}
-                                        subscribers={subscribers}
-                                    />
-                                </ScrollView>
+                                    style={{
+                                        borderWidth: 0,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: '#f2f2f2'
+                                    }}
+                                    dropDownContainerStyle={{
+                                        borderWidth: 0,
+                                        zIndex: 1000001,
+                                        elevation: 1000001
+                                    }}
+                                    containerStyle={{
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 1,
+                                            height: 3
+                                        },
+                                        shadowOpacity: !isRestrictAccessDropdownOpen ? 0 : 0.08,
+                                        shadowRadius: 12,
+                                        zIndex: 1000001,
+                                        elevation: 1000001
+                                    }}
+                                />
                             </View>
                         </View>
                     ) : null}
@@ -4695,7 +4782,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     backgroundColor: 'white',
                                     maxWidth: 400,
                                     width: '85%',
-                                    height: isCategoryDropdownOpen ? 250 : 50
+                                    height: isCategoryDropdownOpen ? getDropdownHeight(categoryOptions.length) : 50
                                 }}
                             >
                                 {addCustomCategory ? (
@@ -4720,7 +4807,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     </View>
                                 ) : (
                                     <DropDownPicker
-                                        listMode="SCROLLVIEW"
+                                        listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                         open={isCategoryDropdownOpen}
                                         value={customCategory}
                                         items={categoryOptions}
@@ -4910,14 +4997,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 >
                     <View
                         style={{
-                            height: isShareWithDropdownOpen ? 250 : 50,
+                            height: isShareWithDropdownOpen ? getDropdownHeight(channelOptions.length) : 50,
                             width: '80%',
                             minWidth: '80%',
                             marginBottom: 20
                         }}
                     >
                         <DropDownPicker
-                            listMode="SCROLLVIEW"
+                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={isShareWithDropdownOpen}
                             value={shareWithChannelId}
                             items={channelOptions.map((channel: any) => {

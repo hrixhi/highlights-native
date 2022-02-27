@@ -21,6 +21,7 @@ export type TextInputProps = ValidationProps & FooterProps & FieldTypeProps & De
 
 export function TextInput(props: TextInputProps) {
     const [errorType, setErrorType] = useState(''); // Error description; Empty String if none;
+    const [focused, setFocused] = useState(false);
 
     const requiredErrorText = PreferredLanguageText('required');
     const onValidateValue = (value: string) => {
@@ -59,9 +60,13 @@ export function TextInput(props: TextInputProps) {
     return (
         <DefaultView style={styles.textInputContainer}>
             <DefaultTextInput
-                style={styles.input}
+                onFocus={() => setFocused(true)}
+                style={focused ? styles.focusedInput : styles.input}
                 {...props}
-                onBlur={() => onValidateValue(props.value || '')}
+                onBlur={() => {
+                    onValidateValue(props.value || '')
+                    setFocused(false)
+                }}
                 multiline={props.hasMultipleLines}
                 numberOfLines={props.hasMultipleLines ? 3 : 1}
             />
@@ -79,6 +84,17 @@ const styles = StyleSheet.create({
     input: {
         width: '100%',
         borderColor: '#f2f2f2',
+        borderBottomWidth: 1,
+        fontSize: 14,
+        paddingTop: 13,
+        paddingBottom: 13,
+        marginTop: 0,
+        marginBottom: 5,
+        paddingHorizontal: 10
+    },
+    focusedInput: {
+        width: '100%',
+        borderColor: '#ffc484',
         borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 13,

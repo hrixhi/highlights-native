@@ -1,6 +1,6 @@
 // REACT
 import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, Dimensions, StyleSheet } from 'react-native';
 import _ from 'lodash';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -180,7 +180,7 @@ const Performance: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     justifyContent: 'center',
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: '#f2f2f2',
+                    backgroundColor: '#fff',
                     alignSelf: 'center',
                     paddingVertical: 100
                 }}>
@@ -197,8 +197,8 @@ const Performance: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 width: '100%',
                 maxWidth: 900,
                 alignSelf: 'center',
-                backgroundColor: '#f2f2f2',
-                paddingBottom: 25
+                backgroundColor: '#fff',
+                paddingBottom: 25,
             }}>
             {props.activeTab === 'meetings' ? (
                 <AttendanceList

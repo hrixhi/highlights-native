@@ -301,7 +301,7 @@ const Meeting: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             style={styles.card}>
                             <TouchableOpacity
                                 onPress={() => {
-                                    if (Platform.OS == 'web') {
+                                    if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                                         window.open(date.url, '_blank');
                                     } else {
                                         Linking.openURL(date.url)

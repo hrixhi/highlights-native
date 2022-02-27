@@ -33,7 +33,6 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                 style={{
                     width: '100%',
                     height: '100%',
-                    zIndex: 1000001,
                     elevation: 1,
                     shadowOffset: {
                         width: 7,
@@ -90,6 +89,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                                         height: 3
                                     },
                                     // overflow: 'hidden',
+                                    elevation: 5,
                                     shadowOpacity: 0.12,
                                     shadowRadius: 8
                                 }}

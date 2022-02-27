@@ -34,7 +34,7 @@ const FileUpload: React.FC<any> = (props: any) => {
             props.action === 'audio/video' &&
             !(type === 'mp4' || type === 'mp3' || type === 'mov' || type === 'mpeg' || type === 'mp2' || type === 'wav')
         ) {
-            alert('Error! This file format is not supported. Upload mp4 or ogg.');
+            alert('Error! This file format is not supported. Upload mp4.');
             setUploading(false);
             return;
         }
@@ -78,13 +78,13 @@ const FileUpload: React.FC<any> = (props: any) => {
     console.log('Uploading', uploading);
 
     return (
-        <View
-            style={{
+        <View style={{ position: props.profile ? 'absolute' : 'relative', backgroundColor: props.profile ? 'none' : '#fff', }}>
+            {/* style={{
                 backgroundColor: '#fff',
                 paddingTop: 3.5,
                 paddingBottom: Dimensions.get('window').width < 768 ? 5 : 0
             }}
-        >
+        > */}
             {uploading ? (
                 <Text style={{ fontSize: 11, color: '#2f2f3c', textTransform: 'uppercase' }}>Importing...</Text>
             ) : props.quiz ? (
@@ -104,17 +104,18 @@ const FileUpload: React.FC<any> = (props: any) => {
                 <Text
                     style={{
                         color: '#006AFF',
+                        backgroundColor: props.profile ? 'none' : '#fff',
                         lineHeight: props.chat ? 40 : 35,
                         textAlign: 'right',
                         fontSize: props.quiz ? 12 : 12,
                         fontFamily: 'overpass',
                         textTransform: 'uppercase',
-                        paddingLeft: 10
+                        paddingLeft: props.profile ? 0 : 10
                     }}
                     onPress={() => onClick()}
                 >
-                    {props.chat ? (
-                        <Ionicons name="document-attach-outline" size={18} />
+                    {props.chat || props.profile ? (
+                        <Ionicons name={props.profile ? "attach-outline" : "document-attach-outline"} size={props.profile ? 25 : 18}  color={props.profile ? 'white' : '#006AFF' } />
                     ) : (
                         PreferredLanguageText('import')
                     )}

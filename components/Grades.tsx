@@ -139,91 +139,116 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     /**
      * @description Used to modify an assignment score directly
      */
-    const modifyGrade = (cueId: string, userId: string, score: string) => {
+     const modifyGrade = (cueId: string, userId: string, score: string) => {
         if (Number.isNaN(Number(score))) {
             Alert('Score should be a valid number');
             return;
         }
-        const server = fetchAPI('');
-        server
-            .mutate({
-                mutation: submitGrade,
-                variables: {
-                    cueId,
-                    userId,
-                    score
+
+        let warning = ''
+
+        if (Number(score) > 100) {
+            warning = 'Warning- Assigned score is greater than 100'
+        }
+
+        Alert('Save grade?', warning, [
+            {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => {
+                    return;
                 }
-            })
-            .then(res => {
-                if (res.data.cue.submitGrade) {
-                    server
-                        .query({
-                            query: getGradesList,
-                            variables: {
-                                channelId: props.channelId
-                            }
-                        })
-                        .then(async res2 => {
-                            if (res2.data.channel.getGrades) {
-                                const u = await AsyncStorage.getItem('user');
-                                if (u) {
-                                    const user = JSON.parse(u);
-                                    if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
-                                        // all scores
-                                        setScores(res2.data.channel.getGrades);
-                                    } else {
-                                        // only user's score
-                                        const score = res2.data.channel.getGrades.find((u: any) => {
-                                            return u.userId.toString().trim() === user._id.toString().trim();
-                                        });
+            },
+            {
+                text: 'Yes',
+                onPress: async () => {
+                    handleSubmit()
+                }
+            }
+        ]);
 
-                                        // if it is a quiz and not release submission then set Graded to false
-                                        const { scores } = score;
-
-                                        const updateScores = scores.map((x: any) => {
-                                            const { cueId, gradeWeight, graded } = x;
-                                            const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
-                                                return u._id.toString() === cueId.toString();
+        function handleSubmit() {
+            const server = fetchAPI('');
+            server
+                .mutate({
+                    mutation: submitGrade,
+                    variables: {
+                        cueId,
+                        userId,
+                        score
+                    }
+                })
+                .then(res => {
+                    if (res.data.cue.submitGrade) {
+                        server
+                            .query({
+                                query: getGradesList,
+                                variables: {
+                                    channelId: props.channelId
+                                }
+                            })
+                            .then(async res2 => {
+                                if (res2.data.channel.getGrades) {
+                                    const u = await AsyncStorage.getItem('user');
+                                    if (u) {
+                                        const user = JSON.parse(u);
+                                        if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
+                                            // all scores
+                                            setScores(res2.data.channel.getGrades);
+                                        } else {
+                                            // only user's score
+                                            const score = res2.data.channel.getGrades.find((u: any) => {
+                                                return u.userId.toString().trim() === user._id.toString().trim();
                                             });
 
-                                            const { releaseSubmission } = findCue;
+                                            // if it is a quiz and not release submission then set Graded to false
+                                            const { scores } = score;
 
-                                            if (!releaseSubmission) {
-                                                return {
-                                                    cueId,
-                                                    gradeWeight,
-                                                    graded: false,
-                                                    score: ''
-                                                };
-                                            } else {
-                                                return x;
-                                            }
-                                        });
+                                            const updateScores = scores.map((x: any) => {
+                                                const { cueId, gradeWeight, graded } = x;
+                                                const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
+                                                    return u._id.toString() === cueId.toString();
+                                                });
 
-                                        score.scores = updateScores;
+                                                const { releaseSubmission } = findCue;
 
-                                        const singleScoreArray = [{ ...score }];
-                                        setScores(singleScoreArray);
+                                                if (!releaseSubmission) {
+                                                    return {
+                                                        cueId,
+                                                        gradeWeight,
+                                                        graded: false,
+                                                        score: ''
+                                                    };
+                                                } else {
+                                                    return x;
+                                                }
+                                            });
+
+                                            score.scores = updateScores;
+
+                                            const singleScoreArray = [{ ...score }];
+                                            setScores(singleScoreArray);
+                                        }
                                     }
+                                    setLoading(false);
                                 }
+                            })
+                            .catch(err => {
+                                console.log('Error', err);
+                                Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
                                 setLoading(false);
-                            }
-                        })
-                        .catch(err => {
-                            console.log('Error', err);
-                            Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
-                            setLoading(false);
-                        });
-                }
-            })
-            .catch(err => {
-                alert('Something went wrong. Try Again.');
-            });
+                            });
+                    }
+                })
+                .catch(err => {
+                    alert('Something went wrong. Try Again.');
+                });
+        }
     };
 
     // MAIN RETURN
     return (
-        <View style={{ width: '100%', backgroundColor: '#f2f2f2' }}>
+        <View style={{ width: '100%', backgroundColor: '#fff' }}>
             {loading ? (
                 <View
                     style={{
@@ -232,12 +257,12 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         justifyContent: 'center',
                         display: 'flex',
                         flexDirection: 'column',
-                        backgroundColor: '#f2f2f2',
+                        backgroundColor: '#fff',
                         borderTopRightRadius: 0,
                         borderTopLeftRadius: 0,
                         paddingVertical: 100
                     }}>
-                    <ActivityIndicator color={'#1F1F1F'} />
+                    {/* <ActivityIndicator color={'#1F1F1F'} /> */}
                 </View>
             ) : (
                 <GradesList
