@@ -448,11 +448,13 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity style={{ backgroundColor: '#006AFF' }}>
+                                        <TouchableOpacity style={{
+                                                // backgroundColor: '#006AFF' 
+                                            }}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
-                                                    backgroundColor: '#006AFF',
+                                                    // backgroundColor: '#006AFF',
                                                     color: '#fff'
                                                 }}
                                                 onPress={() => {
@@ -467,7 +469,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     }
                                                 }}
                                             >
-                                                {obj.title + '.' + obj.type}
+                                                {obj.title}
                                             </Text>
                                         </TouchableOpacity>
                                     );
@@ -1157,7 +1159,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingLeft: 7,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
                         height: 40,
                         lineHeight: 40,
@@ -1188,7 +1190,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingLeft: 7,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
                         height: 40,
                         lineHeight: 40,
@@ -1219,7 +1221,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingLeft: 7,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
                         height: 40,
                         lineHeight: 40,
@@ -1250,7 +1252,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingLeft: 7,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
                         height: 40,
                         lineHeight: 40,
@@ -1264,6 +1266,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
             </TouchableOpacity>
         </View>
     }
+
+    // console.log("Messages", chat)
 
     const filterChannelLabel = channelOptions.find((channel: any) => channel.value === filterChannelId)?.label
 
@@ -1291,7 +1295,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         // paddingVertical: 15,
                         width: '100%',
                         height:
-                            width < 1024 ? Dimensions.get('window').height - 104 : Dimensions.get('window').height - 52,
+                            width < 1024 ? Dimensions.get('window').height : Dimensions.get('window').height - 52,
                         backgroundColor: 'white',
                     }}
                     key={1}
@@ -1362,13 +1366,6 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     />
                                 </TouchableOpacity>
                             </View> */}
-                            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', }}>
-                                <TouchableOpacity onPress={() => {
-                                    props.setShowDirectory(true)
-                                }}>
-                                    <Ionicons name={'person-add-outline'} size={21} color="black" />
-                                </TouchableOpacity>
-                            </View>
 
                         </View>
                     )}
@@ -1841,14 +1838,14 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             width: '100%',
                                             height:
                                                 Dimensions.get('window').width < 1024
-                                                    ? windowHeight - 84 - 120
+                                                    ? windowHeight - (Platform.OS === 'ios' ? 150 : 130)
                                                     : windowHeight - 52 - 80,
                                             zIndex: 5000,
                                             borderColor: '#f2f2f2'
                                         }}
                                     >   
                                         <GiftedChat
-                                            bottomOffset={Platform.OS === "ios" ? 90 : 0}
+                                            bottomOffset={Platform.OS === "ios" ? 40 : 20}
                                             renderMessageAudio={renderMessageAudio}
                                             renderMessageVideo={renderMessageVideo}
                                             renderUsernameOnMessage={isChatGroup}
@@ -2247,7 +2244,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 paddingHorizontal: 10,
                                                 borderRadius: 1,
                                                 width: '100%',
-                                                paddingBottom: 60
+                                                paddingBottom: 200,
                                                 // maxHeight: width < 1024 ? windowHeight - 104 : windowHeight - 52
                                             }}
                                         >

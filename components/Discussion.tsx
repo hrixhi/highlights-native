@@ -137,7 +137,8 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
             style={{
                 width: '100%',
                 backgroundColor: '#fff',
-                marginBottom: 20
+                marginBottom: 20,
+                height: '100%',
             }}
         >
             <Animated.View
@@ -184,6 +185,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         channelColor={props.channelColor}
                         setNewPostCategories={(categories: any[]) => props.setNewPostCategories(categories)}
                         showNewPostModal={() => props.showNewPostModal()}
+                        setHideNavbarDiscussions={props.setHideNavbarDiscussions}
                     />
                 )}
             </Animated.View>

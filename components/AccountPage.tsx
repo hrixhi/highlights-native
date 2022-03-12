@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
     ActivityIndicator,
     Animated,
@@ -7,10 +7,11 @@ import {
     ScrollView,
     Platform,
     Switch,
-    Linking
+    Linking,
 } from 'react-native';
 import { TouchableOpacity, View, Text } from './Themed';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Walkthrough from './Walkthrough';
 import Channels from './Channels';
@@ -39,7 +40,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 <View
                     style={{
                         flexDirection: 'row',
-                        // justifyContent: 'center',
+                        justifyContent: 'center',
                         paddingHorizontal: 20,
                         paddingTop: 10,
                         paddingBottom: 15,
@@ -104,7 +105,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         </Text>
                     </TouchableOpacity>
 
-                    <View style={{ position: 'absolute', display: 'flex', flexDirection: 'row', alignItems: 'center', right: 14, top: activeTab === 'profile' ? 17 : 16 }}>
+                    {/* <View style={{ position: 'absolute', display: 'flex', flexDirection: 'row', alignItems: 'center', right: 14, top: activeTab === 'profile' ? 17 : 16 }}>
                         <TouchableOpacity onPress={() => {
                             if (activeTab === 'profile') {
                                 Linking.openURL('https://www.learnwithcues.com/help')
@@ -114,7 +115,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         }}>
                             <Ionicons name={activeTab === 'profile' ? 'help-circle-outline' : 'add-outline'} size={activeTab === 'profile' ? 24 : 28} color="black" />
                         </TouchableOpacity>
-                    </View>
+                    </View> */}
 
                     {/* <TouchableOpacity
                     style={{
@@ -151,7 +152,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 )}
             </View>
 
-            {/* <TouchableOpacity
+            <TouchableOpacity
                 onPress={() => {
                     if (activeTab === 'profile') {
                         Linking.openURL('https://www.learnwithcues.com/help')
@@ -194,7 +195,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         size={activeTab === 'profile' ? (Dimensions.get('window').width > 350 ? 22 : 21) : (Dimensions.get('window').width > 350 ? 36 : 35)}
                     />
                 </Text>
-            </TouchableOpacity> */}
+            </TouchableOpacity>
         </Animated.View>
     );
 };

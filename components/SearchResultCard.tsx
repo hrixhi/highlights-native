@@ -1,9 +1,9 @@
 // REACT
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash';
-
+import moment from 'moment'
 import Alert from './Alert';
 
 // COMPONENTS
@@ -11,7 +11,19 @@ import { Text, View, TouchableOpacity } from '../components/Themed';
 
 const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const colorScheme = 'dark';
-    const styleObject = styles(colorScheme, props.colorCode || 'black');
+    const styleObject = styles(colorScheme, props.colorCode || 'black', props.option);
+
+    /**
+     * @description Formats time in email format
+     */
+     function emailTimeDisplay(dbDate: string) {
+        let date = moment(dbDate);
+        var currentDate = moment();
+        if (currentDate.isSame(date, 'day')) return date.format('h:mm a');
+        else if (currentDate.isSame(date, 'year')) return date.format('MMM DD');
+        else return date.format('MM/DD/YYYY');
+    }
+
     return (
         // <View style={styleObject.swiper}>
             <TouchableOpacity
@@ -23,9 +35,40 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
             >
                 <View style={styleObject.text}>
                     <View style={styleObject.dateContainer}>
-                        {props.channelName !== '' && props.option !== 'Channels' ? (
+                        {
+                            props.option === 'Content' || props.option === 'Discussion' ?
+                            <View 
+                                style={{
+                                    backgroundColor: props.colorCode || 'black',
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 12,
+                                    marginRight: 7
+                                }}
+                            />
+                            : null
+                        }
+                        {props.channelName !== '' && props.option !== 'Courses' ? (
                             <Text style={styleObject.date}>{props.channelName}</Text>
-                        ) : (
+                        ) : 
+                            props.option === 'Messages' ?
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                {
+                                    props.messageSenderAvatar ? 
+                                    <Image source={{
+                                        uri: props.messageSenderAvatar
+                                    }} style={{
+                                        width: 26,
+                                        height: 26,
+                                        borderRadius: 24,
+                                        marginRight: 10
+                                    }} 
+                                    // resizeMode="contain" 
+                                    /> : null
+                                }
+                                 <Text style={styleObject.date}>{props.messageSenderName}</Text>
+                            </View>
+                        : (
                             <Text style={styleObject.date}> </Text>
                         )}
                     </View>
@@ -35,7 +78,7 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                             width: '100%',
                             flexDirection: 'row',
                             flex: 1,
-                            height: '70%',
+                            // height: '70%',
                         }}
                     >
                         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -44,17 +87,32 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                                 numberOfLines={1}
                                 style={{
                                     fontFamily: 'inter',
-                                    fontSize: 13,
+                                    fontSize: 15,
                                     lineHeight: 20,
                                     flex: 1,
-                                    marginTop: 7,
+                                    marginTop: props.option === 'Messages' ? 6 : 10,
                                     color: '#000000',
                                 }}
                             >
                                 {props.title}
                             </Text>
-                            {props.option === 'Channels' && !props.subscribed ? (
-                                <View style={{ paddingLeft: 10 }}>
+                            {
+                                props.option === 'Content' || props.option === 'Messages' || props.option === 'Discussion' ?
+                                <Text
+                                    style={{
+                                        fontSize: 12,
+                                        padding: 5,
+                                        lineHeight: 13,
+                                        fontWeight: 'bold'
+                                    }}
+                                    ellipsizeMode="tail"
+                                >
+                                    {emailTimeDisplay(props.createdAt)}
+                                </Text>
+                                : null
+                            }
+                            {props.option === 'Courses' && !props.subscribed ? (
+                                <View style={{ paddingLeft: 10, paddingRight: 10 }}>
                                     <TouchableOpacity
                                         onPress={() => {
                                             Alert('Subscribe to ' + props.channelName + '?', '', [
@@ -73,8 +131,9 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                                         }}
                                         style={{ marginTop: 1 }}
                                     >
+
                                         <Text style={{}}>
-                                            <Ionicons name="enter-outline" size={18} color="#006AFF" />
+                                            <Ionicons name="enter-outline" size={24} color="#006AFF" />
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -89,14 +148,14 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
 
 export default SearchResultCard;
 
-const styles: any = (colorScheme: any, col: any) =>
+const styles: any = (colorScheme: any, col: any, option: any) =>
     StyleSheet.create({
         swiper: {
-            height: 60,
-            maxWidth: 190,
+            height: 75,
+            maxWidth: '100%',
             backgroundColor: '#fff',
-            borderColor: col,
-            borderLeftWidth: 3,
+            // borderColor: col,
+            // borderLeftWidth: 3,
             flexDirection: 'column',
             shadowColor: '#000000',
             shadowOffset: { width: 1, height: 1 },
@@ -104,11 +163,12 @@ const styles: any = (colorScheme: any, col: any) =>
             shadowRadius: 1,
             elevation: 0,
             zIndex: 500000,
-            borderTopColor: '#efefef',
-            borderTopWidth: 1,
+            // borderTopColor: '#efefef',
+            // borderTopWidth: 1,
             borderBottomColor: '#efefef',
             borderBottomWidth: 1,
-            marginBottom: 15,
+            paddingLeft: 7,
+            paddingVertical: option === 'Messages' ? 2 : 5
         },
         // card: {
         //     height: '100%',
@@ -127,23 +187,24 @@ const styles: any = (colorScheme: any, col: any) =>
             backgroundColor: '#fff',
         },
         dateContainer: {
-            height: '30%',
+            // height: '30%',
             backgroundColor: '#fff',
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
+            // paddingTop: 10,
         },
         date: {
-            fontSize: 10,
+            fontSize: 12,
             color: '#1F1F1F',
-            lineHeight: 12,
+            // lineHeight: 12,
             textAlign: 'left',
-            paddingVertical: 2,
+            // paddingVertical: 2,
             flex: 1,
         },
         title: {
             fontFamily: 'overpass',
-            fontSize: 12,
+            fontSize: 14,
             lineHeight: 20,
             flex: 1,
             marginTop: 5,

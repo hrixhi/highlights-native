@@ -33,11 +33,14 @@ import { Ionicons } from '@expo/vector-icons';
 import SortableList from 'react-native-sortable-list';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import InsetShadow from 'react-native-inset-shadow';
+import { WebView } from 'react-native-webview';
+
 
 // HELPERS
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { TextInput } from './CustomTextInput';
+import BottomSheet from './BottomSheet';
 
 const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [modalAnimation] = useState(new Animated.Value(1));
@@ -78,6 +81,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [del, setDel] = useState(false);
     const [shareFeedback, setShareFeedback] = useState(false);
     const [submit, setSubmit] = useState(false);
+    const [exportQuizScores, setExportQuizScores] = useState(false);
     const [viewSubmission, setViewSubmission] = useState((props.cue.submittedAt !== null && props.cue.submittedAt !== undefined) ||
     (props.cue.graded && props.cue.releaseSubmission));
     const [showFolder, setShowFolder] = useState(false);
@@ -103,13 +107,18 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [showExistingFolder, setShowExistingFolder] = useState(false);
     const windowHeight = Dimensions.get('window').height;
     const [editorFocus, setEditorFocus] = useState(false);
+    const [submissionAttempts, setSubmissionAttempts] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState('Content')
+    // Fullscreen
+    const [fullScreenWebview, setFullScreenWebview] = useState(false)
+    const [fullScreenPdfUrl, setFullScreenPdfUrl] = useState('')
+    const [fullScreenPdfViewerKey, setFullScreenPdfViewerKey] = useState(Math.random().toString())
+    const [reloadViewerKey, setReloadViewerKey] = useState(Math.random().toString())
 
     // ALERTS
     const unableToLoadStatusesAlert = PreferredLanguageText('unableToLoadStatuses');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
     const unableToLoadCommentsAlert = PreferredLanguageText('unableToLoadComments');
-
-    console.log("Props cue", props.cue)
 
     // HOOKS
 
@@ -137,7 +146,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }
     }, [cueId]);
 
-    console.log("Allow submit", ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil))
+    console.log("Props.cue", props.cue)
 
     /**
      * @description Filter out all channel Cues that already have a folderID
@@ -145,12 +154,20 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     useEffect(() => {
         if (!props.channelCues) return;
 
-        const filterExisting = props.channelCues.filter((cue: any) => {
+        let filterExisting = props.channelCues.filter((cue: any) => {
             return cue.folderId === '' || !cue.folderId;
         });
 
+        // Filter out current
+        if (folderId) {
+            filterExisting = filterExisting.filter((cue: any) => {
+                return cue._id !== props.cue._id
+            })
+        }
+
+
         setChannelCues(filterExisting);
-    }, [props.channelCues]);
+    }, [props.channelCues, folderId, props.cue]);
 
     /**
      * @description Fetch all Channel Folders
@@ -574,6 +591,48 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             });
     }, [cueId]);
 
+    /**
+     * @description Helpter for icon to use in navbar
+     */
+    const getNavbarIconName = (op: string) => {
+        switch (op) {
+            case 'Content':
+                if (isQuiz) {
+                    return activeTab === op ? 'checkbox' : 'checkbox-outline';
+                }
+                return activeTab === op ? 'create' : 'create-outline';
+            case 'Details':
+                return activeTab === op ? 'options' : 'options-outline';
+            case 'Submission':
+                return activeTab === op ? 'time' : 'time-outline'
+            case 'Feedback':
+                return activeTab === op ? 'bar-chart' : 'bar-chart-outline';
+            default:
+                return activeTab === op ? 'person' : 'person-outline';
+        }
+    };
+
+    const getNavbarText = (op: string) => {
+        switch (op) {
+            case 'Content':
+                return isQuiz ? 'Quiz' : (submission && !channelOwner) ? 'Assignment' : 'Content'
+            case 'Details':
+                return 'Details'
+            case 'Submission':
+                return 'Submission'
+            case 'Feedback':
+                return submission || isQuiz ? 'Feedback' : 'Feedback'
+            default:
+                return activeTab === op ? 'person' : 'person-outline';
+        }
+    };
+
+    const getNavbarIconColor = (op: string) => {
+        if (op === activeTab) {
+            return '#000'   
+        } 
+        return '#575655'
+    }
 
     /**
      * @description Tabs (Content, Options, Submission, etc)
@@ -591,42 +650,92 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             }}
         >
             <TouchableOpacity
-                style={showOriginal ? styles.allBlueTabButton : styles.tabButton}
+                // style={showOriginal ? styles.allBlueTabButton : styles.tabButton}
+                style={{
+                    backgroundColor: '#fff',
+                    width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
                 onPress={() => {
                     setShowOptions(false);
                     setViewStatus(false);
                     setShowOriginal(true);
                     setShowComments(false);
+                    setActiveTab('Content')
                 }}
             >
-                <Text style={showOriginal ? styles.allGrayFill : styles.all}>Content</Text>
+                {/* <Text style={showOriginal ? styles.allGrayFill : styles.all}>Content</Text> */}
+                <Ionicons
+                    name={getNavbarIconName('Content')}
+                    style={{ color: getNavbarIconColor('Content'), marginBottom: 6 }}
+                    size={23}
+                />
+                <Text style={{
+                    fontSize: 11,
+                    color: getNavbarIconColor('Content'),
+                    fontWeight: 'bold',
+                    fontFamily: 'Inter'                    
+                }}>
+                    {getNavbarText("Content")}
+                </Text>
             </TouchableOpacity>
             <TouchableOpacity
-                style={showOptions ? styles.allBlueTabButton : styles.tabButton}
+                // style={showOptions ? styles.allBlueTabButton : styles.tabButton}
+                style={{
+                    backgroundColor: '#fff',
+                    width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
                 onPress={() => {
                     setShowOptions(true);
                     setViewStatus(false);
                     setShowOriginal(false);
                     setShowComments(false);
+                    setActiveTab('Details')
                 }}
             >
-                <Text style={showOptions ? styles.allGrayFill : styles.all}>DETAILS</Text>
+                {/* <Text style={showOptions ? styles.allGrayFill : styles.all}>DETAILS</Text> */}
+                <Ionicons
+                    name={getNavbarIconName('Details')}
+                    style={{ color: getNavbarIconColor('Details'), marginBottom: 6 }}
+                    size={23}
+                />
+                <Text style={{
+                    fontSize: 11,
+                    color: getNavbarIconColor('Details'),
+                    fontWeight: 'bold',
+                    fontFamily: 'Inter'                    
+                }}>
+                    {getNavbarText("Details")}
+                </Text>
             </TouchableOpacity>
             {props.channelId === '' || !submission || (channelOwner && submission) || isQuiz ? null : (
                 <TouchableOpacity
-                    style={
-                        !showOriginal && !viewStatus && !showOptions && !showComments
-                            ? styles.allBlueTabButton
-                            : styles.tabButton
-                    }
+                    // style={
+                    //     !showOriginal && !viewStatus && !showOptions && !showComments
+                    //         ? styles.allBlueTabButton
+                    //         : styles.tabButton
+                    // }
+                    style={{
+                        backgroundColor: '#fff',
+                        width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}
                     onPress={() => {
                         setViewStatus(false);
                         setShowOriginal(false);
                         setShowComments(false);
                         setShowOptions(false);
+                        setActiveTab('Submission')
                     }}
                 >
-                    <Text
+                    {/* <Text
                         style={
                             !showOriginal && !viewStatus && !showOptions && !showComments
                                 ? styles.allGrayFill
@@ -634,21 +743,55 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         }
                     >
                         SUBMISSION
+                    </Text> */}
+                     <Ionicons
+                        name={getNavbarIconName('Submission')}
+                        style={{ color: getNavbarIconColor('Submission'), marginBottom: 6 }}
+                        size={23}
+                    />
+                    <Text style={{
+                        fontSize: 11,
+                        color: getNavbarIconColor('Submission'),
+                        fontWeight: 'bold',
+                        fontFamily: 'Inter'                    
+                    }}>
+                        {getNavbarText("Submission")}
                     </Text>
                 </TouchableOpacity>
             )}
             {/* Add Status button here */}
             {props.channelId === '' || !channelOwner || props.version === 'read' ? null : (
                 <TouchableOpacity
-                    style={viewStatus ? styles.allBlueTabButton : styles.tabButton}
+                    // style={viewStatus ? styles.allBlueTabButton : styles.tabButton}
+                    style={{
+                        backgroundColor: '#fff',
+                        width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}
                     onPress={() => {
                         setViewStatus(true);
                         setShowOriginal(false);
                         setShowComments(false);
                         setShowOptions(false);
+                        setActiveTab('Feedback')
                     }}
                 >
-                    <Text style={viewStatus ? styles.allGrayFill : styles.all}>Feedback</Text>
+                    {/* <Text style={viewStatus ? styles.allGrayFill : styles.all}>Feedback</Text> */}
+                    <Ionicons
+                        name={getNavbarIconName('Feedback')}
+                        style={{ color: getNavbarIconColor('Feedback'), marginBottom: 6 }}
+                        size={23}
+                    />
+                    <Text style={{
+                        fontSize: 11,
+                        color: getNavbarIconColor('Feedback'),
+                        fontWeight: 'bold',
+                        fontFamily: 'Inter'                    
+                    }}>
+                        {getNavbarText("Feedback")}
+                    </Text>
                 </TouchableOpacity>
             )}
         </View>
@@ -1022,6 +1165,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             <Ionicons name="swap-horizontal-outline" size={14} color="#000000" />{' '}
         </Text>
     );
+
+    console.log("Channel Cues", channelCues)
     
     
     const renderNewFolderSelectionList = () => {
@@ -1065,6 +1210,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             >
                 <View style={{ width: '100%', flexDirection: 'column', paddingHorizontal: 10 }}>
                     {/* Section 1: Shows all cues from Channel */}
+                    {/* All cues being rendered here instead of filtered */}
                     <View
                         style={{
                             // flex: 1,
@@ -1090,6 +1236,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 indicatorStyle='black'
                             >
                                 {channelCues.map((cue: any) => {
+                                    if (cue.folderId !== '') return;
+
                                     const { title } = htmlStringParser(
                                         cue.channelId && cue.channelId !== '' ? cue.original : cue.cue
                                     );
@@ -1519,6 +1667,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         del={del}
                         submit={submit}
                         viewSubmission={viewSubmission}
+                        setViewSubmission={(v: boolean) => setViewSubmission(v)}
                         customCategories={props.customCategories}
                         cue={props.cue}
                         cueIndex={props.cueIndex}
@@ -1543,7 +1692,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         setDelete={(del: boolean) => setDel(del)}
                         setSubmit={(submit: boolean) => setSubmit(submit)}
                         setViewSubmission={(view: boolean) => setViewSubmission(view)}
+                        setSubmissionAttempts={(att: any[]) => setSubmissionAttempts(att)}
                         // refreshAfterSubmittingQuiz={() => props.refreshAfterSubmittingQuiz()}
+                        setFullScreenWebviewURL={(url: string) => {
+                            setFullScreenWebview(true)
+                            setFullScreenPdfUrl(url)
+                            setFullScreenPdfViewerKey(Math.random().toString())
+                        }}
+                        reloadViewerKey={reloadViewerKey}
                     />
                     {!Number.isNaN(Number(cueId)) || !props.channelId ? (
                         <View style={{ flex: 1, backgroundColor: 'white' }} />
@@ -1624,6 +1780,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         reloadStatuses={reloadStatuses}
                                         shareFeedback={shareFeedback}
                                         setShareFeedback={(feedback: boolean) => setShareFeedback(feedback)}
+                                        exportQuizScores={exportQuizScores}
+                                        setExportQuizScores={(exp: boolean) => setExportQuizScores(exp)}
                                     />
                                 </View>
                             </ScrollView>
@@ -1672,7 +1830,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onPress={() => {
                             setCreateNewFolder(true);
                             setSelectedCues([props.cue]);
-                            const filter = props.channelCues.filter((cue: any) => cue._id !== props.cue._id);
+                            // console.log("props.channelCues", props.channelCues)
+                            const filter = props.channelCues.filter(
+                                (cue: any) => cue._id !== props.cue._id && (!cue.folderId || cue.folderId === '')
+                            );
+                            console.log("Set channel ids filtered", filter)
                             setChannelCues(filter);
                         }}
                         style={{
@@ -1707,6 +1869,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             if (addingToFolder) {
                                 return;
                             }
+                            console.log("Add to folder", {
+                                cueId: props.cue._id,
+                                folderId: choice
+                            })
                             const server = fetchAPI('');
                             setAddingToFolder(true);
                             server
@@ -1795,11 +1961,13 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                                 if (selectedCues.length < 2) {
                                     Alert('Folder must contain at least 2 items.');
+                                    setCreatingFolder(false);
                                     return;
                                 }
 
                                 if (newFolderTitle.trim() === '') {
                                     Alert('Folder title cannot be empty.');
+                                    setCreatingFolder(false);
                                     return;
                                 }
 
@@ -1884,56 +2052,74 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     <React.Fragment>
                         <TouchableOpacity
                             onPress={async () => {
-                                const server = fetchAPI('');
-
-                                setUpdatingFolder(true);
-
-                                const cueIds = folderCuesToDisplay.map((cue: any) => cue._id);
-
-                                if (cueIds.length < 2) {
-                                    Alert('Folder must contain at least 2 items.');
-                                    return;
-                                }
-
-                                if (updateFolderTitle.trim() === '') {
-                                    Alert('Folder title cannot be empty.');
-                                    return;
-                                }
-
-
-                                server
-                                    .mutate({
-                                        mutation: updateFolder,
-                                        variables: {
-                                            title: updateFolderTitle,
-                                            cueIds,
-                                            folderId
-                                        }
-                                    })
-                                    .then(async res => {
-                                        // Update cue locally with the new Unread count so that the Unread count reflects in real time
-                                        if (res.data.folder.update === null || res.data.folder.update === undefined) {
-                                            Alert('Could not create folder. Try again.');
-                                            setUpdatingFolder(false);
+                                Alert('Update folder?', '', [
+                                    {
+                                        text: 'Cancel',
+                                        style: 'cancel',
+                                        onPress: () => {
                                             return;
                                         }
+                                    },
+                                    {
+                                        text: 'Yes',
+                                        onPress: () => {
+                                            const server = fetchAPI('');
 
-                                        // Check if current cue was removed from the list then set folder id to ""
-                                        if (!cueIds.includes(props.cue._id)) {
-                                            setFolderId('');
-                                        } else {
-                                            await fetchFolderCues();
+                                            setUpdatingFolder(true);
+
+                                            const cueIds = folderCuesToDisplay.map((cue: any) => cue._id);
+
+                                            if (cueIds.length < 2) {
+                                                Alert('Folder must contain at least 2 items.');
+                                                setUpdatingFolder(false);
+                                                return;
+                                            }
+
+                                            if (updateFolderTitle.trim() === '') {
+                                                Alert('Folder title cannot be empty.');
+                                                setUpdatingFolder(false);
+                                                return;
+                                            }
+
+                                            server
+                                                .mutate({
+                                                    mutation: updateFolder,
+                                                    variables: {
+                                                        title: updateFolderTitle,
+                                                        cueIds,
+                                                        folderId
+                                                    }
+                                                })
+                                                .then(async res => {
+                                                    // Update cue locally with the new Unread count so that the Unread count reflects in real time
+                                                    if (
+                                                        res.data.folder.update === null ||
+                                                        res.data.folder.update === undefined
+                                                    ) {
+                                                        Alert('Could not create folder. Try again.');
+                                                        setUpdatingFolder(false);
+                                                        return;
+                                                    }
+
+                                                    // Check if current cue was removed from the list then set folder id to ""
+                                                    if (!cueIds.includes(props.cue._id)) {
+                                                        setFolderId('');
+                                                    } else {
+                                                        await fetchFolderCues();
+                                                    }
+
+                                                    setUpdatingFolder(false);
+                                                    setEditFolder(false);
+
+                                                    props.refreshCues();
+                                                })
+                                                .catch(e => {
+                                                    Alert('Could not create folder. Try again.');
+                                                    setUpdatingFolder(false);
+                                                });
                                         }
-
-                                        setUpdatingFolder(false);
-                                        setEditFolder(false);
-
-                                        props.refreshCues();
-                                    })
-                                    .catch(e => {
-                                        Alert('Could not create folder. Try again.');
-                                        setUpdatingFolder(false);
-                                    });
+                                    }
+                                ]);
                             }}
                             disabled={folderCuesToDisplay.length < 2 || updatingFolder}
                             style={{
@@ -2074,13 +2260,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         height: 52,
                         backgroundColor: '#ffffff',
                         paddingHorizontal: 10,
-                        shadowColor: '#000',
-                        shadowOffset: {
-                            width: 1,
-                            height: 1
-                        },
-                        shadowOpacity: 0.08,
-                        shadowRadius: 4,
+                        // shadowColor: '#000',
+                        // shadowOffset: {
+                        //     width: 1,
+                        //     height: 1
+                        // },
+                        // shadowOpacity: 0.08,
+                        // shadowRadius: 4,
+                        elevation: 500,
                         zIndex: 500000
                     }}
                 >
@@ -2096,9 +2283,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 zIndex: 500001,
                                 bottom: -17,
                                 left: '50%',
-                                width: 35,
-                                height: 35,
-                                borderRadius: '100%',
+                                width: Platform.OS === 'ios' ? 35 : 40,
+                                height:  Platform.OS === 'ios' ? 35 : 40,
+                                borderRadius: 70,
                                 backgroundColor: '#f2f2f2',
                                 flexDirection: 'row',
                                 justifyContent: 'center',
@@ -2126,8 +2313,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <TouchableOpacity
                             style={{
                                 flexDirection: 'row',
-                                paddingTop: Dimensions.get('window').width > 768 ? 9 : 11,
-                                backgroundColor: '#ffffff'
+                                paddingTop: Dimensions.get('window').width > 768 ? 9 : 9,
+                                backgroundColor: '#ffffff',
+                                paddingLeft: 5
                             }}
                             onPress={() => {
                                 props.closeModal();
@@ -2136,7 +2324,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text>
                                 <Ionicons
                                     name="arrow-back-outline"
-                                    size={Dimensions.get('window').width > 768 ? 30 : 27}
+                                    size={31}
                                     color={'#000'}
                                 />
                             </Text>
@@ -2271,7 +2459,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         style={{
                                             paddingLeft: 0,
                                             backgroundColor: '#ffffff',
-                                            marginLeft: 20
+                                            marginLeft: 20,
+                                            marginRight: 10,
                                         }}
                                     >
                                         <Text
@@ -2290,7 +2479,27 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     </TouchableOpacity>
                                 ) : null}
 
-                                {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) ?
+                                {
+                                    channelOwner && !showOriginal && !showOptions &&
+                                    !editFolder &&
+                                    !createNewFolder && isQuiz ?
+                                    <TouchableOpacity
+                                        onPress={async () => {
+                                            setExportQuizScores(true)
+                                        }}
+                                        style={{
+                                            paddingLeft: 0,
+                                            backgroundColor: '#ffffff',
+                                            marginLeft: 20,
+                                            paddingTop: 2,
+                                            marginRight: 10
+                                        }}
+                                    >
+                                        <Ionicons name='download-outline' size={23}  color="black" />
+                                    </TouchableOpacity> : null
+                                } 
+
+                                {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && submissionAttempts.length > 0 && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) ?
                                     <TouchableOpacity
                                     onPress={async () => {
                                         setViewSubmission(!viewSubmission)
@@ -2473,7 +2682,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 </View>
             </KeyboardAvoidingView>
             {/* Mobile tabs */}
-            {Dimensions.get('window').width < 1024 && !editorFocus ? (
+            {Dimensions.get('window').width < 1024 && !editorFocus && !loading ? (
                 <View
                     style={{
                         position: 'absolute',
@@ -2487,19 +2696,45 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         flexDirection: 'row',
                         justifyContent: 'center',
                         height: Dimensions.get('window').width < 768 ? 54 : 68,
+                        // shadowColor: '#000',
+                        // shadowOffset: {
+                        //     width: 0,
+                        //     height: -7
+                        // },
+                        // shadowOpacity: 0.12,
+                        // shadowRadius: 10,
                         shadowColor: '#000',
                         shadowOffset: {
                             width: 0,
-                            height: -7
+                            height: -1
                         },
-                        shadowOpacity: 0.12,
-                        shadowRadius: 10,
-                        zIndex: 500000
+                        shadowOpacity: 0.06,
+                        shadowRadius: 7,
+                        zIndex: 1
                     }}
                 >
                     {options}
                 </View>
             ) : null}
+             <BottomSheet
+                isOpen={fullScreenWebview}
+                snapPoints={[0, Dimensions.get('window').height - 60]}
+                close={() => {
+                    setFullScreenWebview(false)
+                    setFullScreenPdfUrl('')
+                    setReloadViewerKey(Math.random().toString())
+                }}
+                title={''}
+                renderContent={() => {
+                    return (<View style={{ width: '100%', height:'100%', paddingTop: 10 }} key={fullScreenPdfViewerKey}>
+                         <WebView
+                            source={{ uri: fullScreenPdfUrl }}
+                        />
+                    </View>)
+                }}
+                header={true}
+                callbackNode={props.callbackNode}
+            />
         </View>
     );
 };

@@ -282,6 +282,8 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     attendance={props.attendance}
                     thread={props.thread}
                     date={props.date}
+                    exportScores={props.exportScores}
+                    setExportScores={props.setExportScores}
                 />
             )}
         </View>

@@ -1,6 +1,6 @@
 // REACT
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { Keyboard, StyleSheet, Switch, TextInput, Dimensions, ScrollView, Animated, Platform } from 'react-native';
+import { Keyboard, StyleSheet, Switch, TextInput, Dimensions, ScrollView, Animated, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import lodash from 'lodash';
@@ -25,7 +25,8 @@ import {
     modifyQuiz,
     // findBySchoolId,
     getRole,
-    getOrganisation
+    getOrganisation,
+    duplicateQuiz
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -58,6 +59,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import BottomSheet from './BottomSheet';
 import { EmojiView, InsertLink } from './ToolbarComponents';
 import RenderHtml from 'react-native-render-html';
+import Reanimated from 'react-native-reanimated';
+import useDynamicRefs from 'use-dynamic-refs';
 
 // HELPERS
 import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
@@ -157,7 +160,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [updatingCueDetails, setUpdatingCueDetails] = useState(false);
     const [viewSubmission, setViewSubmission] = useState(
         (props.cue.submittedAt !== null && props.cue.submittedAt !== undefined) ||
-            (props.cue.graded && props.cue.releaseSubmission)
+            (props.cue.graded && props.cue.releaseSubmission) || (new Date(props.cue.deadline))
     );
     const [viewSubmissionTab, setViewSubmissionTab] = useState('instructorAnnotations');
     const [quizAttempts, setQuizAttempts] = useState<any[]>([]);
@@ -216,6 +219,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const [quizEditorRef, setQuizEditorRef] = useState<any>(null);
 
+    const [showTwoMinuteAlert, setShowTwoMinuteAlert] = useState(false);
+    const [twoMinuteAlertDisplayed, setTwoMinuteAlertDisplayed] = useState(false);
+    const [submittingQuizEndTime, setSubmittingQuizEndTime] = useState(false);
+
+    const [getRef, setRef] = useDynamicRefs();
+    const [quizOptionEditorIndex , setQuizOptionEditorIndex] = useState('')
+    const [downloadUrl, setDownloadUrl] = useState('')
+
     // ALERTS
     const unableToStartQuizAlert = PreferredLanguageText('unableToStartQuiz');
     const cueDeletedAlert = PreferredLanguageText('cueDeleted');
@@ -232,6 +243,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const fillMissingOptionsAlert = PreferredLanguageText('fillMissingOptions');
     const eachOptionOneCorrectAlert = PreferredLanguageText('eachOptionOneCorrect');
 
+    const fall = new Reanimated.Value(1);
+
+    const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
+        inputRange: [0, 1],
+        outputRange: [0.5, 0]
+    });
+
+    console.log("props.cue", props.cue)
+
     // HOOKS
 
     /**
@@ -240,6 +260,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     useEffect(() => {
         loadUser();
     }, []);
+
+    useEffect(() => {
+        if (showTwoMinuteAlert && !twoMinuteAlertDisplayed) {
+            Alert('Two minutes left. Quiz will auto-submit when timer ends.')
+            setShowTwoMinuteAlert(false)
+            setTwoMinuteAlertDisplayed(true)
+        }
+    }, [showTwoMinuteAlert, twoMinuteAlertDisplayed])
 
     // SHARE WITH ANY OTHER CHANNEL IN INSTITUTE
     // useEffect(() => {
@@ -341,30 +369,35 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${url}&cueId=${
                         props.cue._id
                     }&userId=${parsedUser._id}&source=VIEW_SUBMISSION&name=${encodeURIComponent(parsedUser.fullName)}`;
+                    // console.log("pdfViewerURL", pdfViewerURL)
                     setSubmissionPdfviewerURL(pdfViewerURL);
                 }
             }
         })();
     }, [
         viewSubmission,
-        submissionViewerRef,
-        submissionViewerRef.current,
         viewSubmissionTab,
         submissionAttempts,
         props.showOriginal,
-        props.cue
+        props.cue,
     ]);
 
     /**
      * @description Used to detect ongoing quiz and
      */
     useEffect(() => {
+        let now = new Date();
+        now.setMinutes(now.getMinutes() - 1);
+        if (submission && !isQuizTimed && ((!allowLateSubmission && now >= deadline) || (allowLateSubmission && now >= availableUntil)) ) {
+            // console.log("Set view submission true")
+            props.setViewSubmission(true)
+            return;
+        }
+
         if (!isQuizTimed || initiatedAt === null || initiatedAt === '' || isOwner) {
             // not a timed quiz or its not been initiated
             return;
         }
-        let now = new Date();
-        now.setMinutes(now.getMinutes() - 1);
         let current = new Date();
         if ((!allowLateSubmission && now >= deadline) || (allowLateSubmission && now >= availableUntil)) {
             // deadline crossed or late submission over
@@ -374,13 +407,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             return;
         }
         const remainingTime = duration - diff_seconds(initiatedAt, current);
-        if (remainingTime <= 0) {
+        if (remainingTime <= 0 && !submittingQuizEndTime) {
             // Submit quiz when time runs out
             submitQuizEndTime();
         } else {
             setInitDuration(remainingTime); // set remaining duration in seconds
         }
-    }, [initiatedAt, duration, deadline, isQuizTimed, isOwner, allowLateSubmission, availableUntil]);
+    }, [initiatedAt, duration, deadline, isQuizTimed, isOwner, allowLateSubmission, availableUntil, submittingQuizEndTime, submission]);
 
     /**
      * @description If cue contains a Quiz, then need to fetch the quiz and set State
@@ -449,7 +482,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 }
 
                                 if (solutionsObject.attempts !== undefined) {
-                                    console.log("Quiz Attempts", solutionsObject.attempts)
+                                    // console.log("Quiz Attempts", solutionsObject.attempts)
                                     setQuizAttempts(solutionsObject.attempts);
 
                                     // FInd the active one and set it to quizSolutions
@@ -462,6 +495,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                                 // Set remaining attempts
                                 if (props.cue.allowedAttempts !== null) {
+                                    // console.log("props allowedAttempts", props.cue.allowedAttempts)
                                     setRemainingAttempts(
                                         solutionsObject.attempts
                                             ? props.cue.allowedAttempts - solutionsObject.attempts.length
@@ -583,6 +617,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (obj.attempts) {
                     setSubmissionAttempts(obj.attempts);
+                    props.setSubmissionAttempts(obj.attempts)
                 }
             }
         }
@@ -679,7 +714,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                     const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${url}&cueId=${
                         props.cue._id
-                    }&userId=${parsedUser._id}&source=UPDATE&name=${encodeURIComponent(parsedUser.fullName)}`;
+                    }&userId=${parsedUser._id}&source=${!props.channelId ? "MY_NOTES" : "UPDATE"}&name=${encodeURIComponent(parsedUser.fullName)}`;
                     setOriginalPdfviewerURL(pdfViewerURL);
                 } else {
                     if (submissionUrl === '' || !submissionUrl) {
@@ -719,7 +754,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         submissionUrl,
         type,
         submissionType,
-        props.cue
+        props.cue,
+        props.channelId
     ]);
 
     /**
@@ -770,7 +806,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     useEffect(() => {
         setInitialSubmissionDraft(submissionDraft);
-    }, [props.showOriginal, props.showComments, props.showOptions]);
+    }, [props.showOriginal, props.showComments, props.showOptions, props.viewSubmission]);
 
     /**
      * @description Update original value in Editor on Tab change
@@ -869,7 +905,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                             setSubscribers(format);
 
-                            console.log("Subscribers", subscribers)
+                            // console.log("Subscribers", subscribers)
                             
                             // clear selected
                             const sel = res.data.cue.getSharedWith.filter((item: any) => {
@@ -880,7 +916,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 return sub.value
                             });
 
-                            console.log("Format Selected", selected)
+                            // console.log("Format Selected", selected)
 
                             setSelected(formatSel);
                             setOriginalSelected(formatSel);
@@ -974,18 +1010,45 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const changeForeColor = useCallback(
         (h: any) => {
-            RichText.current?.setForeColor(h);
+            if (quizOptionEditorIndex) {
+                const currRef: any = getRef(quizOptionEditorIndex)
+                currRef.current?.setForeColor(h);
+                setQuizOptionEditorIndex('')
+            } else if (quizEditorRef) {
+                quizEditorRef.current?.setForeColor(h);
+                setQuizEditorRef(null)
+            } else {
+                RichText.current?.setForeColor(h);
+            }
+
             setForeColorVisible(false);
         },
-        [foreColor, RichText, RichText.current]
+        [foreColor, RichText, RichText.current, quizEditorRef, quizOptionEditorIndex]
     );
 
     const changeHiliteColor = useCallback(
         (h: any) => {
-            RichText.current?.setHiliteColor(h);
+            console.log("RichText", RichText)
+            console.log("quizOptionEditorIndex", quizOptionEditorIndex);
+            console.log("QuizEditorRef Hilite", quizEditorRef)
+            if (quizOptionEditorIndex) {
+                const currRef: any = getRef(quizOptionEditorIndex)
+
+                console.log("Curr Ref", currRef)
+
+                currRef.current?.setHiliteColor(h);
+                setQuizOptionEditorIndex('')
+            } else if (quizEditorRef) {
+                quizEditorRef.current?.setHiliteColor(h);
+                setQuizEditorRef(null)
+            } else {
+                RichText.current?.setHiliteColor(h);
+            }
+
             setHiliteColorVisible(false);
+            
         },
-        [hiliteColor, RichText, RichText.current]
+        [hiliteColor, RichText, RichText.current, quizEditorRef, quizOptionEditorIndex]
     );
 
     /**
@@ -1005,10 +1068,17 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const insertEmoji = useCallback(
         emoji => {
-            RichText.current?.insertText(emoji);
-            // RichText.current?.blurContentEditor();
+            if (quizOptionEditorIndex) {
+                const currRef: any = getRef(quizOptionEditorIndex)
+                currRef.current?.insertText(emoji)
+            } else if (quizEditorRef) {
+                quizEditorRef.current?.insertText(emoji);
+            } else {
+                RichText.current?.insertText(emoji);
+            }
+
         },
-        [RichText, RichText.current]
+        [RichText, RichText.current, quizEditorRef, quizOptionEditorIndex]
     );
 
     
@@ -1029,6 +1099,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         [RichText, RichText.current, emojiVisible]
     );
 
+    const handleEmojiOptions = useCallback(
+        (optionIndex: any) => {
+            Keyboard.dismiss();
+            // RichText.current?.blurContentEditor();
+            setEmojiVisible(!emojiVisible);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            setQuizOptionEditorIndex(optionIndex)
+        },
+        [RichText, RichText.current, emojiVisible]
+    );
 
     const handleHiliteColor = useCallback(
         (editorRef: any) => {
@@ -1046,6 +1130,27 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         [RichText, RichText.current, hiliteColorVisible]
     );
 
+    const handleHiliteColorOptions = useCallback(
+        (optionIndex: any) => {
+            Keyboard.dismiss();
+            setHiliteColorVisible(!hiliteColorVisible);
+            setForeColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            setQuizOptionEditorIndex(optionIndex)
+
+            // Get current ref
+            const currRef: any = getRef(optionIndex)
+
+            console.log("CurrRef", currRef.current)
+
+        },
+        [RichText, RichText.current, hiliteColorVisible]
+    );
+
+
     const handleForeColor = useCallback(
         (editorRef: any) => {
             Keyboard.dismiss();
@@ -1058,6 +1163,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             if (editorRef) {
                 setQuizEditorRef(editorRef);
             }
+        },
+        [RichText, RichText.current, foreColorVisible]
+    );
+
+    const handleForeColorOptions = useCallback(
+        (optionIndex: any) => {
+            Keyboard.dismiss();
+            setForeColorVisible(!foreColorVisible);
+            setHiliteColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            setQuizOptionEditorIndex(optionIndex)
         },
         [RichText, RichText.current, foreColorVisible]
     );
@@ -1080,24 +1199,53 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
     }, []);
 
+    const handleAddImageQuizOptions = useCallback((optionIndex: any) => {
+        setInsertImageVisible(true);
+        setForeColorVisible(false);
+        setHiliteColorVisible(false);
+        setEmojiVisible(false);
+        setInsertLinkVisible(false);
+
+        setQuizOptionEditorIndex(optionIndex)
+    }, []);
+
     const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
             const url = await handleImageUpload(takePhoto, userId);
+            // const url = "https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*"
+
+            let editorRef: any = {}
 
             if (url && url !== '') {
-                if (quizEditorRef && quizEditorRef.current) {
-                    quizEditorRef.current?.insertImage(url);
-                    setQuizEditorRef(null);
+
+                if (quizOptionEditorIndex) {
+
+                    editorRef = getRef(quizOptionEditorIndex);
+
+                } else if (quizEditorRef && quizEditorRef.current) {
+
+                    editorRef = quizEditorRef
+
                 } else {
-                    RichText.current?.insertImage(url);
+
+                    editorRef = RichText
+
                 }
+
+                console.log("Editor ref", editorRef)
+
+                editorRef.current?.focusContentEditor()
+
+                editorRef.current?.insertHTML('<div><br/></div>')
+
+                editorRef.current?.insertImage(url);
+
             }
 
             setInsertImageVisible(false);
         },
-        [RichText, RichText.current, quizEditorRef, userId]
+        [RichText, RichText.current, quizEditorRef, userId, quizOptionEditorIndex]
     );
-
 
     const handleInsertLink = useCallback(
         (editorRef: any) => {
@@ -1206,6 +1354,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Handle cue content for Submissions and Quiz responses
      */
     const handleUpdateCue = useCallback(async () => {
+
+        if (isSubmitting) return;
+
         let subCues: any = {};
         try {
             const value = await AsyncStorage.getItem('cues');
@@ -1295,7 +1446,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         submissionTitle,
         submissionImported,
         isQuiz,
-        submissionDraft
+        submissionDraft,
+        isSubmitting
     ]);
 
     /**
@@ -1660,6 +1812,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Submit quiz when time gets over
      */
      const submitQuizEndTime = useCallback(async () => {
+
+        setSubmittingQuizEndTime(true)
+        setIsSubmitting(true);
         const u: any = await AsyncStorage.getItem('user');
         if (u) {
             const parsedUser = JSON.parse(u);
@@ -1672,12 +1827,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 initiatedAt
             });
 
-            console.log("Submit Quiz", {
-                cue: saveCue,
-                cueId: props.cue._id,
-                userId: parsedUser._id,
-                quizId
-            })
+            // console.log("Submit Quiz", {
+            //     cue: saveCue,
+            //     cueId: props.cue._id,
+            //     userId: parsedUser._id,
+            //     quizId
+            // })
 
             const server = fetchAPI('');
             server
@@ -1702,6 +1857,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 })
                 .catch(err => {
                     Alert(somethingWentWrongAlert, tryAgainLaterAlert);
+                    setIsSubmitting(false);
                 });
         }
     }, [cue, props.cue, isQuiz, quizId, initiatedAt, solutions]);
@@ -1739,9 +1895,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     solutions,
                                     initiatedAt
                                 });
+                            } else if (submissionImported) {
+                                saveCue = JSON.stringify({
+                                    url: submissionUrl,
+                                    type: submissionType,
+                                    title: submissionTitle,
+                                    annotations: ''
+                                })
                             } else {
                                 saveCue = submissionDraft;
                             }
+
+                            console.log("Submit ", {
+                                cue: saveCue,
+                                cueId: props.cue._id,
+                                userId: parsedUser._id,
+                                quizId: isQuiz ? quizId : null
+                            })
 
                             const server = fetchAPI('');
                             server
@@ -1756,7 +1926,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 })
                                 .then((res: any) => {
                                     if (res.data.cue.submitModification) {
-                                        setIsSubmitting(false);
+                                        // setIsSubmitting(false);
                                         Alert(submissionCompleteAlert, new Date().toString(), [
                                             {
                                                 text: 'Okay',
@@ -1932,72 +2102,94 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         ]);
     }, [props.showOriginal]);
 
+    // console.log("props.cue updatecontrols", props.cue)
+    console.log("props.cue updatecontrols", props.cue)
+    
     /**
      * @description Share cue
      */
-    const shareCue = useCallback(async () => {
-        let saveCue = '';
-        if (submissionImported) {
-            const obj = {
-                type: submissionType,
-                url: submissionUrl,
-                title: submissionTitle
-            };
-            saveCue = JSON.stringify(obj);
-        } else {
-            saveCue = cue;
-        }
+     const shareCue = useCallback(async () => {
 
-        let tempOriginal = '';
-        if (imported) {
-            const obj = {
-                type,
-                url,
-                title
-            };
-            tempOriginal = JSON.stringify(obj);
-        } else {
-            tempOriginal = original;
+        const variables = {
+            cue: props.cue.channelId ? props.cue.original : props.cue.cue,
+            starred: props.cue.starred,
+            channelId: shareWithChannelId,
+            createdBy: props.cue.createdBy,
+            color: color.toString(),
+            shuffle,
+            frequency,
+            customCategory: customCategory === 'None' ? '' : customCategory,
+            gradeWeight: graded ? gradeWeight.toString() : '0',
+            endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : '',
+            submission,
+            deadline: submission ? deadline.toISOString() : '',
+            initiateAt: submission ? initiateAt.toISOString() : '',
+            allowedAttempts: unlimitedAttempts ? '' : allowedAttempts,
+            availableUntil: submission && allowLateSubmission ? availableUntil.toISOString() : '',
+            limitedShares,
+            shareWithUserIds: limitedShares ? [] : null,
         }
 
         const server = fetchAPI('');
-        server
-            .mutate({
-                mutation: createCue,
-                variables: {
-                    cue: props.cue.channelId ? tempOriginal : saveCue,
-                    starred,
-                    color: color.toString(),
-                    channelId: shareWithChannelId,
-                    frequency,
-                    customCategory: customCategory === 'None' ? '' : customCategory,
-                    shuffle,
-                    createdBy: selectedChannelOwner ? selectedChannelOwner.id : props.cue.createdBy,
-                    gradeWeight: graded ? gradeWeight : null,
-                    submission,
-                    deadline: submission ? deadline.toISOString() : '',
-                    endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : ''
-                }
-            })
-            .then(res => {
-                if (res.data.cue.create) {
-                    Alert(sharedAlert, 'Cue has been successfully shared.');
-                }
-            })
-            .catch(err => {
-                Alert(somethingWentWrongAlert, checkConnectionAlert);
-            });
+
+        if (props.cue.channelId && props.cue.original && props.cue.original[0] === '{' && props.cue.original[props.cue.original.length - 1] === '}' && props.cue.original.includes("quizId")) {
+            const parseCue = JSON.parse(props.cue.original);
+
+            if (parseCue.quizId) {
+                server
+                    .mutate({
+                        mutation: duplicateQuiz,
+                        variables: {
+                            quizId: parseCue.quizId
+                        }
+                    })
+                    .then((res) => {
+                        if (res.data && res.data.cue.duplicateQuiz) {
+
+                            if (!res.data.cue.duplicateQuiz) {
+                                Alert("Something went wrong. Try again.")
+                                return;
+                            }
+
+                            variables.cue = JSON.stringify({
+                                quizId: res.data.cue.duplicateQuiz,
+                                title: parseCue.title
+                            })
+                            server
+                                .mutate({
+                                    mutation: createCue,
+                                    variables
+                                })
+                                .then(res1 => {
+                                    if (res1.data.cue.create) {
+                                        Alert(sharedAlert, 'Cue has been successfully shared.');
+                                    }
+                                })
+                                .catch(err => {
+                                    console.log("Err", err)
+                                    Alert(somethingWentWrongAlert, checkConnectionAlert);
+                                });
+                        }
+                    })
+            }
+        } else {
+            server
+                .mutate({
+                    mutation: createCue,
+                    variables
+                })
+                .then(res1 => {
+                    if (res1.data.cue.create) {
+                        Alert(sharedAlert, 'Cue has been successfully shared.');
+                    }
+                })
+                .catch(err => {
+                    console.log("Err", err)
+                    Alert(somethingWentWrongAlert, checkConnectionAlert);
+                });
+
+        }
     }, [
-        submissionImported,
-        submissionTitle,
-        submissionType,
-        submissionUrl,
-        selectedChannelOwner,
-        url,
-        type,
-        imported,
-        title,
-        original,
         cue,
         starred,
         color,
@@ -2007,11 +2199,18 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         gradeWeight,
         submission,
         deadline,
+        initiateAt,
+        allowLateSubmission,
+        availableUntil,
         notify,
         playChannelCueIndef,
         endPlayAt,
         shareWithChannelId,
-        props.cue
+        props.cue,
+        unlimitedAttempts,
+        limitedShares,
+        allowedAttempts,
+        graded
     ]);
 
     /**
@@ -2257,21 +2456,33 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         marginBottom: Dimensions.get('window').width < 768 ? 10 : 25
                     }}
                 >
-                    {isOwner || !props.cue.channelId ? (
-                        <AutoGrowingTextInput
+                    {imported ? (
+                        
+                        <View
+                        style={{
+                            marginBottom: 15,
+                            // marginLeft: 'auto',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            width: '100%'
+                        }}
+                    >
+                        {<AutoGrowingTextInput
                             value={title}
+                            editable={isOwner || !props.cue.channelId}
                             onChange={(event: any) => setTitle(event.nativeEvent.text || '')}
                             style={{
                                 fontFamily: 'overpass',
                                 width: '100%',
-                                maxWidth: 500,
-                                borderBottomWidth: 1,
+                                maxWidth: '65%',
+                                borderBottomWidth: isOwner || !props.cue.channelId ? 1 : 0,
                                 borderBottomColor: '#f2f2f2',
                                 fontSize: 14,
                                 paddingTop: 13,
                                 paddingBottom: 13,
-                                marginTop: 12,
-                                marginBottom: 20,
+                                marginRight: 10,
+                                // marginTop: 12,
+                                // 
                                 borderRadius: 1
                             }}
                             placeholder={'Title'}
@@ -2280,7 +2491,61 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             minHeight={45}
                             enableScrollToCaret
                             // ref={}
-                        />
+                        />}
+                        <View style={{
+                            flexDirection: 'row', marginLeft: 'auto'
+                        }}>
+                            {isOwner || !props.cue.channelId ? (
+                                <TouchableOpacity
+                                    onPress={() => clearAll()}
+                                    style={{
+                                        backgroundColor: 'white',
+                                        borderRadius: 15, 
+                                        marginTop: 5
+                                    }}
+                                >
+                                    <Ionicons size={22} name={'trash-outline'} color="#006AFF" />
+                                </TouchableOpacity>
+                            ) : null}
+                            
+                            <TouchableOpacity
+                                onPress={() => {
+                                    Linking.openURL(props.showOriginal ? url : submissionUrl)
+                                }}
+                                style={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 15, 
+                                    marginTop: 5,
+                                    paddingLeft: 20
+                                }}
+                            >
+                                <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
+                            </TouchableOpacity>
+
+                            {(props.showOriginal && 
+                            type !== 'mp4' &&
+                            type !== 'oga' &&
+                            type !== 'mov' &&
+                            type !== 'wmv' &&
+                            type !== 'mp3' &&
+                            type !== 'mov' &&
+                            type !== 'mpeg' &&
+                            type !== 'mp2' &&
+                            type !== 'wav') ? <TouchableOpacity
+                                onPress={() => {
+                                    props.setFullScreenWebviewURL(props.showOriginal ? originalPdfviewerURL : submissionPdfviewerURL)
+                                }}
+                                style={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 15, 
+                                    marginTop: 5,
+                                    paddingLeft: 20
+                                }}
+                            >
+                                <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
+                            </TouchableOpacity> : null}
+                        </View>
+                    </View>
                     ) : (
                         <Text
                             style={{
@@ -2313,12 +2578,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     size={120}
                                     key={initDuration}
                                     children={({ remainingTime }: any) => {
-                                        if (!remainingTime || remainingTime === 0) {
+                                        if ((!remainingTime || remainingTime === 0) && !submittingQuizEndTime) {
                                             submitQuizEndTime();
                                         }
 
-                                        if (remainingTime === 120) {
-                                            Alert('Two minutes left. Quiz will auto-submit when timer ends.');
+                                        if (remainingTime === 120 && !twoMinuteAlertDisplayed) {
+                                            setShowTwoMinuteAlert(true)
                                         }
 
                                         const hours = Math.floor(remainingTime / 3600);
@@ -2335,34 +2600,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         ) : null
                     ) : null
                 ) : props.cue.graded ? null : (
-                    <View
-                        style={{
-                            marginBottom: 10
-                        }}
-                    >
-                        {isOwner || !props.cue.channelId ? (
-                            <TouchableOpacity
-                                onPress={() => clearAll()}
-                                style={{
-                                    backgroundColor: 'white',
-                                    borderRadius: 15, // marginLeft: 15,
-                                    marginTop: 5
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        lineHeight: 34,
-                                        textTransform: 'uppercase',
-                                        fontSize: 12,
-                                        fontFamily: 'overpass',
-                                        color: '#006AFF'
-                                    }}
-                                >
-                                    Erase
-                                </Text>
-                            </TouchableOpacity>
-                        ) : null}
-                    </View>
+                    null
                 )}
             </View>
         ) : null;
@@ -2401,7 +2639,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowInitiateAtDateAndroid(false);
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowInitiateAtDateAndroid(false);
@@ -2421,14 +2662,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(true);
@@ -2440,15 +2681,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -2475,16 +2713,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -2515,7 +2750,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowInitiateAtTimeAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowInitiateAtTimeAndroid(false);
                             setInitiateAt(currentDate);
@@ -2552,7 +2790,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         mode={'date'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowDeadlineDateAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowDeadlineDateAndroid(false);
 
@@ -2574,14 +2815,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
-                                width: 150,
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(false);
@@ -2593,15 +2834,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -2628,16 +2866,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -2669,7 +2904,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowDeadlineTimeAndroid(false)
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowDeadlineTimeAndroid(false);
                             setDeadline(currentDate);
@@ -2700,9 +2938,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         onChange={(event, selectedDate) => {
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
-
                             setAvailableUntil(roundedValue);
                         }}
+
                     />
                 ) : null}
                 {Platform.OS === 'android' && showAvailableUntilDateAndroid ? (
@@ -2713,7 +2951,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowAvailableUntilDateAndroid(false);
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowAvailableUntilDateAndroid(false);
@@ -2733,14 +2974,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     >
                         <TouchableOpacity
                             style={{
-                                backgroundColor: 'white',
+                                backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
                                 borderRadius: 15,
                                 marginBottom: 10,
-                                width: 150,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
+                                borderColor: '#006AFF',
                             }}
                             onPress={() => {
                                 setShowAvailableUntilDateAndroid(true);
@@ -2752,15 +2993,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
                                     borderRadius: 15
                                 }}
                             >
@@ -2787,16 +3025,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <Text
                                 style={{
                                     textAlign: 'center',
-                                    lineHeight: 35,
-                                    color: '#2f2f3c',
+                                    lineHeight: 30,
+                                    color: '#006AFF',
                                     overflow: 'hidden',
-                                    fontSize: 10,
-                                    // backgroundColor: '#f4f4f6',
-                                    paddingHorizontal: 25,
+                                    fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    width: 150,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -2827,7 +3062,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         mode={'time'}
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
-                            if (!selectedDate) return;
+                            if (!selectedDate) {
+                                setShowAvailableUntilTimeAndroid(false);
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowAvailableUntilTimeAndroid(false);
                             setAvailableUntil(currentDate);
@@ -2873,10 +3111,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         const latestSubmission = quizAttempts[quizAttempts.length - 1];
 
         return (
-            <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View>
                     {quizAttempted ? (
-                        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+                        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                             <Ionicons name="checkmark-outline" size={22} color={'#53BE68'} />
                             <Text style={{ fontSize: 14, paddingLeft: 5 }}>
                                 Submitted at {moment(new Date(latestSubmission.submittedAt)).format('MMMM Do, h:mm a')}
@@ -2923,16 +3161,43 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Render submission history
      */
     const renderSubmissionHistory = () => {
+
+        // console.log("Render submission history")
         return (
-            <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between' }}>
-                {props.cue.submittedAt && props.cue.submittedAt !== '' && viewSubmission ? (
-                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 0 }}>
-                        <Ionicons name="checkmark-outline" size={22} color={'#53BE68'} />
-                        <Text style={{ fontSize: 14, paddingLeft: 5 }}>
-                            {moment(new Date(props.cue.submittedAt)).format('MMMM Do, h:mm a')}
-                        </Text>
-                    </View>
+            <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+
+                <View style={{ flexDirection: 'column' }}>
+                    
+                    {props.cue.submittedAt && props.cue.submittedAt !== '' && viewSubmission ? (
+                        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 0 }}>
+                            <Ionicons name="checkmark-outline" size={22} color={'#53BE68'} />
+                            <Text style={{ fontSize: 14, paddingLeft: 5 }}>
+                                {moment(new Date(props.cue.submittedAt)).format('MMMM Do, h:mm a')}
+                            </Text>
+                        </View>
+                    ) : <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+                        <Ionicons name="alert-circle-outline" size={22} color={'#D91D56'} />
+                        <Text style={{ fontSize: 14, paddingLeft: 5 }}>No Submission</Text>
+                    </View>}
+
+                    {!isOwner &&
+                        props.cue.submittedAt !== '' &&
+                        new Date(props.cue.submittedAt) >= deadline ? (
+                            <View style={{ marginTop: 15, paddingLeft: 5 }}>
+                                <Text
+                                    style={{
+                                    color: '#f94144',
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    // textAlign: 'center'
+                                }}
+                            >
+                                LATE
+                            </Text>
+                        </View>
                 ) : null}
+
+                </View>
 
                 {/* View Submission button here */}
                 {props.cue.graded && props.cue.releaseSubmission && viewSubmission ? (
@@ -2942,7 +3207,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 fontSize: 14,
                                 fontFamily: 'inter',
                                 color: '#2f2f3c',
-                                paddingTop: 20,
+                                // paddingTop: 20,
                                 paddingBottom: 15
                             }}
                         >
@@ -2959,68 +3224,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             {props.cue.score}%
                         </Text>
                     </View>
-                ) : null}
+                ) : null} 
 
-                {/* {props.cue.submittedAt && props.cue.submittedAt !== '' && !props.cue.graded ? (
-                    <View style={{ flexDirection: 'row', marginTop: 10 }}>
-                        {viewSubmission ? (
-                            props.cue.releaseSubmission ||
-                            (!allowLateSubmission && new Date() > deadline) ||
-                            (allowLateSubmission && new Date() > availableUntil) ? null : (
-                                <TouchableOpacity
-                                    onPress={async () => {
-                                        setViewSubmission(false);
-                                    }}
-                                    style={{
-                                        backgroundColor: 'white',
-                                        overflow: 'hidden',
-                                        height: 35,
-                                        // marginTop: 15,
-                                        justifyContent: 'center',
-                                        flexDirection: 'row'
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            textAlign: 'center',
-                                            lineHeight: 34,
-                                            color: '#006AFF',
-                                            borderWidth: 1,
-                                            fontSize: 12,
-                                            borderColor: '#006AFF',
-                                            paddingHorizontal: 20,
-                                            fontFamily: 'inter',
-                                            height: 35,
-                                            // width: 100,
-                                            borderRadius: 15,
-                                            textTransform: 'uppercase'
-                                        }}
-                                    >
-                                        {'NEW SUBMISSION'}
-                                    </Text>
-                                </TouchableOpacity>
-                            )
-                        ) : (
-                            // <TouchableOpacity
-                            //     onPress={async () => {
-                            //         setViewSubmission(true);
-                            //     }}
-                            //     style={{
-                            //         backgroundColor: 'white',
-                            //         overflow: 'hidden',
-                            //         height: 35,
-                            //         justifyContent: 'center',
-                            //         flexDirection: 'row'
-                            //     }}
-                            // >
-                            //     <Text>
-                            //         <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
-                            //     </Text>
-                            // </TouchableOpacity>
-                            null
-                        )}
-                    </View>
-                ) : null} */}
             </View>
         );
     };
@@ -3038,6 +3243,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 style={{
                     display: 'flex',
                     flexDirection: 'row',
+                    flexWrap: 'wrap',
                     marginTop: 20,
                     marginBottom: 10,
                     marginLeft: Dimensions.get('window').width < 768 ? '0%' : 'auto'
@@ -3047,7 +3253,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                         marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                         fontFamily: 'Inter',
-                        fontSize: 14
+                        fontSize: 14,
+                        paddingBottom: 7
                     }}
                 >
                     {problems.length} {problems.length === 1 ? 'Question' : 'Questions'}
@@ -3057,7 +3264,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                         marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                         fontFamily: 'Inter',
-                        fontSize: 14
+                        fontSize: 14,
+                        paddingBottom: 7
                     }}
                 >
                     {totalQuizPoints} Points
@@ -3068,7 +3276,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         style={{
                             marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                             fontFamily: 'Inter',
-                            fontSize: 14
+                            fontSize: 14,
+                            paddingBottom: 7
                         }}
                     >
                         No Time Limit
@@ -3078,7 +3287,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         style={{
                             marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                             fontFamily: 'Inter',
-                            fontSize: 14
+                            fontSize: 14,
+                            paddingBottom: 7
                         }}
                     >
                         {hours} H {minutes} min
@@ -3086,7 +3296,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 )}
 
                 {!isOwner ? (
-                    <Text style={{ fontFamily: 'Inter', fontSize: 14 }}>
+                    <Text style={{ fontFamily: 'Inter', fontSize: 14,  paddingBottom: 7 }}>
                         {allowedAttempts && allowedAttempts !== null
                             ? 'Attempts left: ' + (remainingAttempts >= 0 ? remainingAttempts : '0')
                             : 'Unlimited Attempts'}
@@ -3096,11 +3306,338 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         );
     };
 
+    const renderTimedQuiz = () => {
+
+        console.log("Solutions prop", solutions)
+
+        return initiatedAt ? (
+            <View style={{ width: '100%', flexDirection: 'column' }}>
+                {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
+                <Quiz
+                    // disable quiz if graded or deadline has passed
+                    isOwner={isOwner}
+                    submitted={
+                        isQuiz && props.cue.submittedAt && props.cue.submittedAt !== '' ? true : false
+                    }
+                    graded={props.cue.graded}
+                    hasEnded={currentDate >= deadline}
+                    solutions={solutions}
+                    problems={problems}
+                    setSolutions={(s: any) => setSolutions(s)}
+                    shuffleQuiz={shuffleQuiz}
+                    instructions={instructions}
+                    headers={headers}
+                    modifyQuiz={updateQuiz}
+                    unmodifiedProblems={unmodifiedProblems}
+                    duration={duration}
+                    remainingAttempts={remainingAttempts}
+                    quizAttempts={quizAttempts}
+                    handleAddImage={handleAddImage}
+                    handleInsertLink={handleInsertLink}
+                    handleHiliteColor={handleHiliteColor}
+                    handleForeColor={handleForeColor}
+                    handleEmoji={handleEmoji}
+                    userId={userId}
+                    setRef={setRef}
+                    handleAddImageQuizOptions={handleAddImageQuizOptions}
+                    handleHiliteColorOptions={handleHiliteColorOptions}
+                    handleForeColorOptions={handleForeColorOptions}
+                    handleEmojiOptions={handleEmojiOptions}
+                    resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
+                />
+                {renderFooter()}
+            </View>
+        ) : (
+            <View>
+                {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
+                <View>
+                    <TouchableOpacity
+                        onPress={() => initQuiz()}
+                        style={{
+                            backgroundColor: 'white',
+                            overflow: 'hidden',
+                            height: 35,
+                            justifyContent: 'center',
+                            flexDirection: 'row',
+                            marginVertical: 50
+                        }}
+                    >
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                lineHeight: 34,
+                                color: '#006AFF',
+                                borderColor: '#006AFF',
+                                borderWidth: 1,
+                                fontSize: 12,
+                                backgroundColor: '#fff',
+                                paddingHorizontal: 20,
+                                fontFamily: 'inter',
+                                height: 35,
+                                width: 200,
+                                borderRadius: 15,
+                                textTransform: 'uppercase'
+                            }}
+                        >
+                            {PreferredLanguageText('startQuiz')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        )
+    }
+
+    const renderUntimedQuiz = () => {
+        return <ScrollView
+            contentContainerStyle={{
+                paddingBottom: 150,
+                paddingHorizontal: 10
+            }}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={true}
+            scrollEventThrottle={1}
+            // keyboardDismissMode={'on-drag'}
+            overScrollMode={'always'}
+            nestedScrollEnabled={true}
+        >
+            <View style={{ width: '100%', flexDirection: 'column' }}>
+                {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
+                <Quiz
+                    isOwner={isOwner}
+                    submitted={
+                        isQuiz && props.cue.submittedAt && props.cue.submittedAt !== '' ? true : false
+                    }
+                    graded={props.cue.graded || currentDate >= deadline}
+                    solutions={solutions}
+                    problems={problems}
+                    setSolutions={(s: any) => setSolutions(s)}
+                    shuffleQuiz={shuffleQuiz}
+                    instructions={instructions}
+                    headers={headers}
+                    modifyQuiz={updateQuiz}
+                    unmodifiedProblems={unmodifiedProblems}
+                    duration={duration}
+                    remainingAttempts={remainingAttempts}
+                    quizAttempts={quizAttempts}
+                    // New 
+                    handleAddImage={handleAddImage}
+                    handleInsertLink={handleInsertLink}
+                    handleHiliteColor={handleHiliteColor}
+                    handleForeColor={handleForeColor}
+                    handleEmoji={handleEmoji}
+                    userId={userId}
+                    setRef={setRef}
+                    handleAddImageQuizOptions={handleAddImageQuizOptions}
+                    handleHiliteColorOptions={handleHiliteColorOptions}
+                    handleForeColorOptions={handleForeColorOptions}
+                    handleEmojiOptions={handleEmojiOptions}
+                    resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
+                />
+                {renderFooter()}
+            </View>
+        </ScrollView>
+    }
+
+    const renderCueCreationImports = () => {
+        return imported ? (
+            type === 'mp4' ||
+            type === 'oga' ||
+            type === 'mov' ||
+            type === 'wmv' ||
+            type === 'mp3' ||
+            type === 'mov' ||
+            type === 'mpeg' ||
+            type === 'mp2' ||
+            type === 'wav' ? (
+                <View style={{ width: '100%' }}>
+                    <Video
+                        ref={videoRef}
+                        style={{
+                            width: '100%',
+                            height: 500
+                        }}
+                        source={{
+                            uri: url
+                        }}
+                        useNativeControls
+                        resizeMode="contain"
+                        isLooping
+                    />
+                </View>
+            ) : (
+                <View key={url + props.showOriginal.toString() + props.reloadViewerKey} style={{ minHeight: 500 }}>
+                    <WebView
+                        source={{ uri: originalPdfviewerURL }}
+                    />
+                </View>
+            )
+        ) : null
+    }
+
+    const renderSubmissionImportsTitle = () => {
+        return !props.showOriginal && submissionImported && !isQuiz && !viewSubmission ? (
+            <View style={{ flexDirection: 'row', paddingTop: 10, marginBottom: 20 }}>
+                <View
+                    style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignSelf: 'flex-start',
+                        marginLeft: 0,
+                    }}
+                >
+                    <TextInput
+                        value={submissionTitle}
+                        style={styles.input}
+                        placeholder={'Title'}
+                        onChangeText={val => setSubmissionTitle(val)}
+                        placeholderTextColor={'#1F1F1F'}
+                    />
+                </View>
+                {props.cue.submittedAt && props.cue.submittedAt !== '' ? (
+                    <View
+                        style={{
+                            alignSelf: 'flex-end',
+                            flexDirection: 'row',
+                        }}
+                    >
+                        {props.cue.graded || currentDate > deadline ? null : (
+                            <TouchableOpacity
+                                onPress={() => clearAll()}
+                                style={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 15,
+                                    marginTop: 5
+                                }}
+                            >
+                                {/* <Text
+                                    style={{
+                                        lineHeight: 34,
+                                        textTransform: 'uppercase',
+                                        fontSize: 12,
+                                        fontFamily: 'overpass',
+                                        color: '#006AFF'
+                                    }}
+                                >
+                                    Erase
+                                </Text> */}
+                                <Ionicons size={22} name={'trash-outline'} color="#006AFF" />
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                            onPress={() => {
+                                props.setFullScreenWebviewURL(originalPdfviewerURL)
+                            }}
+                            style={{
+                                backgroundColor: 'white',
+                                borderRadius: 15, 
+                                marginTop: 5,
+                                paddingLeft: 20
+                            }}
+                        >
+                            <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={{
+                        // marginTop: 20,
+                        alignSelf: 'flex-end',
+                        flexDirection: 'row',
+                    }}>
+                        <TouchableOpacity
+                            onPress={() => clearAll()}
+                            style={{
+                                backgroundColor: 'white',
+                                borderRadius: 15,
+                                marginLeft: 15,
+                                marginTop: 5
+                            }}
+                        >
+                            {/* <Text
+                                style={{
+                                    lineHeight: 34,
+                                    textTransform: 'uppercase',
+                                    fontSize: 12,
+                                    fontFamily: 'overpass',
+                                    color: '#006AFF'
+                                }}
+                            >
+                                Erase
+                            </Text> */}
+                            <Ionicons size={22} name={'trash-outline'} color="#006AFF" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                props.setFullScreenWebviewURL(originalPdfviewerURL)
+                            }}
+                            style={{
+                                backgroundColor: 'white',
+                                borderRadius: 15, 
+                                marginTop: 5,
+                                paddingLeft: 20
+                            }}
+                        >
+                            <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
+                        </TouchableOpacity>
+                    </View>
+                    
+                )}
+            </View>
+        ) : null
+    }
+
+    const renderSubmissionImports = () => {
+
+        // console.log("Render submissionImported")
+        return (!props.showOriginal && submissionImported && !viewSubmission ? (
+            submissionType === 'mp4' ||
+            submissionType === 'oga' ||
+            submissionType === 'mov' ||
+            submissionType === 'wmv' ||
+            submissionType === 'mp3' ||
+            submissionType === 'mov' ||
+            submissionType === 'mpeg' ||
+            submissionType === 'mp2' ||
+            submissionType === 'wav' ? (
+                <View style={{ width: '100%' }}>
+                    {/* <ReactPlayer url={submissionUrl} controls={true} width={'100%'} height={'100%'} /> */}
+                    <Video
+                        ref={videoRef}
+                        style={{
+                            width: '100%',
+                            height: 500
+                        }}
+                        source={{
+                            uri: submissionUrl
+                        }}
+                        useNativeControls
+                        resizeMode="contain"
+                        isLooping
+                    />
+                    {/* {renderFooter()} */}
+                </View>
+            ) : (
+                <View
+                style={{ minHeight: 500 }}
+                    key={JSON.stringify(submissionImported) + JSON.stringify(originalPdfviewerURL) + props.reloadViewerKey}
+                >
+                    <WebView
+                        // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
+                        source={{ uri: originalPdfviewerURL }}
+                    />
+                    {/* {renderFooter()} */}
+                </View>
+            )
+        ) : null)
+    }
+
     /**
      * @description Renders main cue content
      */
     const renderMainCueContent = () => {
 
+        // console.log("Rendering Main Cue Content")
+
+        // console.log("View submission", viewSubmission)
         return (
             <View
                 style={{
@@ -3112,209 +3649,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 }}
             >
                 <View style={{ flexDirection: 'column', width: '100%' }}>{renderQuizTimerOrUploadOptions()}</View>
-                {!props.showOriginal || loading ? null : isQuiz ? (
-                    isQuizTimed && !isOwner ? (
-                        initiatedAt ? (
-                            <View style={{ width: '100%', flexDirection: 'column' }}>
-                                {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
-                                <Quiz
-                                    // disable quiz if graded or deadline has passed
-                                    isOwner={isOwner}
-                                    submitted={
-                                        isQuiz && props.cue.submittedAt && props.cue.submittedAt !== '' ? true : false
-                                    }
-                                    graded={props.cue.graded}
-                                    hasEnded={currentDate >= deadline}
-                                    solutions={solutions}
-                                    problems={problems}
-                                    setSolutions={(s: any) => setSolutions(s)}
-                                    shuffleQuiz={shuffleQuiz}
-                                    instructions={instructions}
-                                    headers={headers}
-                                    modifyQuiz={updateQuiz}
-                                    unmodifiedProblems={unmodifiedProblems}
-                                    duration={duration}
-                                    remainingAttempts={remainingAttempts}
-                                    quizAttempts={quizAttempts}
-                                />
-                                {renderFooter()}
-                            </View>
-                        ) : (
-                            <View>
-                                <View>
-                                    <TouchableOpacity
-                                        onPress={() => initQuiz()}
-                                        style={{
-                                            backgroundColor: 'white',
-                                            overflow: 'hidden',
-                                            height: 35,
-                                            justifyContent: 'center',
-                                            flexDirection: 'row',
-                                            marginVertical: 50
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                textAlign: 'center',
-                                                lineHeight: 34,
-                                                color: '#006AFF',
-                                                borderColor: '#006AFF',
-                                                borderWidth: 1,
-                                                fontSize: 12,
-                                                backgroundColor: '#fff',
-                                                paddingHorizontal: 20,
-                                                fontFamily: 'inter',
-                                                height: 35,
-                                                width: 200,
-                                                borderRadius: 15,
-                                                textTransform: 'uppercase'
-                                            }}
-                                        >
-                                            {PreferredLanguageText('startQuiz')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        )
-                    ) : (
-                        <ScrollView
-                            contentContainerStyle={{
-                                paddingBottom: 150,
-                                paddingHorizontal: 10
-                            }}
-                            showsVerticalScrollIndicator={false}
-                            scrollEnabled={true}
-                            scrollEventThrottle={1}
-                            // keyboardDismissMode={'on-drag'}
-                            overScrollMode={'always'}
-                            nestedScrollEnabled={true}
-                        >
-                            <View style={{ width: '100%', flexDirection: 'column' }}>
-                                {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
-                                <Quiz
-                                    isOwner={isOwner}
-                                    submitted={
-                                        isQuiz && props.cue.submittedAt && props.cue.submittedAt !== '' ? true : false
-                                    }
-                                    graded={props.cue.graded || currentDate >= deadline}
-                                    solutions={solutions}
-                                    problems={problems}
-                                    setSolutions={(s: any) => setSolutions(s)}
-                                    shuffleQuiz={shuffleQuiz}
-                                    instructions={instructions}
-                                    headers={headers}
-                                    modifyQuiz={updateQuiz}
-                                    unmodifiedProblems={unmodifiedProblems}
-                                    duration={duration}
-                                    remainingAttempts={remainingAttempts}
-                                    quizAttempts={quizAttempts}
-                                    // New 
-                                    handleAddImage={handleAddImage}
-                                    handleInsertLink={handleInsertLink}
-                                    handleHiliteColor={handleHiliteColor}
-                                    handleForeColor={handleForeColor}
-                                    handleEmoji={handleEmoji}
-                                />
-                                {renderFooter()}
-                            </View>
-                        </ScrollView>
-                    )
-                ) : imported ? (
-                    type === 'mp4' ||
-                    type === 'oga' ||
-                    type === 'mov' ||
-                    type === 'wmv' ||
-                    type === 'mp3' ||
-                    type === 'mov' ||
-                    type === 'mpeg' ||
-                    type === 'mp2' ||
-                    type === 'wav' ? (
-                        <View style={{ width: '100%' }}>
-                            {/* <ReactPlayer
-                                source={{ uri: url }}
-                                // controls={true}
-                                // onContextMenu={(e: any) => e.preventDefault()}
-                                // config={{
-                                //     file: { attributes: { controlsList: 'nodownload' } }
-                                // }}
-                                style={{
-                                    width: '100%',
-                                    height: '100%'
-                                }}
-                            /> */}
-                            <Video
-                                ref={videoRef}
-                                style={{
-                                    width: '100%',
-                                    height: '100%'
-                                }}
-                                source={{
-                                    uri: url
-                                }}
-                                useNativeControls
-                                resizeMode="contain"
-                                isLooping
-                            />
-                        </View>
-                    ) : (
-                        <View key={url + props.showOriginal.toString()} style={{ minHeight: 500 }}>
-                            {/* <div
-                                className="webviewer"
-                                ref={RichText}
-                                style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
-                                key={props.showOriginal + url + imported.toString()}></div> */}
-                            <WebView
-                                // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
-                                source={{ uri: originalPdfviewerURL }}
-                            />
-                        </View>
-                    )
-                ) : // renderRichEditorOriginalCue()
-                null}
-                {!props.showOriginal && submissionImported && !viewSubmission ? (
-                    submissionType === 'mp4' ||
-                    submissionType === 'oga' ||
-                    submissionType === 'mov' ||
-                    submissionType === 'wmv' ||
-                    submissionType === 'mp3' ||
-                    submissionType === 'mov' ||
-                    submissionType === 'mpeg' ||
-                    submissionType === 'mp2' ||
-                    submissionType === 'wav' ? (
-                        <View style={{ width: '100%' }}>
-                            {/* <ReactPlayer url={submissionUrl} controls={true} width={'100%'} height={'100%'} /> */}
-                            <Video
-                                ref={videoRef}
-                                style={{
-                                    width: '100%',
-                                    height: '100%'
-                                }}
-                                source={{
-                                    uri: submissionUrl
-                                }}
-                                useNativeControls
-                                resizeMode="contain"
-                                isLooping
-                            />
-                            {renderFooter()}
-                        </View>
-                    ) : (
-                        <View
-                            style={{ flex: 1 }}
-                            key={
-                                JSON.stringify(submissionImported) +
-                                JSON.stringify(viewSubmission) +
-                                JSON.stringify(viewSubmissionTab)
-                            }
-                        >
-                            <WebView
-                                // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
-                                source={{ uri: submissionPdfviewerURL }}
-                            />
-                            {renderFooter()}
-                        </View>
-                    )
-                ) : null}
+                {(!props.showOriginal &&viewSubmission) || loading ? null : isQuiz ? (
+                    isQuizTimed && !isOwner ? renderTimedQuiz() : renderUntimedQuiz()
+                ) : renderCueCreationImports()}
+
+                {renderSubmissionImportsTitle()}
+                {renderSubmissionImports()}
+
 
                 {props.showOriginal ? null : (
                     <View style={{ width: '100%', paddingBottom: 50, display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -3339,6 +3680,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Render cue content
      */
     const renderRichEditorOriginalCue = () => {
+        // console.log("Render renderRichEditorOriginalCue")
         if (fetchingQuiz || isQuiz) return null;
 
         if (!isOwner && props.cue.channelId && props.cue.channelId !== '') {
@@ -3598,12 +3940,55 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         );
     };
 
+    // console.log("Submission attempts", submissionAttempts)
+
     /**
      * @description Renders submission
      * Make sure that when the deadline has passed that the viewSubmission is set to true by default and that (Re-Submit button is not there)
      */
     const renderViewSubmission = () => {
         const attempt = submissionAttempts[submissionAttempts.length - 1];
+
+        console.log("rendering view submission", attempt)
+
+        let now = new Date();
+        now.setMinutes(now.getMinutes() - 1);
+        if (!attempt) {
+            return (<View>
+                 {props.showOptions ||
+                        props.showComments ||
+                        isOwner ||
+                        props.showOriginal ||
+                        props.viewStatus ||
+                        !submission ||
+                        isQuiz
+                            ? null
+                        : renderSubmissionHistory()}
+
+                {((!allowLateSubmission && now >= deadline) || (allowLateSubmission && now >= availableUntil)) ? <View style={{
+                    
+                }}>
+                    <Text
+                        style={{
+                            width: '100%',
+                            color: '#1F1F1F',
+                            fontSize: 20,
+                            paddingTop: 200,
+                            paddingBottom: 100,
+                            paddingHorizontal: 5,
+                            fontFamily: 'inter',
+                            // flex: 1, 
+                            textAlign: 'center'
+                        }}
+                    >
+                        Submission deadline has passed.
+                    </Text>
+                </View> : null}
+                        
+            </View>)
+        }
+
+        console.log("Attempt.title", attempt.title)
 
         return (
             <View style={{ width: '100%', marginTop: 20, flex: 1, height: '100%', flexDirection: 'column' }}>
@@ -3643,7 +4028,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         isQuiz
                             ? null
                         : renderSubmissionHistory()}
-                {attempt.url !== undefined ? (
+                {attempt && attempt.url !== undefined ? (
                     attempt.type === 'mp4' ||
                     attempt.type === 'oga' ||
                     attempt.type === 'mov' ||
@@ -3654,29 +4039,52 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     attempt.type === 'mp2' ||
                     attempt.type === 'wav' ? (
                         <View style={{ width: '100%', marginTop: 25 }}>
-                            {attempt.title !== '' ? (
-                                <Text
-                                    style={{
-                                        fontSize: 14,
-                                        paddingRight: 15,
-                                        paddingTop: 12,
-                                        paddingBottom: 12,
-                                        marginTop: 20,
-                                        marginBottom: 5,
-                                        maxWidth: '100%',
-                                        fontWeight: '600',
-                                        width: '100%'
-                                    }}
-                                >
-                                    {attempt.title}
-                                </Text>
-                            ) : null}
+                            <View style={{
+                                width: '100%', flexDirection: 'row', marginTop: 20,   marginBottom: 5,
+                            }}>
+
+                                {attempt.title !== '' ? (
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            paddingRight: 15,
+                                            paddingTop: 12,
+                                            paddingBottom: 12,
+                                            maxWidth: '65%',
+                                            fontWeight: '600',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        {attempt.title}
+                                    </Text>
+                                ) : null}
+                                <View style={{
+                                    flexDirection: 'row', marginLeft: 'auto'
+                                }}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            Linking.openURL(attempt.url)
+                                        }}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 15, 
+                                            marginTop: 5,
+                                            paddingLeft: 20
+                                        }}
+                                    >
+                                        <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
+                                    </TouchableOpacity>
+
+                                </View>
+
+
+                            </View>
                             {/* <ReactPlayer url={attempt.url} controls={true} width={'100%'} height={'100%'} /> */}
                             <Video
                                 ref={videoRef}
                                 style={{
                                     width: '100%',
-                                    height: '100%'
+                                    height: 500
                                 }}
                                 source={{
                                     uri: attempt.url
@@ -3687,8 +4095,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             />
                         </View>
                     ) : (
+                        // Add expand button outline here
                         <View
-                            style={{ width: '100%', marginTop: 25, flex: 1 }}
+                            style={{ width: '100%', marginTop: 25, }}
                             key={
                                 JSON.stringify(viewSubmission) +
                                 JSON.stringify(attempt) +
@@ -3697,23 +4106,58 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 JSON.stringify(submissionAttempts)
                             }
                         >
-                            {attempt.title !== '' ? (
-                                <Text
-                                    style={{
-                                        fontSize: 14,
-                                        paddingRight: 15,
-                                        paddingTop: 12,
-                                        paddingBottom: 12,
-                                        marginTop: 20,
-                                        marginBottom: 5,
-                                        maxWidth: '100%',
-                                        fontWeight: '600',
-                                        width: '100%'
-                                    }}
-                                >
-                                    {attempt.title}
-                                </Text>
-                            ) : null}
+                            <View style={{
+                                width: '100%', flexDirection: 'row', marginTop: 20,   marginBottom: 5,
+                            }}>
+                                {attempt.title !== '' ? (
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            paddingRight: 15,
+                                            paddingTop: 12,
+                                            paddingBottom: 12,
+                                            maxWidth: '65%',
+                                            fontWeight: '600',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        {attempt.title}
+                                    </Text>
+                                ) : null}
+                                <View style={{
+                                    flexDirection: 'row', marginLeft: 'auto'
+                                }}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            Linking.openURL(attempt.url)
+                                        }}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 15, 
+                                            marginTop: 5,
+                                            paddingLeft: 20
+                                        }}
+                                    >
+                                        <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            props.setFullScreenWebviewURL(submissionPdfviewerURL)
+                                        }}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 15, 
+                                            marginTop: 5,
+                                            paddingLeft: 20
+                                        }}
+                                    >
+                                        <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            
+                           
                             {/* <div
                                 className="webviewer"
                                 ref={submissionViewerRef}
@@ -3729,7 +4173,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     JSON.stringify(viewSubmission) +
                                     JSON.stringify(attempt) +
                                     JSON.stringify(props.showOriginal) +
-                                    JSON.stringify(submissionAttempts)
+                                    JSON.stringify(submissionAttempts) +
+                                    props.reloadViewerKey
                                 }
                                 // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
                                 source={{ uri: submissionPdfviewerURL }}
@@ -3738,7 +4183,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         </View>
                     )
                 ) : (
-                    <View style={{ width: '100%', marginTop: 25, flex: 1 }} key={JSON.stringify(attempt)}>
+                    <View style={{ width: '100%', marginTop: 25, flex: 1 }} key={JSON.stringify(attempt) + props.reloadViewerKey}>
                         {viewSubmissionTab === 'mySubmission' ? (
                             <Text className="mce-content-body htmlParser" style={{ width: '100%', color: 'black' }}>
                                 {/* {parser(attempt.html)} */}
@@ -3794,8 +4239,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             disabledIconTint={'#bfbfbf'}
                             actions={[
                                 actions.keyboard,
-                                actions.insertVideo,
+                                'insertFile',
                                 actions.insertImage,
+                                actions.insertVideo,
                                 actions.insertLink,
                                 actions.insertBulletsList,
                                 actions.insertOrderedList,
@@ -3812,13 +4258,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 [actions.keyboard]: ({ tintColor }) => (
                                     <Text style={[styles.tib, { color: 'green', fontSize: 20 }]}>✓</Text>
                                 ),
-                                [actions.insertVideo]: importIcon,
+                                insertFile: importIcon,
                                 insertEmoji: emojiIcon
                             }}
                             insertEmoji={handleEmoji}
                             insertVideo={handleUploadFile}
+                            insertFile={handleUploadFile}
                             onPressAddImage={handleAddImage}
                             onInsertLink={handleInsertLink}
+                            insertVideo={handleUploadAudioVideo}
                         />
                         <ScrollView
                             horizontal={false}
@@ -4082,6 +4530,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         );
     };
 
+
     /**
      * @description Share with component
      */
@@ -4128,12 +4577,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         onValueChange={() => {
                                             setLimitedShares(!limitedShares);
                                         }}
-                                        style={{ height: 20 }}
+                                        thumbColor={'#f4f4f6'}
                                         trackColor={{
-                                            false: '#F8F9FA',
+                                            false: '#f4f4f6',
                                             true: '#006AFF'
                                         }}
-                                        activeThumbColor="white"
+                                        style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                     />
                                 </View>
                             </View>
@@ -4145,6 +4594,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         }}>
                             <View style={{ maxWidth: 320, width: '100%', height: isRestrictAccessDropdownOpen ? getDropdownHeight(subscribers.length) : 50, }}>
                                 <DropDownPicker
+                                    listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                     multiple={true}
                                     open={isRestrictAccessDropdownOpen}
                                     value={selected}
@@ -4153,6 +4603,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     setValue={(val: any) => {
                                         setSelected(val)
                                     }}
+                                    zIndex={999999}
                                     style={{
                                         borderWidth: 0,
                                         borderBottomWidth: 1,
@@ -4160,8 +4611,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     }}
                                     dropDownContainerStyle={{
                                         borderWidth: 0,
-                                        zIndex: 1000001,
-                                        elevation: 1000001
+                                        zIndex: 999999
                                     }}
                                     containerStyle={{
                                         shadowColor: '#000',
@@ -4171,9 +4621,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         },
                                         shadowOpacity: !isRestrictAccessDropdownOpen ? 0 : 0.08,
                                         shadowRadius: 12,
-                                        zIndex: 1000001,
-                                        elevation: 1000001
+                                        zIndex: 999999
                                     }}
+                                    
                                 />
                             </View>
                         </View>
@@ -4223,7 +4673,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             style={{
                                 backgroundColor: 'white',
                                 height: 40,
-                                paddingRight: 10
+                                marginRight: 10,
+                                flexDirection: 'row',
+                                justifyContent: width < 768 ? 'flex-start' : 'flex-end'
                             }}
                         >
                             <Switch
@@ -4232,15 +4684,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 onValueChange={() => {
                                     setSubmission(!submission);
                                 }}
-                                style={{
-                                    height: 20,
-                                    marginRight: 'auto'
-                                }}
+                                thumbColor={'#f4f4f6'}
                                 trackColor={{
-                                    false: '#f2f2f2',
+                                    false: '#f4f4f6',
                                     true: '#006AFF'
                                 }}
-                                activeThumbColor="white"
+                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                             />
                         </View>
                     ) : (
@@ -4407,12 +4856,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     disabled={!isOwner}
                                     value={graded}
                                     onValueChange={() => setGraded(!graded)}
-                                    style={{ height: 20 }}
+                                    thumbColor={'#f4f4f6'}
                                     trackColor={{
-                                        false: '#f2f2f2',
+                                        false: '#f4f4f6',
                                         true: '#006AFF'
                                     }}
-                                    activeThumbColor="white"
+                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                 />
                             </View>
                         </View>
@@ -4513,12 +4962,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     disabled={!isOwner}
                                     value={allowLateSubmission}
                                     onValueChange={() => setAllowLateSubmission(!allowLateSubmission)}
-                                    style={{ height: 20 }}
+                                    thumbColor={'#f4f4f6'}
                                     trackColor={{
-                                        false: '#f2f2f2',
+                                        false: '#f4f4f6',
                                         true: '#006AFF'
                                     }}
-                                    activeThumbColor="white"
+                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                 />
                             </View>
                         </View>
@@ -4528,9 +4977,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             style={{
                                 width: '100%',
                                 display: 'flex',
-                                flexDirection: 'row',
+                                flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
                                 backgroundColor: 'white',
-                                alignItems: 'center'
+                                alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start',
+                                paddingTop: Platform.OS === 'ios' ? 0 : 10
                             }}
                         >
                             <Text
@@ -4546,9 +4996,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     ? allowLateSubmission
                                         ? 'Allowed until  ' + moment(new Date(availableUntil)).format('MMMM Do, h:mm a')
                                         : 'No'
-                                    : 'Allowed Until'}
+                                    :  (Platform.OS === 'android' ? 'Allowed until: ' + moment(new Date(availableUntil)).format('MMMM Do, h:mm a') : 'Allowed until')}
                             </Text>
-                            {isOwner ? renderAvailableUntilDateTimePicker() : null}
+                            {isOwner && allowLateSubmission ? renderAvailableUntilDateTimePicker() : null}
                         </View>
                     ) : !isOwner ? (
                         <Text
@@ -4655,12 +5105,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     }
                                     setUnlimitedAttempts(!unlimitedAttempts);
                                 }}
-                                style={{ height: 20 }}
+                                thumbColor={'#f4f4f6'}
                                 trackColor={{
-                                    false: '#f2f2f2',
+                                    false: '#f4f4f6',
                                     true: '#006AFF'
                                 }}
-                                activeThumbColor="white"
+                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                             />
                         </View>
 
@@ -5043,7 +5493,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         <TouchableOpacity
                             disabled={shareWithChannelId === 'None'}
                             onPress={() => {
-                                Alert('Forward cue?', '', [
+                                Alert('Forward cue?', 'All unsaved changes in Details will also reflect in the forwarded cue.', [
                                     {
                                         text: 'Cancel',
                                         style: 'cancel',
@@ -5130,12 +5580,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 setPlayChannelCueIndef(true);
                                 setNotify(!notify);
                             }}
-                            style={{ height: 20 }}
+                            thumbColor={'#f4f4f6'}
                             trackColor={{
-                                false: '#f2f2f2',
+                                false: '#f4f4f6',
                                 true: '#006AFF'
                             }}
-                            activeThumbColor="white"
+                            style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                         />
                     </View>
                 </View>
@@ -5171,12 +5621,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <Switch
                                     value={!shuffle}
                                     onValueChange={() => setShuffle(!shuffle)}
-                                    style={{ height: 20 }}
+                                    thumbColor={'#f4f4f6'}
                                     trackColor={{
-                                        false: '#f2f2f2',
+                                        false: '#f4f4f6',
                                         true: '#006AFF'
                                     }}
-                                    activeThumbColor="white"
+                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                 />
                             </View>
                             {!shuffle ? (
@@ -5372,12 +5822,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <Switch
                                     value={playChannelCueIndef}
                                     onValueChange={() => setPlayChannelCueIndef(!playChannelCueIndef)}
-                                    style={{ height: 20 }}
+                                    thumbColor={'#f4f4f6'}
                                     trackColor={{
-                                        false: '#f2f2f2',
+                                        false: '#f4f4f6',
                                         true: '#006AFF'
                                     }}
-                                    activeThumbColor="white"
+                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                 />
                             </View>
                             {playChannelCueIndef ? null : (
@@ -5533,8 +5983,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     }
 
     const wrapMainCueContentWithScrollView = () => {
-        console.log("Rendering wrapMainCueContentWithScrollView");
-        return isQuiz || imported || !props.showOriginal || (!props.showOriginal && viewSubmission) ? (
+        // console.log("Rendering wrapMainCueContentWithScrollView");
+        return isQuiz || imported || !props.showOriginal ? (
             <ScrollView
                 contentContainerStyle={{
                     paddingBottom: 150,
@@ -5553,6 +6003,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             renderRichEditorOriginalCue()
         );
     };
+
+    // console.log("Remaining attempts", remainingAttempts)
 
     // MAIN RETURN
     return (
@@ -5574,7 +6026,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 !isOwner &&
                 isQuiz) ||
                 !isQuiz ||
-                isOwner) || (!props.showOriginal && !props.showOptions && viewSubmission)) ? (
+                isOwner) || (!props.showOriginal && !props.showOptions && !props.viewStatus)) ? (
                 wrapMainCueContentWithScrollView()
             ) : (
                 <Animated.View
@@ -5623,7 +6075,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             props.cue.submittedAt !== '' &&
                             new Date(props.cue.submittedAt) >= deadline &&
                             props.showOriginal ? (
-                                <View style={{ marginTop: 20, marginBottom: 5 }}>
+                                <View style={{ marginTop: 20, marginBottom: 5, paddingLeft: 20 }}>
                                     <Text
                                         style={{
                                             color: '#f94144',
@@ -5672,80 +6124,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{ flexDirection: 'column', width: '100%' }}>
                                     {renderQuizTimerOrUploadOptions()}
                                 </View>
-                                {!props.showOriginal && submissionImported && !isQuiz && !viewSubmission ? (
-                                    <View style={{ flexDirection: 'row' }}>
-                                        <View
-                                            style={{
-                                                flex: 1,
-                                                flexDirection: 'row',
-                                                alignSelf: 'flex-start',
-                                                marginLeft: 0
-                                            }}
-                                        >
-                                            <TextInput
-                                                value={submissionTitle}
-                                                style={styles.input}
-                                                placeholder={'Title'}
-                                                onChangeText={val => setSubmissionTitle(val)}
-                                                placeholderTextColor={'#1F1F1F'}
-                                            />
-                                        </View>
-                                        {props.cue.submittedAt && props.cue.submittedAt !== '' ? (
-                                            <View
-                                                style={{
-                                                    marginLeft: 15,
-                                                    marginTop: 20,
-                                                    alignSelf: 'flex-end'
-                                                }}
-                                            >
-                                                {props.cue.graded || currentDate > deadline ? null : (
-                                                    <TouchableOpacity
-                                                        onPress={() => clearAll()}
-                                                        style={{
-                                                            backgroundColor: 'white',
-                                                            borderRadius: 15,
-                                                            marginTop: 5
-                                                        }}
-                                                    >
-                                                        <Text
-                                                            style={{
-                                                                lineHeight: 34,
-                                                                textTransform: 'uppercase',
-                                                                fontSize: 12,
-                                                                fontFamily: 'overpass',
-                                                                color: '#006AFF'
-                                                            }}
-                                                        >
-                                                            Erase
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                )}
-                                            </View>
-                                        ) : (
-                                            <TouchableOpacity
-                                                onPress={() => clearAll()}
-                                                style={{
-                                                    backgroundColor: 'white',
-                                                    borderRadius: 15,
-                                                    marginLeft: 15,
-                                                    marginTop: 5
-                                                }}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        lineHeight: 34,
-                                                        textTransform: 'uppercase',
-                                                        fontSize: 12,
-                                                        fontFamily: 'overpass',
-                                                        color: '#006AFF'
-                                                    }}
-                                                >
-                                                    Erase
-                                                </Text>
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                ) : null}
                                 {isQuiz && !isOwner && !initiatedAt ? renderQuizSubmissionHistory() : null}
                                 {isQuiz && cueGraded && props.cue.releaseSubmission ? (
                                     <QuizGrading
@@ -5829,10 +6207,39 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     (allowLateSubmission && new Date() > availableUntil)
                         ? null
                         : renderRichEditorModified()}
-                    {renderFooter()}
+                    {/* {renderFooter()} */}
                 </React.Fragment>
             ) : null}
 
+            {emojiVisible || insertImageVisible || insertLinkVisible || hiliteColorVisible || foreColorVisible ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: animatedShadowOpacity,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute'
+                    }}
+                >
+                    <TouchableOpacity
+                    style={{
+                        backgroundColor: 'transparent',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    onPress={() => {
+                        setEmojiVisible(false)
+                        setInsertImageVisible(false)
+                        setInsertLinkVisible(false)
+                        setHiliteColorVisible(false)
+                        setForeColorVisible(false)
+                    }}>
+                    </TouchableOpacity>
+                </Reanimated.View>
+            ) : null}
             {emojiVisible && (
                 <BottomSheet
                     snapPoints={[0, 350]}
@@ -6056,15 +6463,16 @@ const styles: any = StyleSheet.create({
         borderColor: '#1F1F1F'
     },
     input: {
-        width: '100%',
+        width: '80%',
+        // flex: 1,
         borderBottomColor: '#f2f2f2',
         borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 12,
         paddingBottom: 12,
         // marginTop: 5,
-        marginBottom: 20,
-        maxWidth: 210
+        // marginBottom: 20,
+        // maxWidth: 210
     },
     colorBar: {
         width: '100%',

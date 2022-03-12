@@ -12,12 +12,15 @@ import {
     Platform,
     TextInput as DefaultInput,
     Keyboard,
+    RefreshControl,
+    TouchableOpacity as RNTouchableOpacity
 } from 'react-native';
-import { ScrollView, Switch } from 'react-native-gesture-handler';
+import { ScrollView, Switch, TouchableOpacity } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import _ from 'lodash';
 import moment from 'moment';
+import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 // API
 import axios from 'axios';
@@ -30,10 +33,11 @@ import {
     startInstantMeeting,
     getOngoingMeetings,
     createMessage,
+    addUsersByEmail
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
-import { View, Text, TouchableOpacity } from '../components/Themed';
+import { View, Text } from '../components/Themed';
 import Walkthrough from './Walkthrough';
 import Channels from './Channels';
 import Create from './Create';
@@ -65,7 +69,7 @@ import { zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
 
 import logo from '../components/default-images/cues-logo-black-exclamation-hidden.jpg';
 import { contentsModalHeight, getDropdownHeight } from '../helpers/DropdownHeight';
-
+import { validateEmail } from '../helpers/emailCheck';
 
 const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const styles = styleObject();
@@ -76,16 +80,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [searchTerm, setSearchTerm] = useState('');
     const [collapseMap, setCollapseMap] = useState<any>({});
     const [results, setResults] = useState<any>({
-        Channels: [],
-        Classroom: [],
+        Courses: [],
+        Content: [],
         Messages: [],
-        Threads: [],
+        Discussion: [],
     });
     const [resultCount, setResultCount] = useState(0);
     const [loadingSearchResults, setLoadingSearchResults] = useState(false);
     // const [filterStart, setFilterStart] = useState<any>(null);
     // const [filterEnd, setFilterEnd] = useState<any>(null);
-    const [searchOptions] = useState(['Classroom', 'Messages', 'Threads', 'Channels']);
+    const [searchOptions] = useState(['Content', 'Messages', 'Discussion', 'Courses']);
     const [sortBy, setSortBy] = useState('Date ↑');
     const [cueMap, setCueMap] = useState<any>({});
     const [categoryMap, setCategoryMap] = useState<any>({});
@@ -129,7 +133,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [ongoingMeetings, setOngoingMeetings] = useState<any[]>([]);
     const [userZoomInfo, setUserZoomInfo] = useState<any>('');
     const [meetingProvider, setMeetingProvider] = useState('');
-    const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
+    const [selectedWorkspace, setSelectedWorkspace] = useState<any>(props.selectedWorkspace ? props.selectedWorkspace : '');
     const [showSearchMobile, setShowSearchMobile] = useState<any>('');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showNewContentModal, setShowNewContentModal] = useState(false);
@@ -145,6 +149,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [discussionReloadKey, setDiscussionReloadKey] = useState(Math.random());
 
     const [showWorkspaceOptionsModal, setShowWorkspaceOptionsModal] = useState(false)
+    const [searchResultTabs, setSearchResultTabs] = useState<string[]>([])
+    const [activeSearchResultsTab, setActiveSearchResultsTab] = useState('')
 
     const currentTime = new Date();
     const [meetingEndTime, setMeetingEndTime] = useState(new Date(currentTime.getTime() + 1000 * 40 * 60));
@@ -161,10 +167,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [categoryPositionList, setCategoryPositionList] = useState<any[]>([]);
     const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
     const [showCategoryList, setShowCategoryList] = useState(false);
-
     const [xScrollOffset, setXScrollOffset] = useState(0);
-
     const cuesCarouselRef: any = useRef(null);
+    const [exportScores, setExportScores] = useState(false);
+    
+    const [showChannelPasswordInput, setShowChannelPasswordInput] = useState(false);
+    const [channelPasswordId, setChannelPasswordId] = useState('')
+    const [channelPassword, setChannelPassword] = useState('')
+    const [showInviteByEmailsModal, setShowInviteByEmailsModal] = useState(false);
+    const [emails, setEmails] = useState('');
+    const [refreshChannelSettings, setRefreshChannelSettings] = useState(false)
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const DashboardScrollViewRef: any = useRef()
 
     // ALERTS
     const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
@@ -225,8 +239,46 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     // HOOKS
 
     useEffect(() => {
+        loadRecentSearches()
+    }, [])
+
+    useEffect(() => {
+        props.setShowWorkspaceFilterModal(showFilterModal)
+    }, [showFilterModal])
+
+    useEffect(() => {
+        if (selectedWorkspace === '' || selectedWorkspace === 'My Notes') return;
+
+        const temp = JSON.parse(JSON.stringify(indexMap));
+
+        if (props.activeWorkspaceTab === 'Content') {
+            temp[selectedWorkspace] = 0;
+        } else if (props.activeWorkspaceTab === 'Discuss') {
+            temp[selectedWorkspace] = 1;
+        } else if (props.activeWorkspaceTab === 'Meet') {
+            temp[selectedWorkspace] = 2;
+        } else if (props.activeWorkspaceTab === 'Scores') {
+            temp[selectedWorkspace] = 3;
+        } else {
+            temp[selectedWorkspace] = 4;
+        }
+
+        setIndexMap(temp);
+
+    }, [props.activeWorkspaceTab, selectedWorkspace])
+
+    useEffect(() => {
+        if (props.showNewPost) {
+            setShowNewPostModal(true);
+        } if (props.showNewMeeting) {
+            setShowInstantMeeting(true);
+        }
+    }, [props.showNewPost, props.showNewMeeting])
+
+    useEffect(() => {
         if (props.option === 'Search') {
             setShowSearchMobile(true);
+            setSelectedWorkspace('')
         } else {
             setShowSearchMobile(false);
         }
@@ -247,13 +299,30 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         })();
     }, []);
 
+    // /**
+    //  * @description Fetch meeting provider for org
+    //  */
+    //  useEffect(() => {
+    //     (async () => {
+    //         const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
+
+    //         console.log("Active workspace dashboard", activeWorkspace)
+
+    //         if (activeWorkspace) {
+    //             // const school = JSON.parse(org);
+    //             setSelectedWorkspace(activeWorkspace)
+
+    //             await AsyncStorage.setItem('activeWorkspace', '');
+    //         }
+    //     })();
+    // }, []);
+
     /**
      * @description Update selected Workspace in Home
      */
     useEffect(() => {
         props.setSelectedWorkspace(selectedWorkspace);
         setCategoryPositionList([])
-        console.log("Selected workspace", selectedWorkspace)
 
     }, [selectedWorkspace]);
 
@@ -442,7 +511,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         temp['My Notes'] = [];
         const tempCollapse: any = {};
         tempCollapse['My Notes'] = false;
-        const tempIndexes: any = {};
+        // const tempIndexes: any = {};
 
         let dateFilteredCues: any[] = [];
         if (filterStart && filterEnd) {
@@ -493,7 +562,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 sub.colorCode;
             temp[key] = tempCues;
             tempCollapse[key] = false;
-            tempIndexes[key] = 0;
+            // tempIndexes[key] = 0;
             if (!cat['']) {
                 delete cat[''];
             }
@@ -529,13 +598,39 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             delete cat[''];
         }
         tempCat['My Notes'] = Object.keys(cat);
-        tempIndexes['My Notes'] = 0;
+        // tempIndexes['My Notes'] = 0;
 
         setCueMap(temp);
         setCollapseMap(tempCollapse);
         setCategoryMap(tempCat);
+        // setIndexMap(tempIndexes);
+    }, [sortBy, filterStart, filterEnd, props.subscriptions, props.cues]);
+
+    /**
+     * @description Seperate setting active tab from setting index map since everytime the cues refresh the tabs will also change so we dont want that to happen
+     */
+    useEffect(() => {
+        const tempIndexes: any = {};
+
+        props.subscriptions.map((sub: any) => {
+
+            const key =
+                sub.channelName +
+                '-SPLIT-' +
+                sub.channelId +
+                '-SPLIT-' +
+                sub.channelCreatedBy +
+                '-SPLIT-' +
+                sub.colorCode;
+
+            tempIndexes[key] = 0;
+            
+        });
+
+        tempIndexes['My Notes'] = 0;
         setIndexMap(tempIndexes);
-    }, [sortBy, filterStart, filterEnd, props.subscriptions]);
+        
+    }, [props.subscriptions])
 
     /**
      * @description Setup the data for carousel
@@ -553,6 +648,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         }
 
         const categories = categoryMap[selectedWorkspace];
+
+        categories.sort();
 
         let carouselItemData: any[] = [];
 
@@ -572,6 +669,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             });
         });
 
+        // 
+
         setCuesCarouselData(carouselItemData);
     }, [selectedWorkspace, cueMap, categoryMap]);
 
@@ -586,16 +685,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Fetches search results for search term
      */
     useEffect(() => {
-        if (searchTerm.trim().length < 3) {
-            setLoadingSearchResults(false)
-            cancelTokenRef.current = axios.CancelToken.source();
+        if (searchTerm.trim().length === 0) {
             setResults({
-                Channels: [],
-                Classroom: [],
+                Courses: [],
+                Content: [],
                 Messages: [],
-                Threads: [],
+                Discussion: [],
             });
             setResultCount(0);
+            setSearchResultTabs([]);
+            setActiveSearchResultsTab('');
+            cancelTokenRef.current = axios.CancelToken.source();
+            setLoadingSearchResults(false)
             return;
         }
 
@@ -621,8 +722,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     { cancelToken: cancelTokenRef.current.token }
                 )
                 .then((res: any) => {
-                    console.log(res.data);
-                    console.log(res.channels);
                     const totalCount =
                         res.data.personalCues.length +
                         res.data.channelCues.length +
@@ -631,11 +730,37 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         res.data.messages.length;
 
                     const tempResults = {
-                        Classroom: [...res.data.personalCues, ...res.data.channelCues],
-                        Channels: res.data.channels,
-                        Threads: res.data.threads,
+                        Content: [...res.data.personalCues, ...res.data.channelCues],
+                        Courses: res.data.channels,
+                        Discussion: res.data.threads,
                         Messages: res.data.messages,
                     };
+
+                    const tabsFound = []
+                    let activeTab = ''
+
+                    if ((res.data.personalCues.length + res.data.channelCues.length) > 0) {
+                        tabsFound.push('Content')
+                        activeTab = 'Content'
+                    } 
+
+                    if (res.data.messages.length > 0) {
+                        tabsFound.push('Messages')
+                        activeTab = activeTab !== '' ? activeTab : 'Messages'
+                    }
+
+                    if (res.data.threads.length > 0) {
+                        tabsFound.push('Discussion')
+                        activeTab = activeTab !== '' ? activeTab : 'Discussion'
+                    }
+
+                    if (res.data.channels.length > 0) {
+                        tabsFound.push('Courses')
+                        activeTab = activeTab !== '' ? activeTab : 'Courses'
+                    }
+
+                    setActiveSearchResultsTab(activeTab)
+                    setSearchResultTabs(tabsFound)
 
                     setResultCount(totalCount);
                     setResults(tempResults);
@@ -681,6 +806,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
 
                     setShowInstantMeeting(false);
+                    props.setShowNewMeeting(false);
+
                     setInstantMeetingChannelId('');
                     setInstantMeetingCreatedBy('');
                     setInstantMeetingTitle('');
@@ -722,7 +849,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         let channelId = '';
 
-        if (Dimensions.get('window').width < 768 && selectedWorkspace !== '') {
+        if (Dimensions.get('window').width < 768 && selectedWorkspace !== '' && selectedWorkspace !== 'My Notes') {
             channelId = selectedWorkspace.split('-SPLIT-')[1];
         } else {
             Object.keys(collapseMap).map((key: any) => {
@@ -750,10 +877,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 })
                 .catch((err) => {
+                    console.log("Error in getCurrentMeeting", err)
                     Alert('Something went wrong.');
                 });
         }
-    }, [userId, collapseMap]);
+    }, [userId, collapseMap, selectedWorkspace]);
 
     /**
      * @description Handle create instant meeting for channel owners
@@ -780,6 +908,47 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }
         }
     };
+
+    const loadRecentSearches = useCallback(async () => {
+        const recentSearches = await AsyncStorage.getItem('recentSearches');
+
+        if (recentSearches) {
+            setRecentSearches(JSON.parse(recentSearches))
+        }
+
+    }, [])
+
+    console.log("Recent searches", recentSearches)
+
+    const updateRecentSearches = useCallback(async () => {
+
+        if (searchTerm.trim().length === 0) return;
+
+        let currentSearches = [...recentSearches]
+        currentSearches.push(searchTerm)
+
+        if (currentSearches.length > 10) {
+            currentSearches.shift()
+        }
+
+        setRecentSearches(currentSearches)
+
+        await AsyncStorage.setItem('recentSearches', JSON.stringify(currentSearches))
+
+    }, [recentSearches, searchTerm])
+
+    const removeRecentSearch = useCallback(async (searchTerm: string) => {
+
+
+       const removed = recentSearches.filter((term) => term !== searchTerm);
+
+        console.log("Removed recent search", removed)
+
+        setRecentSearches(removed)
+
+        await AsyncStorage.setItem('recentSearches', JSON.stringify(removed))
+
+    }, [recentSearches])
 
     /**
      * @description Call to enter classroom
@@ -821,6 +990,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }
                     })
                     .catch((err) => {
+                        console.log("Error", err)
                         Alert('Something went wrong.');
                     });
             }
@@ -831,6 +1001,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Fetches status of channel and depending on that handles subscription to channel
      */
     const handleSub = useCallback(async (channelId) => {
+        console.log("Channel Id", channelId)
         const server = fetchAPI('');
         server
             .query({
@@ -839,7 +1010,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     channelId,
                 },
             })
-            .then((res) => {
+            .then(async (res) => {
                 if (res.data.channel && res.data.channel.getChannelStatus) {
                     const channelStatus = res.data.channel.getChannelStatus;
                     switch (channelStatus) {
@@ -847,11 +1018,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             handleSubscribe(channelId, '');
                             break;
                         case 'password-required':
-                            let pass: any = prompt('Enter Password');
-                            if (!pass) {
-                                pass = '';
-                            }
-                            handleSubscribe(channelId, pass);
+                            console.log("Password required");
+                            setChannelPasswordId(channelId)
+                            setShowChannelPasswordInput(true)
                             break;
                         case 'non-existant':
                             Alert(doesNotExistAlert);
@@ -903,6 +1072,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     if (res.data.thread.writeMessage) {
                         setDiscussionReloadKey(Math.random());
                         setShowNewPostModal(false);
+                        props.setShowNewPost(false);
                     } else {
                         Alert(checkConnectionAlert);
                     }
@@ -920,6 +1090,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     const handleSubscribe = useCallback(
         async (channelId, pass) => {
+            console.log("ChannelId", channelId)
+            console.log("Password", pass)
             const uString: any = await AsyncStorage.getItem('user');
             const user = JSON.parse(uString);
 
@@ -958,6 +1130,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 })
                 .catch((err) => {
+                    console.log("Error", err)
                     Alert(somethingWrongAlert, checkConnectionAlert);
                 });
         },
@@ -1013,7 +1186,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                     >
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
@@ -1101,7 +1274,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                     >
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
@@ -1162,7 +1335,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }}
                 >
                     <TouchableOpacity
-                        style={{
+                        containerStyle={{
                             justifyContent: 'center',
                             flexDirection: 'column',
                             backgroundColor: '#fff',
@@ -1198,7 +1371,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={{
+                        containerStyle={{
                             justifyContent: 'center',
                             flexDirection: 'column',
                             backgroundColor: '#fff',
@@ -1233,7 +1406,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </TouchableOpacity>
                     {props.version !== 'read' ? (
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
                                 backgroundColor: '#fff',
@@ -1269,7 +1442,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     ) : null}
                     {props.version !== 'read' ? (
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
                                 backgroundColor: '#fff',
@@ -1305,7 +1478,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     ) : null}
                     {key.split('-SPLIT-')[2] === userId ? (
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
                                 backgroundColor: '#fff',
@@ -1337,7 +1510,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 fontFamily: 'inter',
                                 textAlign: 'center'
                             }}>
-                                {props.version === 'read' ? 'Edit' : 'Settings'}
+                                Settings
                             </Text>
                         </TouchableOpacity>
                     ) : null}
@@ -1363,7 +1536,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }}
             >
                 <TouchableOpacity
-                        style={{
+                        containerStyle={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             backgroundColor: '#fff',
@@ -1401,7 +1574,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         {activeTab === 'Content' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={{
+                        containerStyle={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             backgroundColor: '#fff',
@@ -1438,7 +1611,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </TouchableOpacity>
                     {props.version !== 'read' ? (
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 backgroundColor: '#fff',
@@ -1477,7 +1650,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     ) : null}
                     {props.version !== 'read' ? (
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 backgroundColor: '#fff',
@@ -1516,7 +1689,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     ) : null}
                     {selectedWorkspace.split('-SPLIT-')[2] === userId ? (
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 backgroundColor: '#fff',
@@ -1656,12 +1829,154 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
+    const addViewersWithEmail = useCallback(async (emails: string[]) => {
+        const server = fetchAPI('')
+
+        server.mutate({
+            mutation: addUsersByEmail,
+            variables: {
+                channelId: selectedWorkspace.split('-SPLIT-')[1],
+                userId,
+                emails
+            }
+        }).then((res) => {
+            if (res.data && res.data.channel.addUsersByEmail) {
+
+                const { success, failed, error } = res.data.channel.addUsersByEmail;
+
+                if (error) {
+                    alert(error);
+                    return;
+                } else {
+
+
+                    const successCount = success.length;
+                    const failedCount = failed.length
+
+                    let failedString = ''
+                    if (failedCount > 0) {
+                        failedString = 'Failed to add ' + failed.join(', ') + '. Cannot add users with emails that are part of another org.'
+                    }
+
+
+                    Alert((successCount > 0 ? 'Successfully added ' + successCount + ' viewers. ' : '') + (failedCount > 0 ? failedString : ''))
+                    
+                    if (successCount > 0) {
+                        setShowInviteByEmailsModal(false);
+                        // Refresh subscribers for the channel
+                        setRefreshChannelSettings(true)
+                    }
+                }
+               
+            }
+        })
+        .catch((e) => {
+            alert("Something went wrong. Try again.")
+        })
+
+    }, [selectedWorkspace, userId])
+
+    const renderInviteEmailsModalContent = () => {
+        return <View
+            style={{
+                flexDirection: 'column',
+                paddingHorizontal: 20,
+                marginVertical: 20,
+            }}>
+            <AutoGrowingTextInput
+                value={emails}
+                placeholder="E.g. student1@gmail.com, student2@gmail.com, ..."
+                style={{
+                    fontFamily: 'overpass',
+                    width: '100%',
+                    maxWidth: '100%',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#f2f2f2',
+                    fontSize: 14,
+                    paddingTop: 13,
+                    paddingBottom: 13,
+                    marginRight: 10,
+                    // marginTop: 12,
+                    borderRadius: 1
+                }}
+                onChange={(event: any) => setEmails(event.nativeEvent.text || '')}
+                minHeight={120}
+            />
+            <Text
+                style={{
+                    fontSize: 10,
+                    color: '#000000',
+                    textTransform: 'uppercase',
+                    lineHeight: 20,
+                    fontFamily: 'Inter',
+                    paddingTop: 50
+                }}
+            >
+                NOTE: EMAIL IDS ALREADY IN USE WITH ANOTHER CUES ORGANIZATION/INSTRUCTOR MAY NOT BE ADDED. REACH OUT TO SUPPORT FOR ANY QUERIES.
+            </Text>
+
+            <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                <TouchableOpacity
+                    style={{
+                        marginTop: 50,
+                        backgroundColor: '#006AFF',
+                        borderRadius: 19,
+                        width: 150,
+                        alignSelf: 'center'
+                    }}
+                    onPress={() => {
+                        const splitEmails = emails.split(',')
+
+                        let error = false;
+                        let invalidEmail = ""
+
+                        const santizedEmails = splitEmails.map((e: string) => {
+
+                            if (error) return;
+
+                            const santize = e.toLowerCase().trim()
+                            
+                            if (validateEmail(santize)) {
+                                return santize
+                            } else {
+                                error = true;
+                                invalidEmail = santize
+                                return '';
+                            }
+
+                        })
+
+                        if (error) {
+                            alert("Invalid email " + invalidEmail)
+                            return;
+                        }
+
+                        addViewersWithEmail(santizedEmails);
+                    }}
+                >
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingHorizontal: 25,
+                            fontFamily: 'inter',
+                            height: 35,
+                            lineHeight: 34,
+                            color: '#fff'
+                        }}
+                    >
+                        Add
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    }
+
     const renderNewContentModalOptions = () => {
         return <View style={{ 
             paddingHorizontal: '20%'
         }}>
             <TouchableOpacity
-                style={{
+                containerStyle={{
                     // marginTop: 20,
                     backgroundColor: '#eeeeee',
                     borderRadius: 19,
@@ -1673,7 +1988,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }}
                 onPress={() => {
                     setShowNewContentModal(false)
-                    props.openCreate('content')
+                    props.openCreate()
                 }}
             >
                 <Ionicons name='create-outline' size={20} color={'#000'} />
@@ -1694,7 +2009,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </TouchableOpacity>
 
             {allowQuizCreation ? <TouchableOpacity
-                style={{
+                containerStyle={{
                     marginTop: 25,
                     backgroundColor: '#eeeeee',
                     borderRadius: 19,
@@ -1706,7 +2021,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }}
                 onPress={() => { 
                     setShowNewContentModal(false)
-                    props.openCreate('quiz')
+                    props.openCreate()
                 }}
             >
                 <Ionicons name='checkbox-outline' size={20} color={'#000'} />
@@ -1726,7 +2041,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </TouchableOpacity> : null}
 
             {allowQuizCreation ? <TouchableOpacity
-                style={{
+                containerStyle={{
                     marginTop: 25,
                     backgroundColor: '#eeeeee',
                     borderRadius: 19,
@@ -1738,7 +2053,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }}
                 onPress={() => {
                     setShowNewContentModal(false)
-                    props.openCreate('books')
+                    props.openCreate()
                 }}
             >
                 <Ionicons name='book-outline' size={20} color={'#000'} />
@@ -1780,9 +2095,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0,
+                    zIndex: 10000
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 20,
+                    zIndex: 10000
                 }}
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={true}
@@ -2145,7 +2462,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         }
                                                     }
                                                 }}
-                                                style={{}}
                                             >
                                                 <Text
                                                     style={{
@@ -2165,7 +2481,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         await navigator.clipboard.writeText(meeting.joinUrl);
                                                         Alert('Invite link copied!');
                                                     }}
-                                                    style={{}}
                                                 >
                                                     <Text
                                                         style={{
@@ -2240,7 +2555,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                     >
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
@@ -2271,7 +2586,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={{
+                            containerStyle={{
                                 backgroundColor: '#fff',
                                 overflow: 'hidden',
                                 height: 35,
@@ -2497,7 +2812,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 </Text>
                             </View>
                             <TouchableOpacity
-                                style={{
+                                containerStyle={{
                                     backgroundColor: '#006AFF',
                                     borderRadius: 19,
                                     width: 120,
@@ -2538,7 +2853,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 style={{
                     // height: '100%',
                     width: 195,
-                    marginRight: 20,
+                    marginRight: 12,
                     height: '100%',
                     borderRadius: 4,
                     backgroundColor: '#f2f2f2',
@@ -2615,11 +2930,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             //     }}
                             // />
                             <TouchableOpacity
-                                style={{
-                                    height: 60,
+                                containerStyle={{
+                                    // height: 60,
                                     backgroundColor: '#fff',
-                                    borderColor: col,
-                                    borderLeftWidth: 3,
+                                    // borderColor: col,
+                                    // borderLeftWidth: 3,
                                     flexDirection: 'column',
                                     shadowColor: '#000000',
                                     shadowOffset: { width: 1, height: 1 },
@@ -2627,11 +2942,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     shadowRadius: 1,
                                     elevation: 0,
                                     zIndex: 500000,
-                                    borderTopColor: '#efefef',
-                                    borderTopWidth: 1,
-                                    borderBottomColor: '#efefef',
-                                    borderBottomWidth: 1,
                                     marginBottom: 15,
+                                }}
+                                style={{
+                                    height: 60,
+                                    borderColor: col,
+                                    borderLeftWidth: 3,
+                                    // borderTopColor: '#efefef',
+                                    // borderTopWidth: 1,
+                                    // borderBottomColor: '#efefef',
+                                    // borderBottomWidth: 1,
                                 }}
                                 onPress={() => {
                                     props.openUpdate(
@@ -2762,38 +3082,84 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
+    console.log("Recent searches slice", recentSearches.reverse())
+
     /**
      * @description Renders View for search results
      */
     const searchResultsMobile = (
         <View style={{
             height: Dimensions.get('window').height,
-            backgroundColor: '#f2f2f2',
+            backgroundColor: '#fff',
         }}>
             <View
                 style={{
                     width: '100%',
-                    paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
-                    backgroundColor: '#f2f2f2',
+                    // paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
+                    backgroundColor: '#fff',
                 }}
             >
-                {!loadingSearchResults && resultCount !== 0 ? (
+                {
+                        !loadingSearchResults &&
+                        searchTerm.trim().length !== 0 &&
+                        activeSearchResultsTab !== '' && searchResultTabs.length > 0 ?
+                        (
+                            <ScrollView 
+                                horizontal={true}
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{
+                                    flexDirection: 'row',
+                                    // width: '100%'
+                                    paddingHorizontal: 12,
+                                }}
+                                style={{
+                                    paddingBottom: 10
+                                }}
+                            >
+                                {
+                                    searchResultTabs.map((tab: string) => {
+                                        return <TouchableOpacity
+                                            style={{
+                                                backgroundColor: tab === activeSearchResultsTab ? '#000' : '#f2f2f2',
+                                                borderRadius: 20,
+                                                paddingHorizontal: 14,
+                                                marginRight: 10,
+                                                paddingVertical: 7
+                                            }}
+                                            onPress={() => {
+                                                setActiveSearchResultsTab(tab)
+                                            }}
+                                        >
+                                            <Text style={{
+                                                color: tab === activeSearchResultsTab ? '#fff' : '#000',
+                                                fontSize: 14
+                                            }}>
+                                                {tab}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    })
+                                }
+                            </ScrollView>
+                        ) : null
+                    }
+                {/* {!loadingSearchResults && resultCount !== 0 ? (
                     <Text
                         style={{
                             fontSize: 20,
-                            paddingVertical: 30,
+                            paddingVertical: 20,
                             fontFamily: 'inter',
-                            flex: 1,
+                            paddingLeft: 5,
+                            // flex: 1,
                             // lineHeight: 23,
                             color: '#006AFF',
-                            backgroundColor: '#f2f2f2',
+                            backgroundColor: '#fff',
                         }}
                     >
                         {resultCount} Results
                     </Text>
-                ) : null}
+                ) : null} */}
                 <View>
-                    {!loadingSearchResults &&
+                    {!loadingSearchResults && searchTerm.trim().length !== 0 &&
                     results &&
                     results[searchOptions[0]].length === 0 &&
                     results[searchOptions[1]].length === 0 &&
@@ -2808,18 +3174,89 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 textAlign: 'center',
                                 lineHeight: 30,
                                 fontFamily: 'inter',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
                             }}
                         >
-                            {searchTerm.trim().length > 3 && (
+                            {searchTerm.trim().length !== 0 && (
                                 results[searchOptions[0]].length === 0 &&
                                 results[searchOptions[1]].length === 0 &&
                                 results[searchOptions[2]].length === 0 &&
                                 results[searchOptions[3]].length === 0
                             )
-                                ? 'No results.' : 'Search for content, messages, discussion threads, or courses'}
+                                ? 'No results.' : ''}
                         </Text>
                     ) : null}
+
+
+                    {
+                        !loadingSearchResults && searchTerm.trim().length === 0 ?
+                        <View
+                            style={{
+                                maxHeight: Dimensions.get('window').height - 250,
+                                backgroundColor: '#fff',
+                                paddingHorizontal: 20,
+                                // paddingTop: 20
+                            }}
+
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 20,
+                                    paddingVertical: 20,
+                                    fontFamily: 'inter',
+                                    paddingLeft: 5,
+                                    color: '#000',
+                                    backgroundColor: '#fff',
+                                    marginTop: recentSearches.length > 0 ? 0 : 50
+                                }}
+                            >
+                                {recentSearches.length > 0 ? "Recent searches" : "No recent searches"}
+                            </Text>
+
+                            {recentSearches.reverse().map(((search: string, index: number) => {
+                                return <View style={{
+                                    width: '100%',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingVertical: 10,
+                                    justifyContent: 'space-between'
+                                }}>
+                                    <TouchableOpacity style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                       
+                                    }}>
+                                        <Ionicons 
+                                            name='time-outline'
+                                            color="#000"
+                                            size={22}
+                                        />
+
+                                        <Text style={{
+                                            paddingLeft: 12,
+                                            color: '#000',
+                                            // fontFamily: 'Inter',
+                                            fontSize: 16
+                                        }}>
+                                            {search}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={{
+                                        marginLeft: 'auto',
+                                        paddingRight: 10,
+                                        paddingTop: 2
+                                    }}
+                                    onPress={() => removeRecentSearch(search)}
+                                    >
+                                        <Ionicons name="close-outline" size={20} color=""/>
+                                    </TouchableOpacity>
+                                </View>
+                            }))}
+                        </View> : null
+                    }
+
+
+                    
                     {loadingSearchResults ? (
                         <View
                             style={{
@@ -2828,27 +3265,195 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 justifyContent: 'center',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                backgroundColor: '#f2f2f2',
+                                backgroundColor: '#fff',
                                 paddingVertical: 100,
                             }}
                         >
                             <ActivityIndicator color={'#1F1F1F'} />
                         </View>
                     ) : null}
-                    <ScrollView
+                    {!activeSearchResultsTab || loadingSearchResults || searchTerm.trim().length === 0 ? null : <ScrollView
+                        style={{
+                            maxHeight: Dimensions.get('window').height - 250,
+                            backgroundColor: '#fff',
+                            paddingTop: 20
+                        }}
+                        showsVerticalScrollIndicator={true}
+                        horizontal={false}
+                        indicatorStyle="black"
+                    >
+                        {
+                            results[activeSearchResultsTab].map((obj: any, index: any) => {
+                                let t = '';
+                                let s = '';
+                                let channelName = '';
+                                let colorCode = '';
+                                let subscribed = false;
+                                let messageSenderName = '';
+                                let messageSenderAvatar = '';
+                                let createdAt = ''
+
+                                if (activeSearchResultsTab === 'Content') {
+                                    const { title, subtitle } = htmlStringParser(obj.cue);
+                                    t = title;
+                                    s = subtitle;
+                                    const filterChannel = props.subscriptions.filter((channel: any) => {
+                                        return channel.channelId === obj.channelId;
+                                    });
+
+                                    if (filterChannel && filterChannel.length !== 0) {
+                                        channelName = filterChannel[0].channelName;
+                                        colorCode = filterChannel[0].colorCode;
+                                    }
+
+
+                                    createdAt = obj.date
+                                } else if (activeSearchResultsTab === 'Courses') {
+                                    t = obj.name;
+
+                                    channelName = obj.name;
+                                    // Determine if already subscribed or not
+                                    const existingSubscription = props.subscriptions.filter(
+                                        (channel: any) => {
+                                            return channel.channelId === obj._id;
+                                        }
+                                    );
+
+                                    if (existingSubscription && existingSubscription.length !== 0) {
+                                        subscribed = true;
+                                    }
+                                } else if (activeSearchResultsTab === 'Discussion') {
+                                    if (
+                                        obj.message[0] === '{' &&
+                                        obj.message[obj.message.length - 1] === '}'
+                                    ) {
+                                        const o = JSON.parse(obj.message);
+                                        t = o.title;
+                                        s = o.type;
+                                    } else {
+                                        const { title, subtitle } = htmlStringParser(obj.message);
+                                        t = title;
+                                        s = subtitle;
+                                    }
+                                    const filterChannel = props.subscriptions.filter((channel: any) => {
+                                        return channel.channelId === obj.channelId;
+                                    });
+
+                                    if (filterChannel && filterChannel.length !== 0) {
+                                        channelName = filterChannel[0].channelName;
+                                        colorCode = filterChannel[0].colorCode;
+                                    }
+
+                                    createdAt = obj.time
+                                } else if (activeSearchResultsTab === 'Messages') {
+                                    
+                                    const users = obj.groupId.users;
+
+                                    const sender = users.filter((user: any) => user._id === obj.sentBy)[0]
+
+                                    if (obj.groupId && obj.groupId.name) {
+                                        messageSenderName = obj.groupId.name + ' > ' + sender.fullName
+                                        messageSenderAvatar = obj.groupId.image ? obj.groupId.image : ''
+                                    } else {
+                                        messageSenderName = sender.fullName
+                                        messageSenderAvatar = sender.avatar ? sender.avatar : ''
+                                    }
+
+                                    if (
+                                        obj.message[0] === '{' &&
+                                        obj.message[obj.message.length - 1] === '}'
+                                    ) {
+                                        const o = JSON.parse(obj.message);
+                                        t = o.title;
+                                        s = o.type;
+                                    } else {
+                                        const { title, subtitle } = htmlStringParser(obj.message);
+                                        t = title;
+                                        s = subtitle;
+                                    }
+
+                                    createdAt = obj.sentAt
+
+                                }
+
+                                return (
+                                        <SearchResultCard
+                                            title={t}
+                                            subtitle={s}
+                                            channelName={channelName}
+                                            colorCode={colorCode}
+                                            option={activeSearchResultsTab}
+                                            subscribed={subscribed}
+                                            messageSenderName={messageSenderName}
+                                            messageSenderAvatar={messageSenderAvatar}
+                                            createdAt={createdAt}
+                                            handleSub={() => handleSub(obj._id)}
+                                            onPress={async () => {
+                                                if (activeSearchResultsTab === 'Content') {
+                                                    props.openCueFromCalendar(
+                                                        obj.channelId,
+                                                        obj._id,
+                                                        obj.createdBy
+                                                    );
+                                                    setSearchTerm('');
+                                                } else if (activeSearchResultsTab === 'Discussion') {
+                                                    await AsyncStorage.setItem(
+                                                        'openThread',
+                                                        obj.parentId && obj.parentId !== ''
+                                                            ? obj.parentId
+                                                            : obj._id
+                                                    );
+
+                                                    if (obj.cueId && obj.cueId !== '') {
+                                                        props.openQAFromSearch(obj.channelId, obj.cueId);
+                                                    } else {
+                                                        props.openDiscussionFromSearch(obj.channelId);
+
+                                                        props.setLoadDiscussionForChannelId(obj.channelId);
+                                                    }
+
+                                                    setSearchTerm('');
+                                                } else if (activeSearchResultsTab === 'Messages') {
+                                                    // open chat and set Chat ID and users in Async storage to open that specific chat
+
+                                                    await AsyncStorage.setItem(
+                                                        'openChat',
+                                                        JSON.stringify({
+                                                            _id: obj.groupId._id,
+                                                            users: obj.users,
+                                                        })
+                                                    );
+
+                                                    props.setOption('Inbox');
+
+                                                    setSearchTerm('');
+                                                } else if (activeSearchResultsTab === 'Courses') {
+                                                    if (subscribed) {
+                                                        // Open the channel meeting
+                                                        props.openChannelFromActivity(obj._id);
+                                                    }
+                                                }
+                                            }}
+                                        />
+
+                                );
+                            })
+                        }
+                    </ScrollView>}
+                    {/* <ScrollView
                         horizontal={true}
                         key={JSON.stringify(results)}
                         style={{
-                            maxHeight: Dimensions.get('window').height - 300,
-                            backgroundColor: '#f2f2f2',
+                            maxHeight: Dimensions.get('window').height - 280,
+                            backgroundColor: '#fff',
                         }}
                         indicatorStyle="black"
                         contentContainerStyle={{
                             paddingBottom: 20,
-                            paddingTop: 30,
-                            backgroundColor: '#f2f2f2',
+                            paddingTop: 15,
+                            backgroundColor: '#fff',
                         }}
-                        showsHorizontalScrollIndicator={true}
+                        showsHorizontalScrollIndicator={false}
                     >
                         {searchOptions.map((option: any, i: number) => {
                             if (results[option].length === 0 || loadingSearchResults) {
@@ -2861,7 +3466,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     marginRight: 20,
                                     // maxHeight: 450,
                                     borderRadius: 4,
-                                    backgroundColor: '#f2f2f2',
+                                    backgroundColor: '#fff',
                                  }} key={i}>
                                     <Text
                                         style={{
@@ -2896,6 +3501,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             let channelName = '';
                                             let colorCode = '';
                                             let subscribed = false;
+                                            let messageSenderName = '';
+                                            let messageSenderAvatar = '';
 
                                             if (option === 'Classroom') {
                                                 const { title, subtitle } = htmlStringParser(obj.cue);
@@ -2945,19 +3552,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     colorCode = filterChannel[0].colorCode;
                                                 }
                                             } else if (option === 'Messages') {
-                                                if (
-                                                    obj.message[0] === '{' &&
-                                                    obj.message[obj.message.length - 1] === '}'
-                                                ) {
-                                                    const o = JSON.parse(obj.message);
-                                                    t = o.title;
-                                                    s = o.type;
+                                                
+                                                const users = obj.groupId.users;
+
+                                                const sender = users.filter((user: any) => user._id === obj.sentBy)[0]
+
+                                                if (obj.groupId && obj.groupId.name) {
+                                                    messageSenderName = obj.groupId.name + ' > ' + sender.fullName
+                                                    messageSenderAvatar = obj.groupId.image ? obj.groupId.image : ''
                                                 } else {
-                                                    const { title, subtitle } = htmlStringParser(obj.message);
-                                                    t = title;
-                                                    s = subtitle;
+                                                    messageSenderName = sender.fullName
+                                                    messageSenderAvatar = sender.avatar ? sender.avatar : ''
                                                 }
                                             }
+
+                                            console.log("Obj", obj)
 
                                             return (
                                                     <SearchResultCard
@@ -2967,7 +3576,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         colorCode={colorCode}
                                                         option={option}
                                                         subscribed={subscribed}
-                                                        handleSub={() => handleSub(obj.channelId)}
+                                                        messageSenderName={messageSenderName}
+                                                        messageSenderAvatar={messageSenderAvatar}
+                                                        handleSub={() => handleSub(obj._id)}
                                                         onPress={async () => {
                                                             if (option === 'Classroom') {
                                                                 props.openCueFromCalendar(
@@ -3022,7 +3633,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 </View>
                             );
                         })}
-                    </ScrollView>
+                    </ScrollView> */}
                 </View>
             </View>
         </View>
@@ -3040,6 +3651,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         else if (currentDate.isSame(date, 'year')) return date.format('MMM DD');
         else return date.format('MM/DD/YYYY');
     }
+
+    console.log("Active search tab", activeSearchResultsTab)
+    console.log("Search tabs", searchResultTabs)
 
    
 
@@ -3071,7 +3685,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }}
             key={selectedWorkspace}
         >
-            <View
+            {props.hideNavbarDiscussions ? null : <View
                 style={{
                     paddingHorizontal: 20,
                     // height: 60,
@@ -3096,7 +3710,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 setSelectedWorkspace('');
                                 // props.setSelectedWorkspace('');
                             }}
-                            style={{
+                            containerStyle={{
                                 position: 'absolute',
                                 left: 0,
                                 borderRadius: 20,
@@ -3107,7 +3721,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 alignItems: 'center',
                             }}
                         >
-                            <Ionicons size={27} name="arrow-back-outline" />
+                            <Ionicons size={31} name="arrow-back-outline" />
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             {/* <View
@@ -3120,7 +3734,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     backgroundColor: selectedWorkspace.split('-SPLIT-')[3] || 'black',
                                 }}
                             /> */}
-                            {/* <Text
+                            <Text
                                 ellipsizeMode={'tail'}
                                 numberOfLines={1}
                                 style={{
@@ -3133,8 +3747,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 }}
                             >
                                 {selectedWorkspace.split('-SPLIT-')[0]}
-                            </Text> */}
-                            {selectedWorkspace === 'My Notes' ? 
+                            </Text>
+                            {/* {selectedWorkspace === 'My Notes' ? 
                             <Text
                                 ellipsizeMode={'tail'}
                                 numberOfLines={1}
@@ -3170,13 +3784,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     {getActiveTab()}
                                 </Text>
                                 <Ionicons size={20} name="chevron-down-outline" style={{ paddingTop: 2 }} />
-                            </TouchableOpacity>}
+                            </TouchableOpacity>} */}
                         </View>
 
                         {/* Filter icon */}
                         {indexMap[selectedWorkspace] === 0 ? (
                             <TouchableOpacity
-                                style={{
+                                containerStyle={{
                                     position: 'absolute',
                                     marginLeft: 0,
                                     right: -1,
@@ -3190,42 +3804,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 />
                             </TouchableOpacity>
                         ) : null}
-                        {indexMap[selectedWorkspace] === 1 || (indexMap[selectedWorkspace] === 2 && selectedWorkspace.split('-SPLIT-')[2] === userId) ? (
-                            <TouchableOpacity
-                                style={{
-                                    position: 'absolute',
-                                    marginLeft: 0,
-                                    right: -1,
-                                }}
-                                onPress={() => {
-                                    if (indexMap[selectedWorkspace] === 1) {
-                                        setShowNewPostModal(!showNewPostModal)
-                                    } else {
-                                        setShowInstantMeeting(!showInstantMeeting)
-                                    }
-                                }}
-                            >
-                                <Ionicons
-                                    name={'add-outline'}
-                                    size={27}
-                                    color="black"
-                                />
-                            </TouchableOpacity>
-                        ) : null}
                         {
                             indexMap[selectedWorkspace] === 3 && selectedWorkspace.split('-SPLIT-')[2] === userId ?
                                 (<TouchableOpacity
-                                    style={{
+                                    containerStyle={{
                                         position: 'absolute',
                                         marginLeft: 0,
                                         right: -1,
                                     }}
                                     onPress={() => {
-                                        if (indexMap[selectedWorkspace] === 1) {
-                                            setShowNewPostModal(!showNewPostModal)
-                                        } else {
-                                            setShowInstantMeeting(!showInstantMeeting)
-                                        }
+                                        setExportScores(true)
                                     }}
                                 >
                                 <Ionicons name='download-outline' size={23}  color="black" />
@@ -3246,37 +3834,90 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </Text> : null
                         }
 
-                        {!showSearchMobile ? <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', }}>
-                            <TouchableOpacity onPress={() => {
-                                // props.openCreate()
-                                setShowNewContentModal(true)
+                        {
+                            showSearchMobile ? <View style={{
+                                width: '100%',
+                                backgroundColor: '#f2f2f2',
+                                borderRadius: 22,
+                                height: 45,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: 14,
                             }}>
-                                <Ionicons name={'add-outline'} size={28} color="black" />
-                            </TouchableOpacity>
-                        </View> : null}
+                                <Ionicons name='search-outline' size={24} color='#1f1f1f' />
+                                <DefaultInput
+                                    style={{
+                                        paddingHorizontal: 10,
+                                        width: 300,
+                                        color: '#000',
+                                        fontSize: 15,
+                                        flex: 1,
+                                        paddingVertical: 8,
+                                        // marginTop: 10,
+                                        marginRight: searchTerm === '' ? 10 : 15,
+                                        // backgroundColor: '#f2f2f2',
+                                        // borderRadius: 18,
+                                        // borderBottomColor: '#cfcfcf',
 
+                                        // borderBottomWidth: 1
+                                    }}
+                                    placeholder={'Content, Inbox, Discussion, etc.  '}
+                                    placeholderTextColor="#656565"
+                                    value={searchTerm}
+                                    autoFocus={false}
+                                    onChangeText={(val) => setSearchTerm(val)}
+                                    onFocus={() => setShowSearchMobile(true)}
+                                    returnKeyType="search"
+                                    onSubmitEditing={() => {
+                                        updateRecentSearches()
+                                    }}
+                                    clearButtonMode="while-editing"
+                                />
+                                {searchTerm !== '' ? <TouchableOpacity
+                                    onPress={() => {
+                                        // setShowSearchMobile(!showSearchMobile);
+                                        Keyboard.dismiss()
+                                        setSearchTerm('');
+                                    }}
+                                    containerStyle={{
+                                        marginLeft: 'auto',
 
-                        {showSearchMobile ? <DefaultInput
+                                    }}
+                                >
+                                    <Ionicons
+                                        size={22}
+                                        name={'close-outline'}
+                                        color="black"
+                                    />
+                                </TouchableOpacity> : null}
+                            </View> : null
+                        }
+
+                        {/* {showSearchMobile ? <DefaultInput
                                 style={{
                                     paddingHorizontal: 10,
+                                    marginLeft: 10,
                                     width: 300,
                                     color: '#000',
                                     fontSize: 14,
                                     flex: 1,
                                     paddingVertical: 8,
                                     // marginTop: 10,
-                                    marginRight: searchTerm === '' ? 0 : 15,
-                                    backgroundColor: '#f2f2f2',
-                                    borderRadius: 18
+                                    marginRight: searchTerm === '' ? 10 : 15,
+                                    // backgroundColor: '#f2f2f2',
+                                    // borderRadius: 18,
+                                    borderBottomColor: '#cfcfcf',
+
+                                    borderBottomWidth: 1
                                 }}
-                                placeholder="Search..."
+                                placeholder={'🔍'}
                                 placeholderTextColor="#656565"
                                 value={searchTerm}
                                 autoFocus={false}
                                 onChangeText={(val) => setSearchTerm(val)}
                                 onFocus={() => setShowSearchMobile(true)}
-                            /> : null}
-
+                                returnKeyType="search"
+                            /> : null} */}
 
                         {/* {showSearchMobile ? null : <Image
                             source={logo}
@@ -3347,13 +3988,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 color="black"
                             />
                         </TouchableOpacity>} */}
-                        {showSearchMobile && searchTerm !== '' ? <TouchableOpacity
+                        {/* {showSearchMobile && searchTerm !== '' ? <TouchableOpacity
                             onPress={() => {
                                 // setShowSearchMobile(!showSearchMobile);
                                 Keyboard.dismiss()
                                 setSearchTerm('');
                             }}
-                            style={{
+                            containerStyle={{
                                 marginLeft: 'auto',
 
                             }}
@@ -3363,10 +4004,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 name={'close-outline'}
                                 color="black"
                             />
-                        </TouchableOpacity> : null}
+                        </TouchableOpacity> : null} */}
                     </View>
                 )}
-            </View>
+            </View>}
 
             {/* Render all courses */}
             {selectedWorkspace === '' ? (
@@ -3379,6 +4020,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         contentContainerStyle={{
                             paddingBottom: 30
                         }}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={props.refreshingWorkspace}
+                                onRefresh={props.onRefreshWorkspace}
+                                tintColor="#1f1f1f"
+                                progressBackgroundColor="#1f1f1f"
+                                size={14}
+                            />
+                        }
                     >
                         <View
                             style={{
@@ -3397,14 +4047,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             setSelectedWorkspace(key);
                                         }}
                                         key={ind}
-                                        style={{
-                                            height: 60,
+                                        containerStyle={{
+                                            
                                             backgroundColor: '#fff',
                                             // borderRadius: 17,
-                                            borderTopColor: '#f2f2f2',
-                                            // borderTopWidth: ind === 0 ? 1 : 0,
-                                            borderBottomColor: '#f2f2f2',
-                                            borderBottomWidth: 1,
                                             marginRight: ind % 2 === 0 ? 20 : 0,
                                             // maxWidth: '100%',
                                             width: '100%',
@@ -3418,10 +4064,20 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             overflow: 'hidden',
                                             shadowOpacity: 0.12,
                                             shadowRadius: 7,
+                                           
+                                           
+                                        }}
+                                        style={{
+                                            display: 'flex',
                                             alignItems: 'center',
                                             flexDirection: 'row',
+                                            borderTopColor: '#f2f2f2',
+                                            // borderTopWidth: ind === 0 ? 1 : 0,
+                                            borderBottomColor: '#f2f2f2',
+                                            borderBottomWidth: 1,
                                             paddingVertical: 10,
                                             paddingLeft: 10,
+                                            height: 60,
                                         }}
                                     >
                                         <View
@@ -3460,15 +4116,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     horizontal={false}
                     contentContainerStyle={{
                         backgroundColor: '#fff',
-                        paddingTop: 10,
+                        // paddingTop: 10,
                     }}
                     style={{
                         height: '100%',
                     }}
                     indicatorStyle="black"
-                    alwaysBounceVertical={false}
-                    // decelerationRate={0}
-                    bounces={false}
+                    ref={DashboardScrollViewRef}
+                    // alwaysBounceVertical={false}
+
+                    // bounces={false}
                 >
                     {/* {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? renderTabs(selectedWorkspace) : null} */}
                     <View
@@ -3486,7 +4143,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 width: '100%',
                                 backgroundColor: tabs[indexMap[selectedWorkspace]] === 'Content' ? '#f2f2f2' : '#fff',
                                 // This changes the height for all
-                                height: tabs[indexMap[selectedWorkspace]] === 'Settings' ? 'auto' : windowHeight - (Platform.OS === 'android' ? 90 : 200)
+                                height: tabs[indexMap[selectedWorkspace]] === 'Settings' || (tabs[indexMap[selectedWorkspace]] === 'Discuss' && props.hideNavbarDiscussions) ? 'auto' : windowHeight - (Platform.OS === 'android' ? 90 : 200)
                             }}
                         >
                             {[selectedWorkspace] ? (
@@ -3513,6 +4170,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 }
                                                 showNewPostModal={() => setShowNewPostModal(true)}
                                                 channelColor={selectedWorkspace.split('-SPLIT-')[3]}
+                                                setHideNavbarDiscussions={props.setHideNavbarDiscussions}
                                             />
                                         ) : // Meet
                                         indexMap[selectedWorkspace] === 2 ? (
@@ -3548,6 +4206,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     openCueFromGrades={props.openCueFromCalendar}
                                                     colorCode={selectedWorkspace.split('-SPLIT-')[3]}
                                                     activeTab={'meetings'}
+                                                    exportScores={exportScores}
+                                                    setExportScores={(exp: boolean) => setExportScores(exp)}
                                                 />
                                             </View>
                                         ) : // Scores
@@ -3571,12 +4231,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 colorCode={selectedWorkspace.split('-SPLIT-')[3]}
                                                 activeTab={'scores'}
                                                 isEditor={selectedWorkspace.split('-SPLIT-')[2] === userId}
+                                                exportScores={exportScores}
+                                                setExportScores={(exp: boolean) => setExportScores(exp)}
                                             />
                                         ) : (
                                             <View
                                                 style={{
                                                     width: '100%',
                                                     // maxWidth: 400,
+                                                    height: '100%',
                                                     alignSelf: 'center',
                                                     borderTopRightRadius: 10,
                                                     borderBottomRightRadius: 10,
@@ -3584,12 +4247,26 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             >
                                                 <ChannelSettings
                                                     channelId={selectedWorkspace.split('-SPLIT-')[1]}
-                                                    refreshSubscriptions={props.refreshSubscriptions}
+                                                    refreshSubscriptions={() => {
+                                                        setSelectedWorkspace('')
+                                                        props.refreshSubscriptions()
+                                                    }}
                                                     closeModal={() => {
-                                                        // setShowHome(false)
-                                                        // closeModal()
+                                                        props.onRefreshWorkspace()
                                                     }}
                                                     channelColor={selectedWorkspace.split('-SPLIT-')[3]}
+                                                    userId={userId}
+                                                    scrollToTop={() => {
+                                                        if (DashboardScrollViewRef && DashboardScrollViewRef.current) {
+                                                            DashboardScrollViewRef.current.scrollTo({
+                                                                y: 0,
+                                                                animated: false
+                                                            })
+                                                        }
+                                                    }}
+                                                    refreshChannelSettings={refreshChannelSettings}
+                                                    setRefreshChannelSettings={(refresh: boolean) => setRefreshChannelSettings(refresh)}
+                                                    setShowInviteByEmailsModal={(show: boolean) => setShowInviteByEmailsModal(show)}
                                                 />
                                             </View>
                                         )
@@ -3816,7 +4493,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             shadowOffset={2}
                             shadowOpacity={0.12}
                             shadowRadius={collapseMap[key] ? 10 : 0}
-                            elevation={500000}
+                            // elevation={500000}
                             containerStyle={{
                                 height: 'auto',
                             }}
@@ -3861,7 +4538,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         }}
                                     >
                                         <TouchableOpacity
-                                            style={{
+                                            containerStyle={{
                                                 flex: 1,
                                                 flexDirection: 'row',
                                                 backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
@@ -3933,7 +4610,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         tempCollapse[key] = !collapseMap[key];
                                                         setCollapseMap(tempCollapse);
                                                     }}
-                                                    style={{ backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff' }}
+                                                    containerStyle={{ backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff' }}
                                                 >
                                                     <Text
                                                         style={{
@@ -3970,7 +4647,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         }}
                                     >
                                         <TouchableOpacity
-                                            style={{
+                                            containerStyle={{
                                                 flex: 1,
                                                 flexDirection: 'row',
                                                 backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
@@ -4041,7 +4718,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                                                         setCollapseMap(tempCollapse);
                                                     }}
-                                                    style={{ backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff' }}
+                                                    containerStyle={{ backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff' }}
                                                 >
                                                     <Text
                                                         style={{
@@ -4128,7 +4805,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                                 key.split('-SPLIT-')[2]
                                                                             )
                                                                         }
-                                                                        style={{
+                                                                        containerStyle={{
                                                                             backgroundColor: '#f2f2f2',
                                                                             overflow: 'hidden',
                                                                             height: 35,
@@ -4184,6 +4861,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                 openCueFromGrades={props.openCueFromCalendar}
                                                                 colorCode={key.split('-SPLIT-')[3]}
                                                                 activeTab={'meetings'}
+                                                                exportScores={exportScores}
+                                                                setExportScores={(exp: boolean) => setExportScores(exp)}
                                                             />
                                                         </View>
                                                     ) : // Scores
@@ -4207,6 +4886,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             colorCode={key.split('-SPLIT-')[3]}
                                                             activeTab={'scores'}
                                                             isEditor={key.split('-SPLIT-')[2] === userId}
+                                                            exportScores={exportScores}
+                                                            setExportScores={(exp: boolean) => setExportScores(exp)}
                                                         />
                                                     ) : (
                                                         <View
@@ -4226,6 +4907,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     // closeModal()
                                                                 }}
                                                                 channelColor={key.split('-SPLIT-')[3]}
+                                                                userId={userId}
                                                             />
                                                         </View>
                                                     )
@@ -4417,6 +5099,65 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </ScrollView>
         </View>
     );
+
+    const renderPasswordInputModal = () => {
+        return (<View style={{ paddingHorizontal: 40}}>
+                <Text style={{
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    color: '#000000',
+                    textAlign: 'center',
+                    marginBottom: 10
+                }}>
+                    Enter course password 
+                </Text>
+                <TextInput
+                    value={channelPassword}
+                    placeholder={''}
+                    textContentType={"none"}
+                    autoCompleteType={'off'}
+                    onChangeText={val => {
+                        setChannelPassword(val)
+                    }}
+                    autoFocus={true}
+                    placeholderTextColor={'#7d7f7c'}
+                />
+                <RNTouchableOpacity
+                    onPress={() => {
+                        console.log("Handle subscribe")
+                        setShowChannelPasswordInput(false)
+                        handleSubscribe(channelPasswordId, channelPassword)
+                    }}
+                    // disabled={channelPassword === ''}
+                    style={{
+                        marginTop: 10,
+                        backgroundColor: '#006aff',
+                        width: 130,
+                        alignSelf: 'center',
+                        overflow: 'hidden',
+                        height: 35,
+                        justifyContent: 'center', flexDirection: 'row',
+                        borderRadius: 15,
+                    }}>
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 34,
+                        color: 'white',
+                        fontSize: 12,
+                        backgroundColor: '#006aff',
+                        paddingHorizontal: 20,
+                        fontFamily: 'inter',
+                        height: 35,
+                        // width: 180,
+                        width: 130,
+                        borderRadius: 15,
+                        textTransform: 'uppercase'
+                    }}>
+                        Subscribe
+                    </Text>
+                </RNTouchableOpacity>
+        </View>)
+    }
 
     // MAIN RETURN
     return (
@@ -4697,6 +5438,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         option={props.option}
                         version={props.version}
                         createOption={props.createOption}
+                        showImportCreate={props.showImportCreate}
+                        setShowImportCreate={props.setShowImportCreate}
+                        setCreateActiveTab={props.setCreateActiveTab}
+                        createActiveTab={props.createActiveTab}
+                        setDisableCreateNavbar={props.setDisableCreateNavbar}
                     />
                 ) : (
                     <View
@@ -4736,7 +5482,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 ? overviewMobile
                                 : overview
                             : null}
-                        {Dimensions.get('window').width < 768 &&
+                        {/* {Dimensions.get('window').width < 768 &&
                         selectedWorkspace &&
                         indexMap[selectedWorkspace] === 0 && categoryPositionList.length > 5 ? (
                             <TouchableOpacity
@@ -4776,7 +5522,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <Ionicons name="list-outline" size={25} />
                                 </Text>
                             </TouchableOpacity>
-                        ) : null}
+                        ) : null} */}
                         {props.option === 'To Do' && !showSearchMobile ? (
                             <CalendarX
                                 tab={props.tab}
@@ -4854,8 +5600,40 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     callbackNode={fall}
                 />
             )}
+            {
+                showInviteByEmailsModal ?
+                    <BottomSheet 
+                        snapPoints={[0, Dimensions.get('window').height]}
+                        close={() => {
+                            setShowInviteByEmailsModal(false)
+                        }}
+                        isOpen={showInviteByEmailsModal}
+                        title={'Add Viewers with emails'}
+                        renderContent={() => renderInviteEmailsModalContent()}
+                        header={true}
+                        callbackNode={fall}
+                    /> : null
+            }
 
-            {showWorkspaceOptionsModal && (
+            {
+                showChannelPasswordInput ?
+                    <BottomSheet 
+                        snapPoints={[0, windowHeight - (Platform.OS === 'android' ? 100 : 100
+                        )]}
+                        close={() => {
+                            setChannelPassword('')
+                            setChannelPasswordId('')
+                            setShowChannelPasswordInput(false)
+                        }}
+                        isOpen={showChannelPasswordInput}
+                        // title={'Add a course'}
+                        renderContent={() => renderPasswordInputModal()}
+                        header={false}
+                        callbackNode={fall}
+                    /> : null
+            }
+
+            {/* {showWorkspaceOptionsModal && (
                 <BottomSheet
                     snapPoints={[0, (Platform.OS === 'ios' ? '55%' : '60%')]}
                     close={() => {
@@ -4867,9 +5645,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     header={false}
                     callbackNode={fall}
                 />
-            )}
+            )} */}
 
-            {showNewPostModal || showInstantMeeting || showWorkspaceOptionsModal || showNewContentModal ? (
+            {showNewPostModal || showInstantMeeting || showWorkspaceOptionsModal || showNewContentModal || showInviteByEmailsModal ? (
                 <Reanimated.View
                     style={{
                         alignItems: 'center',
@@ -4882,14 +5660,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         position: 'absolute',
                     }}
                 >
-                    <TouchableOpacity style={{
+                    <TouchableOpacity containerStyle={{
                         backgroundColor: 'transparent',
                         width: '100%',
                         height: '100%',
                     }}
                     onPress={() => {
                         setShowNewPostModal(false)
+                        props.setShowNewPost(false);
                         setShowInstantMeeting(false)
+                        props.setShowNewMeeting(false);
                         setShowWorkspaceOptionsModal(false)
                         setShowNewContentModal(false)
                     }}
@@ -4897,7 +5677,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </TouchableOpacity>
                 </Reanimated.View>
             ) : null}
-            {showFilterModal || showCategoryList ? (
+            {showFilterModal || showCategoryList  || showChannelPasswordInput ? (
                 <Reanimated.View
                     style={{
                         alignItems: 'center',
@@ -4910,7 +5690,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         position: 'absolute',
                     }}
                 >
-                    <TouchableOpacity style={{
+                    <TouchableOpacity containerStyle={{
                         backgroundColor: 'transparent',
                         width: '100%',
                         height: '100%',
@@ -4918,6 +5698,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     onPress={() => {
                         setShowCategoryList(false)
                         setShowFilterModal(false)
+                        setShowChannelPasswordInput(false)
                     }}
                     >
                     </TouchableOpacity>
@@ -4928,7 +5709,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     show={showNewPostModal}
                     // categories={categories}
                     categoriesOptions={newPostCategories}
-                    onClose={() => setShowNewPostModal(false)}
+                    onClose={() => {
+                        setShowNewPostModal(false)
+                        props.setShowNewPost(false);
+                    }}
                     onSend={createNewThread}
                     callbackNode={fall}
                 />
@@ -4938,6 +5722,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     snapPoints={[0, Dimensions.get('window').height]}
                     close={() => {
                         setShowInstantMeeting(false);
+                        props.setShowNewMeeting(false);
                         setInstantMeetingChannelId('');
                         setInstantMeetingCreatedBy('');
                         setInstantMeetingTitle('');

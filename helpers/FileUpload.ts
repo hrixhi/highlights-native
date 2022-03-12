@@ -87,7 +87,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
         let type = nameParts[nameParts.length - 1];
         if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
             Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
-            return { type: '', url: '', name };
+            return { type: '', url: '', name: '' };
         }
 
         // const { file } = res;
@@ -128,7 +128,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
         }
 
         const file = {
-            name: name,
+            name: name.split('.')[0],
             size: size,
             uri: uri,
             type: 'application/' + type
@@ -145,7 +145,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
             return {
                 url: data.url,
                 type,
-                name
+                name: name.split('.')[0]
             };
         } else {
             return { type: '', url: '', name: '' };

@@ -92,6 +92,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     // FILTERS
     const [allItems, setAllItems] = useState<any[]>([]);
+    const [itemsMap, setItemsMap] = useState<any>({});
     const [filterByChannel, setFilterByChannel] = useState('All');
     const [filterEventsType, setFilterEventsType] = useState('All');
 
@@ -177,7 +178,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const renderTimeMessage = () => {
         const currentTime = new Date()
 
-        if (currentTime.getHours() < 12 && currentTime.getHours() >= 4) {
+        if (currentTime.getHours() < 12 && currentTime.getHours() > 0) {
             return 'Good Morning'
         } else if (currentTime.getHours() >= 12 && currentTime.getHours() < 17) {
             return 'Good Afternoon' 
@@ -213,14 +214,27 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     useEffect(() => {
         let total = [...allItems];
 
+        setItems({})
+        setItemsMap({})
+
         if (filterEventsType !== 'All') {
             if (filterEventsType === 'Meetings') {
                 total = total.filter((e: any) => e.meeting);
             } else if (filterEventsType === 'Submissions') {
-                total = total.filter((e: any) => e.cueId !== '');
+                total = total.filter((e: any) => e.cueId !== '' && !e.end);
+
             } else if (filterEventsType === 'Events') {
-                total = total.filter((e: any) => e.cueId === '' && !e.meeting);
+                total = total.filter((e: any) => !e.cueId && !e.meeting && e.end !== null);
             }
+        }
+
+        // Filter between start and end
+        if (filterStart && filterEnd) {
+
+            total = total.filter((e: any) => {
+                return (new Date(e.start) > filterStart && new Date(e.start) < filterEnd)
+            })
+
         }
 
         let filterByChannels = [];
@@ -248,6 +262,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }
         });
 
+        // console.log("Total post filter length", filterByChannels.length)
+
         // Selected date (current date) should never be empty, otherwise Calendar will keep loading
         const todayStr = timeToString(new Date());
 
@@ -255,8 +271,33 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             loadedItems[todayStr] = [];
         }
 
+        Object.keys(loadedItems).map((date: string) => {
+            const events = loadedItems[date]
+
+            let sortedEvents = events.sort((a: any, b: any) => {
+                return new Date(a.start) > new Date(b.start)
+            })
+
+            sortedEvents = events.sort((a: any, b: any) => {
+                return a.title > b.title
+            })
+
+            loadedItems[date] = sortedEvents
+        })
+
+
+        for (let i = -120; i < 120; i++) {
+            const time = Date.now() + i * 24 * 60 * 60 * 1000;
+            const strTime = timeToString(new Date(time));
+
+            if (!loadedItems[strTime]) {
+                loadedItems[strTime] = [];
+            } 
+        }
+
         setItems(loadedItems);
-    }, [filterByChannel, filterEventsType]);
+        setItemsMap(loadedItems)
+    }, [filterByChannel, filterEventsType, filterStart, filterEnd, allItems]);
 
     /**
      * @description Fetch user activity
@@ -350,7 +391,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     backgroundColor: 'white'
                 }}
             >
-                <InsetShadow
+                {/* <InsetShadow
                     shadowColor={'#000'}
                     shadowOffset={2}
                     shadowOpacity={0.12}
@@ -359,7 +400,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     containerStyle={{
                         height: 'auto'
                     }}
-                >
+                > */}
+                <View>
                     <ScrollView style={{
                         height: Dimensions.get('window').height * 0.8
                     }} horizontal={false} showsVerticalScrollIndicator={true} indicatorStyle={'black'}>
@@ -372,18 +414,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 }
                             }
 
-                            const date = new Date(act.date);
-
-                            if (filterStart && filterEnd) {
-                                const start = new Date(filterStart);
-                                if (date < start) {
-                                    return;
-                                }
-                                const end = new Date(filterEnd);
-                                if (date > end) {
-                                    return;
-                                }
-                            }
 
                             return (
                                 <TouchableOpacity
@@ -541,7 +571,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             );
                         })}
                     </ScrollView>
-                </InsetShadow>
+                {/* </InsetShadow> */}
+                </View>
             </View>
         );
     };
@@ -756,7 +787,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const loadEvents = useCallback(async () => {
         setLoadingEvents(true);
-        console.log("Begin loading events", moment(new Date()).format('mm:ss a'))
 
         const u = await AsyncStorage.getItem('user');
         let parsedUser: any = {};
@@ -776,46 +806,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             })
             .then(res => {
                 if (res.data.date && res.data.date.getCalendar) {
-                    console.log("total Fetched events", res.data.date.getCalendar.length)
-                    const parsedEvents: any[] = [];
-                    res.data.date.getCalendar.map((e: any) => {
-                        const { title } = htmlStringParser(e.title);
 
-                        let colorCode = '#202025';
-
-                        const matchSubscription = props.subscriptions.find((sub: any) => {
-                            return sub.channelId === e.channelId;
-                        });
-
-                        if (matchSubscription && matchSubscription !== undefined) {
-                            colorCode = matchSubscription.colorCode;
-                        }
-
-                        parsedEvents.push({
-                            eventId: e.eventId ? e.eventId : '',
-                            originalTitle: title,
-                            title: e.channelName ? e.channelName + ' - ' + title : title,
-                            start: new Date(e.start),
-                            end: datesEqual(e.start, e.end) ? null : new Date(e.end),
-                            dateId: e.dateId,
-                            description: e.description,
-                            createdBy: e.createdBy,
-                            channelName: e.channelName,
-                            recurringId: e.recurringId,
-                            recordMeeting: e.recordMeeting ? true : false,
-                            meeting: e.meeting,
-                            channelId: e.channelId,
-                            cueId: e.cueId,
-                            color: colorCode,
-                            submitted: e.submitted,
-                            zoomMeetingId: e.zoomMeetingId,
-                            zoomStartUrl: e.zoomStartUrl,
-                            zoomJoinUrl: e.zoomJoinUrl,
-                            zoomMeetingScheduledBy: e.zoomMeetingScheduledBy,
-                            zoomMeetingCreatorProfile: e.zoomMeetingCreatorProfile,
-                            meetingLink: e.meetingLink ? e.meetingLink : null
-                        });
-                    });
+                    // console.log("Get calendar", res.data.date.getCalendar)
 
                     const loadedItems: { [key: string]: any } = {};
 
@@ -865,6 +857,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         allEvents.push(modifiedItem);
 
                         if (!loadedItems[strTime]) {
+                            // console.log("New date", strTime)
                             loadedItems[strTime] = [modifiedItem];
                         } else {
                             const existingItems = loadedItems[strTime];
@@ -879,20 +872,41 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         loadedItems[todayStr] = [];
                     }
 
+                    // console.log("Before sort")
+
+                    Object.keys(loadedItems).map((date: string) => {
+                        const events = loadedItems[date]
+                        
+            
+                        let sortedEvents = events.sort((a: any, b: any) => {
+                            return new Date(a.start) > new Date(b.start)
+                        })
+
+                        sortedEvents = events.sort((a: any, b: any) => {
+                            return a.title > b.title
+                        })
+
+                        loadedItems[date] = sortedEvents
+                    })
+
+
+                    for (let i = -120; i < 120; i++) {
+                        const time = Date.now() + i * 24 * 60 * 60 * 1000;
+                        const strTime = timeToString(new Date(time));
+
+                        if (!loadedItems[strTime]) {
+                            loadedItems[strTime] = [];
+                        } 
+                    }
+
+
                     setItems(loadedItems);
+                    setItemsMap(loadedItems)
                     setAllItems(allEvents);
                 }
 
-                console.log("End loading events", moment(new Date()).format('mm:ss a'))
-
                 setLoadingEvents(false);
 
-                modalAnimation.setValue(0);
-                Animated.timing(modalAnimation, {
-                    toValue: 1,
-                    duration: 150,
-                    useNativeDriver: true
-                }).start();
             })
             .catch(err => {
                 console.log(err);
@@ -915,9 +929,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         return time;
     };
-
-    console.log("Show start time android", showStartTimeAndroid)
-    console.log("Show end time android", showEndTimeAndroid)
 
     const renderStartDateTimePicker = () => {
         return (
@@ -1830,37 +1841,67 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         loadChannels();
     }, [props.subscriptions]);
 
-    const loadItemsForMonth = (month: any) => {
+    const loadItemsForMonth = useCallback((month: any) => {
         const itemsWithEmptyDates: { [label: string]: any } = {};
-        for (let i = -90; i < 90; i++) {
-            const time = month.timestamp + i * 24 * 60 * 60 * 1000;
-            const strTime = timeToString(time);
 
-            if (!items[strTime]) {
-                itemsWithEmptyDates[strTime] = [];
+        setTimeout(() => {
+            for (let i = -120; i < 120; i++) {
+                const time = month.timestamp + i * 24 * 60 * 60 * 1000;
+                const strTime = timeToString(new Date(time));
+    
+                if (!itemsMap[strTime]) {
+                    itemsWithEmptyDates[strTime] = [];
+                } else {
+                    itemsWithEmptyDates[strTime] = itemsMap[strTime]
+                }
             }
-        }
 
-        Object.keys(items).forEach(key => {
-            itemsWithEmptyDates[key] = items[key];
-        });
+            // let allEventsLoad: any[] = []
+            
+            // Object.keys(itemsWithEmptyDates).map((date: string) => {
+            //     allEventsLoad = [...allEventsLoad, itemsWithEmptyDates[date]]
+            // })
 
-        // Selected date (current date) should never be empty, otherwise Calendar will keep loading
-        const todayStr = timeToString(new Date());
+            // console.log("alleventsload length", allEventsLoad.length)
+    
+            // Object.keys(items).forEach(key => {
+            //     itemsWithEmptyDates[key] = items[key];
+            // });
+    
+            // Selected date (current date) should never be empty, otherwise Calendar will keep loading
+            const todayStr = timeToString(new Date());
+    
+            if (!itemsWithEmptyDates[todayStr]) {
+                itemsWithEmptyDates[todayStr] = [];
+            }
 
-        if (!itemsWithEmptyDates[todayStr]) {
-            itemsWithEmptyDates[todayStr] = [];
-        }
+            Object.keys(itemsWithEmptyDates).map((date: string) => {
+                const events = itemsWithEmptyDates[date]
+    
+                let sortedEvents = events.sort((a: any, b: any) => {
+                    return new Date(a.start) > new Date(b.start)
+                })
 
-        setItems(itemsWithEmptyDates);
-    };
+                sortedEvents = events.sort((a: any, b: any) => {
+                    return a.title > b.title
+                })
+    
+                itemsWithEmptyDates[date] = sortedEvents
+            })
+            
+            setItems(itemsWithEmptyDates);
+        }, 1000)
+
+        
+    }, [itemsMap, items]);
 
     const timeToString = (time: any) => {
         const date = new Date(time);
-        return date.toISOString().split('T')[0];
+        return moment(date).format('YYYY-MM-DD')
     };
 
     const renderItem = (item: any) => {
+
         const { title } = htmlStringParser(item.title);
 
         const assingmentDue = new Date() > new Date(item.start);
@@ -1869,7 +1910,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         const startTime = new Date(item.start);
         const endTime = new Date(item.end);
 
-        const displayDate = datesEqual(item.start, item.end)
+        const displayDate = !item.end
             ? moment(new Date(item.start)).format('h:mm a')
             : moment(new Date(item.start)).format('h:mm a') + ' to ' + moment(new Date(item.end)).format('h:mm a');
 
@@ -2921,11 +2962,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <TouchableOpacity
                         style={{
                             marginRight: 15,
-                            marginLeft: 10
+                            marginLeft: 10,
+                            paddingLeft: 10
                         }}
                         onPress={() => setActiveTab('agenda')}
                     >
-                        <Ionicons name={'arrow-back-outline'} size={27} color="black" />
+                        <Ionicons name={'arrow-back-outline'} size={31} color="black" />
                     </TouchableOpacity>
                     :
                     <Text style={{
@@ -2936,6 +2978,22 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }}>
                         {renderTimeMessage()}
                     </Text>
+                }
+
+                {
+                    activeTab === 'activity' ?
+                    <Text
+                        style={{
+                            color: '#1f1f1f',
+                            fontFamily: 'Inter',
+                            fontWeight: 'bold',
+                            paddingLeft: 10,
+                            fontSize: Dimensions.get('window').width < 768 ? 22 : 30
+                        }}
+                    >
+                        Activity
+                    </Text>
+                    : null
                 }
 
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', marginRight: 20 }}>
@@ -3036,17 +3094,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Ionicons name={'checkmark-done-outline'} size={23} color="black" />
                     </TouchableOpacity> : null}
 
-                    
-                    <TouchableOpacity style={{
-                        marginRight: activeTab === 'agenda' ? 15 : 0,
-                    }} onPress={() => setShowFilterModal(!showFilterModal)}>
+                    <TouchableOpacity onPress={() => setShowFilterModal(!showFilterModal)}>
                         <Ionicons name={'filter-outline'} size={23} color="black" />
                     </TouchableOpacity>
-
-                    {activeTab === 'agenda' ? <TouchableOpacity onPress={() => setShowAddEvent(true)}>
-                        <Ionicons name={'add-outline'} size={28} color="black" />
-                    </TouchableOpacity> : null}
-
 
                 </View>
             </View>
@@ -3063,13 +3113,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Agenda
                             initialNumToRender={10}
                             showClosingKnob={true}
+                            showOnlySelectedDayItems={Platform.OS === 'android'}
+                            // showOnlySelectedDayItems={true}
                             items={items}
                             loadItemsForMonth={loadItemsForMonth}
-                            selected={new Date().toISOString().split('T')[0]}
+                            selected={timeToString(new Date())}
                             renderItem={renderItem}
                             rowHasChanged={rowHasChanged}
-                            pastScrollRange={12}
-                            futureScrollRange={12}
+                            pastScrollRange={3}
+                            futureScrollRange={3}
                             theme={{
                                 agendaKnobColor: '#e0e0e0', // knob color
                                 agendaTodayColor: '#006AFF', // today in list
@@ -3078,6 +3130,20 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 dotColor: '#006AFF' // dots
                             }}
                             onDayPress={onUpdateSelectedDate}
+                            renderEmptyDate={() => <View />}
+                            // renderEmptyDate={() => (<View style={{
+                            //     paddingVertical: 45,
+                            //     backgroundColor: '#f2f2f2'
+                            // }}>
+                            //     <Text style={{
+                            //         fontSize: 20,
+                            //         backgroundColor: '#f2f2f2',
+                            //         paddingLeft: 10,
+
+                            //     }}>
+                            //         You have nothing scheduled!
+                            //     </Text>
+                            // </View>)}
                         />
                     )
                 ) : (
@@ -3169,7 +3235,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 /> : null
             }
 
-            {/* {activeTab === 'agenda' ? (
+            {activeTab === 'agenda' ? (
                 <TouchableOpacity
                     onPress={() => {
                         setShowAddEvent(true);
@@ -3182,7 +3248,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 : Dimensions.get('window').width >= 768
                                 ? 30
                                 : 24,
-                        marginBottom: Dimensions.get('window').width < 768 ? 35 : 75,
+                        marginBottom: Dimensions.get('window').width < 768 ? 45 : 75,
                         right: 0,
                         justifyContent: 'center',
                         bottom: 0,
@@ -3206,7 +3272,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Ionicons name="add-outline" size={Dimensions.get('window').width > 350 ? 36 : 35} />
                     </Text>
                 </TouchableOpacity>
-            ) : null} */}
+            ) : null}
 
             {/* {activeTab === 'activity' && unreadCount && unreadCount > 0 ? (
                 <TouchableOpacity

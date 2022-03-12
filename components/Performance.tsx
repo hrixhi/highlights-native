@@ -221,6 +221,8 @@ const Performance: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     attendance={attendance}
                     thread={thread}
                     date={date}
+                    exportScores={props.exportScores}
+                    setExportScores={props.setExportScores}
                 />
             )}
         </View>

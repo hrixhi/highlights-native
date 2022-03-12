@@ -320,7 +320,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             }
                         }}
                         style={{
-                            backgroundColor: '#006AFF',
+                            // backgroundColor: '#006AFF',
                             borderRadius: 15,
                             marginLeft: 15,
                             marginTop: 6
@@ -333,7 +333,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 color: 'white',
                                 fontSize: 12,
                                 borderWidth: 1,
-                                borderColor: '#006AFF',
+                                // borderColor: '#006AFF',
                                 paddingHorizontal: 20,
                                 fontFamily: 'inter',
                                 height: 35,
@@ -345,7 +345,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         </Text>
                     </TouchableOpacity>
                 );
-
+            text = importUrl;
+            
             const obj = { title: importTitle, type: importType, url: importUrl };
 
             onSend([
@@ -493,6 +494,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             const user = JSON.parse(u);
             setThreadId(tId);
             setLoading(true);
+            props.setHideNavbarDiscussions(true);
             setShowThreadCues(true);
             const server = fetchAPI('');
             server
@@ -818,13 +820,13 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     maxWidth: 900,
                     borderRadius: 1,
                     padding: 10,
-                    minHeight: Dimensions.get('window').height - (Platform.OS === 'ios' ? 300 : 250),
-                    borderLeftWidth: 3,
-                    borderLeftColor: props.channelColor,
+                    height: Dimensions.get('window').height - 140,
+                    // borderLeftWidth: 3,
+                    // borderLeftColor: props.channelColor,
                 }}
             >
                 <GiftedChat
-                    bottomOffset={Platform.OS === "ios" ? 120 : 40}
+                    bottomOffset={Platform.OS === "ios" ? 50 : 40}
                     renderMessageAudio={renderMessageAudio}
                     renderMessageVideo={renderMessageVideo}
                     renderUsernameOnMessage={true}
@@ -877,8 +879,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     backgroundColor: '#fff',
                     maxWidth: 900,
                     borderRadius: 1,
-                    borderLeftWidth: threads.length === 0 ? 0 : 3,
-                    borderLeftColor: props.channelColor,
+                    // borderLeftWidth: threads.length === 0 ? 0 : 3,
+                    // borderLeftColor: props.channelColor,
                     maxHeight: Dimensions.get('window').height - 300,
                     // borderTopColor: '#f2f2f2',
                     // borderBottomColor: '#f2f2f2',
@@ -898,7 +900,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 fontFamily: 'inter',
                                 flex: 1,
                                 backgroundColor: '#fff',
-                                paddingHorizontal: 20
+                                paddingHorizontal: 20,
                             }}
                         >
                             {!props.cueId ? PreferredLanguageText('noPosts') : PreferredLanguageText('noComments')}
@@ -933,7 +935,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     style={{
                                         // backgroundColor: '#fff',
                                         flexDirection: 'row',
-                                        alignItems: 'center',
+                                        // alignItems: 'center',
                                         borderColor: '#f2f2f2',
                                         paddingVertical: 5,
                                         // borderRightWidth: 1,
@@ -945,8 +947,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     <View style={{ backgroundColor: '#fff', padding: 5 }}>
                                         <Image
                                             style={{
-                                                height: 50,
-                                                width: 50,
+                                                height: 35,
+                                                width: 35,
                                                 marginTop: 5,
                                                 marginLeft: 5,
                                                 marginBottom: 5,
@@ -962,20 +964,20 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     </View>
                                     <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 5 }}>
                                         <Text
-                                            style={{ fontSize: 15, padding: 5, fontFamily: 'inter', marginTop: 5 }}
-                                            ellipsizeMode="tail"
-                                        >
-                                            {thread.anonymous ? 'Anonymous' : thread.fullName}
-                                        </Text>
-                                        <Text
-                                            style={{ fontSize: 13, margin: 5, fontWeight: 'bold', lineHeight: 18 }}
+                                            style={{ fontSize: 15, padding: 5, fontFamily: 'inter', marginTop: 5  }}
                                             ellipsizeMode="tail"
                                             numberOfLines={2}
                                         >
                                             {title}
                                         </Text>
+                                        <Text
+                                            style={{  fontSize: 13, margin: 5, fontWeight: 'bold', lineHeight: 18 }}
+                                            ellipsizeMode="tail"
+                                        >
+                                            {thread.anonymous ? 'Anonymous' : thread.fullName}
+                                        </Text>
                                     </View>
-                                    <View style={{ justifyContent: 'center', flexDirection: 'column' }}>
+                                    <View style={{ justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
                                         <Text
                                             style={{
                                                 fontSize: 12,
@@ -1044,7 +1046,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
     const renderImportModalContent = () => {
         if (importType && importUrl) {
-            return <View style={{ paddingHorizontal: 10 }}>
+            return <View style={{ paddingHorizontal: 10, }}>
                 {importType === 'image' ? 
                     <Image
                         style={{
@@ -1145,27 +1147,31 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             </View>
         } 
 
-        return <View style={{ paddingHorizontal: 10 }}>
+        return <View style={{ paddingHorizontal: '20%', paddingTop: 30 }}>
             <TouchableOpacity
                 style={{
-                    marginTop: 20,
-                    backgroundColor: '#006AFF',
+                    backgroundColor: '#eeeeee',
                     borderRadius: 19,
-                    width: 150,
-                    alignSelf: 'center'
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }}
                 onPress={() => {
                     uploadImageHandler(true);
                 }}
             >
+                <Ionicons name='camera-outline' size={20} color={'#000'} />
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingHorizontal: 25,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
-                        height: 35,
-                        lineHeight: 34,
-                        color: '#fff'
+                        height: 40,
+                        lineHeight: 40,
+                        color: '#000',
+                        fontSize: 16
                     }}
                 >
                     {' '}
@@ -1175,49 +1181,59 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <TouchableOpacity
                 style={{
                     marginTop: 20,
-                    backgroundColor: '#006AFF',
+                    backgroundColor: '#eeeeee',
                     borderRadius: 19,
-                    width: 150,
-                    alignSelf: 'center'
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }}
                 onPress={() => {
                     uploadImageHandler(false);
                 }}
             >
+                <Ionicons name='image-outline' size={20} color={'#000'} />
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingHorizontal: 25,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
-                        height: 35,
-                        lineHeight: 34,
-                        color: '#fff'
+                        height: 40,
+                        lineHeight: 40,
+                        color: '#000',
+                        fontSize: 16
                     }}
                 >
                     {' '}
-                    Image Gallery{' '}
+                    Gallery{' '}
                 </Text>
             </TouchableOpacity>
             <TouchableOpacity
                 style={{
                     marginTop: 20,
-                    backgroundColor: '#006AFF',
+                    backgroundColor: '#eeeeee',
                     borderRadius: 19,
-                    width: 150,
-                    alignSelf: 'center'
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }}
                 onPress={() => {
                     uploadFileHandler(false);
                 }}
             >
+                <Ionicons name='document-outline' size={20} color={'#000'} />
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingHorizontal: 25,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
-                        height: 35,
-                        lineHeight: 34,
-                        color: '#fff'
+                        height: 40,
+                        lineHeight: 40,
+                        color: '#000',
+                        fontSize: 16
                     }}
                 >
                     {' '}
@@ -1227,23 +1243,28 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <TouchableOpacity
                 style={{
                     marginTop: 20,
-                    backgroundColor: '#006AFF',
+                    backgroundColor: '#eeeeee',
                     borderRadius: 19,
-                    width: 150,
-                    alignSelf: 'center'
+                    width: '100%',
+                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }}
                 onPress={() => {
                     uploadFileHandler(true);
                 }}
             >
+                <Ionicons name='videocam-outline' size={20} color={'#000'} />
                 <Text
                     style={{
                         textAlign: 'center',
-                        paddingHorizontal: 25,
+                        paddingLeft: 4,
                         fontFamily: 'inter',
-                        height: 35,
-                        lineHeight: 34,
-                        color: '#fff'
+                        height: 40,
+                        lineHeight: 40,
+                        color: '#000',
+                        fontSize: 16
                     }}
                 >
                     {' '}
@@ -1310,14 +1331,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     style={{
                                         width: '100%',
                                         backgroundColor: 'white',
-                                        borderLeftWidth: 3,
-                                        borderLeftColor: props.channelColor
+                                        // borderLeftWidth: 3,
+                                        // borderLeftColor: props.channelColor
                                     }}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowPost(false);
                                             setShowThreadCues(false);
+                                            props.setHideNavbarDiscussions(false);
                                             props.reload();
                                         }}
                                         style={{
@@ -1331,10 +1353,11 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 lineHeight: 34,
                                                 width: '100%',
                                                 textAlign: 'center',
-                                                paddingTop: 10
+                                                paddingTop: 10,
+                                                paddingLeft: 10
                                             }}
                                         >
-                                            <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
+                                            <Ionicons name="arrow-back-outline" size={31} color={'#1F1F1F'} />
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1355,7 +1378,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             )}
              {uploadFileVisible && (
                 <BottomSheet
-                    snapPoints={[0, 350]}
+                    snapPoints={[0, 380]}
                     close={() => {
                         setUploadFileVisible(false);
                     }}
@@ -1392,9 +1415,11 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     );
 };
 
-export default React.memo(ThreadsList, (prev, next) => {
-    return _.isEqual(prev.threads, next.threads);
-});
+export default ThreadsList;
+
+// export default React.memo(ThreadsList, (prev, next) => {
+//     return _.isEqual(prev.threads, next.threads);
+// });
 
 const styleObject = () => {
     return StyleSheet.create({

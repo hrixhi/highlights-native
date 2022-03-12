@@ -55,6 +55,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [joinWithCode, setJoinWithCode] = useState('');
     const [joinWithCodeDisabled, setJoinWithCodeDisabled] = useState(true);
     const [userId, setUserId] = useState('');
+    const [showChannelPasswordInput, setShowChannelPasswordInput] = useState(false);
+    const [channelPasswordId, setChannelPasswordId] = useState('')
+    const [channelPassword, setChannelPassword] = useState('')
+
      // NATIVE DROPDOWN
      const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
      const [isGradeDropdownOpen, setIsGradeDropdownOpen] = useState(false);
@@ -125,6 +129,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [sortChannels, setSortChannels] = useState<any[]>([]);
     const [subIds, setSubIds] = useState<any[]>([]);
     const fall = new Reanimated.Value(1);
+    const [activeTab, setActiveTab] = useState('create')
 
     const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
         inputRange: [0, 1],
@@ -363,6 +368,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         case "subscribed":
                             alert('Subscribed successfully!')
                             // Refresh subscriptions
+                            setShowChannelPasswordInput(false);
+                            props.closeAddCourseModal()
                             props.refreshSubscriptions()
                             break;
                         case "incorrect-password":
@@ -397,7 +404,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             variables: {
                 channelId
             }
-        }).then(res => {
+        }).then(async res => {
             if (res.data.channel && res.data.channel.getChannelStatus) {
                 const channelStatus = res.data.channel.getChannelStatus
                 switch (channelStatus) {
@@ -405,11 +412,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         handleSubscribe(channelId, '')
                         break;
                     case "password-required":
-                        let pass: any = prompt('Enter Password')
-                        if (!pass) {
-                            pass = ''
-                        }
-                        handleSubscribe(channelId, pass)
+                        setChannelPasswordId(channelId)
+                        setShowChannelPasswordInput(true)
                         break;
                     case "non-existant":
                         Alert(doesNotExistAlert)
@@ -446,11 +450,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         handleSubscribe(channelStatus[1], '')
                         break;
                     case "password-required":
-                        let pass: any = prompt('Enter Password')
-                        if (!pass) {
-                            pass = ''
-                        }
-                        handleSubscribe(channelStatus[1], pass)
+                        setChannelPasswordId(channelStatus[1])
                         break;
                     case "non-existant":
                         Alert(doesNotExistAlert)
@@ -728,47 +728,86 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         </View>)
     }
 
+    const renderTabs = () => {
+        return (<View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center', paddingTop: 5 }}>
+            <TouchableOpacity
+                style={activeTab === 'create' ? styles.selectedButton : styles.unselectedButton}
+                onPress={() => {
+                    setActiveTab('create')
+                }}
+            >
+                <Text style={activeTab === 'create' ? styles.selectedText : styles.unselectedText}> {activeTab === 'create' ? 'Create Course' : 'Create'} </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={activeTab !== 'create' ? styles.selectedButton : styles.unselectedButton}
+                onPress={() => {
+                    setActiveTab('join')
+                }}
+            >
+                <Text style={activeTab !== 'create' ? styles.selectedText : styles.unselectedText}>{activeTab === 'join' ? 'Join a Course' : 'Join'}</Text>
+            </TouchableOpacity>
+        </View>)
+    }
+
 
     const renderAddCourseModal = () => {
         return (
         <ScrollView 
-        showsVerticalScrollIndicator={true}
-        indicatorStyle="black"
-        contentContainerStyle={{
-            backgroundColor: 'white',
-            width: '100%',
-            maxWidth: 500,
-            alignSelf: 'center',
-            paddingTop: Dimensions.get('window').width < 768 ? 20 : 0,
-            paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
-            paddingBottom: 150
-        }}>
+            showsVerticalScrollIndicator={true}
+            indicatorStyle="black"
+            contentContainerStyle={{
+                backgroundColor: 'white',
+                width: '100%',
+                maxWidth: 500,
+                alignSelf: 'center',
+                paddingTop: Dimensions.get('window').width < 768 ? 20 : 0,
+                paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
+                paddingBottom: 150
+            }}
+        >
 
-            <View style={{ padding: 15, 
+            {role !== 'instructor' || (role === 'instructor' &&  activeTab === 'join') ? <View style={{ padding: 15, 
                 width: '100%', 
                 marginBottom: Dimensions.get("window").width < 768 ? 40 : 60,
                 }}>
-                <Text style={{
+                {role === 'instructor' ? null : <Text style={{
                     fontSize: 16,
                     fontFamily: 'Inter',
                     color: '#000000',
                     textAlign: 'center',
                     marginBottom: 10
-                }}>
-                    Join with a code
-                </Text>
-                <TextInput
+                }}> 
+                    {channelPasswordId !== '' ? 'Enter course password'  : 'Join with a code'}
+                </Text>}
+                {channelPasswordId === '' ? <TextInput
                     value={joinWithCode}
-                    placeholder={'9 characters'}
+                    placeholder={'9 characters' + (role === 'instructor' ? ' access code' : '' ) }
                     textContentType={"none"}
                     autoCompleteType={'off'}
                     onChangeText={val => {
                         setJoinWithCode(val)
                     }}
+                    autoFocus={true}
                     placeholderTextColor={'#7d7f7c'}
-                />
+                /> :  <TextInput
+                    value={channelPassword}
+                    placeholder={'Password'}
+                    textContentType={"none"}
+                    autoCompleteType={'off'}
+                    onChangeText={val => {
+                        setChannelPassword(val)
+                    }}
+                    autoFocus={true}
+                    placeholderTextColor={'#7d7f7c'}
+                />}
                 <TouchableOpacity
-                    onPress={() => handleSubmitCode()}
+                    onPress={() => {
+                        if (channelPasswordId !== '') {
+                            handleSubscribe(channelPasswordId, channelPassword)
+                        } else {
+                            handleSubmitCode()}}
+                        }
+                        
                     disabled={joinWithCodeDisabled}
                     style={{
                         marginTop: 10,
@@ -794,13 +833,13 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         borderRadius: 15,
                         textTransform: 'uppercase'
                     }}>
-                        Join
+                        Join 
                     </Text>
                 </TouchableOpacity>
-            </View>
+            </View> : null}
 
-            {role !== 'instructor' ? null : <View style={{ width: '100%' }}>
-                <View style={{ marginBottom: 15, width: '100%', alignSelf: 'center' }}>
+            {role !== 'instructor' || (role === 'instructor' &&  activeTab === 'join') ? null : <View style={{ width: '100%' }}>
+                {/* <View style={{ marginBottom: 15, width: '100%', alignSelf: 'center' }}>
                     <Text
                         style={{
                             fontSize: 16,
@@ -810,7 +849,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         }}>
                         Create a new course
                     </Text>
-                </View>
+                </View> */}
                 <View style={{ backgroundColor: 'white' }}>
                     <Text style={{
                         fontSize: 14,
@@ -1162,6 +1201,64 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         </ScrollView>)
     }
 
+    const renderPasswordInputModal = () => {
+        return (<View style={{ paddingHorizontal: 40}}>
+                <Text style={{
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    color: '#000000',
+                    textAlign: 'center',
+                    marginBottom: 10
+                }}>
+                    Enter course password 
+                </Text>
+                <TextInput
+                    value={channelPassword}
+                    placeholder={''}
+                    textContentType={"none"}
+                    autoCompleteType={'off'}
+                    onChangeText={val => {
+                        setChannelPassword(val)
+                    }}
+                    autoFocus={true}
+                    placeholderTextColor={'#7d7f7c'}
+                />
+                <TouchableOpacity
+                    onPress={() => {
+                        setShowChannelPasswordInput(false)
+                        handleSubscribe(channelPasswordId, channelPassword)
+                    }}
+                    disabled={channelPassword === ''}
+                    style={{
+                        marginTop: 10,
+                        backgroundColor: '#006aff',
+                        width: 130,
+                        alignSelf: 'center',
+                        overflow: 'hidden',
+                        height: 35,
+                        justifyContent: 'center', flexDirection: 'row',
+                        borderRadius: 15,
+                    }}>
+                    <Text style={{
+                        textAlign: 'center',
+                        lineHeight: 34,
+                        color: 'white',
+                        fontSize: 12,
+                        backgroundColor: '#006aff',
+                        paddingHorizontal: 20,
+                        fontFamily: 'inter',
+                        height: 35,
+                        // width: 180,
+                        width: 130,
+                        borderRadius: 15,
+                        textTransform: 'uppercase'
+                    }}>
+                        Subscribe
+                    </Text>
+                </TouchableOpacity>
+        </View>)
+    }
+
 
     if (loading) {
         return <View style={{
@@ -1189,7 +1286,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 {props.showAddCourseModal ? <View
                     style={{
                         flexDirection: 'row',
-                        // justifyContent: 'center',
+                        justifyContent: 'center',
                         paddingHorizontal: 20,
                         paddingTop: 10,
                         paddingBottom: 15,
@@ -1442,10 +1539,28 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         close={() => {
                             props.closeAddCourseModal()
                         }}
+                        tabs={role === 'instructor' ? renderTabs() : null}
                         isOpen={props.showAddCourseModal}
-                        title={'Add a course'}
+                        // title={'Add a course'}
                         renderContent={() => renderAddCourseModal()}
                         header={true}
+                        callbackNode={fall}
+                    /> : null
+            }
+            {
+                showChannelPasswordInput ?
+                    <BottomSheet 
+                        snapPoints={[0, windowHeight - (Platform.OS === 'android' ? 100 : 100
+                        )]}
+                        close={() => {
+                            setChannelPassword('')
+                            setChannelPasswordId('')
+                            setShowChannelPasswordInput(false)
+                        }}
+                        isOpen={showChannelPasswordInput}
+                        // title={'Add a course'}
+                        renderContent={() => renderPasswordInputModal()}
+                        header={false}
                         callbackNode={fall}
                     /> : null
             }
@@ -1462,6 +1577,29 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         position: 'absolute'
                     }}
                 ></Reanimated.View>
+            ) : null}
+            {showChannelPasswordInput ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: 0.3,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute'
+                    }}
+                >
+                    <TouchableOpacity style={{
+                        backgroundColor: 'transparent',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    onPress={() => setShowChannelPasswordInput(false)}
+                    >
+                    </TouchableOpacity>
+                </Reanimated.View>
             ) : null}
         </View>
     );
@@ -1507,5 +1645,43 @@ const styles = StyleSheet.create({
         paddingBottom: 13,
         marginTop: 5,
         marginBottom: 20
-    }
+    },
+    selectedText: {
+        fontSize: Dimensions.get('window').width < 1024 ? 13 : 14,
+        color: '#fff',
+        backgroundColor: '#000',
+        lineHeight: 24,
+        height: 25,
+        fontFamily: 'inter',
+        textTransform: 'uppercase'
+    },
+    unselectedText: {
+        fontSize: Dimensions.get('window').width < 1024 ? 13 : 14,
+        color: '#000',
+        height: 25,
+        // backgroundColor: '#000',
+        lineHeight: 25,
+        fontFamily: 'overpass',
+        textTransform: 'uppercase',
+        fontWeight: 'bold'
+    },
+    selectedButton: {
+        backgroundColor: '#000',
+        borderRadius: 20,
+        height: 25,
+        maxHeight: 25,
+        lineHeight: 24,
+        paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
+        marginHorizontal: 2,
+    },
+    unselectedButton: {
+        // backgroundColor: '#000',
+        height: 25,
+        maxHeight: 25,
+        lineHeight: 24,
+        borderRadius: 20,
+        color: '#000000',
+        paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
+        marginHorizontal: 2,
+    },
 });

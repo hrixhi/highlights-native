@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     },
     focusedInput: {
         width: '100%',
-        borderColor: '#ffc484',
+        borderColor: '#e4e6eb',
         borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 13,

@@ -60,11 +60,12 @@ const importIcon = require('../assets/images/importIcon.png');
 
 import Reanimated from 'react-native-reanimated';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
+import useDynamicRefs from 'use-dynamic-refs';
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
-    const [cue, setCue] = useState('<h1>Title</h1>');
-    const [cueDraft, setCueDraft] = useState('');
+    const [cue, setCue] = useState('');
+    const [cueDraft, setCueDraft] = useState('<h1>Title</h1><br/><h3>Body</h3>');
     const [shuffle, setShuffle] = useState(false);
     const [starred] = useState(false);
     const [notify, setNotify] = useState(false);
@@ -84,6 +85,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#35AC78'].reverse();
     const [modalAnimation] = useState(new Animated.Value(0));
     let RichText: any = useRef();
+    let quizInstructionsEditorRef: any = useRef();
     let editorRef: any = useRef();
     const scrollRef: any = useRef();
     const [init, setInit] = useState(false);
@@ -112,6 +114,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [url, setUrl] = useState('');
     const [type, setType] = useState('');
     const [title, setTitle] = useState('');
+    const [quizTitle, setQuizTitle] = useState('');
     const [selected, setSelected] = useState<any[]>([]);
     const [subscribers, setSubscribers] = useState<any[]>([]);
     const [isQuiz, setIsQuiz] = useState(false);
@@ -170,6 +173,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [insertImageVisible, setInsertImageVisible] = useState(false);
     const [quizEditorRef, setQuizEditorRef] = useState<any>(null);
     const videoRef: any = useRef();
+    const scrollViewRef: any = useRef();
+    const [getRef, setRef] = useDynamicRefs();
+    const [quizOptionEditorIndex , setQuizOptionEditorIndex] = useState('')
+
+
+    let testEditorRef: any = {}
 
     // Alerts
     const enterOneProblemAlert = PreferredLanguageText('enterOneProblem');
@@ -208,9 +217,40 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     }, []);
 
     /**
+     * @description Show import file directly from the navbar
+     */
+    useEffect(() => {
+        if (props.showImportCreate) {
+            handleUploadFile()
+            props.setShowImportCreate(false)
+        }
+    }, [props.showImportCreate])
+
+    /**
+     * @description 
+     */
+    useEffect(() => {
+        setIsQuiz(false);
+        setSubmission(false)
+        setShowBooks(false)
+        
+        if (props.createActiveTab === 'Quiz') {
+            setIsQuiz(true);
+            setSubmission(true)
+        } else if (props.createActiveTab === 'Library') {
+            setShowBooks(true);
+        } else if (props.createActiveTab === 'Content') {
+        }
+    }, [props.createActiveTab])
+
+    /**
      * @description Sets import options based on Cue content if JSON object
      */
     useEffect(() => {
+        if (isQuiz) {
+            return;
+        }
+
         if (cue[0] === '{' && cue[cue.length - 1] === '}') {
             const obj = JSON.parse(cue);
             setImported(true);
@@ -223,7 +263,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             setType('');
             setTitle('');
         }
-    }, [cue]);
+    }, [cue, isQuiz]);
 
     useEffect(() => {
 
@@ -332,9 +372,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * @description Store draft of Cue and Quiz in Async Storage
      */
     useEffect(() => {
+        console.log("Init", init);
         if (!init) {
             return;
         }
+        console.log("Cue", cue);
         let saveCue = '';
         if (imported) {
             const obj = {
@@ -345,6 +387,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             saveCue = JSON.stringify(obj);
         } else if (isQuiz) {
             // Loop over entire quiz and save only the questions which are valid
+            console.log("problems to store", problems)
             const validProblems = problems.filter((prob: any) => isCurrentQuestionValid(prob));
 
             const quiz = {
@@ -358,10 +401,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
             const saveQuiz = JSON.stringify(quiz);
 
+            console.log("Store quizDraft", saveQuiz)
+
             storeDraft('quizDraft', saveQuiz);
         } else {
             saveCue = cue;
         }
+
+        console.log("Store draft", saveCue)
         if (saveCue && saveCue !== '') {
             storeDraft('cueDraft', saveCue);
         } else {
@@ -369,6 +416,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }
     }, [cue, init, type, imported, url, title, problems, timer, duration, headers, quizInstructions]);
 
+    console.log("Problems", problems)
     /**
      * @description Loads Drafts on Init
      */
@@ -376,22 +424,28 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         const getData = async () => {
             try {
                 const h = await AsyncStorage.getItem('cueDraft');
+                console.log("Cue draft", h);
+
                 if (h !== null) {
                     setCue(h);
                     setCueDraft(h);
                 }
                 const quizDraft = await AsyncStorage.getItem('quizDraft');
                 if (quizDraft !== null) {
+                    console.log("Quiz Draft on init", quizDraft)
+
                     const { duration, timer, problems, title, headers, quizInstructions } = JSON.parse(quizDraft);
                     setDuration(duration);
                     setInitialDuration(duration);
                     setTimer(timer);
                     setProblems(problems);
-                    setTitle(title);
+                    // setTitle(title);
+                    setQuizTitle(title);
                     setHeaders(headers);
                     setQuizInstructions(quizInstructions);
                     setInitialQuizInstructions(quizInstructions);
                 }
+                setInit(true)
             } catch (e) {
                 console.log(e);
             }
@@ -423,7 +477,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             setGraded(false);
             setSelected([]);
             setSubscribers([]);
-            setProblems([]);
+            // setProblems([]);
             // console.log('Set not quiz')
             // setIsQuiz(false);
             setTimer(false);
@@ -607,6 +661,34 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             return;
         }
 
+        if (quizTitle === '') {
+            Alert(enterTitleAlert);
+            setIsSubmitting(false);
+            setCreatingQuiz(false);
+            return;
+        }
+
+        if ((submission || isQuiz) && deadline < new Date()) {
+            Alert('Submission deadline must be in future');
+            setIsSubmitting(false);
+            setCreatingQuiz(false);
+            return;
+        }
+
+        if ((submission || isQuiz) && allowLateSubmission && availableUntil < deadline) {
+            Alert('Late submission date must be set after deadline.');
+            setIsSubmitting(false);
+            setCreatingQuiz(false);
+            return;
+        }
+
+        if ((submission || isQuiz) && deadline < initiateAt) {
+            Alert('Available from time must be set before deadline', '');
+            setIsSubmitting(false);
+            setCreatingQuiz(false);
+            return;
+        }
+
         const server = fetchAPI('');
         const durationMinutes = duration.hours * 60 + duration.minutes + duration.seconds / 60;
         server
@@ -654,7 +736,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         starred,
         color,
         notify,
-        title,
+        quizTitle,
         type,
         url,
         timer,
@@ -665,7 +747,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         playChannelCueIndef,
         shuffleQuiz,
         quizInstructions,
-        headers
+        headers,
+        availableUntil,
+        allowLateSubmission,
     ]);
 
     // EDITOR METHODS
@@ -684,10 +768,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         console.log('File upload result', res);
 
         if (!res || res.url === '' || res.type === '') {
+            props.showImportCreate(false)
             return;
         }
 
         setEditorFocus(false);
+
 
         updateAfterFileImport(res.url, res.type);
     }, [RichText, RichText.current, userId]);
@@ -708,28 +794,40 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const changeForeColor = useCallback(
         (h: any) => {
-            if (quizEditorRef) {
+            if (quizOptionEditorIndex) {
+                const currRef: any = getRef(quizOptionEditorIndex)
+                currRef.current?.setForeColor(h);
+                setQuizOptionEditorIndex('')
+            } else if (quizEditorRef) {
                 quizEditorRef.current?.setForeColor(h);
+                setQuizEditorRef(null)
             } else {
                 RichText.current?.setForeColor(h);
             }
 
             setForeColorVisible(false);
         },
-        [foreColor, RichText, RichText.current, quizEditorRef]
+        [foreColor, RichText, RichText.current, quizEditorRef, quizOptionEditorIndex]
     );
 
     const changeHiliteColor = useCallback(
         (h: any) => {
-            if (quizEditorRef) {
+            if (quizOptionEditorIndex) {
+                const currRef: any = getRef(quizOptionEditorIndex)
+
+                currRef.current?.setHiliteColor(h);
+                setQuizOptionEditorIndex('')
+            } else if (quizEditorRef) {
                 quizEditorRef.current?.setHiliteColor(h);
+                setQuizEditorRef(null)
             } else {
                 RichText.current?.setHiliteColor(h);
             }
 
             setHiliteColorVisible(false);
+            
         },
-        [hiliteColor, RichText, RichText.current]
+        [hiliteColor, RichText, RichText.current, quizEditorRef, quizOptionEditorIndex]
     );
 
     /**
@@ -749,15 +847,17 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const insertEmoji = useCallback(
         emoji => {
-            if (quizEditorRef) {
+            if (quizOptionEditorIndex) {
+                const currRef: any = getRef(quizOptionEditorIndex)
+                currRef.current?.insertText(emoji)
+            } else if (quizEditorRef) {
                 quizEditorRef.current?.insertText(emoji);
             } else {
                 RichText.current?.insertText(emoji);
             }
 
-            // RichText.current?.blurContentEditor();
         },
-        [RichText, RichText.current, quizEditorRef]
+        [RichText, RichText.current, quizEditorRef, quizOptionEditorIndex]
     );
 
     const handleEmoji = useCallback(
@@ -773,6 +873,21 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (editorRef) {
                 setQuizEditorRef(editorRef);
             }
+        },
+        [RichText, RichText.current, emojiVisible]
+    );
+
+    const handleEmojiOptions = useCallback(
+        (optionIndex: any) => {
+            Keyboard.dismiss();
+            // RichText.current?.blurContentEditor();
+            setEmojiVisible(!emojiVisible);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            setQuizOptionEditorIndex(optionIndex)
         },
         [RichText, RichText.current, emojiVisible]
     );
@@ -793,6 +908,26 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         [RichText, RichText.current, hiliteColorVisible]
     );
 
+    const handleHiliteColorOptions = useCallback(
+        (optionIndex: any) => {
+            Keyboard.dismiss();
+            setHiliteColorVisible(!hiliteColorVisible);
+            setForeColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            setQuizOptionEditorIndex(optionIndex)
+
+            // Get current ref
+            const currRef: any = getRef(optionIndex)
+
+            console.log("CurrRef", currRef.current)
+
+        },
+        [RichText, RichText.current, hiliteColorVisible]
+    );
+
     const handleForeColor = useCallback(
         (editorRef: any) => {
             Keyboard.dismiss();
@@ -805,6 +940,20 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (editorRef) {
                 setQuizEditorRef(editorRef);
             }
+        },
+        [RichText, RichText.current, foreColorVisible]
+    );
+
+    const handleForeColorOptions = useCallback(
+        (optionIndex: any) => {
+            Keyboard.dismiss();
+            setForeColorVisible(!foreColorVisible);
+            setHiliteColorVisible(false);
+            setEmojiVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            setQuizOptionEditorIndex(optionIndex)
         },
         [RichText, RichText.current, foreColorVisible]
     );
@@ -822,27 +971,60 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setEmojiVisible(false);
         setInsertLinkVisible(false);
 
+        console.log("Editor ref", editorRef)
+
         if (editorRef) {
             setQuizEditorRef(editorRef);
+            testEditorRef = editorRef
         }
+    }, []);
+
+    const handleAddImageQuizOptions = useCallback((optionIndex: any) => {
+        setInsertImageVisible(true);
+        setForeColorVisible(false);
+        setHiliteColorVisible(false);
+        setEmojiVisible(false);
+        setInsertLinkVisible(false);
+
+        setQuizOptionEditorIndex(optionIndex)
     }, []);
 
     const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
             const url = await handleImageUpload(takePhoto, userId);
+            // const url = "https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=1200:*"
+
+            let editorRef: any = {}
 
             if (url && url !== '') {
-                if (quizEditorRef && quizEditorRef.current) {
-                    quizEditorRef.current?.insertImage(url);
-                    setQuizEditorRef(null);
+
+                if (quizOptionEditorIndex) {
+
+                    editorRef = getRef(quizOptionEditorIndex);
+
+                } else if (quizEditorRef && quizEditorRef.current) {
+
+                    editorRef = quizEditorRef
+
                 } else {
-                    RichText.current?.insertImage(url);
+
+                    editorRef = RichText
+
                 }
+
+                console.log("Editor ref", editorRef)
+
+                editorRef.current?.focusContentEditor()
+
+                editorRef.current?.insertHTML('<div><br/></div>')
+
+                editorRef.current?.insertImage(url);
+
             }
 
             setInsertImageVisible(false);
         },
-        [RichText, RichText.current, quizEditorRef, userId]
+        [RichText, RichText.current, quizEditorRef, userId, quizOptionEditorIndex]
     );
 
     const handleInsertLink = useCallback(
@@ -999,7 +1181,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 })
                 .catch(err => {});
         }
-        setInit(true);
+        // setInit(true);
     }, []);
 
     // Don't save question if no question entered
@@ -1044,14 +1226,26 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 return;
             }
 
-            if ((imported || isQuiz) && title === '') {
+            if ((imported && title === '') || (isQuiz && quizTitle === '')) {
                 Alert(enterTitleAlert);
                 setIsSubmitting(false);
                 return;
             }
 
-            if (submission && deadline < new Date()) {
+            if ((submission || isQuiz) && deadline < new Date()) {
                 Alert('Submission deadline must be in future');
+                setIsSubmitting(false);
+                return;
+            }
+
+            if ((submission || isQuiz) && deadline < initiateAt) {
+                Alert('Available from time must be set before deadline', '');
+                setIsSubmitting(false);
+                return;
+            }
+
+            if ((submission || isQuiz) && allowLateSubmission && availableUntil < deadline) {
+                Alert('Late submission date must be set after deadline.')
                 setIsSubmitting(false);
                 return;
             }
@@ -1060,7 +1254,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (quizId) {
                 const obj: any = {
                     quizId,
-                    title
+                    title: quizTitle
                 };
                 if (timer) {
                     obj.initiatedAt = null;
@@ -1139,12 +1333,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     setSelected(ownerarray);
                 }
 
-                if ((submission || isQuiz) && deadline < initiateAt) {
-                    Alert('Available from time must be set before deadline', '');
-                    setIsSubmitting(false);
-                    return;
-                }
-
                 const user = JSON.parse(uString);
                 const server = fetchAPI('');
 
@@ -1220,7 +1408,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             endPlayAt,
             playChannelCueIndef,
             allowLateSubmission,
-            availableUntil
+            availableUntil,
+            quizTitle
         ]
     );
 
@@ -1239,6 +1428,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     setCue('<h1>Title</h1>');
                     setCueDraft('');
                     setImported(false);
+                    setQuizInstructions('');
                     setUrl('');
                     setType('');
                     setTitle('');
@@ -1578,8 +1768,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
                             const currentDate: any = selectedDate;
+                            if (currentDate < deadline) {
+                                Alert('Late submission date must be set after deadline.')
+                                return
+                            };
                             const roundedValue = roundSeconds(currentDate);
-
                             setAvailableUntil(roundedValue);
                         }}
                     />
@@ -1597,6 +1790,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 return
                             };
                             const currentDate: any = selectedDate;
+                            if (currentDate < deadline) {
+                                Alert('Late submission date must be set after deadline.')
+                                return
+                            };
                             const roundedValue = roundSeconds(currentDate);
                             setShowAvailableUntilDateAndroid(false);
                             setAvailableUntil(roundedValue);
@@ -1691,6 +1888,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) return;
                             const currentDate: any = selectedDate;
+
+                            if (currentDate < deadline) {
+                                Alert('Late submission date must be set after deadline.')
+                                return
+                            };
+
                             setAvailableUntil(currentDate);
                         }}
                     />
@@ -1718,6 +1921,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         );
     };
 
+    console.log("Props.showImportCreate", props.showImportCreate)
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -1735,14 +1940,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         maxWidth: 900,
                         paddingVertical: 10,
                         paddingHorizontal: dimensions.window.width < 1024 ? 10 : 0,
-                        display: editorFocus ? 'none' : 'flex',
-                        shadowOffset: {
-                            width: 2,
-                            height: 2
-                        },
-                        // overflow: 'hidden',
-                        shadowOpacity: 0.07,
-                        shadowRadius: 7,
+                        display: editorFocus && !isQuiz ? 'none' : 'flex',
                         zIndex: 500000,
                     }}
                 >
@@ -1751,44 +1949,34 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             flexDirection: 'row',
                             justifyContent: 'center',
                             // paddingBottom: showOptions ? 20 : 0,
+                            height: 50,
                             width: '100%',
                         }}
                     >
-                        {props.option === 'Browse' && !showOptions ? null : (
-                            <TouchableOpacity
-                                style={{
-                                    paddingTop: 10,
-                                    // marginRight: 20
-                                    position: 'absolute',
-                                    left: 0
-                                }}
-                                onPress={() => {
-                                    if (showOptions) {
-                                        setShowOptions(false);
-                                    } else {
-                                        props.closeModal();
-                                    }
-                                }}
-                            >
-                                <Text>
-                                    <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
-                                </Text>
-                            </TouchableOpacity>
-                        )}
-                        <Text
+                        <TouchableOpacity
                             style={{
-                                fontFamily: 'Inter',
-                                fontSize: 20,
-                                fontWeight: 'bold',
-                                paddingTop: 5,
-                                textAlign: 'center',
-                                marginTop: 10,
-                                marginBottom: 10
+                                paddingTop: 8,
+                                // marginRight: 20
+                                position: 'absolute',
+                                left: 0,
+                                paddingLeft: 10
+                            }}
+                            onPress={() => {
+                                if (showOptions) {
+                                    setShowOptions(false);
+                                    props.setDisableCreateNavbar(false)
+                                } else {
+                                    props.closeModal();
+                                }
                             }}
                         >
-                            {props.createOption === 'quiz' ? 'New quiz' : (props.createOption === 'content' ? (role === 'instructor' ? 'New content' : 'New note') : 'Browse Books')}
-                        </Text>
-                        <View style={{ position: 'absolute', right: 0, paddingTop: 10, }}>
+                            <Text>
+                                <Ionicons name="arrow-back-outline" size={31} color={'#1F1F1F'} />
+                            </Text>
+                        </TouchableOpacity>
+                    
+                        
+                        <View style={{ position: 'absolute', right: 0, paddingTop: 10, display: 'flex', flexDirection: 'row' }}>
                             {/* QUIZ BUTTON FOR INSTRUCTORS */}
                             {/* {!imported && !showOptions && !isQuiz && !showBooks ? (
                                 <TouchableOpacity
@@ -1819,8 +2007,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         Browse Books
                                     </Text>
                                 </TouchableOpacity>
-                            ) : null} */}
-                            {/* {allowQuizCreation &&
+                            ) : null}
+                            {allowQuizCreation &&
                             !imported &&
                             !showOptions &&
                             !showBooks &&
@@ -1833,6 +2021,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     onPress={() => {
                                         if (isQuiz) {
                                             clearAll();
+                                            setEditorFocus(false);
                                             return;
                                         }
                                         setIsQuiz(true);
@@ -1875,7 +2064,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             setCueDraft(h);
                                         }
 
+                                        props.setDisableCreateNavbar(true)
                                         setShowOptions(true);
+
+                                        scrollViewRef.current?.scrollTo({
+                                            y: 0,
+                                            // animated: true,
+                                        });
                                     }}
                                     disabled={isSubmitting}
                                     style={{
@@ -1886,18 +2081,30 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 >
                                     <Text
                                         style={{
+                                            // textAlign: 'center',
+                                            // lineHeight: 28,
+                                            // color: '#006AFF',
+                                            // // backgroundColor: '#006AFF',
+                                            // marginTop: 2,
+                                            // fontSize: 12,
+                                            // borderRadius: 15,
+                                            // paddingHorizontal: 10,
+                                            // fontFamily: 'inter',
+                                            // overflow: 'hidden',
+                                            // // height: 30,
+                                            // textTransform: 'uppercase'
                                             textAlign: 'center',
-                                            lineHeight: 28,
-                                            color: '#006AFF',
-                                            // backgroundColor: '#006AFF',
-                                            marginTop: 5,
+                                            lineHeight: 34,
+                                            color: 'white',
                                             fontSize: 12,
-                                            borderRadius: 15,
-                                            paddingHorizontal: 10,
+                                            backgroundColor: '#006AFF',
+                                            borderRadius: 17,
+                                            paddingHorizontal: 20,
                                             fontFamily: 'inter',
                                             overflow: 'hidden',
-                                            // height: 30,
-                                            textTransform: 'uppercase'
+                                            height: 35,
+                                            textTransform: 'uppercase',
+                                            marginRight: 5 
                                         }}
                                     >
                                         NEXT
@@ -1913,7 +2120,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         height: '100%'
                     }}
                 >
-                    <ScrollView style={{ flexDirection: 'column', paddingHorizontal: 20 }} indicatorStyle="black">
+                    <ScrollView ref={scrollViewRef} style={{ flexDirection: 'column', paddingHorizontal: 20 }} indicatorStyle="black">
                         {showOptions ? (
                             <View
                                 style={{
@@ -3252,8 +3459,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         }}
                                     >
                                         <AutoGrowingTextInput
-                                            value={title}
-                                            onChange={(event: any) => setTitle(event.nativeEvent.text || '')}
+                                            value={isQuiz ? quizTitle : title}
+                                            onChange={(event: any) => {
+                                                if (isQuiz) {
+                                                    setQuizTitle(event.nativeEvent.text || '')
+                                                } else {
+                                                    setTitle(event.nativeEvent.text || '')
+                                                }
+                                                
+                                            }}
                                             style={{
                                                 fontFamily: 'overpass',
                                                 // width: 300,
@@ -3287,16 +3501,17 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 }}
                                                 onPress={() => clearAll()}
                                             >
-                                                <Text
+                                                {/* <Text
                                                     style={{
-                                                        fontSize: 12,
+                                                        fontSize: 15,
                                                         lineHeight: 34,
                                                         fontFamily: 'inter',
                                                         color: '#006AFF'
                                                     }}
                                                 >
-                                                    Clear
-                                                </Text>
+                                                    CLEAR
+                                                </Text> */}
+                                                <Ionicons size={22} name={'trash-outline'} color="#006AFF" />
                                             </TouchableOpacity>
                                         ) : null}
                                     </View>
@@ -3492,7 +3707,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 setQuizInstructions(modifedText);
                                                             }}
                                                             onHeightChange={handleHeightChange}
-                                                            onFocus={() => setEditorFocus(true)}
+                                                            onFocus={() => { 
+                                                                setQuizEditorRef({})
+                                                                setEditorFocus(true)
+                                                            }}
                                                             onBlur={() => setEditorFocus(false)}
                                                             allowFileAccess={true}
                                                             allowFileAccessFromFileURLs={true}
@@ -3517,6 +3735,13 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 handleHiliteColor={handleHiliteColor}
                                                 handleForeColor={handleForeColor}
                                                 handleEmoji={handleEmoji}
+                                                userId={userId}
+                                                setRef={setRef}
+                                                handleAddImageQuizOptions={handleAddImageQuizOptions}
+                                                handleHiliteColorOptions={handleHiliteColorOptions}
+                                                handleForeColorOptions={handleForeColorOptions}
+                                                handleEmojiOptions={handleEmojiOptions}
+                                                resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
                                             />
                                         </View>
                                     ) : imported ? (
@@ -3741,11 +3966,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         color: '#2f2f3c',
                                         contentCSSText: 'font-size: 16px; min-height: 400px;'
                                     }}
-                                    initialContentHTML={cue}
+                                    initialContentHTML={cueDraft}
                                     initialHeight={400}
                                     onScroll={() => Keyboard.dismiss()}
                                     placeholder={PreferredLanguageText('title')}
                                     onChange={text => {
+                                        console.log("Set cue", text)
                                         const modifedText = text.split('&amp;').join('&');
                                         setCue(modifedText);
                                     }}

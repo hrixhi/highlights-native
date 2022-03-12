@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 // API
 import { fetchAPI } from '../graphql/FetchAPI';
 import {
-    findChannelById, getOrganisation, getSubscribers, getUserCount, subscribe, unsubscribe, updateChannel, getChannelColorCode, duplicateChannel, resetAccessCode, getChannelModerators, deleteChannel
+    findChannelById, getOrganisation, getSubscribers, getUserCount, subscribe, unsubscribe, updateChannel, getChannelColorCode, duplicateChannel, resetAccessCode, getChannelModerators, deleteChannel, addUsersByEmail
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -34,6 +34,8 @@ import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 // import ReactTagInput from "@pathofdev/react-tag-input";
 // import "@pathofdev/react-tag-input/build/index.css";
 import { getDropdownHeight } from '../helpers/DropdownHeight';
+import BottomSheet from './BottomSheet';
+import Reanimated from 'react-native-reanimated';
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
 
@@ -130,6 +132,19 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [meetingProvider, setMeetingProvider] = useState('');
     const [meetingUrl, setMeetingUrl] = useState('');
 
+    const fall = new Reanimated.Value(1);
+
+    const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
+        inputRange: [0, 1],
+        outputRange: [0.5, 0]
+    });
+
+    useEffect(() => {
+        let filterRemovedModerators = selectedModerators.filter((mod: any) => selectedValues.includes(mod))
+
+        setSelectedModerators(filterRemovedModerators)
+    }, [selectedValues])
+
     // HOOKS
 
     /**
@@ -222,13 +237,16 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
     }, [channelCreator])
 
-    /**
-     * @description Fetches all the data for the channel 
-     */
     useEffect(() => {
-        (
-            async () => {
-                const u = await AsyncStorage.getItem('user')
+        if (props.refreshChannelSettings) {
+            fetchChannelSettings()
+            props.setRefreshChannelSettings(false)
+        }
+    }, [props.refreshChannelSettings])
+    
+
+    const fetchChannelSettings = useCallback(async () => {
+        const u = await AsyncStorage.getItem('user')
 
                 let schoolObj: any;
 
@@ -450,9 +468,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         }
                     })
                 }
-            }
-        )()
+    }, [props.channelId, props.user])
 
+    /**
+     * @description Fetches all the data for the channel 
+     */
+    useEffect(() => {
+        fetchChannelSettings()
     }, [props.channelId, props.user])
 
     /**
@@ -486,7 +508,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 if (res2.data && res2.data.channel.duplicate === "created") {
                     alert("Course duplicated successfully.")
                     // Refresh Subscriptions for user
-                    props.refreshSubscriptions()
+                    // props.refreshSubscriptions()
                     props.closeModal()
                 }
             })
@@ -780,6 +802,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         return <View
             style={{
                 width: "100%",
+                height: Dimensions.get('window').height - 200,
                 flex: 1,
                 justifyContent: "center",
                 display: "flex",
@@ -796,21 +819,12 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     if (showDuplicateChannel) {
         return (<View style={{
-            borderLeftWidth: 3,
-            borderColor: props.channelColor,
             borderTopRightRadius: 10,
             borderBottomRightRadius: 10,
-            // shadowOffset: {
-            //     width: 2,
-            //     height: 2,
-            // },
-            // shadowOpacity: 0.1,
-            // shadowRadius: 10,
-            // zIndex: 5000000
+            width: '100%'
         }}>
             <View style={styles.screen} >
                 <View style={{
-                    maxWidth: 400,
                     alignSelf: 'center',
                     minHeight: 100,
                 }}>
@@ -819,9 +833,11 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             key={Math.random()}
                             style={{
                                 flex: 1,
-                                backgroundColor: 'white'
+                                backgroundColor: 'white',
+                                paddingHorizontal: 15,
                             }}
                             onPress={() => {
+                                props.scrollToTop()
                                 setShowDuplicateChannel(false)
                             }}>
                             <Text style={{
@@ -830,14 +846,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 fontWeight: 'bold',
                                 color: '#1F1F1F'
                             }}>
-                                <Ionicons name='chevron-back-outline' size={24} color={'#000000'} style={{ marginRight: 10 }} />
+                                <Ionicons name='close-outline' size={24} color={'#000000'} style={{ marginRight: 10 }} />
                             </Text>
                         </TouchableOpacity>
                     </View>
                     <Text
                         style={{
                             fontSize: 20,
-                            // paddingBottom: 20,,
                             alignSelf: 'center',
                             fontFamily: 'inter',
                             flex: 1,
@@ -849,15 +864,15 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         onScroll={() => {
                             Keyboard.dismiss()
                         }}
+                        style={{
+                            width: '100%'
+                        }}
                         contentContainerStyle={{
-                            maxHeight: Dimensions.get('window').height - 95,
-                            // height: 'auto',
-                            minHeight: 100,
-                            paddingRight: 50,
-                            maxWidth: 320,
+                            paddingHorizontal: 20,
+                            width: '100%'
                         }}
                     >
-                        <View style={{ backgroundColor: 'white' }}>
+                        <View style={{ backgroundColor: 'white', }}>
                             <Text style={{
                                 fontSize: 14,
                                 color: '#000000',
@@ -1176,19 +1191,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     // MAIN RETURN 
     return (
         <View style={{
-            borderLeftWidth: 3,
-            borderColor: props.channelColor,
             borderTopRightRadius: 10,
             borderBottomRightRadius: 10,
-            // shadowOffset: {
-            //     width: 2,
-            //     height: 2,
-            // },
-            // shadowOpacity: 0.1,
-            // shadowRadius: 10,
             backgroundColor: '#fff',
             zIndex: 5000000,
-            // marginTop: 20,
         }}>
             <View style={styles.screen} >
                 <View style={{ backgroundColor: 'white', paddingTop: 20, paddingHorizontal: 10, }}>
@@ -1217,7 +1223,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 </Text>
 
                                 <View style={{ flexDirection: 'row', }}>
-
+{/* 
                                     <TouchableOpacity style={{ 
                                         flexDirection: 'column',
                                         alignItems: 'center',
@@ -1228,7 +1234,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     }}>
                                         <Ionicons name={copied ? "checkmark-circle-outline" : "clipboard-outline"} size={18} color={copied ? "#35AC78" : "#006AFF"} />
                                         <Text style={{ color: copied ? "#35AC78" : "#006AFF", fontSize: 10, paddingTop: 3 }}> {copied ? "Copied" : "Copy"} </Text>
-                                    </TouchableOpacity>
+                                    </TouchableOpacity> */}
 
                                     <TouchableOpacity style={{ 
                                         flexDirection: 'column',
@@ -1407,14 +1413,45 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             : null
                         }
 
-                        <Text style={{
-                            fontSize: 14,
-                            paddingTop: 20,
-                            color: '#000000',
-                            fontFamily: 'Inter'
+                        <View style={{
+                            display: 'flex',
+                            width: '100%',
+                            flexDirection: 'row',
+                            paddingTop: 30,
+                            alignItems: 'center'
                         }}>
-                            Viewers
-                        </Text>
+                            <Text style={{
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                color: '#000000'
+                            }}>
+                                Viewers
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => props.setShowInviteByEmailsModal(true)}
+                                style={{
+                                    backgroundColor: 'white',
+                                    overflow: 'hidden',
+                                    height: 35,
+                                    justifyContent: 'center',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    marginLeft: 'auto',
+                                    paddingTop: 2
+                                }}
+                            >
+                                <Ionicons name="mail-outline" color="#006AFF" style={{ marginRight: 7, paddingTop: 2 }} size={18} />
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        color: '#006AFF'
+                                    }}
+                                >
+                                Invite New Users
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
 
                         {school ? renderSubscriberFilters() : null}
                         <View style={{
@@ -1428,12 +1465,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     items={options}
                                     setOpen={setIsViewersDropdownOpen}
                                     setValue={(val: any) => {
+                                        console.log("val", val)
                                         setSelectedValues(val)
-                                        // Filter out any moderator if not part of the selected values
-
-                                        let filterRemovedModerators = selectedModerators.filter((mod: any) => val.includes(mod))
-
-                                        setSelectedModerators(filterRemovedModerators)
                                     }}
                                     style={{
                                         borderWidth: 0,
@@ -1459,47 +1492,45 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 />
                             </View>
                         </View>
-                        <Text style={{
+                        {props.userId === channelCreator ? <Text style={{
                             fontSize: 14,
                             color: '#000000', marginTop: 25, marginBottom: 20,
                             maxWidth: 320,
                             fontFamily: 'Inter'
                         }}>
                             Editors
-                        </Text>
-                        <View style={{ height: isEditorsDropdownOpen ? getDropdownHeight(moderatorOptions.length) : 50, }}>
-
-                       
-                        <DropDownPicker
-                            multiple={true}
-                            open={isEditorsDropdownOpen}
-                            value={selectedModerators}
-                            items={moderatorOptions}
-                            setOpen={setIsEditorsDropdownOpen}
-                            setValue={setSelectedModerators}
-                            style={{
-                                borderWidth: 0,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
-                            }}
-                            dropDownContainerStyle={{
-                                borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001
-                            }}
-                            containerStyle={{
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 1,
-                                    height: 3
-                                },
-                                shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.08,
-                                shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
-                            }}
-                        />
-                         </View>
+                        </Text> : null}
+                        {props.userId === channelCreator ? <View style={{ height: isEditorsDropdownOpen ? getDropdownHeight(moderatorOptions.length) : 50, }}>
+                            <DropDownPicker
+                                multiple={true}
+                                open={isEditorsDropdownOpen}
+                                value={selectedModerators}
+                                items={moderatorOptions}
+                                setOpen={setIsEditorsDropdownOpen}
+                                setValue={setSelectedModerators}
+                                style={{
+                                    borderWidth: 0,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: '#f2f2f2'
+                                }}
+                                dropDownContainerStyle={{
+                                    borderWidth: 0,
+                                    zIndex: 1000001,
+                                    elevation: 1000001
+                                }}
+                                containerStyle={{
+                                    shadowColor: '#000',
+                                    shadowOffset: {
+                                        width: 1,
+                                        height: 3
+                                    },
+                                    shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.08,
+                                    shadowRadius: 12,
+                                    zIndex: 1000001,
+                                    elevation: 1000001
+                                }}
+                            />
+                        </View> : null}
                         {/* <label style={{ width: '100%', maxWidth: 320 }}>
                             <Select
                                 themeVariant="light"
@@ -1568,9 +1599,11 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 </Text>
                             </TouchableOpacity>
 
-
-                            <TouchableOpacity
-                                onPress={() => setShowDuplicateChannel(true)}
+                            {props.userId === channelCreator ? <TouchableOpacity
+                                onPress={() => {
+                                    props.scrollToTop()
+                                    setShowDuplicateChannel(true)
+                                }}
                                 style={{
                                     backgroundColor: 'white',
                                     borderRadius: 15,
@@ -1596,7 +1629,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 }}>
                                     DUPLICATE
                                 </Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> : null}
                             {
                                 temporary ?
                                     <TouchableOpacity

@@ -23,9 +23,12 @@ import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor'
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { Video } from 'expo-av';
 import RenderHtml from 'react-native-render-html';
+import { handleFile } from '../helpers/FileUpload';
+import _ from 'lodash';
 
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
+
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [problems, setProblems] = useState<any[]>(props.problems.slice());
@@ -53,7 +56,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [problemRefs, setProblemRefs] = useState<any[]>(props.problems.map(() => createRef(null)));
     const [showFormulas, setShowFormulas] = useState<any[]>(props.problems.map((prob: any) => false));
     const [responseEquations, setResponseEquations] = useState<any[]>(props.problems.map((prob: any) => ''));
-    const [getRef, setRef] = useDynamicRefs();
+    // const [getRef, setRef] = useDynamicRefs();
     const [optionEquations, setOptionEquations] = useState<any[]>([]);
     const [showOptionFormulas, setShowOptionFormulas] = useState<any[]>([]);
     const regradeOptions: any = {
@@ -62,7 +65,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         giveEveryoneFullCredit: 'Give everyone full credit',
         noRegrading: 'Update question without regrading.'
     };
-    let RichText: any = useRef();
+    let QuestionRichText: any = useRef();
+    let InstructionsRichText: any = useRef();
+    const [instructionsEditorFocus, setInstructionsEditorFocus] = useState(false);
     const [editorFocus, setEditorFocus] = useState(false);
     const [optionEditorRefs, setOptionEditorRefs] = useState<boolean[]>([]);
     const [solutionEditorRefs, setSolutionEditorRefs] = useState<boolean[]>([]);
@@ -100,14 +105,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     useEffect(() => {
         if (props.isOwner) return;
 
+        console.log("Props.solutions during init")
+
         if (props.solutions && props.solutions.length !== 0) {
             setSolutions(props.solutions);
+
+            console.log("Setting initial solutions from props")
 
             // Load initial solutions for free-response text editors
             if (initialSolutions.length === 0) {
                 setInitialSolutions(lodash.cloneDeep(props.solutions));
             }
         } else {
+
+            console.log("initiating solutions")
+
             const solutionInit: any = [];
             problems.map((problem: any) => {
                 if (!problem.questionType || problem.questionType === 'trueFalse') {
@@ -130,6 +142,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 }
             });
             setSolutions(solutionInit);
+            setInitialSolutions(solutionInit)
             props.setSolutions(solutionInit);
         }
     }, [problems, props.solutions, props.setSolutions, props.isOwner]);
@@ -554,6 +567,25 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         );
     };
 
+    const handleUploadVideoQuestion = useCallback(async (index: number) => {
+        const res = await handleFile(true, props.userId);
+
+        // console.log('File upload result', res);
+
+        if (!res || res.url === '' || res.type === '') {
+            return;
+        }
+
+        const obj = { url: res.url, type: res.type, content: problems[index].question  };
+
+        const newProbs = [...problems];
+        newProbs[index].question = JSON.stringify(obj);
+        // setEditQuestion(newProbs[problemIndex]);
+        setProblems(newProbs);
+        setShowImportOptions(false);
+
+    }, [props.userId, problems])
+
     /**
      * @description Renders Rich editor for Question
      */
@@ -607,7 +639,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         flatContainerStyle={{
                             paddingHorizontal: 12
                         }}
-                        editor={RichText}
+                        editor={QuestionRichText}
                         disabled={false}
                         selectedIconTint={'#006AFF'}
                         disabledIconTint={'#bfbfbf'}
@@ -619,12 +651,15 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             actions.setItalic,
                             actions.setUnderline,
                             actions.insertImage,
+                            actions.insertVideo,
                             actions.insertLink,
                             actions.insertBulletsList,
                             actions.insertOrderedList,
                             actions.heading1,
                             actions.heading3,
                             actions.setParagraph,
+                            actions.setSuperscript,
+                            actions.setSubscript,
                             actions.foreColor,
                             actions.hiliteColor,
                             'insertEmoji'
@@ -633,7 +668,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             [actions.keyboard]: ({ tintColor }) => (
                                 <Text style={{ color: 'green', fontSize: 20 }}>✓</Text>
                             ),
-                            [actions.insertVideo]: importIcon,
                             insertEmoji: emojiIcon,
                             [actions.heading1]: ({ tintColor }) => (
                                 <Text
@@ -692,11 +726,14 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 </Text>
                             )
                         }}
-                        hiliteColor={() => props.handleHiliteColor(RichText)}
-                        foreColor={() => props.handleForeColor(RichText)}
-                        insertEmoji={() => props.handleEmoji(RichText)}
-                        onPressAddImage={() => props.handleAddImage(RichText)}
-                        onInsertLink={() => props.handleInsertLink(RichText)}
+                        hiliteColor={() => props.handleHiliteColor(QuestionRichText)}
+                        foreColor={() => props.handleForeColor(QuestionRichText)}
+                        insertEmoji={() => props.handleEmoji(QuestionRichText)}
+                        onPressAddImage={() => props.handleAddImage(QuestionRichText)}
+                        onInsertLink={() => props.handleInsertLink(QuestionRichText)}
+                        insertVideo={() => {
+                            handleUploadVideoQuestion(index)
+                        }}
                     />
                     <ScrollView
                         horizontal={false}
@@ -714,7 +751,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         persistentScrollbar={true}
                     >
                         <RichEditor
-                            ref={RichText}
+                            ref={QuestionRichText}
                             useContainer={true}
                             style={{
                                 width: '100%',
@@ -758,7 +795,10 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     props.setProblems(newProbs);
                                 }
                             }}
-                            onFocus={() => setEditorFocus(true)}
+                            onFocus={() => {
+                                setInstructionsEditorFocus(false)
+                                setEditorFocus(true)
+                            }}
                             onBlur={() => setEditorFocus(false)}
                             allowFileAccess={true}
                             allowFileAccessFromFileURLs={true}
@@ -830,11 +870,17 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         props.setSolutions(updatedSolution);
     };
 
+    console.log("Problems length", problems.length)
+    console.log("Solutions length", solutions.length)
+    console.log("Initial solutions", initialSolutions.length)
+    console.log('Is owner', props.isOwner)
+
+
     if (problems.length !== solutions.length && !props.isOwner) {
         return <View />;
     }
 
-    if (!props.isOwner && initialSolutions.length === 0) return null;
+    if (!props.isOwner && initialSolutions.length !== solutions.length) return null;
 
     let displayProblems = props.shuffleQuiz && !props.isOwner ? shuffledProblems : problems;
 
@@ -857,18 +903,18 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         );
     }
 
-    let optionRefs: any[] = [];
-    let solutionRefs: any[] = [];
+    // let optionRefs: any[] = [];
+    // let solutionRefs: any[] = [];
 
-    if (editQuestionNumber !== 0) {
-        problems[editQuestionNumber - 1].options.map((_: any, index: number) => {
-            optionRefs.push(getRef(index.toString()));
-        });
-    }
+    // if (editQuestionNumber !== 0) {
+    //     problems[editQuestionNumber - 1].options.map((_: any, index: number) => {
+    //         optionRefs.push(props.getRef(index.toString()));
+    //     });
+    // }
 
-    problems.map((prob: any, index: number) => {
-        solutionRefs.push(getRef(index.toString()));
-    });
+    // problems.map((prob: any, index: number) => {
+    //     solutionRefs.push(props.getRef(index.toString()));
+    // });
 
     // MAIN RETURN
     return (
@@ -899,12 +945,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 backgroundColor: '#fff',
                                 maxHeight: 40,
                                 height: 40,
-                                display: editorFocus ? 'flex' : 'none'
+                                display: instructionsEditorFocus ? 'flex' : 'none'
                             }}
                             flatContainerStyle={{
                                 paddingHorizontal: 12
                             }}
-                            editor={RichText}
+                            editor={InstructionsRichText}
                             disabled={false}
                             selectedIconTint={'#006AFF'}
                             disabledIconTint={'#bfbfbf'}
@@ -920,6 +966,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 actions.heading1,
                                 actions.heading3,
                                 actions.setParagraph,
+                                actions.setSuperscript,
+                                actions.setSubscript,
                                 actions.foreColor,
                                 actions.hiliteColor,
                                 'insertEmoji'
@@ -993,11 +1041,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     </Text>
                                 )
                             }}
-                            hiliteColor={() => props.handleHiliteColor(RichText)}
-                            foreColor={() => props.handleForeColor(RichText)}
-                            insertEmoji={() => props.handleEmoji(RichText)}
-                            onPressAddImage={() => props.handleAddImage(RichText)}
-                            onInsertLink={() => props.handleInsertLink(RichText)}
+                            hiliteColor={() => props.handleHiliteColor(InstructionsRichText)}
+                            foreColor={() => props.handleForeColor(InstructionsRichText)}
+                            insertEmoji={() => props.handleEmoji(InstructionsRichText)}
+                            onPressAddImage={() => props.handleAddImage(InstructionsRichText)}
+                            onInsertLink={() => props.handleInsertLink(InstructionsRichText)}
                         />
                         <ScrollView
                             horizontal={false}
@@ -1005,7 +1053,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 backgroundColor: '#f2f2f2',
                                 height: 120,
                                 borderColor: '#f2f2f2',
-                                borderWidth: editorFocus ? 1 : 0
+                                borderWidth: instructionsEditorFocus ? 1 : 0
                             }}
                             keyboardDismissMode={'none'}
                             nestedScrollEnabled={true}
@@ -1015,7 +1063,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             persistentScrollbar={true}
                         >
                             <RichEditor
-                                ref={RichText}
+                                ref={InstructionsRichText}
                                 useContainer={true}
                                 style={{
                                     width: '100%',
@@ -1042,8 +1090,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     const modifedText = text.split('&amp;').join('&');
                                     setInstructions(modifedText);
                                 }}
-                                onFocus={() => setEditorFocus(true)}
-                                onBlur={() => setEditorFocus(false)}
+                                onFocus={() => {
+                                    // props.resetEditorOptionIndex()
+                                    setInstructionsEditorFocus(true)
+                                    setEditorFocus(false)
+                                }}
+                                onBlur={() => setInstructionsEditorFocus(false)}
                                 allowFileAccess={true}
                                 allowFileAccessFromFileURLs={true}
                                 allowUniversalAccessFromFileURLs={true}
@@ -1101,7 +1153,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     type = parse.type;
                 }
 
-                const solutionRef: any = setRef(index.toString());
+                // const solutionRef: any = props.setRef(index.toString());
+
+                const solutionRef: any = {}
 
                 return (
                     <View
@@ -1386,8 +1440,16 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     color = '#3B64F8';
                                 }
 
-                                const currRef: any = setRef(i.toString());
+                              
 
+                                let currRef: any = {};
+
+                                if (editQuestionNumber === index + 1 ) {
+                                    console.log("Problem index", index.toString())
+                                    console.log("Render option", i.toString())
+                                    currRef = props.setRef(i.toString());
+                                }
+ 
                                 return (
                                     <View style={{ flexDirection: 'row', marginBottom: 20 }}>
                                         <View style={{ width: 40, paddingTop: 17 }}>
@@ -1470,11 +1532,14 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         actions.setBold,
                                                         actions.setItalic,
                                                         actions.setUnderline,
+                                                        actions.insertImage,
                                                         actions.insertBulletsList,
                                                         actions.insertOrderedList,
                                                         actions.heading1,
                                                         actions.heading3,
                                                         actions.setParagraph,
+                                                        actions.setSuperscript,
+                                                        actions.setSubscript,
                                                         actions.foreColor,
                                                         actions.hiliteColor,
                                                         'insertEmoji'
@@ -1546,6 +1611,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     foreColor={() => props.handleForeColor(currRef)}
                                                     insertEmoji={() => props.handleEmoji(currRef)}
                                                     onInsertLink={() => props.handleInsertLink(currRef)}
+                                                    onPressAddImage={() => props.handleAddImage(currRef)}
+                                                    // hiliteColor={() => props.handleHiliteColorOptions((i.toString()))}
+                                                    // foreColor={() => props.handleForeColorOptions((i.toString()))}
+                                                    // insertEmoji={() => props.handleEmojiOptions((i.toString()))}
+                                                    // onPressAddImage={() => props.handleAddImageQuizOptions((i.toString()))}
                                                 />
                                                 <ScrollView
                                                     horizontal={false}
@@ -1699,11 +1769,14 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 actions.setBold,
                                                 actions.setItalic,
                                                 actions.setUnderline,
+                                                actions.insertImage,
                                                 actions.insertBulletsList,
                                                 actions.insertOrderedList,
                                                 actions.heading1,
                                                 actions.heading3,
                                                 actions.setParagraph,
+                                                actions.setSuperscript,
+                                                actions.setSubscript,
                                                 actions.foreColor,
                                                 actions.hiliteColor,
                                                 'insertEmoji'
@@ -1775,6 +1848,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             foreColor={() => props.handleForeColor(solutionRef)}
                                             insertEmoji={() => props.handleEmoji(solutionRef)}
                                             onInsertLink={() => props.handleInsertLink(solutionRef)}
+                                            onPressAddImage={() => props.handleAddImage(solutionRef)}
+                                            // hiliteColor={() => props.handleHiliteColorOptions((index.toString()))}
+                                            // foreColor={() => props.handleForeColorOptions((index.toString()))}
+                                            // insertEmoji={() => props.handleEmojiOptions((index.toString()))}
+                                            // onPressAddImage={() => props.handleAddImageQuizOptions((index.toString()))}
                                         />
                                         <ScrollView
                                             horizontal={false}
@@ -2030,7 +2108,30 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     );
 };
 
-export default Quiz;
+
+// export default Quiz;
+export default React.memo(Quiz, (prev, next) => {
+    return _.isEqual(
+                {
+                    ...prev.setSolutions,
+                    ...prev.solutions,
+                    ...prev.problems,
+                    ...prev.headers,
+                    ...prev.unmodifiedProblems,
+                    ...prev.quizAttempts,
+                    ...prev.isOwner,
+                },
+                {
+                    ...next.setSolutions,
+                    ...next.solutions,
+                    ...next.problems,
+                    ...next.headers,
+                    ...next.unmodifiedProblems,
+                    ...next.quizAttempts,
+                    ...next.isOwner,
+                }
+            );
+});
 
 const styles = StyleSheet.create({
     input: {

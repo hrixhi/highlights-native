@@ -1,5 +1,5 @@
 // REACT
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Dimensions, TextInput as DefaultTextInput, Keyboard, ScrollView } from 'react-native';
 import lodash from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ import RenderHtml from 'react-native-render-html';
 // HELPER
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
+import { handleFile } from '../helpers/FileUpload';
 
 // CONSTANTS
 const questionTypeOptions = [
@@ -82,6 +83,13 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const [insertImageVisible, setInsertImageVisible] = useState(false);
     const [questionEditorFocus, setQuestionEditorFocus] = useState(false);
 
+    console.log("Props.problems", props.problems);
+    console.log("Problems inside quizCreate", problems);
+
+    useEffect(() => {
+        setProblems(props.problems)
+    }, [props.problems])
+
     // HOOKS
 
     /**
@@ -94,6 +102,25 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
             setOptionEditorRefs([]);
         }
     }, [editQuestionNumber]);
+
+    const handleUploadVideoQuestion = useCallback(async (index: number) => {
+        const res = await handleFile(true, props.userId);
+
+        console.log('File upload result', res);
+
+        if (!res || res.url === '' || res.type === '') {
+            return;
+        }
+
+        const obj = { url: res.url, type: res.type, content: problems[index].question };
+
+        const newProbs = [...problems];
+        newProbs[index].question = JSON.stringify(obj);
+
+        setProblems(newProbs)
+        props.setProblems(newProbs)
+
+    }, [props.userId, problems])
 
     // EDITOR METHODS
 
@@ -169,21 +196,24 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             actions.setItalic,
                             actions.setUnderline,
                             actions.insertImage,
+                            actions.insertVideo,
                             actions.insertLink,
                             actions.insertBulletsList,
                             actions.insertOrderedList,
                             actions.heading1,
                             actions.heading3,
                             actions.setParagraph,
+                            actions.setSuperscript,
+                            actions.setSubscript,
                             actions.foreColor,
                             actions.hiliteColor,
-                            'insertEmoji'
+                            'insertEmoji',
                         ]}
                         iconMap={{
                             [actions.keyboard]: ({ tintColor }) => (
                                 <Text style={{ color: 'green', fontSize: 20 }}>✓</Text>
                             ),
-                            [actions.insertVideo]: importIcon,
+                            // [actions.insertVideo]: importIcon,
                             insertEmoji: emojiIcon,
                             [actions.heading1]: ({ tintColor }) => (
                                 <Text
@@ -240,13 +270,16 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 >
                                     H
                                 </Text>
-                            )
+                            ),
                         }}
                         hiliteColor={() => props.handleHiliteColor(RichText)}
                         foreColor={() => props.handleForeColor(RichText)}
                         insertEmoji={() => props.handleEmoji(RichText)}
                         onPressAddImage={() => props.handleAddImage(RichText)}
                         onInsertLink={() => props.handleInsertLink(RichText)}
+                        insertVideo={() => {
+                            handleUploadVideoQuestion(index)
+                        }}
                     />
                     <ScrollView
                         horizontal={false}
@@ -526,13 +559,13 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
     };
 
     // Create refs for current question options
-    let optionRefs: any[] = [];
+    // let optionRefs: any[] = [];
 
-    if (editQuestionNumber !== 0) {
-        problems[editQuestionNumber - 1].options.map((_: any, index: number) => {
-            optionRefs.push(getRef(index.toString()));
-        });
-    }
+    // if (editQuestionNumber !== 0) {
+    //     problems[editQuestionNumber - 1].options.map((_: any, index: number) => {
+    //         optionRefs.push(getRef(index.toString()));
+    //     });
+    // }
 
     // MAIN RETURN
 
@@ -1025,7 +1058,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             </Text>
                         ) : null}
                         {problem.options.map((option: any, i: any) => {
-                            const currRef: any = setRef(i.toString());
+
+                            const currRef: any = props.setRef(i.toString());
 
                             return (
                                 <View
@@ -1097,14 +1131,17 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 actions.setBold,
                                                                 actions.setItalic,
                                                                 actions.setUnderline,
+                                                                actions.insertImage,
                                                                 actions.insertBulletsList,
                                                                 actions.insertOrderedList,
                                                                 actions.heading1,
                                                                 actions.heading3,
                                                                 actions.setParagraph,
+                                                                actions.setSuperscript,
+                                                                actions.setSubscript,
                                                                 actions.foreColor,
                                                                 actions.hiliteColor,
-                                                                'insertEmoji'
+                                                                'insertEmoji',
                                                             ]}
                                                             iconMap={{
                                                                 [actions.keyboard]: ({ tintColor }) => (
@@ -1171,17 +1208,17 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     </Text>
                                                                 )
                                                             }}
-                                                            hiliteColor={() => props.handleHiliteColor(currRef)}
-                                                            foreColor={() => props.handleForeColor(currRef)}
-                                                            insertEmoji={() => props.handleEmoji(currRef)}
-                                                            onInsertLink={() => props.handleInsertLink(currRef)}
+                                                            hiliteColor={() => props.handleHiliteColorOptions((i.toString()))}
+                                                            foreColor={() => props.handleForeColorOptions((i.toString()))}
+                                                            insertEmoji={() => props.handleEmojiOptions((i.toString()))}
+                                                            onPressAddImage={() => props.handleAddImageQuizOptions((i.toString()))}
                                                         />
                                                         <ScrollView
                                                             horizontal={false}
                                                             style={{
                                                                 backgroundColor: '#f2f2f2',
                                                                 // maxHeight: editorFocus ? 340 : 'auto',
-                                                                height: 100,
+                                                                // height: 100,
                                                                 borderColor: '#f2f2f2',
                                                                 borderWidth: optionEditorRefs[i] ? 1 : 0
                                                             }}
@@ -1248,6 +1285,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     ];
                                                                     updateOptionEditorRefs[i] = false;
                                                                     setOptionEditorRefs(updateOptionEditorRefs);
+                                                                    props.resetEditorOptionIndex()
                                                                 }}
                                                                 allowFileAccess={true}
                                                                 allowFileAccessFromFileURLs={true}

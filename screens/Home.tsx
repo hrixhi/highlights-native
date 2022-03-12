@@ -81,7 +81,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [updateModalKey, setUpdateModalKey] = useState('local');
 
     const [modalType, setModalType] = useState('');
-    const [pageNumber, setPageNumber] = useState(0);
+    // const [pageNumber, setPageNumber] = useState(0);
     const [channelId, setChannelId] = useState('');
     const [cueId, setCueId] = useState('');
     const [createdBy, setCreatedBy] = useState('');
@@ -126,18 +126,25 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
     const [isSsoEnabled, setIsSsoEnabled] = useState(false);
 
+    const [showNewPost, setShowNewPost] = useState(false);
+    const [showNewMeeting, setShowNewMeeting] = useState(false);
+
     const responseListener: any = useRef();
 
     const [option, setOption] = useState('To Do');
     const [options] = useState(['To Do', 'Classroom', 'Search', 'Inbox', 'Account']);
+    const [workspaceOptions] = useState(['Content', 'Discuss', 'Meet', 'Scores', 'Settings']);
+    const [createOptions] = useState(['Content', 'Import', 'Quiz', 'Library'])
 
     const [createOption, setCreateOption] = useState('');
+    const [userId, setUserId] = useState('');
+    const [role, setRole] = useState('');
 
     // const [showSettings, setShowSettings] = useState(false);
 
     const [showHome, setShowHome] = useState(true);
     const [hideNewChatButton, setHideNewChatButton] = useState(false);
-
+    const [hideNavbarDiscussions, setHideNavbarDiscussions] = useState(false);
     const [loadingCues, setLoadingCues] = useState(true);
     const [loadingSubs, setLoadingSubs] = useState(true);
     const [loadingUser, setLoadingUser] = useState(true);
@@ -145,10 +152,25 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const [syncingCues, setSyncingCues] = useState(false);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const [workspaceActiveTab, setWorkspaceActiveTab] = useState('Content');
+    const [createActiveTab, setCreateActiveTab] = useState('Content')
+    const [disableCreateNavbar, setDisableCreateNavbar] = useState(false)
+
+    const [closingModal, setClosingModal] = useState(false);
+    const [refreshingWorkspace, setRefreshingWorkspace] = useState(false)
+    const [showImportCreate, setShowImportCreate] = useState(false)
+
+    const [showWorkspaceFilterModal, setShowWorkspaceFilterModal] = useState(false);
+
+    console.log('Disable create', disableCreateNavbar)
 
     const onOrientationChange = useCallback(async () => {
         await Updates.reloadAsync();
     }, []);
+
+    useEffect(() => {
+        setWorkspaceActiveTab('Content')
+    }, [selectedWorkspace])
 
     useEffect(() => {
         (async () => {
@@ -160,7 +182,23 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         })();
     }, []);
 
-    console.log("Selected workspace", selectedWorkspace)
+    useEffect(() => {
+        (async () => {
+            const u = await AsyncStorage.getItem('user');
+            if (u) {
+                const user = JSON.parse(u);
+
+                if (user._id && user._id !== '') {
+                    setUserId(user._id);
+                    setRole(user.role);
+                    await loadDataFromCloud();
+                    // Update EXPO notification ID once on INIT
+                    updateExpoNotificationId(user)
+                }
+            }
+        })();
+
+    }, [])
 
     useEffect(() => {
         (async () => {
@@ -229,6 +267,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             const token = r.data.user.loginFromSso.token;
                             if (u.__typename) {
                                 delete u.__typename;
+                            }
+
+                            if (u._id) {
+                                setUserId(u._id)
+                                setRole(u.role)
                             }
 
                             const sU = JSON.stringify(u);
@@ -553,6 +596,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
     }, []);
 
+    console.log("Selected workspace", selectedWorkspace)
+
+    console.log("User id", userId)
+
     const updateInboxCount = useCallback(userId => {
         const server = fetchAPI('');
         server
@@ -573,6 +620,111 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             })
             .catch(err => console.log(err));
     }, []);
+
+    const handleRefreshWorkspace = useCallback(async () => {
+        
+        let user = await AsyncStorage.getItem('user');
+
+        if (user) {
+            setRefreshingWorkspace(true)
+
+            await refreshSubscriptions()
+
+            const parsedUser = JSON.parse(user);
+            const server = fetchAPI(parsedUser._id);
+
+            const allCues: any = {};
+
+            try {
+                const res = await server.query({
+                    query: getCues,
+                    variables: {
+                        userId: parsedUser._id
+                    }
+                });
+
+                if (res.data.cue.findByUserId) {
+                    // Here we load all new Cues
+                    // we update statuses for the cues that are already stored and add new cues to the list
+                    // (cant directly replace the store because channel cues could be modified by the user)
+
+                    const receivedCues = res.data.cue.findByUserId;
+                    receivedCues.map((item: any) => {
+                        const channelId = item.channelId.toString().trim();
+                        let index = -1;
+                        if (allCues[channelId]) {
+                            index = allCues[channelId].findIndex((cue: any) => {
+                                return cue._id.toString().trim() === item._id.toString().trim();
+                            });
+                        }
+                        if (index === -1) {
+                            let cue: any = {};
+                            cue = {
+                                ...item
+                            };
+                            delete cue.__typename;
+                            if (allCues[cue.channelId]) {
+                                allCues[cue.channelId].push(cue);
+                            } else {
+                                allCues[cue.channelId] = [cue];
+                            }
+                        } else {
+                            allCues[item.channelId][index].unreadThreads = item.unreadThreads ? item.unreadThreads : 0;
+                            allCues[item.channelId][index].status = item.status;
+                            allCues[item.channelId][index].folderId = item.folderId;
+                            if (!allCues[item.channelId][index].original) {
+                                allCues[item.channelId][index].original = item.cue;
+                            }
+                        }
+                    });
+                    const custom: any = {};
+                    console.log("Refresh workspace cues", allCues)
+                    setCues(allCues);
+                    if (allCues['local']) {
+                        allCues['local'].map((item: any) => {
+                            if (item.customCategory !== '') {
+                                if (!custom[item.customCategory]) {
+                                    custom[item.customCategory] = 0;
+                                }
+                            }
+                        });
+                        const customC: any[] = [];
+                        Object.keys(custom).map(item => {
+                            customC.push(item);
+                        });
+                        customC.sort();
+                        setCustomCategories(customC);
+                    }
+                    // await notificationScheduler(allCues);
+                    const stringCues = JSON.stringify(allCues);
+                    await AsyncStorage.setItem('cues', stringCues);
+                    setRefreshingWorkspace(false)
+                }
+            } catch (err) {
+                console.log('Error background', err);
+                Alert(unableToRefreshCuesAlert, checkConnectionAlert);
+                const custom: any = {};
+                setCues(allCues);
+                if (allCues['local']) {
+                    allCues['local'].map((item: any) => {
+                        if (item.customCategory !== '') {
+                            if (!custom[item.customCategory]) {
+                                custom[item.customCategory] = 0;
+                            }
+                        }
+                    });
+                    const customC: any[] = [];
+                    Object.keys(custom).map(item => {
+                        customC.push(item);
+                    });
+                    customC.sort();
+                    setCustomCategories(customC);
+                }
+                setRefreshingWorkspace(false)
+            }
+        }
+
+    }, [])
 
     // imp
     const loadNewChannelCues = useCallback(async () => {
@@ -642,7 +794,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         customC.sort();
                         setCustomCategories(customC);
                     }
-                    await notificationScheduler(allCues);
+                    // await notificationScheduler(allCues);
                     const stringCues = JSON.stringify(allCues);
                     await AsyncStorage.setItem('cues', stringCues);
                     setSyncingCues(false);
@@ -683,7 +835,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             const custom: any = {};
             const allCues = JSON.parse(unparsedCues);
             setCues(allCues);
-            await notificationScheduler(allCues);
+            // await notificationScheduler(allCues);
             if (allCues['local']) {
                 allCues['local'].map((item: any) => {
                     if (item.customCategory !== '') {
@@ -744,55 +896,55 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
     }, []);
 
+    const updateExpoNotificationId = useCallback(async (user: any) => {
+
+        // const user = JSON.parse(u);
+        let experienceId = undefined;
+        if (!Constants.manifest) {
+            // Absence of the manifest means we're in bare workflow
+            experienceId = user._id + Platform.OS;
+        }
+        const expoToken = await Notifications.getExpoPushTokenAsync({
+            experienceId
+        });
+
+        const notificationId = expoToken.data;
+
+        if (!user.notificationId || !user.notificationId.includes(notificationId)) {
+            const server = fetchAPI('');
+            console.log("Notification id set", {
+                userId: user._id,
+                notificationId:
+                    user.notificationId === 'NOT_SET'
+                        ? notificationId
+                        : user.notificationId + '-BREAK-' + notificationId
+            })
+            server.mutate({
+                mutation: updateNotificationId,
+                variables: {
+                    userId: user._id,
+                    notificationId:
+                        user.notificationId === 'NOT_SET'
+                            ? notificationId
+                            : user.notificationId + '-BREAK-' + notificationId
+                }
+            });
+        }
+        
+        
+    }, [])
+
     // FETCH NEW DATA
     const loadData = useCallback(
         async (saveData?: boolean) => {
             try {
-                const version = 'v0.9';
-                const fO = await AsyncStorage.getItem(version);
-
-                // LOAD FIRST OPENED
-                if (fO === undefined || fO === null) {
-                    try {
-                        await AsyncStorage.clear();
-                        await AsyncStorage.setItem(version, 'SET');
-                    } catch (e) {}
-                }
 
                 let u = await AsyncStorage.getItem('user');
 
                 // HANDLE PROFILE
                 if (u) {
                     // UPDATE NOTIFICATION ID
-                    const user = JSON.parse(u);
-                    if (user.notificationId === 'NOT_SET') {
-                        let experienceId = undefined;
-                        if (!Constants.manifest) {
-                            // Absence of the manifest means we're in bare workflow
-                            experienceId = user._id + Platform.OS;
-                        }
-                        const expoToken = await Notifications.getExpoPushTokenAsync({
-                            experienceId
-                        });
-                        const notificationId = expoToken.data;
-                        const server = fetchAPI('');
-                        server
-                            .mutate({
-                                mutation: updateNotificationId,
-                                variables: {
-                                    userId: user._id,
-                                    notificationId
-                                }
-                            })
-                            .then(async res => {
-                                if (res.data && res.data.user.updateNotificationId) {
-                                    user.notificationId = notificationId;
-                                    const sU = JSON.stringify(user);
-                                    await AsyncStorage.setItem('user', sU);
-                                }
-                            })
-                            .catch(err => console.log(err));
-                    }
+                    
 
                     const parsedUser = JSON.parse(u);
                     if (parsedUser.email) {
@@ -932,7 +1084,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             })
             .then(async (r: any) => {
                 if (r.data && r.data.user.getSsoLinkNative) {
-                    console.log('URL', r.data.user.getSsoLinkNative);
                     if (r.data.user.getSsoLinkNative !== '') {
                         // window.location.href = r.data.user.getSsoLinkNative;
                         const url = r.data.user.getSsoLinkNative;
@@ -974,9 +1125,47 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         delete u.__typename;
                     }
 
+                    if (u._id) {
+                        setUserId(u._id)
+                        setRole(u.role)
+                    }
+
                     const sU = JSON.stringify(u);
                     await AsyncStorage.setItem('jwt_token', token);
                     await AsyncStorage.setItem('user', sU);
+
+                    let experienceId = undefined;
+                    if (!Constants.manifest) {
+                        // Absence of the manifest means we're in bare workflow
+                        experienceId = u._id + Platform.OS;
+                    }
+                    const expoToken = await Notifications.getExpoPushTokenAsync({
+                        experienceId
+                    });
+                    const notificationId = expoToken.data;
+                        // UPDATE NOTIFICATION IDS AFTER LOGGING IN
+                    if (!u.notificationId || !u.notificationId.includes(notificationId)) {
+                        let experienceId = undefined;
+                        if (!Constants.manifest) {
+                            // Absence of the manifest means we're in bare workflow
+                            experienceId = u._id + Platform.OS;
+                        }
+                        const expoToken = await Notifications.getExpoPushTokenAsync({
+                            experienceId
+                        });
+                        const notificationId = expoToken.data;
+                        server.mutate({
+                            mutation: updateNotificationId,
+                            variables: {
+                                userId: u._id,
+                                notificationId:
+                                    u.notificationId === 'NOT_SET'
+                                        ? notificationId
+                                        : u.notificationId + '-BREAK-' + notificationId
+                            }
+                        });
+                    }
+
                     setShowLoginWindow(false);
                     loadDataFromCloud();
                     setIsLoggingIn(false);
@@ -1014,43 +1203,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 .then(async res => {
                     const u = res.data.user.findById;
                     if (u) {
-                        await AsyncStorage.setItem('cueDraft', u.currentDraft);
+                        // await AsyncStorage.setItem('cueDraft', u.currentDraft);
                         delete u.currentDraft;
                         delete u.__typename;
                         const sU = JSON.stringify(u);
                         await AsyncStorage.setItem('user', sU);
-                        // UPDATE NOTIFICATION
-                        let experienceId = undefined;
-                        if (!Constants.manifest) {
-                            // Absence of the manifest means we're in bare workflow
-                            experienceId = u._id + Platform.OS;
-                        }
-                        const expoToken = await Notifications.getExpoPushTokenAsync({
-                            experienceId
-                        });
-                        const notificationId = expoToken.data;
-                        // UPDATE NOTIFICATION IDS AFTER LOGGING IN
-                        if (u.notificationId && !u.notificationId.includes(notificationId)) {
-                            let experienceId = undefined;
-                            if (!Constants.manifest) {
-                                // Absence of the manifest means we're in bare workflow
-                                experienceId = u._id + Platform.OS;
-                            }
-                            const expoToken = await Notifications.getExpoPushTokenAsync({
-                                experienceId
-                            });
-                            const notificationId = expoToken.data;
-                            server.mutate({
-                                mutation: updateNotificationId,
-                                variables: {
-                                    userId: user._id,
-                                    notificationId:
-                                        u.notificationId === 'NOT_SET'
-                                            ? notificationId
-                                            : u.notificationId + '-BREAK-' + notificationId
-                                }
-                            });
-                        }
                         setLoadingUser(false);
                     }
                 })
@@ -1069,9 +1226,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         res.data.cue.getCuesFromCloud.map((cue: any) => {
                             const channelId = cue.channelId && cue.channelId !== '' ? cue.channelId : 'local';
                             delete cue.__typename;
-                            if (channelId === '60c16dcdd79a074f7318dd3f' && cue._id === '621b27af9a4afc0cf34ee36b') {
-                                console.log('Updated cue', cue)
-                            } 
+                            // if (channelId === '60c16dcdd79a074f7318dd3f' && cue._id === '621b27af9a4afc0cf34ee36b') {
+                            //     console.log('Updated cue', cue)
+                            // } 
                             if (allCues[channelId]) {
                                 allCues[channelId].push({ ...cue });
                             } else {
@@ -1099,7 +1256,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         setCustomCategories(customC);
                         const stringCues = JSON.stringify(allCues);
                         await AsyncStorage.setItem('cues', stringCues);
-                        await notificationScheduler(allCues);
+                        // await notificationScheduler(allCues);
                         setLoadingCues(false);
                     }
                 })
@@ -1154,6 +1311,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     // imp
     const saveDataInCloud = useCallback(async () => {
         if (saveDataInProgress) return;
+
 
         setSaveDataInProgress(true);
         const u: any = await AsyncStorage.getItem('user');
@@ -1263,36 +1421,67 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const updateCuesHelper = useCallback(
         async (obj: any) => {
             setCues(obj);
-            await notificationScheduler(obj);
+            // await notificationScheduler(obj);
         },
         [cues]
     );
 
-    useEffect(() => {
-        (async () => {
-            await syncOfflineDataOnInit();
-            await loadData();
-        })();
+    // useEffect(() => {
+    //     (async () => {
+    //         await syncOfflineDataOnInit();
+    //         await loadData();
+    //     })();
 
-        // Called when component is loaded
-    }, []);
+    //     // Called when component is loaded
+    // }, []);
 
     const openModal = useCallback(
-        type => {
+        async (type) => {
+
+            console.log("Options", option)
+            console.log("Active workspace", selectedWorkspace)
+
+            if (option === 'Classroom' && selectedWorkspace !== '') {
+                await AsyncStorage.setItem('activeWorkspace', selectedWorkspace)
+                setSelectedWorkspace('')
+                console.log("set new selected workspace", selectedWorkspace)
+            }
+
+
             setModalType(type);
-            AsyncStorage.setItem('lastopened', type);
+            // AsyncStorage.setItem('lastopened', type);
         },
-        [cues]
+        [cues, selectedWorkspace, option]
     );
 
     const openCueFromCalendar = useCallback(
-        (channelId, _id, by) => {
+        async (channelId, _id, by) => {
+
+            setShowHome(false);
+            openModal('Update');
+
+            console.log("Open cue from calendar");
+
+            const fetchAsyncCues = await AsyncStorage.getItem('cues');
+
+            console.log('Fetched storage cues', fetchAsyncCues)
+
+            if (!fetchAsyncCues) {
+                "Failed to open. Try again"
+                return;
+            }
+
+            const storageCues = JSON.parse(fetchAsyncCues);
+
+            
+
+            // Get the latest cues from async storage and not state (Error in quiz) 
             let cueKey = '';
             let cueIndex = 0;
 
-            if (cues !== {}) {
-                Object.keys(cues).map(key => {
-                    cues[key].map((cue: any, index: number) => {
+            if (storageCues !== {}) {
+                Object.keys(storageCues).map(key => {
+                    storageCues[key].map((cue: any, index: number) => {
                         if (cue._id === _id) {
                             cueKey = key;
                             cueIndex = index;
@@ -1301,10 +1490,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 });
             }
 
+            console.log('StorageCues mapping over')
+
             setUpdateModalKey(cueKey);
             setUpdateModalIndex(cueIndex);
-            setPageNumber(pageNumber);
+            // setPageNumber(pageNumber);
             setChannelId(channelId);
+
             if (channelId !== '') {
                 const sub = subscriptions.find((item: any) => {
                     return item.channelId === channelId;
@@ -1315,17 +1507,16 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             }
             setCreatedBy(by);
             setCueId(_id);
-            openModal('Update');
-            setShowHome(false);
+            
         },
-        [subscriptions, cues]
+        [subscriptions]
     );
 
     const openUpdate = useCallback(
         (key, index, pageNumber, _id, by, channId) => {
             setUpdateModalKey(key);
             setUpdateModalIndex(index);
-            setPageNumber(pageNumber);
+            // setPageNumber(pageNumber);
             setChannelId(channId);
             if (channId !== '') {
                 const sub = subscriptions.find((item: any) => {
@@ -1340,7 +1531,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             openModal('Update');
             setShowHome(false);
         },
-        [subscriptions]
+        [subscriptions, selectedWorkspace]
     );
 
     const reloadCueListAfterUpdate = useCallback(async () => {
@@ -1365,7 +1556,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 customC.sort();
                 setCustomCategories(customC);
             }
-            await notificationScheduler(allCues);
+            // await notificationScheduler(allCues);
             Animated.timing(fadeAnimation, {
                 toValue: 1,
                 duration: 150,
@@ -1463,6 +1654,25 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, [cues, updateModalKey, updateModalIndex]);
 
     const closeModal = useCallback(async () => {
+
+        setClosingModal(true);
+
+        // Check if active workspace
+        if (option === 'Classroom') {
+            
+            const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
+            
+            console.log("Active workspace home", activeWorkspace)
+
+            if (activeWorkspace) {
+
+                setSelectedWorkspace(activeWorkspace)
+            }
+        }
+
+        const cueDraftHome = await AsyncStorage.getItem('cueDraft');
+        console.log("Cue Draft Home", cueDraftHome)
+
         await loadData();
 
         setModalType('');
@@ -1479,7 +1689,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         if (modalType === 'Update') {
             setChannelId('');
         }
-    }, [fadeAnimation, modalType]);
+
+        setDisableCreateNavbar(false);
+        setCreateActiveTab('Content')
+
+        setClosingModal(false);
+
+        
+    }, [fadeAnimation, modalType, option]);
 
     /**
      * @description Helpter for icon to use in navbar
@@ -1499,13 +1716,55 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
     };
 
+    const getWorkspaceNavbarIconName = (op: string) => {
+        switch (op) {
+            case 'Content':
+                return workspaceActiveTab === op ? 'library' : 'library-outline';
+            case 'Discuss':
+                return workspaceActiveTab === op ? 'chatbubbles' : 'chatbubbles-outline';
+            case 'Meet':
+                return workspaceActiveTab === op ? 'videocam' : 'videocam-outline'
+            case 'Scores':
+                return workspaceActiveTab === op ? 'bar-chart' : 'bar-chart-outline';
+            default:
+                return workspaceActiveTab === op ? 'build' : 'build-outline';
+        }
+    };
+
+    const getCreateNavbarIconName = (op: string) => {
+        switch (op) {
+            case 'Content':
+                return createActiveTab === op ? 'create' : 'create-outline';
+            case 'Import':
+                return createActiveTab === op ? 'share' : 'share-outline';
+            case 'Quiz':
+                return createActiveTab === op ? 'checkbox' : 'checkbox-outline'
+            case 'Library':
+                return createActiveTab === op ? 'book' : 'book-outline';
+            default:
+                return createActiveTab === op ? 'build' : 'build-outline';
+        }
+    };
+
     const getNavbarIconColor = (op: string) => {
         if (op === option) {
-            if (op === 'Classroom' && selectedWorkspace !== '') {
-                return selectedWorkspace.split('-SPLIT-')[3]
-            } else {
-                return '#000'   
-            }
+            return '#000'   
+        } 
+        return '#575655'
+    }
+
+    const getWorkspaceNavbarIconColor = (op: string) => {
+        if (op === workspaceActiveTab) {
+            return selectedWorkspace.split('-SPLIT-')[3]
+        } 
+        return '#575655'
+    }
+
+    console.log('createActiveTab', createActiveTab)
+
+    const getCreateNavbarIconColor = (op: string) => {
+        if (op === createActiveTab) {
+            return selectedWorkspace.split('-SPLIT-')[3]
         } 
         return '#575655'
     }
@@ -1515,17 +1774,43 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             case 'To Do':
                 return 'Home'
             case 'Classroom':
-                if (selectedWorkspace !== '') {
-                    return selectedWorkspace.split('-SPLIT-')[0]
-                } else {
-                    return 'Workspace'
-                }
+                return 'Workspace'
             case 'Search':
                 return 'Search'
             case 'Inbox':
                 return 'Inbox'
             default:
                 return 'Account';
+        }
+    }
+
+    const getWorkspaceNavbarText = (op: string) => {
+        switch (op) {
+            case 'Content':
+                return 'Library'
+            case 'Discuss':
+                return 'Discussion'
+            case 'Meet':
+                return 'Meetings'
+            case 'Scores':
+                return 'Scores'
+            default:
+                return 'Settings';
+        }
+    }
+
+    const getCreateNavbarText = (op: string) => {
+        switch (op) {
+            case 'Content':
+                return 'Content'
+            case 'Import':
+                return 'Import'
+            case 'Quiz':
+                return 'Quiz'
+            case 'Library':
+                return 'Books'
+            default:
+                return 'Settings';
         }
     }
 
@@ -1562,6 +1847,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     } else {
         dateFilteredCues = cuesArray;
     }
+
+    console.log("Role home", role)
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%' }}>
@@ -2071,14 +2358,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         </View>
                     </KeyboardAvoidingView>
                 ) : null}
-                {/* {showHome &&
+                {showHome &&
+                !showWorkspaceFilterModal &&
                 !loadingCues &&
                 !loadingUser &&
                 !loadingSubs &&
                 !loadingOrg &&
                 !saveDataInProgress &&
                 !syncingCues &&
-                ((option === 'Classroom' && modalType !== 'Create' && !selectedWorkspace) ||
+                ((option === 'Classroom' && modalType !== 'Create' && (workspaceActiveTab === 'Content' || (workspaceActiveTab === 'Discuss' && !showNewPost && !hideNavbarDiscussions) || (workspaceActiveTab === 'Meet' && selectedWorkspace.split('-SPLIT-')[2] === userId && !showNewMeeting))) ||
                     (option === 'Inbox' && !showDirectory && !hideNewChatButton) ||
                     (option === 'Channels' && !showCreate)) ? (
                     <TouchableOpacity
@@ -2095,7 +2383,16 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     }
                                     loadData(true);
                                 }
-                                openModal('Create');
+
+                                if (selectedWorkspace === '' || workspaceActiveTab === 'Content') {
+                                    openModal('Create');
+                                } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Discuss') {
+                                    setShowNewPost(true)
+                                } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Meet') {
+                                    setShowNewMeeting(true)
+                                }
+
+                             
                                 // setShowHome(false)
                                 // setMenuCollapsed(true)
                             } else if (option === 'Channels') {
@@ -2129,14 +2426,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             },
                             shadowOpacity: 0.12,
                             shadowRadius: 10,
-                            zIndex: showLoginWindow ? 40 : 500000
+                            zIndex: showLoginWindow ? 40 : 100,
+                            opacity: showWorkspaceFilterModal ? 0 : 1
                         }}
                     >
                         <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
-                            {option === 'Classroom' ? (
+                            {option === 'Classroom' && (selectedWorkspace === '' || workspaceActiveTab === 'Content') ? (
                                 <Ionicons name="pencil-outline" size={Dimensions.get('window').width > 350 ? 26 : 25} />
-                            ) : option === 'Channels' ? (
-                                <Ionicons name="add-outline" size={Dimensions.get('window').width > 350 ? 36 : 35} />
+                            ) : option === 'Channels' || (option === 'Classroom' && selectedWorkspace !== '' && (workspaceActiveTab === 'Discuss' || workspaceActiveTab === 'Meet') ) ? (
+                                <Ionicons name={workspaceActiveTab === 'Meet' ? "videocam-outline" : "add-outline"} size={workspaceActiveTab === 'Meet' ? 28 : Dimensions.get('window').width > 350 ? 36 : 35} />
                             ) : option === 'Inbox' ? (
                                 <Ionicons name="person-add-outline" size={Dimensions.get('window').width > 350 ? 22 : 21} />
                             ) : (
@@ -2144,7 +2442,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             )}
                         </Text>
                     </TouchableOpacity>
-                ) : null} */}
+                ) : null}
                 {showHome && !showLoginWindow ? (
                     <View
                         style={{
@@ -2176,6 +2474,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             loadingSubs ||
                             loadingOrg ||
                             saveDataInProgress ||
+                            closingModal ||
                             syncingCues ? (
                                 <View style={[styles(channelId).activityContainer, styles(channelId).horizontal]}>
                                     <ActivityIndicator color={'#1F1F1F'} />
@@ -2191,7 +2490,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     showHelp={showHelp}
                                     showDirectory={showDirectory}
                                     setShowDirectory={(val: any) => setShowDirectory(val)}
-                                    // selectedWorkspace={selectedWorkspace}
+                                    selectedWorkspace={selectedWorkspace}
                                     setSelectedWorkspace={(val: any) => setSelectedWorkspace(val)}
                                     setOption={(op: any) => setOption(op)}
                                     option={option}
@@ -2213,7 +2512,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     reloadData={() => {
                                         loadDataFromCloud();
                                     }}
-                                    openCreate={(createOption: string) => {
+                                    openCreate={() => {
                                         setCueId('');
                                         setModalType('');
                                         setCreatedBy('');
@@ -2224,7 +2523,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             }
                                             loadData(true);
                                         }
-                                        setCreateOption(createOption)
+                                        console.log("Open modal create")
                                         openModal('Create');
                                     }}
                                     createOption={createOption}
@@ -2249,7 +2548,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         showDirectory.toString() +
                                         showCreate.toString() +
                                         showHelp.toString() +
-                                        subscriptions.toString() +
                                         cues.toString()
                                     }
                                     openDiscussionFromActivity={(channelId: string) => {
@@ -2300,16 +2598,34 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     customCategories={customCategories}
                                     closeCreateModal={() => {
                                         setModalType('');
-                                        setPageNumber(0);
+                                        // setPageNumber(0);
                                     }}
                                     closeOnCreate={() => {
+                                        setDisableCreateNavbar(false)
+                                        setCreateActiveTab('Content')
                                         setModalType('');
-                                        setPageNumber(0);
+                                        // setPageNumber(0);
                                         loadData(true);
                                     }}
                                     unreadMessages={unreadMessages}
                                     refreshUnreadInbox={refreshUnreadInbox}
                                     hideNewChatButton={(hide: boolean) => setHideNewChatButton(hide)}
+                                    activeWorkspaceTab={workspaceActiveTab}
+                                    hideNavbarDiscussions={hideNavbarDiscussions}
+                                    setHideNavbarDiscussions={(hide:boolean) => setHideNavbarDiscussions(hide)}
+                                    showNewPost={showNewPost}
+                                    setShowNewPost={(show: boolean) => setShowNewPost(show)}
+                                    showNewMeeting={showNewMeeting}
+                                    setShowNewMeeting={(show: boolean) => setShowNewMeeting(show)}
+                                    refreshingWorkspace={refreshingWorkspace}
+                                    onRefreshWorkspace={() => handleRefreshWorkspace()}
+                                    // 
+                                    setShowImportCreate={(showImport: boolean) => setShowImportCreate(showImport)}
+                                    showImportCreate={showImportCreate}
+                                    setCreateActiveTab={(tab: any) => setCreateActiveTab(tab)}
+                                    createActiveTab={createActiveTab}
+                                    setDisableCreateNavbar={(disable: boolean) => setDisableCreateNavbar(disable)}
+                                    setShowWorkspaceFilterModal={(show: boolean) => setShowWorkspaceFilterModal(show)}
                                 />
                             )}
                         </View>
@@ -2352,7 +2668,157 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     ) : null}
                 </View>
 
-                {showHome && !showLoginWindow ? (
+                {/* Create navbar */}
+                {
+                    modalType === 'Create' && !disableCreateNavbar ? (
+                        <View 
+                            style={{
+                                position: 'absolute',
+                                backgroundColor: '#fff',
+                                alignSelf: 'flex-end',
+                                width: '100%',
+                                paddingTop: 12,
+                                paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
+                                paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 0
+                                },
+                                bottom: 0,
+                                right: 0,
+                                shadowOpacity: 0.10,
+                                shadowRadius: 12,
+                                zIndex: showLoginWindow ? 40 : 100,
+                                elevation: showLoginWindow ? 40 : 100,
+                                borderTopColor: '#fff'
+                                }}
+                            >
+                            
+                            {createOptions.map((op: any, ind: number) => {
+
+                                if (role !== 'instructor' && op === 'Quiz') {
+                                    return null
+                                }
+
+                                if (disableCreateNavbar) {
+                                    return null
+                                }
+
+                                return (
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#fff',
+                                            width: role === 'instructor' ? '25%' : '33%',
+                                            flexDirection: 'column',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                        key={ind}
+                                        onPress={() => {
+                                            if (op === 'Import') {
+                                                setShowImportCreate(true)
+                                            } else {
+                                                setCreateActiveTab(op)
+                                            }
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name={getCreateNavbarIconName(op)}
+                                            style={{ color: getCreateNavbarIconColor(op), marginBottom: 6 }}
+                                            size={23}
+                                        />
+                                        <Text style={{
+                                            fontSize: 11,
+                                            color: getCreateNavbarIconColor(op),
+                                            fontWeight: 'bold',
+                                            fontFamily: 'Inter'
+                                            
+                                        }}>
+                                            {getCreateNavbarText(op)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    ) : null
+                }
+
+
+                {
+                    modalType !== 'Create' && option === 'Classroom' && selectedWorkspace !== '' && showHome  && selectedWorkspace !== 'My Notes' && (workspaceActiveTab !== "Discuss" || !hideNavbarDiscussions) ? (
+                        <View 
+                            style={{
+                                position: 'absolute',
+                                backgroundColor: '#fff',
+                                alignSelf: 'flex-end',
+                                width: '100%',
+                                paddingTop: 12,
+                                paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
+                                paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 0
+                                },
+                                bottom: 0,
+                                right: 0,
+                                shadowOpacity: 0.10,
+                                shadowRadius: 12,
+                                zIndex: showLoginWindow ? 40 : 100,
+                                elevation: showLoginWindow ? 40 : 100,
+                                }}
+                                key={selectedWorkspace}
+                            >
+                            
+                            {workspaceOptions.map((op: any, ind: number) => {
+
+                                if (selectedWorkspace.split('-SPLIT-')[2] !== userId && op === 'Settings') {
+                                    return 
+                                }
+
+                                return (
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#fff',
+                                            width: selectedWorkspace.split('-SPLIT-')[2] === userId || selectedWorkspace === 'My Notes' ? '20%' : '25%',
+                                            flexDirection: 'column',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                        key={ind}
+                                        onPress={() => {
+                                            setWorkspaceActiveTab(op)
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name={getWorkspaceNavbarIconName(op)}
+                                            style={{ color: getWorkspaceNavbarIconColor(op), marginBottom: 6 }}
+                                            size={23}
+                                        />
+                                        <Text style={{
+                                            fontSize: 11,
+                                            color: getWorkspaceNavbarIconColor(op),
+                                            fontWeight: 'bold',
+                                            fontFamily: 'Inter'
+                                            
+                                        }}>
+                                            {getWorkspaceNavbarText(op)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    ) : null
+                }
+
+                {modalType !== 'Create' && showHome && !showLoginWindow && (option !== 'Classroom' || selectedWorkspace === "" || selectedWorkspace === 'My Notes') && (option !== 'Inbox' || !hideNewChatButton) ? (
                     <View
                         style={{
                             position: 'absolute',
@@ -2368,17 +2834,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             shadowColor: '#000',
                             shadowOffset: {
                                 width: 0,
-                                height: -3
+                                height: 0
                             },
                             bottom: 0,
                             right: 0,
-                            shadowOpacity: 0.06,
-                            shadowRadius: 6,
+                            shadowOpacity: 0.10,
+                            shadowRadius: 12,
                             zIndex: showLoginWindow ? 40 : 100,
-                            elevation: showLoginWindow ? 40 : 100,
-                            borderTopColor: '#f2f2f2',
-                            borderTopWidth: 1,
-                            // elevation: 10,
+                            elevation: showLoginWindow ? 40 : 120,
                         }}
                     >
                         {options.map((op: any, ind: number) => {
@@ -2410,7 +2873,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         }
                                         if (op === 'Classroom') {
                                             setModalType('');
-                                            setPageNumber(0);
+                                            // setPageNumber(0);
                                         }
                                     }}
                                 >
@@ -2420,7 +2883,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         size={23}
                                     />
                                     <Text style={{
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         color: getNavbarIconColor(op),
                                         fontWeight: 'bold',
                                         fontFamily: 'Inter'
@@ -2428,31 +2891,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     }}>
                                         {getNavbarText(op)}
                                     </Text>
-
-                                    {/* <Text style={op === option ? styles('').allGrayFill : styles('').all}>
-                                        {op === 'Classroom'
-                                            ? version === 'read'
-                                                ? 'Library'
-                                                : 'Workspace'
-                                            : op === 'Performance'
-                                            ? 'Performance'
-                                            : op === 'To Do'
-                                            ? 'Agenda'
-                                            : op}
-                                    </Text>
-                                    {op === 'Inbox' && unreadMessages > 0 ? (
-                                        <View
-                                            style={{
-                                                width: 7,
-                                                height: 7,
-                                                borderRadius: 7,
-                                                backgroundColor: '#f94144',
-                                                position: 'absolute',
-                                                top: -3,
-                                                right: 5
-                                            }}
-                                        />
-                                    ) : null} */}
                                 </TouchableOpacity>
                             );
                         })}

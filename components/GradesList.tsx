@@ -71,7 +71,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
             const { title } = htmlStringParser(cue.cue)
 
-            row1.push(`${title} (${cue.gradeWeight ? cue.gradeWeight : '0'}%)`)
+            row1.push(`${title} (${cue.gradeWeight ? cue.gradeWeight.toString() : '0'}%)`)
         })
 
         row1.push("Total")
@@ -161,6 +161,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
         setActiveUserId('')
         setActiveScore('')
     }
+
+    useEffect(() => {
+        exportGrades()
+        props.setExportScores(false)
+    }, [props.exportScores])
 
     /**
      * @description Renders export button
@@ -391,7 +396,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     cues.length === 0 ? null :
                         <View style={styles.col} key={'total'}>
                             <View style={{ height: 10, marginBottom: 5 }} />
-                            <Text style={{ textAlign: 'center', fontSize: 13, color: '#000000', fontFamily: 'inter', marginBottom: 5,  }}>
+                            <Text style={{ textAlign: 'center', fontSize: 14, color: '#000000', fontFamily: 'inter', marginBottom: 5,  }}>
                                 {PreferredLanguageText('total')}
                             </Text>
                             {/* <Text style={{ textAlign: 'center', fontSize: 10, color: '#000000' }}>
@@ -403,17 +408,17 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     cues.map((cue: any, col: number) => {
                         const { title } = htmlStringParser(cue.cue)
                         return <TouchableOpacity style={styles.col} key={col.toString()} onPress={() => props.openCueFromGrades(cue._id)}>
-                            <Text style={{ textAlign: 'center', fontSize: 10, color: '#000000', marginBottom: 5 }}>
+                            <Text style={{ textAlign: 'center', fontSize: 12, color: '#000000', marginBottom: 5 }}>
                                 {
                                     (new Date(cue.deadline)).toString().split(' ')[1] +
                                     ' ' +
                                     (new Date(cue.deadline)).toString().split(' ')[2]
                                 }
                             </Text>
-                            <Text style={{ textAlign: 'center', fontSize: 13, color: '#000000', fontFamily: 'inter', marginBottom: 5, textAlignVertical: 'center' }} numberOfLines={2} ellipsizeMode="tail">
+                            <Text style={{ textAlign: 'center', fontSize: 14, color: '#000000', fontFamily: 'inter', marginBottom: 5, textAlignVertical: 'center' }} numberOfLines={2} ellipsizeMode="tail">
                                 {title}
                             </Text>
-                            <Text style={{ textAlign: 'center', fontSize: 10, color: '#000000' }}>
+                            <Text style={{ textAlign: 'center', fontSize: 12, color: '#000000' }}>
                                 {cue.gradeWeight ? cue.gradeWeight : '0'}%
                             </Text>
                         </TouchableOpacity>
@@ -461,14 +466,14 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
                             return <View style={styles.row} key={row}>
                                 {props.isOwner ? <View style={styles.col} >
-                                    <Text style={{ textAlign: 'center', fontSize: 12, color: '#000000', fontFamily: 'inter' }}>
+                                    <Text style={{ textAlign: 'center', fontSize: 14, color: '#000000', fontFamily: 'inter' }}>
                                         {score.fullName}
                                     </Text>
                                 </View> : null}
                                 {
                                     cues.length === 0 ? null :
                                         <View style={styles.col} key={'total'}>
-                                            <Text style={{ textAlign: 'center', fontSize: 11, color: '#000000', textTransform: 'uppercase' }}>
+                                            <Text style={{ textAlign: 'center', fontSize: 13, color: '#000000', textTransform: 'uppercase' }}>
                                                 {totalScore !== 0 ? (totalPoints / totalScore).toFixed(2).replace(/\.0+$/, '') : '0'}%
                                             </Text>
                                         </View>
@@ -495,14 +500,14 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     <TouchableOpacity onPress={() => {
                                                         modifyGrade()
                                                     }}>
-                                                        <Ionicons name='checkmark-circle-outline' size={15} style={{ marginRight: 5 }} color={'#8bc34a'} />
+                                                        <Ionicons name='checkmark-circle-outline' size={17} style={{ marginRight: 5 }} color={'#8bc34a'} />
                                                     </TouchableOpacity>
                                                     <TouchableOpacity onPress={() => {
                                                         setActiveCueId('')
                                                         setActiveUserId('')
                                                         setActiveScore('')
                                                     }}>
-                                                        <Ionicons name='close-circle-outline' size={15} color={'#f94144'} />
+                                                        <Ionicons name='close-circle-outline' size={17} color={'#f94144'} />
                                                     </TouchableOpacity>
                                                 </View>
 
@@ -517,18 +522,18 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             setActiveUserId(score.userId);
                                             setActiveScore(scoreObject.score);
                                         }}>
-                                            {!scoreObject || !scoreObject.submittedAt ? <Text style={{ textAlign: 'center', fontSize: 11, color: '#f94144', }}>
+                                            {!scoreObject || !scoreObject.submittedAt ? <Text style={{ textAlign: 'center', fontSize: 13, color: '#f94144', }}>
                                                 {scoreObject && scoreObject !== undefined && scoreObject.graded && scoreObject.score.replace(/\.0+$/, '') ? scoreObject.score : (!scoreObject || !scoreObject.cueId ? "N/A" : "Missing")}
                                             </Text>
                                                 :
-                                                <Text style={{ textAlign: 'center', fontSize: 11, color: scoreObject && new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) ? '#f3722c' : '#000000', }}>
+                                                <Text style={{ textAlign: 'center', fontSize: 13, color: scoreObject && new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) ? '#f3722c' : '#000000', }}>
                                                     {
                                                         scoreObject && scoreObject !== undefined && scoreObject.graded && scoreObject.score ? scoreObject.score.replace(/\.0+$/, '') : (scoreObject && (new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline))) ? "Late" : '-')
                                                     }
                                                 </Text>}
 
                                             {
-                                                scoreObject && scoreObject !== undefined && scoreObject.score && scoreObject.graded && ((new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) || !scoreObject.submittedAt)) ? <Text style={{ textAlign: 'center', fontSize: 10, color: !scoreObject.submittedAt ? '#f94144' : '#f3722c', marginTop: 5, borderWidth: 0, borderColor: !scoreObject.submittedAt ? '#f94144' : '#f3722c', borderRadius: 10, width: 60, alignSelf: 'center' }}>
+                                                scoreObject && scoreObject !== undefined && scoreObject.score && scoreObject.graded && ((new Date(parseInt(scoreObject.submittedAt)) >= (new Date(cue.deadline)) || !scoreObject.submittedAt)) ? <Text style={{ textAlign: 'center', fontSize: 13, color: !scoreObject.submittedAt ? '#f94144' : '#f3722c', marginTop: 5, borderWidth: 0, borderColor: !scoreObject.submittedAt ? '#f94144' : '#f3722c', borderRadius: 10, width: 60, alignSelf: 'center' }}>
                                                     {!scoreObject.submittedAt ? "(Missing)" : "(Late)"}
                                                 </Text> : null
                                             }
@@ -589,14 +594,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     );
 }
 
-export default React.memo(GradesList, (prev, next) => {
-    return _.isEqual(prev.grades, next.grades)
-})
+export default GradesList
 
 
 const stylesObject: any = (isOwner: any) => StyleSheet.create({
     row: { minHeight: 70, flexDirection: isOwner  ? 'row' : 'column',  borderBottomColor: '#f2f2f2', borderBottomWidth: (!isOwner && Dimensions.get('window').width < 768) || isOwner ? 1 : 0 },
-    col: { height: isOwner  ? 'auto' : 90, paddingBottom: isOwner ? 0 : 10, width: isOwner  ? (Dimensions.get('window').width < 768 ? 90 : 120) : 180, justifyContent: 'center', display: 'flex', flexDirection: 'column', padding: 7, borderBottomColor: '#f2f2f2', borderBottomWidth: isOwner || (Dimensions.get('window').width < 768) ? 0 : 1,  },
+    col: { height: isOwner  ? 'auto' : 90, paddingBottom: isOwner ? 0 : 10, width: isOwner  ? (Dimensions.get('window').width < 768 ? 120 : 120) : 180, justifyContent: 'center', display: 'flex', flexDirection: 'column', padding: 7, borderBottomColor: '#f2f2f2', borderBottomWidth: isOwner || (Dimensions.get('window').width < 768) ? 0 : 1,  },
     selectedText: {
         fontSize: Dimensions.get('window').width < 1024 ? 12 : 14,
         color: '#fff',

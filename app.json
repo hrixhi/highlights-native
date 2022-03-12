@@ -1,53 +1,65 @@
 {
-    "expo": {
-        "name": "Cues - Notebook",
-        "slug": "cues",
-        "version": "1.1.2",
-        "icon": "./assets/images/icon.png",
-        "scheme": "cues",
-        "userInterfaceStyle": "automatic",
-        "splash": {
-            "image": "./assets/images/splash.png",
-            "resizeMode": "contain",
-            "backgroundColor": "#2f2f3c"
-        },
-        "updates": {
-            "fallbackToCacheTimeout": 30000
-        },
-        "assetBundlePatterns": ["**/*"],
-        "ios": {
-            "supportsTablet": true,
-            "bundleIdentifier": "com.vora.cues",
-            "buildNumber": "1.1",
-            "usesIcloudStorage": true
-        },
-        "android": {
-            "useNextNotificationsApi": true,
-            "versionCode": 4,
-            "softwareKeyboardLayoutMode": "pan",
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/images/adaptive-icon.png",
-                "backgroundColor": "#2f2f3c"
-            },
-            "package": "com.vora.cues",
-            "googleServicesFile": "./google-services.json"
-        },
-        "web": {
-            "favicon": "./assets/images/favicon.png"
-        },
-        "packagerOpts": {
-            "config": "metro.config.js",
-            "sourceExts": ["js", "jsx", "css"],
-            "transformer": "node_modules/react-native-css-transformer/index.js"
-        },
-        "plugins": [
-            [
-                "expo-image-picker",
-                {
-                    "photosPermission": "The app accesses your photos to help you create notes and content.",
-                    "cameraPermission": "The app accesses your camera to help you create notes and content."
-                }
-            ]
-        ]
+  "expo": {
+    "name": "Learn with Cues",
+    "slug": "cues",
+    "version": "1.1.3",
+    "icon": "./assets/images/icon.png",
+    "scheme": "cues",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 30000
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vora.cues",
+      "buildNumber": "1.2",
+      "usesIcloudStorage": true
+    },
+    "android": {
+      "useNextNotificationsApi": true,
+      "versionCode": 4,
+      "softwareKeyboardLayoutMode": "pan",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.vora.cues",
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "packagerOpts": {
+      "config": "metro.config.js",
+      "sourceExts": [
+        "js",
+        "jsx",
+        "css"
+      ],
+      "transformer": "node_modules/react-native-css-transformer/index.js"
+    },
+    "plugins": [
+      "sentry-expo"
+    ],
+    "hooks": {
+      "postPublish": [
+        {
+          "file": "sentry-expo/upload-sourcemaps",
+          "config": {
+            "organization": "cues-technologies",
+            "project": "cues-technologies-native-app",
+            "authToken": "8b7031031fcc48078435f3d9e320d5f8b0a195d925db40949d5996d7427803b0"
+          }
+        }
+      ]
     }
+  }
 }

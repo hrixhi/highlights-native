@@ -67,6 +67,15 @@ export const duplicateChannel = gql`
         }
     }
 `;
+export const duplicateQuiz = gql`
+    mutation(
+        $quizId: String!
+    ) {
+        cue {
+            duplicateQuiz(quizId: $quizId)
+        }
+    }
+`
 
 export const createCue = gql`
     mutation(
@@ -598,9 +607,6 @@ export const connectZoom = gql`
         user {
             connectZoom(code: $code, userId: $userId) {
                 accountId
-                accessToken
-                refreshToken
-                expiresOn
                 email
             }
         }
@@ -652,7 +658,17 @@ export const updateAnnotationsFromViewer = gql`
         }
     }
 `;
-
+export const addUsersByEmail = gql`
+    mutation($channelId: String!, $userId: String!, $emails: [String!]!) {
+        channel {
+            addUsersByEmail(channelId: $channelId, userId: $userId, emails: $emails) {
+                success
+                failed
+                error
+            }
+        }
+    }
+`
 /**
  * ALL
  * QUERIES
@@ -899,6 +915,7 @@ export const login = gql`
             login(email: $email, password: $password) {
                 user {
                     _id
+                    role
                 }
                 error
                 token
@@ -1311,6 +1328,7 @@ export const loginFromSso = gql`
             loginFromSso(code: $code) {
                 user {
                     _id
+                    role
                 }
                 error
                 token

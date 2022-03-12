@@ -132,6 +132,15 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
     }, [props.cue]);
 
+    useEffect(() => {
+
+        if (props.exportQuizScores) {
+            exportScores()
+            props.setExportQuizScores(false)
+        }
+        
+    }, [props.exportQuizScores])
+
     /**
      * @description prepares export data for Assignment grades
      */

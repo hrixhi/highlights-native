@@ -38,6 +38,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                         width: 7,
                         height: -7
                     },
+                    zIndex: 1000,
                     // overflow: 'hidden',
                     shadowOpacity: 0.5,
                     shadowRadius: 8,
@@ -47,7 +48,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                 }}
             >
                 {/* Closing knob */}
-                {!props.header ? (
+                {!props.header && !props.tabs ? (
                     <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
                         <View
                             style={{
@@ -61,7 +62,9 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                     </View>
                 ) : null}
 
-                {props.header ? (
+                
+
+                {props.header || props.tabs ? (
                     <View style={{ paddingTop: 20, paddingHorizontal: 20, backgroundColor: '#fff' }}>
                         <View
                             style={{
@@ -96,9 +99,11 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                             >
                                 <Ionicons size={24} name="close-outline" />
                             </TouchableOpacity>
-                            <Text style={{ fontFamily: 'Inter', fontSize: 20, fontWeight: 'bold', paddingTop: 5 }}>
+                            {props.title ? <Text style={{ fontFamily: 'Inter', fontSize: 20, fontWeight: 'bold', paddingTop: 5 }}>
                                 {props.title}
-                            </Text>
+                            </Text> : props.tabs ? props.tabs : <View  style={{ height: 20 }} />}
+
+
                         </View>
                     </View>
                 ) : null}

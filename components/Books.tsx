@@ -247,7 +247,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         flex: 1
                                     }}
                                 >
-                                    Search through over 5 million books & texts
+                                    Browse through over 5 million books & texts
                                 </Text>
                             ) : (
                                 <Text

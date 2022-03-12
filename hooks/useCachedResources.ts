@@ -8,14 +8,15 @@ export default function useCachedResources() {
     // Load any resources or data that we need prior to rendering the app
     React.useEffect(() => {
         async function loadResourcesAndDataAsync() {
+
             try {
                 SplashScreen.preventAutoHideAsync();
                 // Load fonts
                 await Font.loadAsync({
-                    inter: 'https://cues-files.s3.amazonaws.com/fonts/clarkson500.woff2',
-                    overpass: 'https://cues-files.s3.amazonaws.com/fonts/clarkson400.woff2',
-                    Inter: 'https://cues-files.s3.amazonaws.com/fonts/clarkson500.woff2',
-                    Overpass: 'https://cues-files.s3.amazonaws.com/fonts/clarkson400.woff2',
+                    inter: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Medium.woff',
+                    overpass: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Regular.woff',
+                    Inter: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Medium.woff',
+                    Overpass: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Regular.woff',
                     Ionicons: {
                         uri: 'https://cues-files.s3.amazonaws.com/fonts/Ionicons.ttf'
                     },
