@@ -726,7 +726,6 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     .then(res => {
                         const tempChat: any[] = [];
                         res.data.message.getMessagesThread.map((msg: any) => {
-                            console.log("Messages", res.data.message.getMessagesThread)
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -1267,8 +1266,6 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         </View>
     }
 
-    // console.log("Messages", chat)
-
     const filterChannelLabel = channelOptions.find((channel: any) => channel.value === filterChannelId)?.label
 
     // MAIN RETURN
@@ -1495,7 +1492,6 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             paddingTop: 8
                                                         }}
                                                         onSelect={(channel: any) => {
-                                                            console.log('Select', channel)
                                                             setFilterChannelId(channel)
                                                         }}
                                                     >
@@ -2265,7 +2261,6 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 </View>
                                             ) : null}
                                             {sortChatsByLastMessage.map((chat: any, index) => {
-                                                console.log('Chat', chat);
 
                                                 // Group name or individual user name
                                                 let fName = '';

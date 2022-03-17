@@ -146,8 +146,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }
     }, [cueId]);
 
-    console.log("Props.cue", props.cue)
-
     /**
      * @description Filter out all channel Cues that already have a folderID
      */
@@ -1165,9 +1163,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             <Ionicons name="swap-horizontal-outline" size={14} color="#000000" />{' '}
         </Text>
     );
-
-    console.log("Channel Cues", channelCues)
-    
     
     const renderNewFolderSelectionList = () => {
         
@@ -1675,7 +1670,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         channelOwner={channelOwner}
                         createdBy={createdBy}
                         folderId={folderId}
-                        closeModal={() => props.closeModal()}
+                        closeModal={(submit?: boolean) => props.closeModal(submit)}
                         reloadCueListAfterUpdate={() => props.reloadCueListAfterUpdate()}
                         changeViewStatus={() => setViewStatus(true)}
                         viewStatus={viewStatus}
@@ -1782,6 +1777,12 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         setShareFeedback={(feedback: boolean) => setShareFeedback(feedback)}
                                         exportQuizScores={exportQuizScores}
                                         setExportQuizScores={(exp: boolean) => setExportQuizScores(exp)}
+                                        setFullScreenWebviewURL={(url: string) => {
+                                            setFullScreenWebview(true)
+                                            setFullScreenPdfUrl(url)
+                                            setFullScreenPdfViewerKey(Math.random().toString())
+                                        }}
+                                        reloadViewerKey={reloadViewerKey}
                                     />
                                 </View>
                             </ScrollView>
@@ -1830,11 +1831,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onPress={() => {
                             setCreateNewFolder(true);
                             setSelectedCues([props.cue]);
-                            // console.log("props.channelCues", props.channelCues)
                             const filter = props.channelCues.filter(
                                 (cue: any) => cue._id !== props.cue._id && (!cue.folderId || cue.folderId === '')
                             );
-                            console.log("Set channel ids filtered", filter)
                             setChannelCues(filter);
                         }}
                         style={{
@@ -1869,10 +1868,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             if (addingToFolder) {
                                 return;
                             }
-                            console.log("Add to folder", {
-                                cueId: props.cue._id,
-                                folderId: choice
-                            })
                             const server = fetchAPI('');
                             setAddingToFolder(true);
                             server

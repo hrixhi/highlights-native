@@ -13,11 +13,9 @@ import * as Sentry from 'sentry-expo';
 
 Sentry.init({
     dsn: 'https://ab6789029b074fea84e0d6e2df55746e@o1165395.ingest.sentry.io/6255085',
-    enableInExpoDevelopment: true,
-    debug: true, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
+    enableInExpoDevelopment: false,
+    debug: false, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
 });
-
-
 
 export default function App() {
     const isLoadingComplete = useCachedResources();
@@ -40,7 +38,6 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        Sentry.Native.captureException(new Error('Oops!'))
         longerSplashScreen();
     }, []);
 

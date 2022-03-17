@@ -169,6 +169,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
      */
     useEffect(() => {
 
+        setLoadingUsers(true)
+
         let filteredUsers = [...allUsers];
 
         if (activeRole !== "All") {
@@ -219,12 +221,15 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
 
         setOptions(sort)
 
-    }, [activeRole, activeGrade, activeSection, channelCreator])
+        setLoadingUsers(false)
+
+    }, [activeRole, activeGrade, activeSection, channelCreator, allUsers])
 
     /**
      * @description Filter out channel Creator from the Subscribers dropdown
      */
     useEffect(() => {
+        setLoadingChannelColor(true)
         if (channelCreator !== "") {
             const subscribers = [...selectedValues]
 
@@ -235,7 +240,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             setSelectedValues(filterOutOwner);
 
         }
-    }, [channelCreator])
+        setLoadingChannelColor(false)
+    }, [channelCreator, allUsers])
 
     useEffect(() => {
         if (props.refreshChannelSettings) {
@@ -246,11 +252,18 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     
 
     const fetchChannelSettings = useCallback(async () => {
+
+
         const u = await AsyncStorage.getItem('user')
 
                 let schoolObj: any;
 
                 if (u) {
+
+                    setLoadingUsers(true)
+                    setLoadingChannelColor(true)
+                    setLoadingOrg(true)
+
                     const user = JSON.parse(u)
                     const server = fetchAPI('')
                     // get all users

@@ -487,7 +487,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 }
 
                                 return <View style={{ flexDirection: 'row' }} key={solutions.toString() + i.toString()}>
-                                    <View style={{  paddingRight: 10, paddingTop: 21 }}>
+                                    <View style={{ width: '20%', paddingRight: 10, paddingTop: 21 }}>
                                         <BouncyCheckbox
                                             style={{}}
                                             isChecked={

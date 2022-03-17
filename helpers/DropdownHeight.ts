@@ -6,8 +6,6 @@ export const getDropdownHeight = (numOfItems: number) => {
 
 export const contentsModalHeight = (numOfCategories: number) => {
     const height = numOfCategories * 40 + 240
-    console.log("NumofCategories", numOfCategories)
-    console.log("Height", height)
 
     return height > 600 ? 600 : height; 
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Linking } from 'react-native';
 import { TextInput } from './CustomTextInput';
 import Alert from './Alert';
 
@@ -207,16 +207,9 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
     const [link, setLink] = useState('');
     const [insertDisabled, setInsertDisabled] = useState(true);
 
-    function isValidHttpUrl(string: string) {
-        let url;
-
-        try {
-            url = new URL(string);
-        } catch (_) {
-            return false;
-        }
-
-        return url.protocol === 'http:' || url.protocol === 'https:';
+    async function isValidHttpUrl(string: string) {
+        const res = await Linking.canOpenURL(string)
+        return res;
     }
 
     useEffect(() => {
@@ -280,7 +273,7 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
                 </Text>
                 <TextInput
                     value={link}
-                    placeholder="e.g. www.google.com"
+                    placeholder="https://www.abc.com"
                     onChangeText={val => setLink(val)}
                     placeholderTextColor={'#a2a2ac'}
                 />
@@ -294,12 +287,13 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
                     width: 120,
                     alignSelf: 'center'
                 }}
-                onPress={() => {
-                    // if (isValidHttpUrl(link)) {
-                    props.onInsertLink(title, link);
-                    // } else {
-                    //     Alert('URL is invalid.');
-                    // }
+                onPress={async () => {
+                    const valid = await isValidHttpUrl(link)
+                    if (valid) {
+                        props.onInsertLink(title, link);
+                    } else {
+                        Alert('URL is invalid. Correct url must be of format https://www.abc.com.');
+                    }
                 }}
                 disabled={insertDisabled}
             >

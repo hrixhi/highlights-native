@@ -929,11 +929,26 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View>
                     )} */}
                 </View>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 25, justifyContent: 'center'  }}>
                 {
-                    !showSavePassword ? <Text style={{ fontSize: 12, textAlign: 'center', marginTop: 25 }}>
+                    !showSavePassword ? <TouchableOpacity style={{}} onPress={() => Linking.openURL('https://www.learnwithcues.com/privacypolicy.pdf')}>
+                    <Text style={{ fontSize: 12, textAlign: 'center', marginRight: 30 }}>
+                        Privacy Policy
+                    </Text></TouchableOpacity>  : null
+                }
+                {
+                    !showSavePassword ? <Text style={{ fontSize: 12, textAlign: 'center', marginRight: 30 }}>
                         version {appVersion}
                     </Text> : null
                 }
+                
+                {
+                    !showSavePassword ? <TouchableOpacity style={{}} onPress={() => Linking.openURL('https://www.learnwithcues.com/eula.pdf')}>
+                    <Text style={{ fontSize: 12, textAlign: 'center', }}>
+                        Terms of Use
+                    </Text></TouchableOpacity>  : null
+                }
+                </View>
                 {/* </View> */}
                 {/* </View> */}
             </ScrollView>

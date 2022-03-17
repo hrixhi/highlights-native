@@ -89,7 +89,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             const { scores } = score;
 
                                             const updateScores = scores.map((x: any) => {
-                                                const { cueId, gradeWeight, graded } = x;
+                                                const { cueId, gradeWeight, graded, submittedAt } = x;
                                                 const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
                                                     return u._id.toString() === cueId.toString();
                                                 });
@@ -101,7 +101,8 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         cueId,
                                                         gradeWeight,
                                                         graded: false,
-                                                        score: ''
+                                                        score: '',
+                                                        submittedAt
                                                     };
                                                 } else {
                                                     return x;

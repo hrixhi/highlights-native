@@ -8,7 +8,8 @@ import {
     Dimensions,
     Switch,
     Keyboard,
-    ScrollView
+    ScrollView,
+    Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import lodash from 'lodash';
@@ -22,7 +23,10 @@ import useDynamicRefs from 'use-dynamic-refs';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { Video } from 'expo-av';
-import RenderHtml from 'react-native-render-html';
+import RenderHtml, {
+    useIMGElementProps,
+    CustomBlockRenderer,
+  } from 'react-native-render-html';
 import { handleFile } from '../helpers/FileUpload';
 import _ from 'lodash';
 
@@ -72,6 +76,17 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [optionEditorRefs, setOptionEditorRefs] = useState<boolean[]>([]);
     const [solutionEditorRefs, setSolutionEditorRefs] = useState<boolean[]>([]);
 
+    const OptionImageRenderer: CustomBlockRenderer = props => {
+        const imgProps = useIMGElementProps(props);
+        return (
+          <Image
+            resizeMode="contain"
+            style={imgProps.style}
+            source={imgProps.source}
+          />
+        )
+      };
+
     // HOOKS
 
     /**
@@ -105,20 +120,14 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     useEffect(() => {
         if (props.isOwner) return;
 
-        console.log("Props.solutions during init")
-
         if (props.solutions && props.solutions.length !== 0) {
             setSolutions(props.solutions);
-
-            console.log("Setting initial solutions from props")
 
             // Load initial solutions for free-response text editors
             if (initialSolutions.length === 0) {
                 setInitialSolutions(lodash.cloneDeep(props.solutions));
             }
         } else {
-
-            console.log("initiating solutions")
 
             const solutionInit: any = [];
             problems.map((problem: any) => {
@@ -662,7 +671,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             actions.setSubscript,
                             actions.foreColor,
                             actions.hiliteColor,
-                            'insertEmoji'
+                            // 'insertEmoji'
                         ]}
                         iconMap={{
                             [actions.keyboard]: ({ tintColor }) => (
@@ -870,12 +879,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         props.setSolutions(updatedSolution);
     };
 
-    console.log("Problems length", problems.length)
-    console.log("Solutions length", solutions.length)
-    console.log("Initial solutions", initialSolutions.length)
-    console.log('Is owner', props.isOwner)
-
-
     if (problems.length !== solutions.length && !props.isOwner) {
         return <View />;
     }
@@ -883,8 +886,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     if (!props.isOwner && initialSolutions.length !== solutions.length) return null;
 
     let displayProblems = props.shuffleQuiz && !props.isOwner ? shuffledProblems : problems;
-
-    console.log('Problems', displayProblems);
 
     if (loading || props.loading) {
         return (
@@ -970,7 +971,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 actions.setSubscript,
                                 actions.foreColor,
                                 actions.hiliteColor,
-                                'insertEmoji'
+                                // 'insertEmoji'
                             ]}
                             iconMap={{
                                 [actions.keyboard]: ({ tintColor }) => (
@@ -1445,14 +1446,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 let currRef: any = {};
 
                                 if (editQuestionNumber === index + 1 ) {
-                                    console.log("Problem index", index.toString())
-                                    console.log("Render option", i.toString())
                                     currRef = props.setRef(i.toString());
                                 }
  
                                 return (
                                     <View style={{ flexDirection: 'row', marginBottom: 20 }}>
-                                        <View style={{ width: 40, paddingTop: 17 }}>
+                                        <View style={{ width: '20%', paddingTop: 17,  }}>
                                             {onlyOneCorrect && editQuestionNumber !== index + 1 ? (
                                                 <BouncyCheckbox
                                                     style={{}}
@@ -1542,7 +1541,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         actions.setSubscript,
                                                         actions.foreColor,
                                                         actions.hiliteColor,
-                                                        'insertEmoji'
+                                                        // 'insertEmoji'
                                                     ]}
                                                     iconMap={{
                                                         [actions.keyboard]: ({ tintColor }) => (
@@ -1704,7 +1703,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             <View
                                                 style={{
                                                     paddingTop: 10,
-                                                    width: '100%',
+                                                    width: '80%',
                                                     height: '100%',
                                                     flex: 1
                                                 }}
@@ -1713,6 +1712,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     source={{
                                                         html: option.option
                                                     }}
+                                                    // renderers={{
+                                                    //     img: OptionImageRenderer
+                                                    // }}
                                                     defaultTextProps={{
                                                         selectable: true
                                                     }}
@@ -1779,7 +1781,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 actions.setSubscript,
                                                 actions.foreColor,
                                                 actions.hiliteColor,
-                                                'insertEmoji'
+                                                // 'insertEmoji'
                                             ]}
                                             iconMap={{
                                                 [actions.keyboard]: ({ tintColor }) => (

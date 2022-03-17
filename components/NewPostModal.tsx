@@ -34,7 +34,6 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     //     );
     // }, [props.categoriesOptions]);
 
-    // console.log('Dropdown height', dropdownHeight);
 
     /**
      * @description Renders option to select Category for new discussion post

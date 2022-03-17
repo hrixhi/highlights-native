@@ -75,8 +75,6 @@ const FileUpload: React.FC<any> = (props: any) => {
         return axios.post(url, formData, config);
     }, []);
 
-    console.log('Uploading', uploading);
-
     return (
         <View style={{ position: props.profile ? 'absolute' : 'relative', backgroundColor: props.profile ? 'none' : '#fff', }}>
             {/* style={{

@@ -83,9 +83,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const [insertImageVisible, setInsertImageVisible] = useState(false);
     const [questionEditorFocus, setQuestionEditorFocus] = useState(false);
 
-    console.log("Props.problems", props.problems);
-    console.log("Problems inside quizCreate", problems);
-
     useEffect(() => {
         setProblems(props.problems)
     }, [props.problems])
@@ -105,8 +102,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
     const handleUploadVideoQuestion = useCallback(async (index: number) => {
         const res = await handleFile(true, props.userId);
-
-        console.log('File upload result', res);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -207,7 +202,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             actions.setSubscript,
                             actions.foreColor,
                             actions.hiliteColor,
-                            'insertEmoji',
+                            // 'insertEmoji',
                         ]}
                         iconMap={{
                             [actions.keyboard]: ({ tintColor }) => (
@@ -1141,7 +1136,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 actions.setSubscript,
                                                                 actions.foreColor,
                                                                 actions.hiliteColor,
-                                                                'insertEmoji',
+                                                                // 'insertEmoji',
                                                             ]}
                                                             iconMap={{
                                                                 [actions.keyboard]: ({ tintColor }) => (

@@ -162,6 +162,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [isUsersDropdownOpen, setIsUsersDropdownOpen] = useState(false);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const [height, setHeight] = useState(100);
+    const [scrollViewHeight, setScrollViewHeight] = useState(0);
     const [reloadEditorKey, setReloadEditorKey] = useState(Math.random());
     const [editorFocus, setEditorFocus] = useState(false);
     const [emojiVisible, setEmojiVisible] = useState(false);
@@ -306,7 +307,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (u) {
                 const parsedUser = JSON.parse(u);
 
-                const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${url}&source=CREATE&name=${encodeURIComponent(
+                const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&source=CREATE&name=${encodeURIComponent(
                     parsedUser.fullName
                 )}`;
 
@@ -1018,7 +1019,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                 editorRef.current?.insertHTML('<div><br/></div>')
 
-                editorRef.current?.insertImage(url);
+                editorRef.current?.insertImage(url, 'width:300px');
+
+                editorRef.current?.insertHTML('<div><br/></div>')
 
             }
 
@@ -1210,6 +1213,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         },
         [title]
     );
+
+    console.log("createPdfviewerURL", createPdfviewerURL)
 
     /**
      * @description Handles creation of Cue
@@ -3574,7 +3579,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             actions.setParagraph,
                                                             actions.foreColor,
                                                             actions.hiliteColor,
-                                                            'insertEmoji'
+                                                            // 'insertEmoji'
                                                         ]}
                                                         iconMap={{
                                                             [actions.keyboard]: ({ tintColor }) => (
@@ -3676,6 +3681,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         indicatorStyle={'black'}
                                                         showsHorizontalScrollIndicator={true}
                                                         persistentScrollbar={true}
+                                                        onLayout={(event: any) => {
+                                                            const { x, y, height, width } = event.nativeEvent.layout;
+                                                            setScrollViewHeight(height);
+                                                        }}
                                                     >
                                                         <RichEditor
                                                             key={reloadEditorKey.toString()}
@@ -3706,7 +3715,16 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 const modifedText = text.split('&amp;').join('&');
                                                                 setQuizInstructions(modifedText);
                                                             }}
-                                                            onHeightChange={handleHeightChange}
+                                                            // onHeightChange={handleHeightChange}
+                                                            onHeightChange={(height: React.SetStateAction<number>) => {
+                                                                console.log("Set height", height)
+                                                                setHeight(height);
+                                                                if (height >= scrollViewHeight) {
+                                                                  setTimeout(() => {
+                                                                    scrollViewRef && scrollViewRef?.current?.scrollToEnd();
+                                                                });
+                                                                }
+                                                            }}
                                                             onFocus={() => { 
                                                                 setQuizEditorRef({})
                                                                 setEditorFocus(true)
@@ -3720,6 +3738,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             allowsLinkPreview={true}
                                                             allowsBackForwardNavigationGestures={true}
                                                             onCursorPosition={handleCursorPosition}
+                                                            
                                                         />
                                                     </ScrollView>
                                                 </View>
@@ -3868,8 +3887,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <Books
                             onUpload={(obj: any) => {
                                 setCue(JSON.stringify(obj));
-                                setShowBooks(false);
+                                // setShowBooks(false);
+                                props.setCreateActiveTab('Content')
                             }}
+                            hideBars={(show: boolean) => setEditorFocus(show)}
                         />
                     ) : null}
                 </Animated.View>
@@ -3913,7 +3934,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     actions.blockquote,
                                     actions.code,
                                     actions.line,
-                                    'insertEmoji'
+                                    // 'insertEmoji'
                                 ]}
                                 iconMap={{
                                     [actions.keyboard]: ({ tintColor }) => (
@@ -3942,6 +3963,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 indicatorStyle={'black'}
                                 showsHorizontalScrollIndicator={true}
                                 persistentScrollbar={true}
+                                // onContentSizeChange={(contentWidth, contentHeight) => {
+                                //     scrollRef.current?.scrollToEnd({ animated: false });
+                                // }}
                             >
                                 <RichEditor
                                     key={reloadEditorKey.toString()}
@@ -3975,6 +3999,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         const modifedText = text.split('&amp;').join('&');
                                         setCue(modifedText);
                                     }}
+                                    
                                     onHeightChange={handleHeightChange}
                                     onFocus={() => setEditorFocus(true)}
                                     onBlur={() => setEditorFocus(false)}
@@ -4101,7 +4126,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     style={{
                         alignItems: 'center',
                         backgroundColor: 'black',
-                        opacity: animatedShadowOpacity,
+                        opacity: 0.3,
                         height: '100%',
                         top: 0,
                         left: 0,

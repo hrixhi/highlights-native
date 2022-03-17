@@ -1,6 +1,6 @@
 // REACT
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { Keyboard, StyleSheet, Switch, TextInput, Dimensions, ScrollView, Animated, Platform, Linking } from 'react-native';
+import { Keyboard, StyleSheet, Switch, TextInput, Dimensions, ScrollView, Animated, Platform, Linking, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import lodash from 'lodash';
@@ -61,6 +61,8 @@ import { EmojiView, InsertLink } from './ToolbarComponents';
 import RenderHtml from 'react-native-render-html';
 import Reanimated from 'react-native-reanimated';
 import useDynamicRefs from 'use-dynamic-refs';
+import * as FileSystem from 'expo-file-system';
+
 
 // HELPERS
 import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
@@ -69,6 +71,7 @@ import { handleImageUpload } from '../helpers/ImageUpload';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
+import { downloadFileToDevice } from '../helpers/DownloadFile';
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
@@ -226,6 +229,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [getRef, setRef] = useDynamicRefs();
     const [quizOptionEditorIndex , setQuizOptionEditorIndex] = useState('')
     const [downloadUrl, setDownloadUrl] = useState('')
+    const [downloadOriginalInProgress, setDownloadOriginalInProgress] = useState(false)
+    const [downloadSubmissionInProgress, setDownloadSubmissionInProgress] = useState(false)
 
     // ALERTS
     const unableToStartQuizAlert = PreferredLanguageText('unableToStartQuiz');
@@ -249,8 +254,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         inputRange: [0, 1],
         outputRange: [0.5, 0]
     });
-
-    console.log("props.cue", props.cue)
 
     // HOOKS
 
@@ -366,10 +369,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 if (submissionAttempts && submissionAttempts.length > 0) {
                     const attempt = submissionAttempts[submissionAttempts.length - 1];
                     let url = attempt.html !== undefined ? attempt.annotationPDF : attempt.url;
-                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${url}&cueId=${
+                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&cueId=${
                         props.cue._id
                     }&userId=${parsedUser._id}&source=VIEW_SUBMISSION&name=${encodeURIComponent(parsedUser.fullName)}`;
-                    // console.log("pdfViewerURL", pdfViewerURL)
                     setSubmissionPdfviewerURL(pdfViewerURL);
                 }
             }
@@ -389,7 +391,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         let now = new Date();
         now.setMinutes(now.getMinutes() - 1);
         if (submission && !isQuizTimed && ((!allowLateSubmission && now >= deadline) || (allowLateSubmission && now >= availableUntil)) ) {
-            // console.log("Set view submission true")
             props.setViewSubmission(true)
             return;
         }
@@ -413,7 +414,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         } else {
             setInitDuration(remainingTime); // set remaining duration in seconds
         }
-    }, [initiatedAt, duration, deadline, isQuizTimed, isOwner, allowLateSubmission, availableUntil, submittingQuizEndTime, submission]);
+    }, [initiatedAt, duration, deadline, isQuizTimed, isOwner, allowLateSubmission, availableUntil, submittingQuizEndTime, submission, props.showOriginal]);
 
     /**
      * @description If cue contains a Quiz, then need to fetch the quiz and set State
@@ -482,7 +483,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 }
 
                                 if (solutionsObject.attempts !== undefined) {
-                                    // console.log("Quiz Attempts", solutionsObject.attempts)
                                     setQuizAttempts(solutionsObject.attempts);
 
                                     // FInd the active one and set it to quizSolutions
@@ -495,7 +495,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                                 // Set remaining attempts
                                 if (props.cue.allowedAttempts !== null) {
-                                    // console.log("props allowedAttempts", props.cue.allowedAttempts)
                                     setRemainingAttempts(
                                         solutionsObject.attempts
                                             ? props.cue.allowedAttempts - solutionsObject.attempts.length
@@ -712,7 +711,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         return;
                     }
 
-                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${url}&cueId=${
+                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&cueId=${
                         props.cue._id
                     }&userId=${parsedUser._id}&source=${!props.channelId ? "MY_NOTES" : "UPDATE"}&name=${encodeURIComponent(parsedUser.fullName)}`;
                     setOriginalPdfviewerURL(pdfViewerURL);
@@ -904,8 +903,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             });
 
                             setSubscribers(format);
-
-                            // console.log("Subscribers", subscribers)
                             
                             // clear selected
                             const sel = res.data.cue.getSharedWith.filter((item: any) => {
@@ -915,8 +912,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             const formatSel = sel.map((sub: any) => {
                                 return sub.value
                             });
-
-                            // console.log("Format Selected", selected)
 
                             setSelected(formatSel);
                             setOriginalSelected(formatSel);
@@ -1028,13 +1023,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const changeHiliteColor = useCallback(
         (h: any) => {
-            console.log("RichText", RichText)
-            console.log("quizOptionEditorIndex", quizOptionEditorIndex);
-            console.log("QuizEditorRef Hilite", quizEditorRef)
             if (quizOptionEditorIndex) {
                 const currRef: any = getRef(quizOptionEditorIndex)
-
-                console.log("Curr Ref", currRef)
 
                 currRef.current?.setHiliteColor(h);
                 setQuizOptionEditorIndex('')
@@ -1144,8 +1134,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             // Get current ref
             const currRef: any = getRef(optionIndex)
 
-            console.log("CurrRef", currRef.current)
-
         },
         [RichText, RichText.current, hiliteColorVisible]
     );
@@ -1231,15 +1219,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     editorRef = RichText
 
                 }
-
-                console.log("Editor ref", editorRef)
-
+                
                 editorRef.current?.focusContentEditor()
 
                 editorRef.current?.insertHTML('<div><br/></div>')
 
-                editorRef.current?.insertImage(url);
+                editorRef.current?.insertImage(url, 'width:300px');
 
+                editorRef.current?.insertHTML('<div><br/></div>')
             }
 
             setInsertImageVisible(false);
@@ -1637,7 +1624,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         cueId: props.cue._id
                     }
                 }).then((res: any) => {
-                    console.log("Res", res);
                 }).catch((e: any) => {
                     console.log("Error", e)
                 })
@@ -1652,7 +1638,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         cueId: props.cue._id
                     }
                 }).then((res: any) => {
-                    console.log("Res", res);
                 }).catch((e: any) => {
                     console.log("Error", e)
                 })
@@ -1827,13 +1812,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 initiatedAt
             });
 
-            // console.log("Submit Quiz", {
-            //     cue: saveCue,
-            //     cueId: props.cue._id,
-            //     userId: parsedUser._id,
-            //     quizId
-            // })
-
             const server = fetchAPI('');
             server
                 .mutate({
@@ -1850,7 +1828,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         Alert(submissionCompleteAlert, new Date().toString(), [
                             {
                                 text: 'Okay',
-                                onPress: () => props.closeModal()
+                                onPress: () => props.closeModal(true)
                             }
                         ]);
                     }
@@ -1906,13 +1884,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 saveCue = submissionDraft;
                             }
 
-                            console.log("Submit ", {
-                                cue: saveCue,
-                                cueId: props.cue._id,
-                                userId: parsedUser._id,
-                                quizId: isQuiz ? quizId : null
-                            })
-
                             const server = fetchAPI('');
                             server
                                 .mutate({
@@ -1930,7 +1901,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         Alert(submissionCompleteAlert, new Date().toString(), [
                                             {
                                                 text: 'Okay',
-                                                onPress: () => props.closeModal()
+                                                onPress: () => props.closeModal(true)
                                             }
                                         ]);
                                     } else {
@@ -2101,9 +2072,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             }
         ]);
     }, [props.showOriginal]);
-
-    // console.log("props.cue updatecontrols", props.cue)
-    console.log("props.cue updatecontrols", props.cue)
     
     /**
      * @description Share cue
@@ -2127,7 +2095,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             allowedAttempts: unlimitedAttempts ? '' : allowedAttempts,
             availableUntil: submission && allowLateSubmission ? availableUntil.toISOString() : '',
             limitedShares,
-            shareWithUserIds: limitedShares ? [] : null,
+            shareWithUserIds: limitedShares ? [props.cue.createdBy] : null,
         }
 
         const server = fetchAPI('');
@@ -2508,19 +2476,27 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 </TouchableOpacity>
                             ) : null}
                             
-                            <TouchableOpacity
-                                onPress={() => {
-                                    Linking.openURL(props.showOriginal ? url : submissionUrl)
-                                }}
-                                style={{
-                                    backgroundColor: 'white',
-                                    borderRadius: 15, 
-                                    marginTop: 5,
-                                    paddingLeft: 20
-                                }}
-                            >
-                                <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
-                            </TouchableOpacity>
+                            {downloadOriginalInProgress ?
+                                <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> :
+                                <TouchableOpacity
+                                    onPress={async () => {
+                                        // Linking.openURL(props.showOriginal ? url : submissionUrl)
+
+                                        if (downloadOriginalInProgress) return;
+
+                                        setDownloadOriginalInProgress(true)
+                                        const res = await downloadFileToDevice(props.showOriginal ? url : submissionUrl)
+                                        setDownloadOriginalInProgress(false)
+                                    }}
+                                    style={{
+                                        backgroundColor: 'white',
+                                        borderRadius: 15, 
+                                        marginTop: 5,
+                                        paddingLeft: 20
+                                    }}
+                                >
+                                    <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
+                                </TouchableOpacity>}
 
                             {(props.showOriginal && 
                             type !== 'mp4' &&
@@ -2528,7 +2504,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             type !== 'mov' &&
                             type !== 'wmv' &&
                             type !== 'mp3' &&
-                            type !== 'mov' &&
                             type !== 'mpeg' &&
                             type !== 'mp2' &&
                             type !== 'wav') ? <TouchableOpacity
@@ -3162,7 +3137,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderSubmissionHistory = () => {
 
-        // console.log("Render submission history")
         return (
             <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
 
@@ -3307,8 +3281,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     };
 
     const renderTimedQuiz = () => {
-
-        console.log("Solutions prop", solutions)
 
         return initiatedAt ? (
             <View style={{ width: '100%', flexDirection: 'column' }}>
@@ -3523,7 +3495,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <Ionicons size={22} name={'trash-outline'} color="#006AFF" />
                             </TouchableOpacity>
                         )}
-                        <TouchableOpacity
+                        {submissionType !== 'mp4' &&
+                            submissionType !== 'oga' &&
+                            submissionType !== 'mov' &&
+                            submissionType !== 'wmv' &&
+                            submissionType !== 'mp3' &&
+                            submissionType !== 'mpeg' &&
+                            submissionType !== 'mp2' &&
+                            submissionType !== 'wav' ? <TouchableOpacity
                             onPress={() => {
                                 props.setFullScreenWebviewURL(originalPdfviewerURL)
                             }}
@@ -3535,7 +3514,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             }}
                         >
                             <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
-                        </TouchableOpacity>
+                        </TouchableOpacity> : null}
                     </View>
                 ) : (
                     <View style={{
@@ -3565,7 +3544,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             </Text> */}
                             <Ionicons size={22} name={'trash-outline'} color="#006AFF" />
                         </TouchableOpacity>
-                        <TouchableOpacity
+                        {submissionType !== 'mp4' &&
+                            submissionType !== 'oga' &&
+                            submissionType !== 'mov' &&
+                            submissionType !== 'wmv' &&
+                            submissionType !== 'mp3' &&
+                            submissionType !== 'mpeg' &&
+                            submissionType !== 'mp2' &&
+                            submissionType !== 'wav' ? <TouchableOpacity
                             onPress={() => {
                                 props.setFullScreenWebviewURL(originalPdfviewerURL)
                             }}
@@ -3577,7 +3563,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             }}
                         >
                             <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
-                        </TouchableOpacity>
+                        </TouchableOpacity> : null}
                     </View>
                     
                 )}
@@ -3587,7 +3573,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const renderSubmissionImports = () => {
 
-        // console.log("Render submissionImported")
         return (!props.showOriginal && submissionImported && !viewSubmission ? (
             submissionType === 'mp4' ||
             submissionType === 'oga' ||
@@ -3635,9 +3620,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderMainCueContent = () => {
 
-        // console.log("Rendering Main Cue Content")
-
-        // console.log("View submission", viewSubmission)
         return (
             <View
                 style={{
@@ -3664,7 +3646,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 key={
                                     JSON.stringify(submissionImported) +
                                     JSON.stringify(viewSubmission) +
-                                    JSON.stringify(props.showOriginal)
+                                    JSON.stringify(props.showOriginal) + 
+                                    props.reloadViewerKey
                                 }
                             >
                                 {renderViewSubmission()}
@@ -3680,7 +3663,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Render cue content
      */
     const renderRichEditorOriginalCue = () => {
-        // console.log("Render renderRichEditorOriginalCue")
+
         if (fetchingQuiz || isQuiz) return null;
 
         if (!isOwner && props.cue.channelId && props.cue.channelId !== '') {
@@ -3750,7 +3733,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 actions.blockquote,
                                 actions.code,
                                 actions.line,
-                                'insertEmoji'
+                                // 'insertEmoji'
                             ]}
                             iconMap={{
                                 [actions.keyboard]: ({ tintColor }) => (
@@ -3940,16 +3923,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         );
     };
 
-    // console.log("Submission attempts", submissionAttempts)
-
     /**
      * @description Renders submission
      * Make sure that when the deadline has passed that the viewSubmission is set to true by default and that (Re-Submit button is not there)
      */
     const renderViewSubmission = () => {
         const attempt = submissionAttempts[submissionAttempts.length - 1];
-
-        console.log("rendering view submission", attempt)
 
         let now = new Date();
         now.setMinutes(now.getMinutes() - 1);
@@ -3987,8 +3966,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         
             </View>)
         }
-
-        console.log("Attempt.title", attempt.title)
 
         return (
             <View style={{ width: '100%', marginTop: 20, flex: 1, height: '100%', flexDirection: 'column' }}>
@@ -4061,9 +4038,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{
                                     flexDirection: 'row', marginLeft: 'auto'
                                 }}>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            Linking.openURL(attempt.url)
+                                    {downloadSubmissionInProgress ? <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> : <TouchableOpacity
+                                        onPress={async () => {
+                                            if (downloadSubmissionInProgress) return;
+
+                                            setDownloadSubmissionInProgress(true)
+                                            const res = await downloadFileToDevice(attempt.url)
+                                            console.log("Download result", res)
+                                            setDownloadSubmissionInProgress(false)
                                         }}
                                         style={{
                                             backgroundColor: 'white',
@@ -4073,7 +4055,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         }}
                                     >
                                         <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
-                                    </TouchableOpacity>
+                                    </TouchableOpacity>}
 
                                 </View>
 
@@ -4103,7 +4085,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 JSON.stringify(attempt) +
                                 JSON.stringify(props.showOriginal) +
                                 JSON.stringify(props.showOptions) +
-                                JSON.stringify(submissionAttempts)
+                                JSON.stringify(submissionAttempts) +
+                                props.reloadViewerKey
                             }
                         >
                             <View style={{
@@ -4127,9 +4110,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{
                                     flexDirection: 'row', marginLeft: 'auto'
                                 }}>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            Linking.openURL(attempt.url)
+                                    {downloadSubmissionInProgress ? <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> : <TouchableOpacity
+                                        onPress={async () => {
+                                            if (downloadSubmissionInProgress) return;
+
+                                            setDownloadSubmissionInProgress(true)
+                                            const res = await downloadFileToDevice(attempt.url)
+                                            console.log("Download result", res)
+                                            setDownloadSubmissionInProgress(false)
                                         }}
                                         style={{
                                             backgroundColor: 'white',
@@ -4139,9 +4127,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         }}
                                     >
                                         <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
-                                    </TouchableOpacity>
+                                    </TouchableOpacity>}
 
-                                    <TouchableOpacity
+                                    {attempt.type !== 'mp4' &&
+                                    attempt.type !== 'oga' &&
+                                    attempt.type !== 'mov' &&
+                                    attempt.type !== 'wmv' &&
+                                    attempt.type !== 'mp3' &&
+                                    attempt.type !== 'mpeg' &&
+                                    attempt.type !== 'mp2' &&
+                                    attempt.type !== 'wav' ? <TouchableOpacity
                                         onPress={() => {
                                             props.setFullScreenWebviewURL(submissionPdfviewerURL)
                                         }}
@@ -4153,7 +4148,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         }}
                                     >
                                         <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
-                                    </TouchableOpacity>
+                                    </TouchableOpacity> : null}
                                 </View>
                             </View>
                             
@@ -4184,6 +4179,68 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     )
                 ) : (
                     <View style={{ width: '100%', marginTop: 25, flex: 1 }} key={JSON.stringify(attempt) + props.reloadViewerKey}>
+                        <View style={{
+                                width: '100%', flexDirection: 'row', marginTop: 20,   marginBottom: 5,
+                            }}>
+                                {attempt.title !== '' ? (
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            paddingRight: 15,
+                                            paddingTop: 12,
+                                            paddingBottom: 12,
+                                            maxWidth: '65%',
+                                            fontWeight: '600',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        {attempt.title}
+                                    </Text>
+                                ) : null}
+                                <View style={{
+                                    flexDirection: 'row', marginLeft: 'auto'
+                                }}>
+                                    {downloadSubmissionInProgress ? <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> : <TouchableOpacity
+                                        onPress={async () => {
+                                            if (downloadOriginalInProgress) return;
+
+                                            setDownloadSubmissionInProgress(true)
+                                            const res = await downloadFileToDevice(attempt.url)
+                                            console.log("Download result", res)
+                                            setDownloadSubmissionInProgress(false)
+                                        }}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 15, 
+                                            marginTop: 5,
+                                            paddingLeft: 20
+                                        }}
+                                    >
+                                        <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
+                                    </TouchableOpacity>}
+
+                                    {attempt.type !== 'mp4' &&
+                                    attempt.type !== 'oga' &&
+                                    attempt.type !== 'mov' &&
+                                    attempt.type !== 'wmv' &&
+                                    attempt.type !== 'mp3' &&
+                                    attempt.type !== 'mpeg' &&
+                                    attempt.type !== 'mp2' &&
+                                    attempt.type !== 'wav' ? <TouchableOpacity
+                                        onPress={() => {
+                                            props.setFullScreenWebviewURL(submissionPdfviewerURL)
+                                        }}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 15, 
+                                            marginTop: 5,
+                                            paddingLeft: 20
+                                        }}
+                                    >
+                                        <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
+                                    </TouchableOpacity> : null}
+                                </View>
+                            </View>
                         {viewSubmissionTab === 'mySubmission' ? (
                             <Text className="mce-content-body htmlParser" style={{ width: '100%', color: 'black' }}>
                                 {/* {parser(attempt.html)} */}
@@ -4252,7 +4309,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 actions.blockquote,
                                 actions.code,
                                 actions.line,
-                                'insertEmoji'
+                                // 'insertEmoji'
                             ]}
                             iconMap={{
                                 [actions.keyboard]: ({ tintColor }) => (
@@ -5983,7 +6040,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     }
 
     const wrapMainCueContentWithScrollView = () => {
-        // console.log("Rendering wrapMainCueContentWithScrollView");
+
         return isQuiz || imported || !props.showOriginal ? (
             <ScrollView
                 contentContainerStyle={{
@@ -6003,8 +6060,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             renderRichEditorOriginalCue()
         );
     };
-
-    // console.log("Remaining attempts", remainingAttempts)
 
     // MAIN RETURN
     return (

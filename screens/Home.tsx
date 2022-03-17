@@ -162,8 +162,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const [showWorkspaceFilterModal, setShowWorkspaceFilterModal] = useState(false);
 
-    console.log('Disable create', disableCreateNavbar)
-
     const onOrientationChange = useCallback(async () => {
         await Updates.reloadAsync();
     }, []);
@@ -188,13 +186,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             if (u) {
                 const user = JSON.parse(u);
 
-                if (user._id && user._id !== '') {
+                if (user && user._id && user._id !== '') {
                     setUserId(user._id);
                     setRole(user.role);
                     await loadDataFromCloud();
                     // Update EXPO notification ID once on INIT
                     updateExpoNotificationId(user)
+                } else {
+                    setShowLoginWindow(true)
                 }
+            } else {
+                setShowLoginWindow(true)
             }
         })();
 
@@ -596,10 +598,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
     }, []);
 
-    console.log("Selected workspace", selectedWorkspace)
-
-    console.log("User id", userId)
-
     const updateInboxCount = useCallback(userId => {
         const server = fetchAPI('');
         server
@@ -621,107 +619,155 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             .catch(err => console.log(err));
     }, []);
 
-    const handleRefreshWorkspace = useCallback(async () => {
+    const handleRefreshWorkspace = useCallback(async (subscriptions: boolean) => {
         
         let user = await AsyncStorage.getItem('user');
+        const unparsedCues = await AsyncStorage.getItem('cues');
 
-        if (user) {
+        if (user && unparsedCues) {
             setRefreshingWorkspace(true)
 
-            await refreshSubscriptions()
+            if (subscriptions) {
+                await refreshSubscriptions()
+            }
 
             const parsedUser = JSON.parse(user);
             const server = fetchAPI(parsedUser._id);
 
-            const allCues: any = {};
+           
+            const allCues: any = JSON.parse(unparsedCues)
 
-            try {
-                const res = await server.query({
-                    query: getCues,
+            server
+                .query({
+                    query: getCuesFromCloud,
                     variables: {
                         userId: parsedUser._id
                     }
-                });
-
-                if (res.data.cue.findByUserId) {
-                    // Here we load all new Cues
-                    // we update statuses for the cues that are already stored and add new cues to the list
-                    // (cant directly replace the store because channel cues could be modified by the user)
-
-                    const receivedCues = res.data.cue.findByUserId;
-                    receivedCues.map((item: any) => {
-                        const channelId = item.channelId.toString().trim();
-                        let index = -1;
-                        if (allCues[channelId]) {
-                            index = allCues[channelId].findIndex((cue: any) => {
-                                return cue._id.toString().trim() === item._id.toString().trim();
-                            });
-                        }
-                        if (index === -1) {
-                            let cue: any = {};
-                            cue = {
-                                ...item
-                            };
+                })
+                .then(async res => {
+                    if (res.data.cue.getCuesFromCloud) {
+                        const allCues: any = {};                        
+                        res.data.cue.getCuesFromCloud.map((cue: any) => {
+                            const channelId = cue.channelId && cue.channelId !== '' ? cue.channelId : 'local';
                             delete cue.__typename;
-                            if (allCues[cue.channelId]) {
-                                allCues[cue.channelId].push(cue);
+                            if (allCues[channelId]) {
+                                allCues[channelId].push({ ...cue });
                             } else {
-                                allCues[cue.channelId] = [cue];
-                            }
-                        } else {
-                            allCues[item.channelId][index].unreadThreads = item.unreadThreads ? item.unreadThreads : 0;
-                            allCues[item.channelId][index].status = item.status;
-                            allCues[item.channelId][index].folderId = item.folderId;
-                            if (!allCues[item.channelId][index].original) {
-                                allCues[item.channelId][index].original = item.cue;
-                            }
-                        }
-                    });
-                    const custom: any = {};
-                    console.log("Refresh workspace cues", allCues)
-                    setCues(allCues);
-                    if (allCues['local']) {
-                        allCues['local'].map((item: any) => {
-                            if (item.customCategory !== '') {
-                                if (!custom[item.customCategory]) {
-                                    custom[item.customCategory] = 0;
-                                }
+                                allCues[channelId] = [{ ...cue }];
                             }
                         });
+                        const custom: any = {};
+                        if (allCues['local']) {
+                            allCues['local'].map((item: any) => {
+                                if (item.customCategory !== '') {
+                                    if (!custom[item.customCategory]) {
+                                        custom[item.customCategory] = 0;
+                                    }
+                                }
+                            });
+                        } else {
+                            allCues['local'] = [];
+                        }
                         const customC: any[] = [];
                         Object.keys(custom).map(item => {
                             customC.push(item);
                         });
                         customC.sort();
+                        setCues(allCues);
                         setCustomCategories(customC);
+                        const stringCues = JSON.stringify(allCues);
+                        await AsyncStorage.setItem('cues', stringCues);
+                        // await notificationScheduler(allCues);
+                        setRefreshingWorkspace(false);
                     }
-                    // await notificationScheduler(allCues);
-                    const stringCues = JSON.stringify(allCues);
-                    await AsyncStorage.setItem('cues', stringCues);
-                    setRefreshingWorkspace(false)
-                }
-            } catch (err) {
-                console.log('Error background', err);
-                Alert(unableToRefreshCuesAlert, checkConnectionAlert);
-                const custom: any = {};
-                setCues(allCues);
-                if (allCues['local']) {
-                    allCues['local'].map((item: any) => {
-                        if (item.customCategory !== '') {
-                            if (!custom[item.customCategory]) {
-                                custom[item.customCategory] = 0;
-                            }
-                        }
-                    });
-                    const customC: any[] = [];
-                    Object.keys(custom).map(item => {
-                        customC.push(item);
-                    });
-                    customC.sort();
-                    setCustomCategories(customC);
-                }
-                setRefreshingWorkspace(false)
-            }
+                })
+                .catch(err => console.log(err));
+
+            // try {
+            //     const res = await server.query({
+            //         query: getCues,
+            //         variables: {
+            //             userId: parsedUser._id
+            //         }
+            //     });
+
+            //     if (res.data.cue.findByUserId) {
+            //         // Here we load all new Cues
+            //         // we update statuses for the cues that are already stored and add new cues to the list
+            //         // (cant directly replace the store because channel cues could be modified by the user)
+
+            //         const receivedCues = res.data.cue.findByUserId;
+            //         receivedCues.map((item: any) => {
+            //             const channelId = item.channelId.toString().trim();
+            //             let index = -1;
+            //             if (allCues[channelId]) {
+            //                 index = allCues[channelId].findIndex((cue: any) => {
+            //                     return cue._id.toString().trim() === item._id.toString().trim();
+            //                 });
+            //             }
+            //             if (index === -1) {
+            //                 let cue: any = {};
+            //                 cue = {
+            //                     ...item
+            //                 };
+            //                 delete cue.__typename;
+            //                 if (allCues[cue.channelId]) {
+            //                     allCues[cue.channelId].push(cue);
+            //                 } else {
+            //                     allCues[cue.channelId] = [cue];
+            //                 }
+            //             } else {
+            //                 allCues[item.channelId][index].unreadThreads = item.unreadThreads ? item.unreadThreads : 0;
+            //                 allCues[item.channelId][index].status = item.status;
+            //                 allCues[item.channelId][index].folderId = item.folderId;
+            //                 if (!allCues[item.channelId][index].original) {
+            //                     allCues[item.channelId][index].original = item.cue;
+            //                 }
+            //             }
+            //         });
+            //         const custom: any = {};
+            //         setCues(allCues);
+            //         if (allCues['local']) {
+            //             allCues['local'].map((item: any) => {
+            //                 if (item.customCategory !== '') {
+            //                     if (!custom[item.customCategory]) {
+            //                         custom[item.customCategory] = 0;
+            //                     }
+            //                 }
+            //             });
+            //             const customC: any[] = [];
+            //             Object.keys(custom).map(item => {
+            //                 customC.push(item);
+            //             });
+            //             customC.sort();
+            //             setCustomCategories(customC);
+            //         }
+            //         // await notificationScheduler(allCues);
+            //         const stringCues = JSON.stringify(allCues);
+            //         await AsyncStorage.setItem('cues', stringCues);
+            //         setRefreshingWorkspace(false)
+            //     }
+            // } catch (err) {
+            //     Alert(unableToRefreshCuesAlert, checkConnectionAlert);
+            //     const custom: any = {};
+            //     setCues(allCues);
+            //     if (allCues['local']) {
+            //         allCues['local'].map((item: any) => {
+            //             if (item.customCategory !== '') {
+            //                 if (!custom[item.customCategory]) {
+            //                     custom[item.customCategory] = 0;
+            //                 }
+            //             }
+            //         });
+            //         const customC: any[] = [];
+            //         Object.keys(custom).map(item => {
+            //             customC.push(item);
+            //         });
+            //         customC.sort();
+            //         setCustomCategories(customC);
+            //     }
+            //     setRefreshingWorkspace(false)
+            // }
         }
 
     }, [])
@@ -1222,13 +1268,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 })
                 .then(async res => {
                     if (res.data.cue.getCuesFromCloud) {
-                        const allCues: any = {};
+                        const allCues: any = {};                        
                         res.data.cue.getCuesFromCloud.map((cue: any) => {
                             const channelId = cue.channelId && cue.channelId !== '' ? cue.channelId : 'local';
                             delete cue.__typename;
-                            // if (channelId === '60c16dcdd79a074f7318dd3f' && cue._id === '621b27af9a4afc0cf34ee36b') {
-                            //     console.log('Updated cue', cue)
-                            // } 
                             if (allCues[channelId]) {
                                 allCues[channelId].push({ ...cue });
                             } else {
@@ -1311,7 +1354,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     // imp
     const saveDataInCloud = useCallback(async () => {
         if (saveDataInProgress) return;
-
 
         setSaveDataInProgress(true);
         const u: any = await AsyncStorage.getItem('user');
@@ -1438,13 +1480,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const openModal = useCallback(
         async (type) => {
 
-            console.log("Options", option)
-            console.log("Active workspace", selectedWorkspace)
-
             if (option === 'Classroom' && selectedWorkspace !== '') {
                 await AsyncStorage.setItem('activeWorkspace', selectedWorkspace)
                 setSelectedWorkspace('')
-                console.log("set new selected workspace", selectedWorkspace)
             }
 
 
@@ -1458,13 +1496,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         async (channelId, _id, by) => {
 
             setShowHome(false);
-            openModal('Update');
-
-            console.log("Open cue from calendar");
 
             const fetchAsyncCues = await AsyncStorage.getItem('cues');
-
-            console.log('Fetched storage cues', fetchAsyncCues)
 
             if (!fetchAsyncCues) {
                 "Failed to open. Try again"
@@ -1490,12 +1523,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 });
             }
 
-            console.log('StorageCues mapping over')
-
             setUpdateModalKey(cueKey);
             setUpdateModalIndex(cueIndex);
             // setPageNumber(pageNumber);
             setChannelId(channelId);
+
+            openModal('Update');
 
             if (channelId !== '') {
                 const sub = subscriptions.find((item: any) => {
@@ -1653,7 +1686,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         reloadCueListAfterUpdate();
     }, [cues, updateModalKey, updateModalIndex]);
 
-    const closeModal = useCallback(async () => {
+    const closeModal = useCallback(async (submit?: boolean) => {
 
         setClosingModal(true);
 
@@ -1662,8 +1695,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             
             const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
             
-            console.log("Active workspace home", activeWorkspace)
-
             if (activeWorkspace) {
 
                 setSelectedWorkspace(activeWorkspace)
@@ -1671,14 +1702,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
 
         const cueDraftHome = await AsyncStorage.getItem('cueDraft');
-        console.log("Cue Draft Home", cueDraftHome)
 
         await loadData();
 
         setModalType('');
 
         // Mark as read
-        if (modalType === 'Update') {
+        if (modalType === 'Update' && !submit) {
             await markCueAsRead();
         }
 
@@ -1704,7 +1734,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const getNavbarIconName = (op: string) => {
         switch (op) {
             case 'To Do':
-                return option === op ? 'home' : 'home-outline';
+                return option === op ? 'calendar' : 'calendar-outline';
             case 'Classroom':
                 return option === op ? 'library' : 'library-outline';
             case 'Search':
@@ -1760,8 +1790,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         return '#575655'
     }
 
-    console.log('createActiveTab', createActiveTab)
-
     const getCreateNavbarIconColor = (op: string) => {
         if (op === createActiveTab) {
             return selectedWorkspace.split('-SPLIT-')[3]
@@ -1772,7 +1800,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const getNavbarText = (op: string) => {
         switch (op) {
             case 'To Do':
-                return 'Home'
+                return 'Agenda'
             case 'Classroom':
                 return 'Workspace'
             case 'Search':
@@ -1847,8 +1875,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     } else {
         dateFilteredCues = cuesArray;
     }
-
-    console.log("Role home", role)
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%' }}>
@@ -2523,7 +2549,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             }
                                             loadData(true);
                                         }
-                                        console.log("Open modal create")
                                         openModal('Create');
                                     }}
                                     createOption={createOption}
@@ -2600,12 +2625,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         setModalType('');
                                         // setPageNumber(0);
                                     }}
-                                    closeOnCreate={() => {
+                                    closeOnCreate={async () => {
                                         setDisableCreateNavbar(false)
                                         setCreateActiveTab('Content')
                                         setModalType('');
                                         // setPageNumber(0);
-                                        loadData(true);
+                                        await loadData(true);
+                                        await loadData();
                                     }}
                                     unreadMessages={unreadMessages}
                                     refreshUnreadInbox={refreshUnreadInbox}
@@ -2618,7 +2644,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     showNewMeeting={showNewMeeting}
                                     setShowNewMeeting={(show: boolean) => setShowNewMeeting(show)}
                                     refreshingWorkspace={refreshingWorkspace}
-                                    onRefreshWorkspace={() => handleRefreshWorkspace()}
+                                    onRefreshWorkspace={(subs: boolean) => handleRefreshWorkspace(subs)}
                                     // 
                                     setShowImportCreate={(showImport: boolean) => setShowImportCreate(showImport)}
                                     showImportCreate={showImportCreate}
@@ -2653,7 +2679,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             cue={cues[updateModalKey][updateModalIndex]}
                             cueIndex={updateModalIndex}
                             cueKey={updateModalKey}
-                            closeModal={() => closeModal()}
+                            closeModal={(submit?: boolean) => closeModal(submit)}
                             cueId={cueId}
                             createdBy={createdBy}
                             channelId={channelId}

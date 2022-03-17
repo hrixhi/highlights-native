@@ -1,6 +1,6 @@
 // REACT
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, ScrollView, TextInput, Dimensions, Image } from 'react-native';
+import { StyleSheet, ScrollView, TextInput, Dimensions, Image, ActivityIndicator } from 'react-native';
 import _ from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,7 +23,7 @@ import {
 // COMPONENTS
 import { View, Text, TouchableOpacity } from './Themed';
 import Alert from './Alert';
-import ReactPlayer from 'react-native-video';
+import { Video } from 'expo-av';
 import alert from './Alert';
 import QuizGrading from './QuizGrading';
 import { htmlStringParser } from '../helpers/HTMLParser';
@@ -33,6 +33,7 @@ import { WebView } from 'react-native-webview';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
+import { downloadFileToDevice } from '../helpers/DownloadFile';
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [filterChoice, setFilterChoice] = useState('All');
@@ -69,6 +70,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [exportAoa, setExportAoa] = useState<any[]>();
     const [showQuizGrading, setShowQuizGrading] = useState(false);
     const [feedbackPdfviewerURL, setFeedbackPdfviewerURL] = useState('');
+    const videoRef: any = useRef();
+    const [downloadFeedbackInProgress, setDownloadFeedbackInProgress] = useState(false)
+
 
     if (props.cue && props.cue.submission) {
         categories.push('Submitted');
@@ -348,8 +352,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
      * @description Setup PDFTRON Webviewer with Submission
      */
     useEffect(() => {
-        console.log('Load submission url');
-
         (async () => {
             const u = await AsyncStorage.getItem('user');
 
@@ -359,8 +361,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 if (submissionAttempts && submissionAttempts.length > 0) {
                     const attempt = submissionAttempts[submissionAttempts.length - 1];
                     let url = attempt.html !== undefined ? attempt.annotationPDF : attempt.url;
-                    console.log('URL', url);
-                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${url}&cueId=${
+                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&cueId=${
                         props.cue._id
                     }&userId=${userId}&source=FEEDBACK&name=${encodeURIComponent(parsedUser.fullName)}`;
                     setFeedbackPdfviewerURL(pdfViewerURL);
@@ -733,8 +734,9 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const renderViewSubmission = () => {
         const attempt = submissionAttempts[submissionAttempts.length - 1];
 
+
         return (
-            <View style={{ width: '100%', marginTop: 20 }}>
+            <View style={{ width: '100%', }} key={props.reloadViewerKey}>
                 {/* Render Tabs to switch between original submission and Annotations only if submission was HTML and not a file upload */}
                 {/* {attempt.url !== undefined ? null : <View style={{ flexDirection: "row", width: '100%', justifyContent: 'center' }}>
                 <TouchableOpacity
@@ -762,6 +764,68 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     </Text>
                 </TouchableOpacity>
             </View>} */}
+            <View style={{
+                                width: '100%', flexDirection: 'row', marginTop: 20,   marginBottom: 5,
+                            }}>
+                                {attempt.title !== '' ? (
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            paddingRight: 15,
+                                            paddingTop: 12,
+                                            paddingBottom: 12,
+                                            maxWidth: '65%',
+                                            fontWeight: '600',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        {attempt.title}
+                                    </Text>
+                                ) : null}
+                                <View style={{
+                                    flexDirection: 'row', marginLeft: 'auto'
+                                }}>
+                                    {downloadFeedbackInProgress ? <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> : <TouchableOpacity
+                                        onPress={async () => {
+                                            if (downloadFeedbackInProgress) return;
+
+                                            setDownloadFeedbackInProgress(true)
+                                            const res = await downloadFileToDevice(attempt.url ? attempt.url : attempt.annotationPDF)
+                                            setDownloadFeedbackInProgress(false)
+                                        }}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 15, 
+                                            marginTop: 5,
+                                            paddingLeft: 20
+                                        }}
+                                    >
+                                        <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
+                                    </TouchableOpacity>}
+
+                                    {attempt.type !== 'mp4' &&
+                                    attempt.type !== 'oga' &&
+                                    attempt.type !== 'mov' &&
+                                    attempt.type !== 'wmv' &&
+                                    attempt.type !== 'mp3' &&
+                                    attempt.type !== 'mpeg' &&
+                                    attempt.type !== 'mp2' &&
+                                    attempt.type !== 'wav' ? <TouchableOpacity
+                                        onPress={() => {
+                                            props.setFullScreenWebviewURL(feedbackPdfviewerURL)
+                                        }}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 15, 
+                                            marginTop: 5,
+                                            paddingLeft: 20
+                                        }}
+                                    >
+                                        <Ionicons size={22} name={'expand-outline'} color="#006AFF" />
+                                    </TouchableOpacity> : null}
+                                </View>
+                            </View>
+
                 {attempt.url !== undefined ? (
                     attempt.type === 'mp4' ||
                     attempt.type === 'oga' ||
@@ -773,7 +837,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     attempt.type === 'mp2' ||
                     attempt.type === 'wav' ? (
                         <View style={{ width: '100%', marginTop: 25 }}>
-                            {attempt.title !== '' ? (
+                            {/* {attempt.title !== '' ? (
                                 <Text
                                     style={{
                                         fontSize: 18,
@@ -789,18 +853,31 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 >
                                     {attempt.title}
                                 </Text>
-                            ) : null}
-                            <ReactPlayer
+                            ) : null} */}
+                            {/* <ReactPlayer
                                 source={{ uri: attempt.url }}
                                 style={{
                                     width: '100%',
                                     height: '100%'
                                 }}
+                            /> */}
+                            <Video
+                                ref={videoRef}
+                                style={{
+                                    width: '100%',
+                                    height: 500
+                                }}
+                                source={{
+                                    uri: attempt.url
+                                }}
+                                useNativeControls
+                                resizeMode="contain"
+                                isLooping
                             />
                         </View>
                     ) : (
                         <View style={{ width: '100%', marginTop: 25, flex: 1 }}>
-                            {attempt.title !== '' ? (
+                            {/* {attempt.title && attempt.title !== '' ? (
                                 <Text
                                     style={{
                                         fontSize: 18,
@@ -816,7 +893,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 >
                                     {attempt.title}
                                 </Text>
-                            ) : null}
+                            ) : null} */}
                             {/* <div
                                 className="webviewer"
                                 ref={submissionViewerRef}
@@ -829,7 +906,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View>
                     )
                 ) : (
-                    <View style={{ width: '100%', marginTop: 25, flex: 1 }} key={viewSubmissionTab}>
+                    <View style={{ width: '100%', marginTop: 25 }} key={viewSubmissionTab}>
                         {viewSubmissionTab === 'mySubmission' ? (
                             <Text className="mce-content-body htmlParser" style={{ width: '100%' }}>
                                 {/* {parser(attempt.html)} */}
@@ -1304,7 +1381,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         </TouchableOpacity>
                                     </View>
                                 </View>
-                                <View style={{ flexDirection: 'row' }}>
+                                {/* <View style={{ flexDirection: 'row' }}>
                                     {imported && !isQuiz ? (
                                         <View style={{ }}>
                                             <TextInput
@@ -1317,7 +1394,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             />
                                         </View>
                                     ) : null}
-                                </View>
+                                </View> */}
                                 {submissionAttempts.length > 0 && !isQuiz ? renderViewSubmission() : null}
                             </ScrollView>
                         </View>

@@ -49,7 +49,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
             setLoading(true);
             setSearchComplete(false);
             const url =
-                'https://archive.org/services/search/v1/scrape?fields=title,identifier,mediatype,format,description,downloads&q=';
+                'https://archive.org/services/search/v1/scrape?fields=title,identifier,mediatype,format,description,downloads,collection&q=';
             const response = await axios.get(
                 url + encodeURIComponent(searchTerm) + '&sorts=' + encodeURIComponent('downloads desc') + '&count=1000'
             );
@@ -69,7 +69,14 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 } catch (e) {
                     console.log(item.format);
                 }
-                return pdfExists;
+
+                let isAvailableForFree = false;
+
+                if (item.collection && (item.collection.includes('opensource') || item.collection.includes('community'))) {
+                    isAvailableForFree = true;
+                }
+
+                return pdfExists && isAvailableForFree;
             });
             setResults(filteredItems);
             setSearchComplete(true);
@@ -82,6 +89,8 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
      */
     const retrieveBook = useCallback(() => {
         setRetrievingBook(true);
+
+        // alert('Retrieving book... Large files may take a while to process');
 
         const server = fetchAPI('');
         server
@@ -108,8 +117,10 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         })
                         .then((res2: any) => {
                             if (res2.data) {
+                                console.log("Upload", res2.data)
                                 setRetrievingBook(false);
                                 setSelectedBook(null);
+                                props.hideBars(false)
                                 props.onUpload({
                                     url: res2.data,
                                     title: selectedBook.title,
@@ -130,6 +141,31 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 console.log(e);
             });
     }, [selectedBook]);
+
+    if (retrievingBook) {
+       
+        return <View
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    backgroundColor: '#fff'
+                }}
+            >
+                <ActivityIndicator color={'#1F1F1F'} style={{ alignSelf: 'center' }} />
+                <Text
+                    style={{
+                        marginTop: 15,
+                        textAlign: 'center',
+                        fontSize: 18,
+                        fontFamily: 'Inter'
+                    }}
+                >
+                    Retrieving book...
+                </Text>
+            </View>
+    }
 
     // MAIN RETURN
     return (
@@ -274,6 +310,7 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             onPress={() => {
                                                 setSelectedBook(result);
                                                 // Open the popup that has detailed information
+                                                props.hideBars(true)
                                             }}
                                             style={{
                                                 width: 125,
@@ -387,22 +424,23 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     </View>
                 )}
             </ScrollView>
-            {selectedBook ? (
+            {selectedBook && !retrievingBook ? (
                 <BottomSheet
-                    snapPoints={[0, 700]}
+                    snapPoints={[0, 600]}
                     close={() => {
                         if (retrievingBook) {
                             return;
                         }
                         setSelectedBook(null);
+                        props.hideBars(false)
                     }}
                     header={false}
-                    isOpen={selectedBook !== null}
+                    isOpen={selectedBook !== null && !retrievingBook}
                     title={selectedBook ? selectedBook.title : ''}
                     callbackNode={fall}
                     renderContent={() => (
                         <View>
-                            {!retrievingBook && selectedBook ? (
+                            {selectedBook ? (
                                 <View style={{ flexDirection: 'column', padding: 25, backgroundColor: 'none' }}>
                                     <View
                                         style={{
@@ -461,37 +499,6 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     >
                                         {selectedBook.description}
                                     </Text>
-                                </View>
-                            ) : retrievingBook ? (
-                                <View
-                                    style={{
-                                        padding: 25,
-                                        justifyContent: 'center',
-                                        flexDirection: 'column',
-                                        backgroundColor: 'white'
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            height: 245,
-                                            width: 175,
-                                            justifyContent: 'center',
-                                            flexDirection: 'column',
-                                            backgroundColor: 'white'
-                                        }}
-                                    >
-                                        <ActivityIndicator color={'#1F1F1F'} style={{ alignSelf: 'center' }} />
-                                        <Text
-                                            style={{
-                                                marginTop: 15,
-                                                textAlign: 'center',
-                                                fontSize: 18,
-                                                fontFamily: 'Inter'
-                                            }}
-                                        >
-                                            Retrieving text...
-                                        </Text>
-                                    </View>
                                 </View>
                             ) : null}
 

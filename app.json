@@ -2,10 +2,11 @@
   "expo": {
     "name": "Learn with Cues",
     "slug": "cues",
-    "version": "1.1.3",
-    "icon": "./assets/images/icon.png",
+    "version": "1.0.1",
+    "icon": "./assets/images/cues-app-logo.png",
     "scheme": "cues",
     "userInterfaceStyle": "automatic",
+    "orientation": "portrait",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -18,9 +19,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.vora.cues",
-      "buildNumber": "1.2",
+      "supportsTablet": false,
+      "bundleIdentifier": "com.cues-technologies.learnwithcues",
+      "buildNumber": "1.0",
       "usesIcloudStorage": true
     },
     "android": {
@@ -28,7 +29,7 @@
       "versionCode": 4,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/cues-app-logo.png",
         "backgroundColor": "#000000"
       },
       "package": "com.vora.cues",
@@ -47,7 +48,14 @@
       "transformer": "node_modules/react-native-css-transformer/index.js"
     },
     "plugins": [
-      "sentry-expo"
+      "sentry-expo",  [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile pic.",
+          "savePhotosPermission": "Allow access to save photos from coursework, notes, messages, discussion posts on your device.",
+          "isAccessMediaLocationEnabled": "false"
+        }
+      ]
     ],
     "hooks": {
       "postPublish": [

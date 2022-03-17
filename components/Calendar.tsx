@@ -1980,9 +1980,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <Text
                         style={{
                             paddingTop: Platform.OS === 'android' ? 3 : 5,
-                            color: '#a2a2ac',
+                            color: '#006AFF',
                             paddingRight: 10,
-                            paddingLeft: 17
+                            paddingLeft: 17,
+                            fontSize: 13,
                         }}
                         numberOfLines={1}
                     >
@@ -3113,8 +3114,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         <Agenda
                             initialNumToRender={10}
                             showClosingKnob={true}
-                            showOnlySelectedDayItems={Platform.OS === 'android'}
-                            // showOnlySelectedDayItems={true}
+                            // showOnlySelectedDayItems={Platform.OS === 'android'}
+                            showOnlySelectedDayItems={false}
                             items={items}
                             loadItemsForMonth={loadItemsForMonth}
                             selected={timeToString(new Date())}
@@ -3130,6 +3131,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 dotColor: '#006AFF' // dots
                             }}
                             onDayPress={onUpdateSelectedDate}
+                            onDayLongPress={onUpdateSelectedDate}
                             renderEmptyDate={() => <View />}
                             // renderEmptyDate={() => (<View style={{
                             //     paddingVertical: 45,

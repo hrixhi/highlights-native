@@ -116,7 +116,8 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                             paddingTop: 5,
                             textAlign: 'center',
                             marginTop: 10,
-                            marginBottom: 10
+                            marginBottom: 10,
+                            paddingHorizontal: 20
                             // color: '#006aff'
                         }}
                     >

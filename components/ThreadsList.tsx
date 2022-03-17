@@ -220,7 +220,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             const url = await handleImageUpload(takePhoto, userId);
 
             if (!url) {
-                console.log("url", url)
                 setImportType('')
                 return 
             }

@@ -178,6 +178,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [emails, setEmails] = useState('');
     const [refreshChannelSettings, setRefreshChannelSettings] = useState(false)
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [reversedSearches, setReversedSearches] = useState<string[]>([]);
     const DashboardScrollViewRef: any = useRef()
 
     // ALERTS
@@ -306,7 +307,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     //     (async () => {
     //         const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
 
-    //         console.log("Active workspace dashboard", activeWorkspace)
 
     //         if (activeWorkspace) {
     //             // const school = JSON.parse(org);
@@ -483,7 +483,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, [scrollViewRef.current, channelKeyList, channelHeightList, loadDiscussionForChannelId, indexMap]);
 
     /**
-     * @description Prepares all the data to be displayed in workspace
+     * @description Load user and set user properties
      */
     useEffect(() => {
         (async () => {
@@ -504,7 +504,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
             }
         })();
+    }, [])
 
+
+    /**
+     * @description Prepares all the data to be displayed in workspace
+     */
+    useEffect(() => {
         const temp: any = {};
         const tempCat: any = {};
         const mycues: any[] = [];
@@ -513,6 +519,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         tempCollapse['My Notes'] = false;
         // const tempIndexes: any = {};
 
+        // Sort by start and end date
         let dateFilteredCues: any[] = [];
         if (filterStart && filterEnd) {
             dateFilteredCues = props.cues.filter((item: any) => {
@@ -523,6 +530,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             dateFilteredCues = props.cues;
         }
 
+        //  
         props.subscriptions.map((sub: any) => {
             // const tempCategories: any = {}
             const tempCues: any[] = [];
@@ -536,8 +544,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
             });
 
+            // Sort alphabetically
+            tempCues.sort((a: any, b: any) => {
+                return a.title > b.title ? -1 : 1
+            })
+
             if (sortBy === 'Priority') {
-                tempCues.reverse();
+                // tempCues.reverse();
+                tempCues.sort((a: any, b: any) => {
+                    return a.colorCode < b.colorCode ? 1 : -1 
+                });
             } else if (sortBy === 'Date ↑') {
                 tempCues.sort((a: any, b: any) => {
                     const aDate = new Date(a.date);
@@ -550,7 +566,22 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         return 0;
                     }
                 });
+            } else {
+                tempCues.sort((a: any, b: any) => {
+                    const aDate = new Date(a.date);
+                    const bDate = new Date(b.date);
+                    if (aDate < bDate) {
+                        return -1;
+                    } else if (aDate > bDate) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                });
             }
+
+            console.log("Sort by", sortBy)
+            console.log("Sorted cues", tempCues);
 
             const key =
                 sub.channelName +
@@ -568,6 +599,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }
             tempCat[key] = Object.keys(cat);
         });
+
         const cat: any = { '': [] };
         props.cues.map((cue: any) => {
             if (!cue.channelId || cue.channelId === '') {
@@ -577,9 +609,29 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
             }
         });
+
+        // Sort alphabetically
+        mycues.sort((a: any, b: any) => {
+            return a.title > b.title ? -1 : 1
+        })
+
         if (sortBy === 'Priority') {
-            mycues.reverse();
+            mycues.sort((a: any, b: any) => {
+                return a.colorCode < b.colorCode ? 1 : -1 
+            });
         } else if (sortBy === 'Date ↑') {
+            mycues.sort((a: any, b: any) => {
+                const aDate = new Date(a.date);
+                const bDate = new Date(b.date);
+                if (aDate < bDate) {
+                    return 1;
+                } else if (aDate > bDate) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            });
+        } else {
             mycues.sort((a: any, b: any) => {
                 const aDate = new Date(a.date);
                 const bDate = new Date(b.date);
@@ -593,12 +645,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             });
         }
 
+        console.log("Sort by", sortBy)
+        console.log("Sorted cues my notes", mycues);
+
         temp['My Notes'] = mycues;
         if (!cat['']) {
             delete cat[''];
         }
         tempCat['My Notes'] = Object.keys(cat);
         // tempIndexes['My Notes'] = 0;
+
+        // console.log("Set Cue Map", temp["My Notes"])
 
         setCueMap(temp);
         setCollapseMap(tempCollapse);
@@ -845,7 +902,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Handle create instant meeting for channel owners
      */
     const getCurrentMeetings = useCallback(async () => {
-        // console.log('Collapse map', collapseMap);
 
         let channelId = '';
 
@@ -854,8 +910,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         } else {
             Object.keys(collapseMap).map((key: any) => {
                 if (collapseMap[key] && key.split('-SPLIT-')[0] !== 'My Notes') {
-                    console.log('Active', collapseMap[key]);
-                    console.log('Key', key.split('-SPLIT-')[1]);
                     channelId = key.split('-SPLIT-')[1];
                 }
             });
@@ -918,7 +972,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     }, [])
 
-    console.log("Recent searches", recentSearches)
+    useEffect(() => {
+        setReversedSearches(recentSearches.reverse())
+    }, [recentSearches])
 
     const updateRecentSearches = useCallback(async () => {
 
@@ -941,8 +997,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
 
        const removed = recentSearches.filter((term) => term !== searchTerm);
-
-        console.log("Removed recent search", removed)
 
         setRecentSearches(removed)
 
@@ -1001,7 +1055,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Fetches status of channel and depending on that handles subscription to channel
      */
     const handleSub = useCallback(async (channelId) => {
-        console.log("Channel Id", channelId)
         const server = fetchAPI('');
         server
             .query({
@@ -1018,7 +1071,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             handleSubscribe(channelId, '');
                             break;
                         case 'password-required':
-                            console.log("Password required");
                             setChannelPasswordId(channelId)
                             setShowChannelPasswordInput(true)
                             break;
@@ -1042,16 +1094,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     const createNewThread = useCallback(
         async (message: any, category: any, isPrivate: any) => {
-            console.log('Create new thread', {
-                message,
-                userId,
-                channelId: selectedWorkspace.split('-SPLIT-')[1],
-                isPrivate,
-                anonymous: false,
-                cueId: !props.cueId ? 'NULL' : props.cueId,
-                parentId: 'INIT',
-                category: category === 'None' ? '' : category,
-            });
 
             const server = fetchAPI('');
             server
@@ -1090,8 +1132,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     const handleSubscribe = useCallback(
         async (channelId, pass) => {
-            console.log("ChannelId", channelId)
-            console.log("Password", pass)
             const uString: any = await AsyncStorage.getItem('user');
             const user = JSON.parse(uString);
 
@@ -1153,6 +1193,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
 
+                            if (roundedValue > filterEnd) {
+                                Alert("Start date cannot be after end date")
+                                return;
+                            }
+
                             setFilterStart(roundedValue);
                         }}
                     />
@@ -1172,6 +1217,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowFilterStartDateAndroid(false);
+
+                            if (roundedValue > filterEnd) {
+                                Alert("Start date cannot be after end date")
+                                return;
+                            }
+
                             setFilterStart(roundedValue);
                         }}
                     />
@@ -1222,9 +1273,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
-    console.log('New post categories', newPostCategories);
-    console.log('categoryPositionList', categoryPositionList)
-
     const renderFilterEndDateTimePicker = () => {
         return (
             <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
@@ -1239,6 +1287,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             if (!selectedDate) return;
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
+                            console.log("End date", roundedValue)
+                            console.log("Start date", filterStart)
+
+                            if (roundedValue < filterStart) {
+                                Alert("End date cannot be before start date")
+                                return;
+                            }
+                            
                             setFilterEnd(roundedValue);
                         }}
                     />
@@ -1259,6 +1315,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setShowFilterEndDateAndroid(false);
 
                             const roundedValue = roundSeconds(currentDate);
+
+                            if (roundedValue < filterStart) {
+                                Alert("End date cannot be before start date")
+                                return;
+                            }
+                            
 
                             setFilterEnd(roundedValue);
                         }}
@@ -1519,8 +1581,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
-    console.log('Horizontal scroll position', xScrollOffset);
-
     const renderWorkspaceOptionsList = () => {
 
         const activeTab = tabs[indexMap[selectedWorkspace]];
@@ -1732,11 +1792,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     }
 
-    // console.log("Cues carousel data", cuesCarouselData)
-
     const renderCategorySelectionContent = () => {
-        console.log('New post categories', newPostCategories);
-        console.log('categoryPositionList', categoryPositionList)
         return (
             <ScrollView
                 key={xScrollOffset.toString()}
@@ -1762,7 +1818,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 nestedScrollEnabled={true}
             >
                 {cuesCarouselData.map((item: any) => {
-                    console.log('Horizontal scroll position', xScrollOffset);
 
                     let activeCategoryIndex = 0;
 
@@ -1774,9 +1829,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }
                     });
 
-                    console.log('Active scroll index', activeCategoryIndex);
-
-                    console.log('item.index', item.index);
                     return (
                         <TouchableOpacity
                             key={item.index.toString()}
@@ -1843,6 +1895,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             if (res.data && res.data.channel.addUsersByEmail) {
 
                 const { success, failed, error } = res.data.channel.addUsersByEmail;
+                console.log("Response", res.data.channel.addUsersByEmail)
 
                 if (error) {
                     alert(error);
@@ -1863,6 +1916,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     
                     if (successCount > 0) {
                         setShowInviteByEmailsModal(false);
+                        setEmails("")
                         // Refresh subscribers for the channel
                         setRefreshChannelSettings(true)
                     }
@@ -1916,7 +1970,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </Text>
 
             <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
-                <TouchableOpacity
+                <RNTouchableOpacity
                     style={{
                         marginTop: 50,
                         backgroundColor: '#006AFF',
@@ -1951,6 +2005,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             return;
                         }
 
+                        console.log("Add viewers with email", santizedEmails);
+
                         addViewersWithEmail(santizedEmails);
                     }}
                 >
@@ -1966,7 +2022,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         Add
                     </Text>
-                </TouchableOpacity>
+                </RNTouchableOpacity>
             </View>
         </View>
     }
@@ -2294,7 +2350,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const renderOngoingMeetings = (createdBy: string, colorCode: string) => {
-        console.log('Ongoing meetings', ongoingMeetings);
         return (
             <View style={{ width: '100%', maxWidth: 900, backgroundColor: '#fff', paddingBottom: 30 }}>
                 <Text
@@ -3082,8 +3137,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
-    console.log("Recent searches slice", recentSearches.reverse())
-
     /**
      * @description Renders View for search results
      */
@@ -3213,7 +3266,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 {recentSearches.length > 0 ? "Recent searches" : "No recent searches"}
                             </Text>
 
-                            {recentSearches.reverse().map(((search: string, index: number) => {
+                            {reversedSearches.map(((search: string, index: number) => {
                                 return <View style={{
                                     width: '100%',
                                     flexDirection: 'row',
@@ -3224,8 +3277,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <TouchableOpacity style={{
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                       
-                                    }}>
+                                    }}
+                                    onPress={() => setSearchTerm(search)}
+                                    >
                                         <Ionicons 
                                             name='time-outline'
                                             color="#000"
@@ -3639,8 +3693,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         </View>
     );
 
-    console.log('Ongoing meeting', ongoingMeetings);
-
     /**
      * @description Formats time in email format
      */
@@ -3651,11 +3703,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         else if (currentDate.isSame(date, 'year')) return date.format('MMM DD');
         else return date.format('MM/DD/YYYY');
     }
-
-    console.log("Active search tab", activeSearchResultsTab)
-    console.log("Search tabs", searchResultTabs)
-
-   
 
     const getActiveTab = () => {
         const activeTab = tabs[indexMap[selectedWorkspace]];
@@ -4023,7 +4070,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         refreshControl={
                             <RefreshControl
                                 refreshing={props.refreshingWorkspace}
-                                onRefresh={props.onRefreshWorkspace}
+                                onRefresh={() => props.onRefreshWorkspace(true)}
                                 tintColor="#1f1f1f"
                                 progressBackgroundColor="#1f1f1f"
                                 size={14}
@@ -4252,7 +4299,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         props.refreshSubscriptions()
                                                     }}
                                                     closeModal={() => {
-                                                        props.onRefreshWorkspace()
+                                                        props.onRefreshWorkspace(false)
                                                     }}
                                                     channelColor={selectedWorkspace.split('-SPLIT-')[3]}
                                                     userId={userId}
@@ -5124,7 +5171,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 />
                 <RNTouchableOpacity
                     onPress={() => {
-                        console.log("Handle subscribe")
                         setShowChannelPasswordInput(false)
                         handleSubscribe(channelPasswordId, channelPassword)
                     }}
