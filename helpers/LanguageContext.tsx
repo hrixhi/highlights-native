@@ -99,7 +99,7 @@ const EnglishBank: { [key: string]: string } = {
     option: 'Option', // Done
     comments: 'Comments', // Done
     noComments: 'No posts.', // Done
-    noPosts: 'No posts.', // Done
+    noPosts: 'Ongoing discussion threads will be displayed here.', // Done
     delete: 'DELETE', // Done
     deleteForEveryone: 'DELETE FOR ALL', // Done
     submit: 'SUBMIT', // Done
@@ -112,7 +112,8 @@ const EnglishBank: { [key: string]: string } = {
     post: 'Post', // Done
     anonymous: 'Anonymous', // Done
     grades: 'Grades', // Done
-    noGraded: 'No graded assignments.',
+    noGraded: 'Scores for pending and graded submissions will be displayed here.',
+    noGradedStudents: 'No submissions created.',
     total: 'Total', // Done
     test: 'Test', // Done
     discussion: 'Discuss', // Done
@@ -124,7 +125,9 @@ const EnglishBank: { [key: string]: string } = {
     internetRequired: 'Internet connection required to initialise.',
     removeFromChannel: 'REMOVE FROM CHANNEL', //
     inbox: 'Inbox',
-    noCuesCreated: 'No content.',
+    noCuesCreated: 'No content shared.',
+    noNotesCreated: 'Click ✎ to create a note.',
+    noCuesCreatedInstructor: 'Click ✎ to create, import and share content.',
     present: 'Present',
     addChoice: 'Add Choice',
     addProblem: 'Add Question',

@@ -45,17 +45,17 @@ export default function App() {
         return null;
     } else {
         return (
-            <Fragment>
-                <SafeAreaView style={{ flex: 0, backgroundColor: 'white' }} />
-                <SafeAreaView style={styles.font}>
-                    <StatusBar style={'dark'} />
-                    <MenuProvider>
-                        <LanguageProvider>
-                            <Navigation colorScheme={colorScheme} />
-                        </LanguageProvider>
-                    </MenuProvider>
-                </SafeAreaView>
-            </Fragment>
+                <Fragment>
+                    <SafeAreaView style={{ flex: 0, backgroundColor: 'white' }} />
+                    <SafeAreaView style={styles.font}>
+                        <StatusBar style={'dark'} />
+                        <MenuProvider>
+                            <LanguageProvider>
+                                <Navigation colorScheme={colorScheme} />
+                            </LanguageProvider>
+                        </MenuProvider>
+                    </SafeAreaView>
+                </Fragment>
         );
     }
 }

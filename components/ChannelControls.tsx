@@ -46,6 +46,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [tags, setTags] = useState<string[]>([])
     const [school, setSchool] = useState<any>(null)
     const [role, setRole] = useState('')
+    const [userCreatedOrg, setUserCreatedOrg] = useState(false)
     const [colorCode, setColorCode] = useState("")
     const [channels, setChannels] = useState<any[]>([])
     const [allUsers, setAllUsers] = useState<any[]>([])
@@ -541,6 +542,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         if (u) {
             const parsedUser = JSON.parse(u)
             setUserId(parsedUser._id)
+            setRole(parsedUser.role)
+            setUserCreatedOrg(parsedUser.userCreatedOrg)
             setDisplayName(parsedUser.displayName)
             setFullName(parsedUser.fullName)
             const server = fetchAPI('')
@@ -556,16 +559,17 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     fetchSchoolUsers(res.data.school.findByUserId._id)
                 }
             })
-            server.query({
-                query: getRole,
-                variables: {
-                    userId: parsedUser._id
-                }
-            }).then(res => {
-                if (res.data && res.data.user.getRole) {
-                    setRole(res.data.user.getRole)
-                }
-            })
+            // server.query({
+            //     query: getRole,
+            //     variables: {
+            //         userId: parsedUser._id
+            //     }
+            // }).then(res => {
+            //     if (res.data && res.data.user.getRole) {
+            //         setRole(res.data.user.getRole)
+            //     }
+            // })
+
         } 
     }, [])
 
@@ -781,7 +785,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 </Text>}
                 {channelPasswordId === '' ? <TextInput
                     value={joinWithCode}
-                    placeholder={'9 characters' + (role === 'instructor' ? ' access code' : '' ) }
+                    placeholder={'Access Code'}
                     textContentType={"none"}
                     autoCompleteType={'off'}
                     onChangeText={val => {
@@ -929,7 +933,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 width: "100%",
                             }}>
-                            <View
+                            {/* <View
                                 style={{
                                     width: "100%",
                                     paddingBottom: 15,
@@ -939,6 +943,24 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     fontSize: 14,
                                     color: '#000000'
                                 }}>Temporary</Text>
+                            </View> */}
+                            <View style={{
+                                flexDirection: 'row', alignItems: 'center', marginTop: 15, marginBottom: 10,
+                            }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    marginRight: 8,
+                                    color: '#000000', 
+                                }}>
+                                    Temporary
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        Alert("Courses that are not temporary can only be deleted by the school administrator.")
+                                    }}
+                                >
+                                    <Ionicons name='help-circle-outline' size={18} color="#939699" />
+                                </TouchableOpacity>
                             </View>
                             <View
                                 style={{
@@ -957,9 +979,9 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     activeThumbColor="white"
                                 />
                             </View>
-                            <Text style={{ color: '#1F1F1F', fontSize: 12, paddingTop: 10 }}>
+                            {/* <Text style={{ color: '#1F1F1F', fontSize: 12, paddingTop: 10 }}>
                                 Courses that are not temporary can only be deleted by the school administrator.
-                            </Text>
+                            </Text> */}
                         </View>
                         : null
                 }
@@ -1060,15 +1082,26 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     </View>
                 </View>
 
-                {school ? <Text style={{
-                    fontSize: 14,
-                    paddingTop: 20,
-                    color: '#000000'
+                <View style={{
+                    flexDirection: 'row', alignItems: 'center', marginTop: 20
                 }}>
-                    Viewers
-                </Text> : null}
+                    <Text style={{
+                        fontSize: 14,
+                        marginRight: 8,
+                        color: '#000000'
+                    }}>
+                        Students
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => {
+                            Alert("Students are able to view content, provide submissions, post discussion threads and view their performance.", userCreatedOrg ? 'After creating the course, you can add new users using their emails from the settings tab.' : '',)
+                        }}
+                    >
+                        <Ionicons name='help-circle-outline' size={18} color="#939699" />
+                    </TouchableOpacity>
+                </View>
 
-                {school ? renderSubscriberFilters() : null}
+                {school && !userCreatedOrg ? renderSubscriberFilters() : null}
                 {school ? <View style={{
                     flexDirection: 'column', marginTop: 25,
                 }}>
@@ -1112,12 +1145,24 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 />
                             </View>
                 </View> : null}
-                {school ? <Text style={{
-                    fontSize: 14,
-                    color: '#000000', marginTop: 25, marginBottom: 20
-                }}>
-                    Editors
-                </Text> : null}
+                {school ? <View style={{
+                                flexDirection: 'row', alignItems: 'center', marginTop: 25, marginBottom: 20,
+                            }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    marginRight: 8,
+                                    color: '#000000', 
+                                }}>
+                                    Instructors
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        Alert("Instructors can share content, score and view submissions for all users, initiate meetings and edit course settings, in addition to the student permissions.")
+                                    }}
+                                >
+                                    <Ionicons name='help-circle-outline' size={18} color="#939699" />
+                                </TouchableOpacity>
+                            </View> : null}
                 {school ? 
                
                <View style={{ height: isEditorsDropdownOpen ? getDropdownHeight(moderatorOptions.length) : 50, }}>

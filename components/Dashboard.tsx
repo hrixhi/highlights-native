@@ -75,6 +75,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const styles = styleObject();
     const [userId, setUserId] = useState('');
     const [role, setRole] = useState('');
+    const [userCreatedOrg, setUserCreatedOrg] = useState(false);
     const [allowQuizCreation, setAllowQuizCreation] = useState(false);
     const scrollViewRef: any = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -499,6 +500,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 if (user.role) {
                     setRole(user.role);
                 }
+
+                if (user.userCreatedOrg) {
+                    setUserCreatedOrg(user.userCreatedOrg)
+                }
+
                 if (user.allowQuizCreation) {
                     setAllowQuizCreation(true);
                 }
@@ -3236,7 +3242,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 results[searchOptions[2]].length === 0 &&
                                 results[searchOptions[3]].length === 0
                             )
-                                ? 'No results.' : ''}
+                                ? 'No search results found.' : ''}
                         </Text>
                     ) : null}
 
@@ -3263,7 +3269,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     marginTop: recentSearches.length > 0 ? 0 : 50
                                 }}
                             >
-                                {recentSearches.length > 0 ? "Recent searches" : "No recent searches"}
+                                {recentSearches.length > 0 ? "Recent searches" : "No recent searches."}
                             </Text>
 
                             {reversedSearches.map(((search: string, index: number) => {
@@ -4314,6 +4320,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     refreshChannelSettings={refreshChannelSettings}
                                                     setRefreshChannelSettings={(refresh: boolean) => setRefreshChannelSettings(refresh)}
                                                     setShowInviteByEmailsModal={(show: boolean) => setShowInviteByEmailsModal(show)}
+                                                    userCreatedOrg={userCreatedOrg}
                                                 />
                                             </View>
                                         )
@@ -4322,7 +4329,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             style={{
                                                 width: '100%',
                                                 color: '#1F1F1F',
-                                                fontSize: 20,
+                                                fontSize: 18,
                                                 paddingTop: 50,
                                                 paddingBottom: 50,
                                                 paddingHorizontal: 20,
@@ -4330,7 +4337,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 flex: 1,
                                             }}
                                         >
-                                            {PreferredLanguageText('noCuesCreated')}
+                                            {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? (selectedWorkspace.split('-SPLIT-')[2] === userId ? PreferredLanguageText('noCuesCreatedInstructor') : PreferredLanguageText('noCuesCreated')) : PreferredLanguageText('noNotesCreated')}
                                         </Text>
                                     ) : (
                                         renderMobileCuesCarousel()
@@ -4955,6 +4962,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                 }}
                                                                 channelColor={key.split('-SPLIT-')[3]}
                                                                 userId={userId}
+                                                                userCreatedOrg={userCreatedOrg}
                                                             />
                                                         </View>
                                                     )

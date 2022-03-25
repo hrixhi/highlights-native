@@ -894,7 +894,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             style={{
                                 width: '100%',
                                 color: '#1F1F1F',
-                                fontSize: 20,
+                                fontSize: 18,
                                 paddingVertical: 50,
                                 fontFamily: 'inter',
                                 flex: 1,

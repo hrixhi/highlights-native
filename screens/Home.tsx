@@ -2126,8 +2126,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 'https://cues-files.s3.amazonaws.com/logo/cues-logo-black-exclamation-hidden.jpg'
                                         }}
                                         style={{
-                                            width: dimensions.window.height * 0.16 * 0.53456,
-                                            height: dimensions.window.height * 0.16 * 0.2
+                                            width: dimensions.window.height * 0.2 * 0.53456,
+                                            height: dimensions.window.height * 0.2 * 0.2
                                         }}
                                         resizeMode={'contain'}
                                     />
@@ -2137,13 +2137,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         fontSize: 15,
                                         color: '#1F1F1F',
                                         fontFamily: 'overpass',
-                                        paddingBottom: 20,
+                                        paddingBottom: showForgotPassword ? 20 : 0,
                                         textAlign: 'center'
                                     }}
                                 >
                                     {showForgotPassword
                                         ? PreferredLanguageText('temporaryPassword')
-                                        : PreferredLanguageText('continueLeftOff')}
+                                        : ''}
+                                        {/* PreferredLanguageText('continueLeftOff')} */}
                                 </Text>
 
                                 <View

@@ -1219,13 +1219,24 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                         }}
                     >
                         <View style={{ backgroundColor: 'white' }}>
-                            <Text style={{
-                                fontSize: 14, 
-                                color: '#000000',
-                                fontFamily: 'Inter'
+                            <View style={{
+                                flexDirection: 'row', alignItems: 'center',
                             }}>
-                                Access Code
-                            </Text>
+                                <Text style={{
+                                    fontSize: 14,
+                                    marginRight: 8,
+                                    color: '#000000', 
+                                }}>
+                                    Access Code
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        Alert("Share this code so people can join your course directly.")
+                                    }}
+                                >
+                                    <Ionicons name='help-circle-outline' size={18} color="#939699" />
+                                </TouchableOpacity>
+                            </View>
 
                             <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10,  }}>
 
@@ -1261,12 +1272,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
 
                             </View>
 
-                            <Text style={{ color: '#1F1F1F', fontSize: 12, marginTop: 10, marginBottom: 20, }}>
-                                Share this code so people can join your course directly 
-                            </Text>
                         </View>
 
-                        <View style={{ backgroundColor: 'white', maxWidth: 320 }}>
+                        <View style={{ backgroundColor: 'white', maxWidth: 320, marginTop: 20 }}>
                             <Text style={{
                                 fontSize: 14, 
                                 color: '#000000',
@@ -1433,14 +1441,25 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             paddingTop: 30,
                             alignItems: 'center'
                         }}>
-                            <Text style={{
-                                fontSize: 14,
-                                fontFamily: 'Inter',
-                                color: '#000000'
+                            <View style={{
+                                flexDirection: 'row', alignItems: 'center'
                             }}>
-                                Viewers
-                            </Text>
-                            <TouchableOpacity
+                                <Text style={{
+                                    fontSize: 14,
+                                    marginRight: 8,
+                                    color: '#000000'
+                                }}>
+                                    Students
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        Alert("Students are able to view content, provide submissions, post discussion threads and view their performance.")
+                                    }}
+                                >
+                                    <Ionicons name='help-circle-outline' size={18} color="#939699" />
+                                </TouchableOpacity>
+                            </View>
+                            {props.userCreatedOrg ? <TouchableOpacity
                                 onPress={() => props.setShowInviteByEmailsModal(true)}
                                 style={{
                                     backgroundColor: 'white',
@@ -1460,13 +1479,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         color: '#006AFF'
                                     }}
                                 >
-                                Invite New Users
+                                    Add Users
                                 </Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> : null}
                         </View>
 
 
-                        {school ? renderSubscriberFilters() : null}
+                        {school && !props.userCreatedOrg ? renderSubscriberFilters() : null}
                         <View style={{
                             flexDirection: 'column', marginTop: 25,
                         }}>
@@ -1505,14 +1524,24 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 />
                             </View>
                         </View>
-                        {props.userId === channelCreator ? <Text style={{
-                            fontSize: 14,
-                            color: '#000000', marginTop: 25, marginBottom: 20,
-                            maxWidth: 320,
-                            fontFamily: 'Inter'
-                        }}>
-                            Editors
-                        </Text> : null}
+                        {props.userId === channelCreator ? <View style={{
+                                flexDirection: 'row', alignItems: 'center', marginTop: 25, marginBottom: 20,
+                            }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    marginRight: 8,
+                                    color: '#000000', 
+                                }}>
+                                    Instructors
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        Alert("Instructors can share content, score and view submissions for all users, initiate meetings and edit course settings, in addition to the student permissions.")
+                                    }}
+                                >
+                                    <Ionicons name='help-circle-outline' size={18} color="#939699" />
+                                </TouchableOpacity>
+                            </View> : null}
                         {props.userId === channelCreator ? <View style={{ height: isEditorsDropdownOpen ? getDropdownHeight(moderatorOptions.length) : 50, }}>
                             <DropDownPicker
                                 multiple={true}

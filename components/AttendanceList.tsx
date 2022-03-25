@@ -735,13 +735,13 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             style={{
                                 width: '100%',
                                 color: '#1F1F1F',
-                                fontSize: 20,
-                                paddingVertical: 50,
+                                fontSize: 18,
+                                paddingVertical: 10,
                                 paddingHorizontal: 20,
                                 fontFamily: 'inter'
                             }}
                         >
-                            {pastMeetings.length === 0 ? 'No past meetings.' : 'No Students.'}
+                            {pastMeetings.length === 0 ? (isOwner ? 'Past meetings and attendances will be displayed here.' : 'Past meetings & attendances will be displayed here.') : 'No Students.'}
                         </Text>
                     </View>
                 )

@@ -1,6 +1,7 @@
 // REACT
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Dimensions, TextInput as DefaultTextInput, Keyboard, ScrollView } from 'react-native';
+import { Dimensions, TextInput as DefaultTextInput, Keyboard, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import lodash from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,6 +17,7 @@ const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
 import { Video } from 'expo-av';
 import RenderHtml from 'react-native-render-html';
+import Board, { Repository } from "react-native-dnd-board";
 
 // HELPER
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -35,13 +37,23 @@ const questionTypeOptions = [
     {
         label: 'True/False',
         value: 'trueFalse'
+    },
+    {
+        label: "Drag & Drop",
+        value: "dragdrop"
+    },
+    {
+        label: "Hotspot",
+        value: "hotspot"
     }
 ];
 
 const questionTypeLabels = {
     '': 'MCQ',
     freeResponse: 'Free response',
-    trueFalse: 'True/False'
+    trueFalse: 'True/False',
+    dragdrop: 'Drag Drop',
+    hotspot: 'Hotspot'
 };
 
 const requiredOptions = [
@@ -82,6 +94,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const [insertLinkVisible, setInsertLinkVisible] = useState(false);
     const [insertImageVisible, setInsertImageVisible] = useState(false);
     const [questionEditorFocus, setQuestionEditorFocus] = useState(false);
+    const [repository, setRepository] = useState(null);
 
     useEffect(() => {
         setProblems(props.problems)
@@ -553,6 +566,54 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
         return true;
     };
 
+    const onCardPress = card => {
+        console.log('Card ID: ', card.id);
+    };
+    
+    const onDragEnd = (fromColumnId, toColumnId, row) => {
+        //
+        console.log("From col id", fromColumnId)
+        console.log("To col id", toColumnId)
+        console.log("row", row)
+    };
+
+    const renderCard = ({ item }) => {
+        return (
+          <View style={styles.card}>
+            <Text>{item.name}</Text>
+            <TouchableOpacity
+              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            //   onPress={() => deleteCard(item.id)}
+            >
+              <Text>✕</Text>
+            </TouchableOpacity>
+          </View>
+        );
+    };
+
+    const renderColumn = ({ item, columnComponent, layoutProps, index }) => {
+        return (
+          <View style={styles.column} {...layoutProps}>
+            <View style={styles.columnHeader}>
+              <Text style={styles.columnName}>{item.name}</Text>
+              <TouchableOpacity
+                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                // onPress={() => deleteColumn(item.id)}
+                >
+                <Text>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {columnComponent}
+            <TouchableOpacity
+              style={styles.addCard}
+            //   onPress={() => addCard(item.id)}
+              >
+              <Text>+ Add Card</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      };
+
     // Create refs for current question options
     // let optionRefs: any[] = [];
 
@@ -605,6 +666,29 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     type = parse.type;
                 }
 
+                const dragdropData = []
+
+                if (problem.dragDropData) {
+                    problem.dragDropData.map((groups: any[], groupIndex: number) => {
+
+                        const rows: any[] = [];
+    
+                        groups.map((label: any) => {
+                            rows.push({
+                                id: label.id,
+                                name: label.content
+                            })
+                        })
+    
+                        dragdropData.push({
+                            id: groupIndex,
+                            name: problem.dragDropHeaders[groupIndex],
+                            rows
+                        })
+                    })
+                }
+
+                
                 return (
                     <View
                         style={{
@@ -757,7 +841,74 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     option: 'False',
                                                                     isCorrect: false
                                                                 });
+                                                            } 
+
+                                                            // hotspots
+                                                            updatedProblems[index].hotspots = []
+                                                            updatedProblems[index].imgUrl = ''
+
+                                                            if (questionType === 'dragdrop') {
+                                                                updatedProblems[index].questionType = 'dragdrop'
+                                                                updatedProblems[index].options = []
+                                                                updatedProblems[index].dragDropData = [
+                                                                    [
+                                                                        {
+                                                                            id: '0',
+                                                                            content: 'Item 1'
+                                                                        },
+                                                                        {
+                                                                            id: '1',
+                                                                            content: 'Item 2'
+                                                                        },
+                                                                    ],
+                                                                    [
+                                                                        { 
+                                                                            id: '2',
+                                                                            content: 'Item 3' 
+                                                                        },
+                                                                        { 
+                                                                            id: '3',
+                                                                            content: 'Item 4' 
+                                                                        },
+                                                                    ]
+                                                                ]
+
+                                                                updatedProblems[index].dragDropHeaders = ['Group 1', 'Group 2']
+                                                      
+                                                                const dragdropData: any[] = [];
+
+                                                                updatedProblems[index].dragDropData.map((groups: any[], groupIndex: number) => {
+                                                
+                                                                    const rows: any[] = [];
+                                                
+                                                                    groups.map((label: any) => {
+                                                                        rows.push({
+                                                                            id: label.id,
+                                                                            name: label.content
+                                                                        })
+                                                                    })
+                                                
+                                                                    dragdropData.push({
+                                                                        id: (groupIndex + 1).toString(),
+                                                                        name: updatedProblems[index].dragDropHeaders[groupIndex],
+                                                                        rows
+                                                                    })
+                                                                })
+
+
+                                                                setRepository(new Repository(dragdropData))
+
+                                                            } else {
+                                                                // clear data if not drag and drop
+                                                                updatedProblems[index].dragDropData = []
+                                                                updatedProblems[index].dragDropHeaders = []
+                                                                updatedProblems[index].options = []
                                                             }
+
+                                                            if (questionType === 'hotspot') {
+                                                                updatedProblems[index].options = []
+                                                            }
+
                                                             setProblems(updatedProblems);
                                                             props.setProblems(updatedProblems);
                                                         }}
@@ -1052,6 +1203,28 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 Free Response Answer
                             </Text>
                         ) : null}
+
+                        {
+                            problem.questionType === 'dragdrop' && editQuestionNumber === (index + 1) ? (
+                                <Board
+                                    style={styles.board}
+                                    repository={repository}
+                                    renderRow={renderCard}
+                                    renderColumnWrapper={renderColumn}
+                                    onRowPress={onCardPress}
+                                    onDragEnd={onDragEnd}
+                                    columnWidth={200}
+                                    // accessoryRight={
+                                    // <View style={[styles.column, styles.addColumn]}>
+                                    //     <TouchableOpacity onPress={addColumn}>
+                                    //     <Text>+ Add Column</Text>
+                                    //     </TouchableOpacity>
+                                    // </View>
+                                    // }
+                                />
+                            ) : null
+                        }
+
                         {problem.options.map((option: any, i: any) => {
 
                             const currRef: any = props.setRef(i.toString());
@@ -1468,3 +1641,62 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
 };
 
 export default QuizCreate;
+
+
+const styles = StyleSheet.create({
+    header: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 16,
+    },
+    hederName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    board: {
+        paddingVertical: 16,
+        backgroundColor: '#E0E8EF',
+    },
+    column: {
+        backgroundColor: '#F8FAFB',
+        marginLeft: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 4,
+      },
+      columnHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+      },
+      columnName: {
+        fontWeight: 'bold',
+      },
+      addColumn: {
+        marginRight: 12,
+        padding: 12,
+        minWidth: 200,
+      },
+      card: {
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#F6F7FB',
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        marginBottom: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      },
+      addCard: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgb(233, 233, 233)',
+        borderRadius: 4,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: '#F5F6F8',
+      },
+})

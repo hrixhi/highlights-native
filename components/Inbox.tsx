@@ -2256,7 +2256,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             fontFamily: 'inter'
                                                         }}
                                                     >
-                                                        No conversations.
+                                                        Click on + to initiate a new chat.
                                                     </Text>
                                                 </View>
                                             ) : null}
