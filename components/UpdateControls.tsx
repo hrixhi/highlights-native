@@ -3437,7 +3437,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     />
                 </View>
             ) : (
-                <View key={url + props.showOriginal.toString() + props.reloadViewerKey} style={{ minHeight: 500 }}>
+                <View key={url + props.showOriginal.toString() + props.reloadViewerKey} style={{ minHeight: 550 }}>
                     <WebView
                         source={{ uri: originalPdfviewerURL }}
                     />
@@ -3602,7 +3602,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 </View>
             ) : (
                 <View
-                style={{ minHeight: 500 }}
+                style={{ minHeight: 550 }}
                     key={JSON.stringify(submissionImported) + JSON.stringify(originalPdfviewerURL) + props.reloadViewerKey}
                 >
                     <WebView
@@ -4173,7 +4173,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 }
                                 // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
                                 source={{ uri: submissionPdfviewerURL }}
-                                style={{ height: 500, width: '100%', flex: 1 }}
+                                style={{ height: 550, width: '100%', flex: 1 }}
                             />
                         </View>
                     )
@@ -4255,7 +4255,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <WebView
                                 // key={viewSubmissionTab}
                                 source={{ uri: submissionPdfviewerURL }}
-                                style={{ height: 500, width: '100%', flex: 1 }}
+                                style={{ height: 550, width: '100%', flex: 1 }}
                             />
                         )}
                     </View>
@@ -6211,7 +6211,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <View
                                 style={{
                                     width: '100%',
-                                    maxWidth: 900,
+                                    // maxWidth: 900,
                                     alignSelf: 'center',
                                     paddingLeft: Dimensions.get('window').width < 768 ? 10 : 15
                                 }}

@@ -1211,7 +1211,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     <Text
                                         style={{
                                             color: '#000000',
-                                            fontSize: 22,
+                                           fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
                                             paddingBottom: Dimensions.get('window').width < 768 ? 0 : 25,
                                             width: 40,
                                             paddingTop: Dimensions.get('window').width < 768 ? 20 : 15,

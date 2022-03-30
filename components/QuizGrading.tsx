@@ -342,7 +342,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         {renderHeader(index)}
                         <View style={{ flexDirection: 'column', width: '100%' }}>
                                 <View style={{  flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', width: '100%' }}>
-                                    <Text style={{ color: '#000000', fontSize: 22, paddingBottom: 25, width: 40, paddingTop: 15, fontFamily: 'inter' }}>
+                                    <Text style={{ color: '#000000',fontSize: Dimensions.get('window').width < 800 ? 22 : 26, paddingBottom: 25, width: 40, paddingTop: 15, fontFamily: 'inter' }}>
                                         {index + 1}.
                                     </Text>
 

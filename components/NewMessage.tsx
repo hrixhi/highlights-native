@@ -200,7 +200,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 width: '100%',
                                 lineHeight: 23
                             }}>
-                                <Ionicons name='chevron-back-outline' size={23} color={'#2f2f3c'} />
+                                <Ionicons name='chevron-back-outline' size={Dimensions.get('window').width < 800 ? 23 : 26} color={'#2f2f3c'} />
                             </Text>
                         </TouchableOpacity>
                     </View>

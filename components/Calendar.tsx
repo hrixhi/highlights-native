@@ -1917,13 +1917,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         return (
             <TouchableOpacity
                 style={{
-                    height: 80,
+                    // height: 80,
                     backgroundColor: 'white',
                     marginTop: 20,
                     marginBottom: 15,
-                    marginRight: Dimensions.get('window').width > 768 ? 20 : 10,
+                    marginHorizontal: 20,
+                    marginRight: 30,
                     // padding: 10,
-                    paddingHorizontal: 10,
+                    paddingHorizontal: 20,
+                    paddingBottom: 10,
                     borderRadius: 15,
                     shadowOffset: {
                         width: 1,
@@ -1932,7 +1934,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     flexDirection: 'column',
                     shadowOpacity: 0.03,
                     shadowRadius: 16,
-                    zIndex: 50
+                    zIndex: 50,
+                    maxWidth: 500
                 }}
                 onPress={() => {
                     onSelectEvent(item);
@@ -2968,11 +2971,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                         onPress={() => setActiveTab('agenda')}
                     >
-                        <Ionicons name={'arrow-back-outline'} size={31} color="black" />
+                        <Ionicons name={'arrow-back-outline'} size={35} color="#1f1f1f" />
                     </TouchableOpacity>
                     :
                     <Text style={{
-                        fontSize: 22,
+                       fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
                         color: '#000',
                         fontFamily: 'Inter',
                         marginLeft: 20
@@ -3019,7 +3022,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         /> : null}
                         <Ionicons name={'notifications-outline'} style={{
                              color: activeTab === 'activity' ? '#006AFF' : 'black'
-                        }} size={23} color="black" />
+                        }} size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
                     </TouchableOpacity>}
 
 
@@ -3092,11 +3095,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         ])
                         
                     }}>
-                        <Ionicons name={'checkmark-done-outline'} size={23} color="black" />
+                        <Ionicons name={'checkmark-done-outline'} size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
                     </TouchableOpacity> : null}
 
                     <TouchableOpacity onPress={() => setShowFilterModal(!showFilterModal)}>
-                        <Ionicons name={'filter-outline'} size={23} color="black" />
+                        <Ionicons name={'filter-outline'} size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
                     </TouchableOpacity>
 
                 </View>

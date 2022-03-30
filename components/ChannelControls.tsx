@@ -1326,7 +1326,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             width: '100%',
             maxHeight: Dimensions.get("window").width < 768 ? Dimensions.get("window").height - (Platform.OS === 'android' ? 90 : 120) : Dimensions.get("window").height - 52,
             height: '100%',
-            backgroundColor: props.showCreate ? "#fff" : '#f2f2f2',
+            backgroundColor: props.showCreate ? "#fff" : '#fff',
         }} key={1}>
                 {props.showAddCourseModal ? <View
                     style={{
@@ -1398,7 +1398,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     </TouchableOpacity>
 
                 </View> : null}
-            <View style={{ width: '100%', maxWidth: 900, paddingBottom: 25, backgroundColor: props.showCreate ? '#fff' : '#f2f2f2' }}>
+            <View style={{ width: '100%', paddingBottom: 25, backgroundColor: props.showCreate ? '#fff' : '#f2f2f2' }}>
                 {/* Back Button */}
                 {
                     props.showCreate ?

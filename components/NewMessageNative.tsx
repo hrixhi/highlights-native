@@ -181,7 +181,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 />
                             </View>
                             <View style={{ backgroundColor: '#fff' }}>
-                                <Text style={{ width: '100%', color: '#a2a2ac', fontSize: 22, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
+                                <Text style={{ width: '100%', color: '#a2a2ac',fontSize: Dimensions.get('window').width < 800 ? 22 : 26, marginLeft: '10%', paddingHorizontal: 5, fontFamily: 'inter', flex: 1 }}>
                                     <Ionicons name='document-outline' size={50} color='#a2a2ac' />
                                 </Text>
                             </View>
@@ -254,7 +254,7 @@ const NewMessage: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             borderRadius: 15,
                             backgroundColor: 'white'
                         }}>
-                        <Ionicons name='send' size={23} color={'#2f2f3c'} />
+                        <Ionicons name='send' size={Dimensions.get('window').width < 800 ? 23 : 26} color={'#2f2f3c'} />
                     </TouchableOpacity>
                 </View>
             </View>
