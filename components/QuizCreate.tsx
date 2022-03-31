@@ -19,7 +19,7 @@ import { Video } from 'expo-av';
 import RenderHtml from 'react-native-render-html';
 
 // import Board, { Repository } from "react-native-dnd-board";
-import { Board, BoardRepository } from 'react-native-draganddrop-board'
+
 
 // HELPER
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -568,6 +568,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
         return true;
     };
 
+
     // const onCardPress = card => {
     //     console.log('Card ID: ', card.id);
     // };
@@ -899,15 +900,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     })
                                                                 })
 
-                                                                console.log('--------------------')
-                                                                console.log(dragdropData)
 
+                                                                // setRepository(new Repository(dragdropData))
 
-                                                                const boardRepository = new BoardRepository(dragdropData);
-
-                                                                console.log(boardRepository)
-
-                                                                setRepository(boardRepository)
 
                                                             } else {
                                                                 // clear data if not drag and drop
@@ -1215,7 +1210,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             </Text>
                         ) : null}
 
-                        {
+                        {/* {
                             problem.questionType === 'dragdrop' && editQuestionNumber === (index + 1) ? (
                                 // <SafeAreaView style={{ maxHeight: 500, zIndex: 10000, padding: 0 }}>
                                 <Board
@@ -1245,7 +1240,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 /* </GestureHandlerRootView>
                                 </SafeAreaView> */
                             ) : null
-                        }
+                        } */}
 
                         {problem.options.map((option: any, i: any) => {
 

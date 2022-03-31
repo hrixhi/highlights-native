@@ -917,6 +917,7 @@ export const login = gql`
                 user {
                     _id
                     role
+                    notificationId
                 }
                 error
                 token
@@ -1056,6 +1057,36 @@ export const getEvents = gql`
         }
     }
 `;
+
+export const getNotificationEvents = gql`
+    query($userId: String!) {
+        date {
+            getNotificationEvents(userId: $userId) {
+                eventId
+                dateId
+                title
+                start
+                end
+                channelName
+                description
+                createdBy
+                recurringId
+                recordMeeting
+                meeting
+                channelId
+                cueId
+                submitted
+                zoomMeetingId
+                zoomStartUrl
+                zoomJoinUrl
+                zoomMeetingScheduledBy
+                zoomMeetingCreatorProfile
+                meetingLink
+            }
+        }
+    }
+`;
+
 export const getUnreadQACount = gql`
     query($userId: String!, $cueId: String!) {
         threadStatus {
@@ -1340,6 +1371,7 @@ export const loginFromSso = gql`
                 user {
                     _id
                     role
+                    notificationId
                 }
                 error
                 token

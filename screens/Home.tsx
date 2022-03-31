@@ -33,7 +33,8 @@ import {
     signup,
     authWithProvider,
     updateNotificationId,
-    loginFromSso
+    loginFromSso,
+    getNotificationEvents
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -45,6 +46,7 @@ import Update from '../components/Update';
 // import SocialMediaButton from '../components/SocialMediaButton';
 import Dashboard from '../components/Dashboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import moment from 'moment';
 
 // HELPERS
 import { validateEmail } from '../helpers/emailCheck';
@@ -189,12 +191,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             if (u) {
                 const user = JSON.parse(u);
 
+                console.log("User id ", user._id);
+
                 if (user && user._id && user._id !== '') {
                     setUserId(user._id);
                     setRole(user.role);
                     await loadDataFromCloud();
-                    // Update EXPO notification ID once on INIT
-                    updateExpoNotificationId(user)
+                    setupEventsNotifications(user._id)
                 } else {
                     setShowLoginWindow(true)
                 }
@@ -282,6 +285,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             const sU = JSON.stringify(u);
                             await AsyncStorage.setItem('jwt_token', token);
                             await AsyncStorage.setItem('user', sU);
+
+                            updateExpoNotificationId(u)
+
                             setShowLoginWindow(false);
                             loadDataFromCloud();
                             setIsLoggingIn(false);
@@ -406,192 +412,413 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         })();
     }, []);
 
-    const notificationScheduler = useCallback(
-        async c => {
-            try {
-                if (c === undefined || c === null) {
-                    return;
+    const setupEventsNotifications = useCallback(async (userId: string) => {
+        console.log("Setup event notifications")
+
+        await Notifications.cancelAllScheduledNotificationsAsync();
+
+        const settings = await Notifications.getPermissionsAsync();
+                
+        if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+            // permission granted
+        } else {
+            
+            await Notifications.requestPermissionsAsync({
+                ios: {
+                    allowAlert: true,
+                    allowBadge: true,
+                    allowSound: true,
+                    allowAnnouncements: true
                 }
+            });
+            
+            const settings = await Notifications.getPermissionsAsync();
+            
+            if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+                // permission granted
+            } else {
+                // leave scheduler
+                return;
+            }
+        }
 
-                // Clean out all already scheduled notifications
-                await Notifications.cancelAllScheduledNotificationsAsync();
+        // Setting notification handler
+        Notifications.setNotificationHandler({
+            handleNotification: async n => {
+                return {
+                    shouldShowAlert: true,
+                    shouldPlaySound: true,
+                    shouldSetBadge: true
+                };
+            },
+            handleError: err => console.log(err),
+            handleSuccess: res => {
+                // loadData()
+            }
+        });
 
-                // This is the object where we are going to collect all notifications that can be scheduled
-                // between two time points A and B
-                const notificationRequests: any[] = [];
+        // for when user taps on a notification
+        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+            loadData();
+        });
 
-                // Get notification permission
-                const settings = await Notifications.getPermissionsAsync();
-                if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
-                    // permission granted
-                } else {
-                    await Notifications.requestPermissionsAsync({
-                        ios: {
-                            allowAlert: true,
-                            allowBadge: true,
-                            allowSound: true,
-                            allowAnnouncements: true
-                        }
-                    });
-                    const settings = await Notifications.getPermissionsAsync();
-                    if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
-                        // permission granted
-                    } else {
-                        // leave scheduler
-                        return;
-                    }
+        const server = fetchAPI('');
+        server
+            .query({
+                query: getNotificationEvents,
+                variables: {
+                    userId
                 }
+            })
+            .then(async res => {
+                if (res.data.date && res.data.date.getNotificationEvents) {
 
-                // Setting notification handler
-                Notifications.setNotificationHandler({
-                    handleNotification: async n => {
-                        return {
-                            shouldShowAlert: true,
-                            shouldPlaySound: true,
-                            shouldSetBadge: true
-                        };
-                    },
-                    handleError: err => console.log(err),
-                    handleSuccess: res => {
-                        // loadData()
-                    }
-                });
+                    const scheduleNotifications: any[] = [];
+                    
+                    res.data.date.getNotificationEvents.map((event: any) => {
 
-                // for when user taps on a notification
-                responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-                    loadData();
-                });
+                        const start = new Date(event.start);
 
-                // for the ones that are on shuffle
-                // const shuffledCues: any[] = []
-                // const unShuffledCues: any[] = []
+                        // Submissions 
+                        if (!event.meeting && event.cueId !== '' && event.dateId === 'channel') {
+                            // 24 hours prior, 6 hours prior and 1 hour prior
 
-                // choose two dates - now (A) & now + 1 month (B) for timed cues
-                const A = new Date();
-                const B = new Date();
-                B.setMonth(B.getMonth() + 1);
+                            // console.log("Submission type");
 
-                // For sleep calculations
-                // let from = new Date(sleepFrom)
-                // let to = new Date(sleepTo)
-                // let a = from.getHours()
-                // let b = to.getHours()
-                // a += (from.getMinutes() / 60)
-                // b += (to.getMinutes() / 60)
+                            const { title } = htmlStringParser(event.title);
 
-                const cuesArray: any[] = [];
-                if (c !== {}) {
-                    Object.keys(c).map(key => {
-                        c[key].map((cue: any, index: number) => {
-                            cuesArray.push({
-                                ...cue,
-                                key,
-                                index
-                            });
-                        });
-                    });
-                }
+                            const dayOffset = 24 * 60 * 60 * 1000; 
+                            var twentyFourOffset = new Date();
+                            twentyFourOffset.setTime(twentyFourOffset.getTime() - dayOffset);
+                            
+                            var trigger1 = new Date(event.start);
+                            trigger1.setTime(trigger1.getTime() - dayOffset)
+                            var trigger2 = new Date(event.start);
+                            trigger2.setTime(trigger2.getTime() - (dayOffset / 4))
+                            var trigger3 = new Date(event.start);
+                            trigger3.setTime(trigger3.getTime() - (dayOffset / 24))
 
-                // First filter shuffled and unshuffled cues
-                cuesArray.map((item: any) => {
-                    if (item.shuffle) {
-                        if (item.frequency === '0' || !item.endPlayAt || item.endPlayAt === '') {
-                            return;
-                        }
-                        // One time reminder
-                        // must have endplayat stored
-                        let trigger = new Date(item.endPlayAt);
-                        if (trigger > A && trigger < B) {
-                            // if trigger is in the next 30 days
-                            const { title, subtitle } = htmlStringParser(item.cue);
-                            notificationRequests.push({
-                                content: {
-                                    title,
-                                    subtitle,
-                                    sound: true
-                                },
-                                trigger
-                            });
-                        }
-                        // shuffledCues.push(item)
-                    } else {
-                        if (item.frequency !== '0') {
-                            let trigger = new Date(item.date);
-                            let loopCheck = 0;
-                            let end = B;
-                            if (item.endPlayAt && item.endPlayAt !== '') {
-                                const playLimit = new Date(item.endPlayAt);
-                                if (playLimit < B) {
-                                    end = playLimit;
-                                }
+                           
+                            if (trigger1 > new Date()) {
+                                scheduleNotifications.push({
+                                    content: {
+                                        title,
+                                        subtitle: event.channelName + ' - ' + alertTimeDisplay(event.start, true),
+                                        sound: true
+                                    },
+                                    trigger: trigger1
+                                });
                             }
-                            while (trigger < end) {
-                                if (trigger < A) {
-                                    trigger = getNextDate(item.frequency, trigger);
-                                    continue;
-                                }
-                                loopCheck++;
-                                if (loopCheck > 64) {
-                                    // upto 50 valid notifications can be considered
-                                    break;
-                                }
-                                const { title, subtitle } = htmlStringParser(
-                                    item.channelId && item.channelId !== '' ? item.original : item.cue
-                                );
-                                notificationRequests.push({
+
+                            if (trigger2 > new Date()) {
+                                scheduleNotifications.push({
+                                    content: {
+                                        title,
+                                        subtitle: event.channelName + ' - ' + alertTimeDisplay(event.start, false),
+                                        sound: true
+                                    },
+                                    trigger: trigger2
+                                });
+                            }
+
+                            if (trigger3 > new Date()) {
+                                scheduleNotifications.push({
+                                    content: {
+                                        title,
+                                        subtitle: event.channelName + ' - ' + alertTimeDisplay(event.start, false),
+                                        sound: true
+                                    },
+                                    trigger: trigger3
+                                });
+                            }
+
+                        // Personal events 
+                        } else if (!event.meeting && event.cueId === '' && event.dateId !== 'channel') {
+                            // Same time as the actual start
+
+                            // console.log("Personal event type");
+
+                            const title = event.title
+
+                            const subtitle = moment(event.start).format('h:mm a')
+
+                            if (start > new Date()) {
+                                scheduleNotifications.push({
                                     content: {
                                         title,
                                         subtitle,
                                         sound: true
                                     },
-                                    trigger
+                                    trigger: start
                                 });
-                                trigger = getNextDate(item.frequency, trigger);
                             }
+
+                        // Meetings / Other event reminders
                         } else {
-                            // if frequency === 0
-                            // no reminder set - do nothing
+
+                            // console.log("Meeting/Channel event type");
+
+                            // 15 minutes prior
+                            const fifteenMinOffset =  15 * 60 * 1000; 
+
+                            var trigger1 = new Date(event.start);
+                            trigger1.setTime(trigger1.getTime() - fifteenMinOffset)
+
+                    
+                            const title = event.title;
+                            
+                            const subtitle = event.channelName && event.channelName !== '' ? (event.channelName + ' - ' + alertTimeDisplay(event.start, false)) : alertTimeDisplay(event.start, false)
+
+                            if (trigger1 > new Date()) {
+                                scheduleNotifications.push({
+                                    content: {
+                                        title,
+                                        subtitle,
+                                        sound: true
+                                    },
+                                    trigger: trigger1
+                                });
+                            }                       
+
+                        }
+
+                    })
+
+                    // Sort all the scheduleNotifications
+                    const sortedNotifications = scheduleNotifications.sort((a: any, b: any) => {
+                        return a.trigger > b.trigger ? 1 : -1
+                    })
+
+                    console.log("Sorted notifications", sortedNotifications)
+
+                    if (sortedNotifications.length === 0) {
+                        // no requests to process
+                        return;
+                    }
+    
+                    let lastTriggerDate = new Date();
+                    lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 5);
+                    const iterateUpTo = scheduleNotifications.length >= 64 ? 63 : scheduleNotifications.length;
+                    // iOS has a limit on scheduled notifications - 64 which is why we have to
+                    // choose the first 64 notifications
+                    // After that make the user revisit the app again
+                    for (let i = 0; i < iterateUpTo; i++) {
+                        // Schedule notification
+                        await Notifications.scheduleNotificationAsync(scheduleNotifications[i]);
+                        // The last notification in the scheduling queue has to be the one
+                        if (i === iterateUpTo - 1) {
+                            lastTriggerDate = new Date(scheduleNotifications[i].trigger);
+                            lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 1);
+                            const n = await Notifications.scheduleNotificationAsync({
+                                content: {
+                                    title: 'Continue receiving notifications?',
+                                    subtitle: "Open Cues! It's been a while...",
+                                    sound: true
+                                },
+                                trigger: lastTriggerDate
+                            });
                         }
                     }
-                });
 
-                const sortedRequests: any[] = notificationRequests.sort((a: any, b: any) => {
-                    return a.trigger - b.trigger;
-                });
-                if (sortedRequests.length === 0) {
-                    // no requests to process
-                    return;
+
+
                 }
 
-                let lastTriggerDate = new Date();
-                lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 5);
-                const iterateUpTo = sortedRequests.length >= 64 ? 63 : sortedRequests.length;
-                // iOS has a limit on scheduled notifications - 64 which is why we have to
-                // choose the first 64 notifications
-                // After that make the user revisit the app again
-                for (let i = 0; i < iterateUpTo; i++) {
-                    // Schedule notification
-                    await Notifications.scheduleNotificationAsync(sortedRequests[i]);
-                    // The last notification in the scheduling queue has to be the one
-                    if (i === iterateUpTo - 1) {
-                        lastTriggerDate = new Date(sortedRequests[i].trigger);
-                        lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 1);
-                        const n = await Notifications.scheduleNotificationAsync({
-                            content: {
-                                title: 'Continue receiving notifications?',
-                                subtitle: "Open Cues! It's been a while...",
-                                sound: true
-                            },
-                            trigger: lastTriggerDate
-                        });
-                    }
-                }
-            } catch (e) {
-                console.log(e);
-            }
-        },
-        [cues, responseListener]
-    );
+            })
+            .catch(err => {
+                console.log(err);
+                // Alert('Unable to load calendar.', 'Check connection.');
+
+            });
+
+    }, [])
+
+    // const notificationScheduler = useCallback(
+    //     async c => {
+    //         try {
+    //             if (c === undefined || c === null) {
+    //                 return;
+    //             }
+
+    //             // Clean out all already scheduled notifications
+    //             await Notifications.cancelAllScheduledNotificationsAsync();
+
+    //             // This is the object where we are going to collect all notifications that can be scheduled
+    //             // between two time points A and B
+    //             const notificationRequests: any[] = [];
+
+    //             // Get notification permission
+    //             const settings = await Notifications.getPermissionsAsync();
+    //             if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+    //                 // permission granted
+    //             } else {
+    //                 await Notifications.requestPermissionsAsync({
+    //                     ios: {
+    //                         allowAlert: true,
+    //                         allowBadge: true,
+    //                         allowSound: true,
+    //                         allowAnnouncements: true
+    //                     }
+    //                 });
+    //                 const settings = await Notifications.getPermissionsAsync();
+    //                 if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+    //                     // permission granted
+    //                 } else {
+    //                     // leave scheduler
+    //                     return;
+    //                 }
+    //             }
+
+    //             // Setting notification handler
+    //             Notifications.setNotificationHandler({
+    //                 handleNotification: async n => {
+    //                     return {
+    //                         shouldShowAlert: true,
+    //                         shouldPlaySound: true,
+    //                         shouldSetBadge: true
+    //                     };
+    //                 },
+    //                 handleError: err => console.log(err),
+    //                 handleSuccess: res => {
+    //                     // loadData()
+    //                 }
+    //             });
+
+    //             // for when user taps on a notification
+    //             responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+    //                 loadData();
+    //             });
+
+    //             // for the ones that are on shuffle
+    //             // const shuffledCues: any[] = []
+    //             // const unShuffledCues: any[] = []
+
+    //             // choose two dates - now (A) & now + 1 month (B) for timed cues
+    //             const A = new Date();
+    //             const B = new Date();
+    //             B.setMonth(B.getMonth() + 1);
+
+    //             // For sleep calculations
+    //             // let from = new Date(sleepFrom)
+    //             // let to = new Date(sleepTo)
+    //             // let a = from.getHours()
+    //             // let b = to.getHours()
+    //             // a += (from.getMinutes() / 60)
+    //             // b += (to.getMinutes() / 60)
+
+    //             const cuesArray: any[] = [];
+    //             if (c !== {}) {
+    //                 Object.keys(c).map(key => {
+    //                     c[key].map((cue: any, index: number) => {
+    //                         cuesArray.push({
+    //                             ...cue,
+    //                             key,
+    //                             index
+    //                         });
+    //                     });
+    //                 });
+    //             }
+
+    //             // First filter shuffled and unshuffled cues
+    //             cuesArray.map((item: any) => {
+    //                 if (item.shuffle) {
+    //                     if (item.frequency === '0' || !item.endPlayAt || item.endPlayAt === '') {
+    //                         return;
+    //                     }
+    //                     // One time reminder
+    //                     // must have endplayat stored
+    //                     let trigger = new Date(item.endPlayAt);
+    //                     if (trigger > A && trigger < B) {
+    //                         // if trigger is in the next 30 days
+    //                         const { title, subtitle } = htmlStringParser(item.cue);
+    //                         notificationRequests.push({
+    //                             content: {
+    //                                 title,
+    //                                 subtitle,
+    //                                 sound: true
+    //                             },
+    //                             trigger
+    //                         });
+    //                     }
+    //                     // shuffledCues.push(item)
+    //                 } else {
+    //                     if (item.frequency !== '0') {
+    //                         let trigger = new Date(item.date);
+    //                         let loopCheck = 0;
+    //                         let end = B;
+    //                         if (item.endPlayAt && item.endPlayAt !== '') {
+    //                             const playLimit = new Date(item.endPlayAt);
+    //                             if (playLimit < B) {
+    //                                 end = playLimit;
+    //                             }
+    //                         }
+    //                         while (trigger < end) {
+    //                             if (trigger < A) {
+    //                                 trigger = getNextDate(item.frequency, trigger);
+    //                                 continue;
+    //                             }
+    //                             loopCheck++;
+    //                             if (loopCheck > 64) {
+    //                                 // upto 50 valid notifications can be considered
+    //                                 break;
+    //                             }
+    //                             const { title, subtitle } = htmlStringParser(
+    //                                 item.channelId && item.channelId !== '' ? item.original : item.cue
+    //                             );
+    //                             notificationRequests.push({
+    //                                 content: {
+    //                                     title,
+    //                                     subtitle,
+    //                                     sound: true
+    //                                 },
+    //                                 trigger
+    //                             });
+    //                             trigger = getNextDate(item.frequency, trigger);
+    //                         }
+    //                     } else {
+    //                         // if frequency === 0
+    //                         // no reminder set - do nothing
+    //                     }
+    //                 }
+    //             });
+
+    //             const sortedRequests: any[] = notificationRequests.sort((a: any, b: any) => {
+    //                 return a.trigger - b.trigger;
+    //             });
+    //             if (sortedRequests.length === 0) {
+    //                 // no requests to process
+    //                 return;
+    //             }
+
+    //             let lastTriggerDate = new Date();
+    //             lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 5);
+    //             const iterateUpTo = sortedRequests.length >= 64 ? 63 : sortedRequests.length;
+    //             // iOS has a limit on scheduled notifications - 64 which is why we have to
+    //             // choose the first 64 notifications
+    //             // After that make the user revisit the app again
+    //             for (let i = 0; i < iterateUpTo; i++) {
+    //                 // Schedule notification
+    //                 await Notifications.scheduleNotificationAsync(sortedRequests[i]);
+    //                 // The last notification in the scheduling queue has to be the one
+    //                 if (i === iterateUpTo - 1) {
+    //                     lastTriggerDate = new Date(sortedRequests[i].trigger);
+    //                     lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 1);
+    //                     const n = await Notifications.scheduleNotificationAsync({
+    //                         content: {
+    //                             title: 'Continue receiving notifications?',
+    //                             subtitle: "Open Cues! It's been a while...",
+    //                             sound: true
+    //                         },
+    //                         trigger: lastTriggerDate
+    //                     });
+    //                 }
+    //             }
+    //         } catch (e) {
+    //             console.log(e);
+    //         }
+    //     },
+    //     [cues, responseListener]
+    // );
 
     const refreshUnreadInbox = useCallback(async () => {
         const u = await AsyncStorage.getItem('user');
@@ -947,39 +1174,53 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const updateExpoNotificationId = useCallback(async (user: any) => {
 
-        // const user = JSON.parse(u);
-        let experienceId = undefined;
-        if (!Constants.manifest) {
-            // Absence of the manifest means we're in bare workflow
-            experienceId = user._id + Platform.OS;
-        }
-        const expoToken = await Notifications.getExpoPushTokenAsync({
-            experienceId
-        });
+        let existingStatus = await Notifications.getPermissionsAsync();
 
-        const notificationId = expoToken.data;
+        if (!existingStatus.granted && existingStatus.ios?.status !== Notifications.IosAuthorizationStatus.PROVISIONAL) {
+            // permission granted
 
-        if (!user.notificationId || !user.notificationId.includes(notificationId)) {
-            const server = fetchAPI('');
-            console.log("Notification id set", {
-                userId: user._id,
-                notificationId:
-                    user.notificationId === 'NOT_SET'
-                        ? notificationId
-                        : user.notificationId + '-BREAK-' + notificationId
-            })
-            server.mutate({
-                mutation: updateNotificationId,
-                variables: {
-                    userId: user._id,
-                    notificationId:
-                        user.notificationId === 'NOT_SET'
-                            ? notificationId
-                            : user.notificationId + '-BREAK-' + notificationId
+            await Notifications.requestPermissionsAsync({
+                ios: {
+                allowAlert: true,
+                    allowBadge: true,
+                    allowSound: true,
+                    allowAnnouncements: true
                 }
             });
-        }
 
+            existingStatus = await Notifications.getPermissionsAsync();
+
+        } 
+
+        if (existingStatus.granted || existingStatus.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+            // const user = JSON.parse(u);
+            let experienceId = undefined;
+            if (!Constants.manifest) {
+                // Absence of the manifest means we're in bare workflow
+                experienceId = user._id + Platform.OS;
+            }
+            const expoToken = await Notifications.getExpoPushTokenAsync({
+                experienceId
+            });
+
+            const notificationId = expoToken.data;
+
+            console.log("Update notification id INIT", notificationId);
+
+            if (!user.notificationId || !user.notificationId.includes(notificationId)) {
+                const server = fetchAPI('');
+                server.mutate({
+                    mutation: updateNotificationId,
+                    variables: {
+                        userId: user._id,
+                        notificationId:
+                            user.notificationId === 'NOT_SET' || user.notificationId === 'undefined'
+                                ? notificationId
+                                : user.notificationId + '-BREAK-' + notificationId
+                    }
+                });
+            }
+        }
 
     }, [])
 
@@ -1183,41 +1424,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     await AsyncStorage.setItem('jwt_token', token);
                     await AsyncStorage.setItem('user', sU);
 
-                    let experienceId = undefined;
-                    if (!Constants.manifest) {
-                        // Absence of the manifest means we're in bare workflow
-                        experienceId = u._id + Platform.OS;
-                    }
-                    const expoToken = await Notifications.getExpoPushTokenAsync({
-                        experienceId
-                    });
-                    const notificationId = expoToken.data;
-                    // UPDATE NOTIFICATION IDS AFTER LOGGING IN
-                    if (!u.notificationId || !u.notificationId.includes(notificationId)) {
-                        let experienceId = undefined;
-                        if (!Constants.manifest) {
-                            // Absence of the manifest means we're in bare workflow
-                            experienceId = u._id + Platform.OS;
-                        }
-                        const expoToken = await Notifications.getExpoPushTokenAsync({
-                            experienceId
-                        });
-                        const notificationId = expoToken.data;
-                        server.mutate({
-                            mutation: updateNotificationId,
-                            variables: {
-                                userId: u._id,
-                                notificationId:
-                                    u.notificationId === 'NOT_SET'
-                                        ? notificationId
-                                        : u.notificationId + '-BREAK-' + notificationId
-                            }
-                        });
-                    }
-
+                    updateExpoNotificationId(u)
                     setShowLoginWindow(false);
                     loadDataFromCloud();
                     setIsLoggingIn(false);
+
+                    
                 } else {
                     const { error } = r.data.user.login;
                     Alert(error);
@@ -1229,6 +1441,22 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 setIsLoggingIn(false);
             });
     }, [email, password]);
+
+    const timeToString = (time: any) => {
+        const date = new Date(time);
+        return moment(date).format('YYYY-MM-DD')
+    };
+
+    function alertTimeDisplay(dbDate: string, twentyFourOffset: boolean) {
+        let date = moment(dbDate);
+
+        if (!twentyFourOffset) { 
+            return 'Today at ' + date.format('h:mm a')
+        } else { 
+            return 'Tomorrow at ' + date.format('h:mm a')
+        } 
+
+    }
 
     // imp
     const loadDataFromCloud = useCallback(async () => {
