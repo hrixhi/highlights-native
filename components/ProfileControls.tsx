@@ -319,6 +319,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     newNotifIds.push(notif);
                                 }
                             });
+                            console.log("Clean up notification id", newNotifIds.join('-BREAK-') === '' ? 'NOT_SET' : newNotifIds.join('-BREAK-'))
                             server
                                 .mutate({
                                     mutation: updateNotificationId,

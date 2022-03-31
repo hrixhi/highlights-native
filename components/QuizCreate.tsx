@@ -17,7 +17,7 @@ const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
 import { Video } from 'expo-av';
 import RenderHtml from 'react-native-render-html';
-import Board, { Repository } from "react-native-dnd-board";
+// import Board, { Repository } from "react-native-dnd-board";
 
 // HELPER
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -575,6 +575,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
         console.log("From col id", fromColumnId)
         console.log("To col id", toColumnId)
         console.log("row", row)
+
+        
+
     };
 
     const renderCard = ({ item }) => {
@@ -895,8 +898,10 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     })
                                                                 })
 
+                                                                console.log("Drag drop data", dragdropData)
 
-                                                                setRepository(new Repository(dragdropData))
+
+                                                                // setRepository(new Repository(dragdropData))
 
                                                             } else {
                                                                 // clear data if not drag and drop
@@ -1204,7 +1209,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             </Text>
                         ) : null}
 
-                        {
+                        {/* {
                             problem.questionType === 'dragdrop' && editQuestionNumber === (index + 1) ? (
                                 <Board
                                     style={styles.board}
@@ -1223,7 +1228,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     // }
                                 />
                             ) : null
-                        }
+                        } */}
 
                         {problem.options.map((option: any, i: any) => {
 
