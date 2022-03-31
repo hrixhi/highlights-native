@@ -176,7 +176,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const videoRef: any = useRef();
     const scrollViewRef: any = useRef();
     const [getRef, setRef] = useDynamicRefs();
-    const [quizOptionEditorIndex , setQuizOptionEditorIndex] = useState('')
+    const [quizOptionEditorIndex, setQuizOptionEditorIndex] = useState('')
 
 
     let testEditorRef: any = {}
@@ -198,7 +198,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     // HOOK
 
     console.log('URL', url);
-    
+
     const fall = new Reanimated.Value(1);
 
     const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
@@ -234,7 +234,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setIsQuiz(false);
         setSubmission(false)
         setShowBooks(false)
-        
+
         if (props.createActiveTab === 'Quiz') {
             setIsQuiz(true);
             setSubmission(true)
@@ -826,7 +826,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             }
 
             setHiliteColorVisible(false);
-            
+
         },
         [hiliteColor, RichText, RichText.current, quizEditorRef, quizOptionEditorIndex]
     );
@@ -1107,7 +1107,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     }
                 }
             })
-            .catch(err => {});
+            .catch(err => { });
         // get subscribers
         server
             .query({
@@ -1182,7 +1182,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         setChannelOptions(options);
                     }
                 })
-                .catch(err => {});
+                .catch(err => { });
         }
         // setInit(true);
     }, []);
@@ -1284,7 +1284,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     if (value) {
                         subCues = JSON.parse(value);
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 let localCues: any[] = subCues['local'] ? subCues['local'] : [];
 
@@ -1743,7 +1743,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
                                 setShowDeadlineTimeAndroid(false)
-                                return};
+                                return
+                            };
                             const currentDate: any = selectedDate;
                             setShowDeadlineTimeAndroid(false);
                             setDeadline(currentDate);
@@ -1942,9 +1943,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         width: '100%',
                         backgroundColor: 'white',
                         opacity: modalAnimation,
-                        maxWidth: 900,
+                        // maxWidth: 900,
                         paddingVertical: 10,
-                        paddingHorizontal: dimensions.window.width < 1024 ? 10 : 0,
+                        paddingHorizontal: 15,
                         display: editorFocus && !isQuiz ? 'none' : 'flex',
                         zIndex: 500000,
                     }}
@@ -1960,7 +1961,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     >
                         <TouchableOpacity
                             style={{
-                                paddingTop: 8,
+                                paddingTop: 5,
                                 // marginRight: 20
                                 position: 'absolute',
                                 left: 0,
@@ -1976,11 +1977,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }}
                         >
                             <Text>
-                                <Ionicons name="arrow-back-outline" size={31} color={'#1F1F1F'} />
+                                <Ionicons name="arrow-back-outline" size={35} color={'#1F1F1F'} />
                             </Text>
                         </TouchableOpacity>
-                    
-                        
+
+
                         <View style={{ position: 'absolute', right: 0, paddingTop: 10, display: 'flex', flexDirection: 'row' }}>
                             {/* QUIZ BUTTON FOR INSTRUCTORS */}
                             {/* {!imported && !showOptions && !isQuiz && !showBooks ? (
@@ -2109,7 +2110,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             overflow: 'hidden',
                                             height: 35,
                                             textTransform: 'uppercase',
-                                            marginRight: 5 
+                                            marginRight: 5
                                         }}
                                     >
                                         NEXT
@@ -2125,7 +2126,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         height: '100%'
                     }}
                 >
-                    <ScrollView ref={scrollViewRef} style={{ flexDirection: 'column', paddingHorizontal: 20 }} indicatorStyle="black">
+                    <ScrollView
+                        nestedScrollEnabled={true}
+                        ref={scrollViewRef} style={{ flexDirection: 'column', paddingHorizontal: 20 }} indicatorStyle="black">
                         {showOptions ? (
                             <View
                                 style={{
@@ -2393,23 +2396,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     </View>
                                                     <View style={{ width: '100%', marginBottom: 15 }}>
 
-                                                            {submission ? (
-                                                                <View
-                                                                    style={{
-                                                                        width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                                                                        flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
-                                                                        paddingTop: 12,
-                                                                        backgroundColor: '#fff',
-                                                                        // marginLeft: 'auto',
-                                                                        alignItems: Platform.OS === 'ios' ?  'center' : 'flex-start'
-                                                                    }}
-                                                                >
-                                                                    <Text style={styles.text}>Available {Platform.OS === 'android'
-                                                                        ? ': ' + moment(new Date(initiateAt)).format('MMMM Do YYYY, h:mm a')
-                                                                        : null}</Text>
-                                                                    {renderInitiateAtDateTimePicker()}
-                                                                </View>
-                                                            ) : null}
+                                                        {submission ? (
+                                                            <View
+                                                                style={{
+                                                                    width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                                                                    flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                                                                    paddingTop: 12,
+                                                                    backgroundColor: '#fff',
+                                                                    // marginLeft: 'auto',
+                                                                    alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start'
+                                                                }}
+                                                            >
+                                                                <Text style={styles.text}>Available {Platform.OS === 'android'
+                                                                    ? ': ' + moment(new Date(initiateAt)).format('MMMM Do YYYY, h:mm a')
+                                                                    : null}</Text>
+                                                                {renderInitiateAtDateTimePicker()}
+                                                            </View>
+                                                        ) : null}
                                                     </View>
 
                                                     {/* Add it here */}
@@ -2598,8 +2601,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 }}
                                                             >
                                                                 <Text style={styles.text}>Ends on {Platform.OS === 'android'
-                                                                        ? ': ' + moment(new Date(availableUntil)).format('MMMM Do YYYY, h:mm a')
-                                                                        : null}</Text>
+                                                                    ? ': ' + moment(new Date(availableUntil)).format('MMMM Do YYYY, h:mm a')
+                                                                    : null}</Text>
                                                                 {renderAvailableUntilDateTimePicker()}
                                                                 {/* <MobiscrollDatePicker
                                                                     controls={['date', 'time']}
@@ -3471,7 +3474,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 } else {
                                                     setTitle(event.nativeEvent.text || '')
                                                 }
-                                                
+
                                             }}
                                             style={{
                                                 fontFamily: 'overpass',
@@ -3494,7 +3497,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             maxHeight={200}
                                             minHeight={45}
                                             enableScrollToCaret
-                                            // ref={}
+                                        // ref={}
                                         />
                                         {!isQuiz ? (
                                             <TouchableOpacity
@@ -3720,12 +3723,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 console.log("Set height", height)
                                                                 setHeight(height);
                                                                 if (height >= scrollViewHeight) {
-                                                                  setTimeout(() => {
-                                                                    scrollViewRef && scrollViewRef?.current?.scrollToEnd();
-                                                                });
+                                                                    setTimeout(() => {
+                                                                        scrollViewRef && scrollViewRef?.current?.scrollToEnd();
+                                                                    });
                                                                 }
                                                             }}
-                                                            onFocus={() => { 
+                                                            onFocus={() => {
                                                                 setQuizEditorRef({})
                                                                 setEditorFocus(true)
                                                             }}
@@ -3738,7 +3741,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             allowsLinkPreview={true}
                                                             allowsBackForwardNavigationGestures={true}
                                                             onCursorPosition={handleCursorPosition}
-                                                            
+
                                                         />
                                                     </ScrollView>
                                                 </View>
@@ -3765,14 +3768,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         </View>
                                     ) : imported ? (
                                         type === 'mp4' ||
-                                        type === 'oga' ||
-                                        type === 'mov' ||
-                                        type === 'wmv' ||
-                                        type === 'mp3' ||
-                                        type === 'mov' ||
-                                        type === 'mpeg' ||
-                                        type === 'mp2' ||
-                                        type === 'wav' ? (
+                                            type === 'oga' ||
+                                            type === 'mov' ||
+                                            type === 'wmv' ||
+                                            type === 'mp3' ||
+                                            type === 'mov' ||
+                                            type === 'mpeg' ||
+                                            type === 'mp2' ||
+                                            type === 'wav' ? (
                                             <Video
                                                 ref={videoRef}
                                                 style={{
@@ -3963,9 +3966,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 indicatorStyle={'black'}
                                 showsHorizontalScrollIndicator={true}
                                 persistentScrollbar={true}
-                                // onContentSizeChange={(contentWidth, contentHeight) => {
-                                //     scrollRef.current?.scrollToEnd({ animated: false });
-                                // }}
+                            // onContentSizeChange={(contentWidth, contentHeight) => {
+                            //     scrollRef.current?.scrollToEnd({ animated: false });
+                            // }}
                             >
                                 <RichEditor
                                     key={reloadEditorKey.toString()}
@@ -3999,7 +4002,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         const modifedText = text.split('&amp;').join('&');
                                         setCue(modifedText);
                                     }}
-                                    
+
                                     onHeightChange={handleHeightChange}
                                     onFocus={() => setEditorFocus(true)}
                                     onBlur={() => setEditorFocus(false)}
@@ -4113,7 +4116,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 }}
                                 hiliteColor={handleHiliteColor}
                                 foreColor={handleForeColor}
-                                // removeFormat={handleRemoveFormat}
+                            // removeFormat={handleRemoveFormat}
                             />
 
                             {/* </KeyboardAvoidingView> */}
@@ -4135,18 +4138,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     }}
                 >
                     <TouchableOpacity
-                    style={{
-                        backgroundColor: 'transparent',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                    onPress={() => {
-                        setEmojiVisible(false)
-                        setInsertImageVisible(false)
-                        setInsertLinkVisible(false)
-                        setHiliteColorVisible(false)
-                        setForeColorVisible(false)
-                    }}>
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
+                        onPress={() => {
+                            setEmojiVisible(false)
+                            setInsertImageVisible(false)
+                            setInsertLinkVisible(false)
+                            setHiliteColorVisible(false)
+                            setForeColorVisible(false)
+                        }}>
                     </TouchableOpacity>
                 </Reanimated.View>
             ) : null}

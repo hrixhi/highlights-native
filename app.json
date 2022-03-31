@@ -19,7 +19,7 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.cues-technologies.learnwithcues",
       "buildNumber": "1.3",
       "usesIcloudStorage": true,

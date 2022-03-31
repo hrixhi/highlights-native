@@ -184,7 +184,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     /**
      * 
      */
-     const uploadImageHandler = useCallback(
+    const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
             const url = await handleImageUpload(takePhoto, userId);
 
@@ -441,31 +441,31 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 key={reloadFormKey.toString()}
             >
                 {showSavePassword ? <View
-                        style={{
-                            flexDirection: 'row',
-                            width: '100%',
-                            alignSelf: 'center',
-                            maxWidth: 400,
-                            height: 50,
-                            marginTop: 20,
-                            // paddingHorizontal: 10
-                        }}>
-                        <View style={{ flexDirection: 'row' }}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setShowSavePassword(false);
-                                }}
-                                style={{
-                                    paddingRight: 20,
-                                    paddingTop: 5,
-                                    alignSelf: 'flex-start'
-                                }}>
-                                <Text style={{ lineHeight: 34, width: '100%', textAlign: 'center' }}>
-                                    <Ionicons name="arrow-back-outline" size={31} color={'#1F1F1F'} />
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                        </View> : null}
+                    style={{
+                        flexDirection: 'row',
+                        width: '100%',
+                        alignSelf: 'center',
+                        maxWidth: 400,
+                        height: 50,
+                        marginTop: 20,
+                        // paddingHorizontal: 10
+                    }}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowSavePassword(false);
+                            }}
+                            style={{
+                                paddingRight: 20,
+                                paddingTop: 5,
+                                alignSelf: 'flex-start'
+                            }}>
+                            <Text style={{ lineHeight: 34, width: '100%', textAlign: 'center' }}>
+                                <Ionicons name="arrow-back-outline" size={35} color={'#1F1F1F'} />
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View> : null}
                 {showSavePassword ? (
                     <View
                         style={{
@@ -552,7 +552,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         style={{
                             width: '100%',
                             backgroundColor: 'white',
-                            paddingTop: Dimensions.get('window').width < 768 ? 25 : 50,
+                            // paddingTop: Dimensions.get('window').width < 768 ? 25 : 50,
                             paddingBottom: 20,
                             maxWidth: 400,
                             alignSelf: 'center',
@@ -606,7 +606,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             backgroundColor: 'transparent'
                                         }}
                                     >
-                                        <Ionicons name={"attach-outline"} size={30}  color={'white'} />
+                                        <Ionicons name={"attach-outline"} size={30} color={'white'} />
                                         {/* {PreferredLanguageText('import')} */}
                                     </Text>
                                 </TouchableOpacity>
@@ -702,7 +702,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         alignSelf: 'center'
                     }}
                 >
-                   <TouchableOpacity
+                    <TouchableOpacity
                         onPress={() => handleSubmit()}
                         style={{
                             backgroundColor: '#006AFF',
@@ -930,25 +930,24 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </View>
                     )} */}
                 </View>
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 25, justifyContent: 'center'  }}>
-                {
-                    !showSavePassword ? <TouchableOpacity style={{}} onPress={() => Linking.openURL('https://www.learnwithcues.com/privacypolicy.pdf')}>
-                    <Text style={{ fontSize: 12, textAlign: 'center', marginRight: 30 }}>
-                        Privacy Policy
-                    </Text></TouchableOpacity>  : null
-                }
-                {
-                    !showSavePassword ? <Text style={{ fontSize: 12, textAlign: 'center', marginRight: 30 }}>
-                        version {appVersion}
-                    </Text> : null
-                }
-                
-                {
-                    !showSavePassword ? <TouchableOpacity style={{}} onPress={() => Linking.openURL('https://www.learnwithcues.com/eula.pdf')}>
-                    <Text style={{ fontSize: 12, textAlign: 'center', }}>
-                        Terms of Use
-                    </Text></TouchableOpacity>  : null
-                }
+                <View style={{ display: 'flex', alignItems: 'center', marginTop: 35, justifyContent: 'center' }}>
+                    {
+                        !showSavePassword ? <Text style={{ fontSize: 12, textAlign: 'center', marginBottom: 10, color: '#797979' }}>
+                            Version {appVersion}
+                        </Text> : null
+                    }
+                    {
+                        !showSavePassword ? <TouchableOpacity style={{}} onPress={() => Linking.openURL('https://www.learnwithcues.com/privacypolicy.pdf')}>
+                            <Text style={{ fontSize: 12, textAlign: 'center', marginBottom: 10, color: '#797979' }}>
+                                Privacy Policy
+                            </Text></TouchableOpacity> : null
+                    }
+                    {
+                        !showSavePassword ? <TouchableOpacity style={{}} onPress={() => Linking.openURL('https://www.learnwithcues.com/eula.pdf')}>
+                            <Text style={{ fontSize: 12, textAlign: 'center', color: '#797979' }}>
+                                Terms of Use
+                            </Text></TouchableOpacity> : null
+                    }
                 </View>
                 {/* </View> */}
                 {/* </View> */}
@@ -1038,7 +1037,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         width: '100%',
                         height: '100%',
                     }}
-                    onPress={() => setUploadProfilePicVisible(false)}
+                        onPress={() => setUploadProfilePicVisible(false)}
                     >
                     </TouchableOpacity>
                 </Reanimated.View>

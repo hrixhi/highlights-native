@@ -40,13 +40,17 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 <View
                     style={{
                         flexDirection: 'row',
-                        justifyContent: 'center',
-                        paddingHorizontal: 20,
+                        justifyContent: 'flex-start',
+                        // paddingHorizontal: 20,
                         paddingTop: 10,
                         paddingBottom: 15,
-                        display: showAddCourseModal ? 'none' : 'flex'
+                        display: showAddCourseModal ? 'none' : 'flex',
+                        width: '100%',
+                        // maxWidth: 400,
+                        // alignSelf: 'center'
+                        paddingLeft: 25
                     }}
-                >   
+                >
                     {/* Back button */}
                     {/* <TouchableOpacity
                         style={{
@@ -77,7 +81,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 color: activeTab === 'profile' ? '#000' : '#656565',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold',
-                                fontSize: Dimensions.get('window').width < 768 ? 20 : 30
+                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26
                             }}
                         >
                             Profile
@@ -98,7 +102,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 color: activeTab === 'courses' ? '#000' : '#656565',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold',
-                                fontSize: Dimensions.get('window').width < 768 ? 20 : 30
+                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26
                             }}
                         >
                             Courses
@@ -132,7 +136,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <View>
                 {activeTab === 'profile' ? (
                     <Walkthrough
-                        closeModal={() => {}}
+                        closeModal={() => { }}
                         saveDataInCloud={() => props.saveDataInCloud()}
                         reOpenProfile={() => props.reOpenProfile()}
                         reloadData={() => props.reloadData()}
@@ -143,7 +147,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <Channels
                         setShowCreate={(val: any) => props.setShowCreate(val)}
                         showCreate={props.showCreate}
-                        closeModal={() => {}}
+                        closeModal={() => { }}
                         subscriptions={props.subscriptions}
                         refreshSubscriptions={props.refreshSubscriptions}
                         showAddCourseModal={showAddCourseModal}
@@ -166,14 +170,14 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         Dimensions.get('window').width >= 1100
                             ? (Dimensions.get('window').width - 1100) / 2 - 25
                             : Dimensions.get('window').width >= 768
-                            ? 30
-                            : 24,
-                    marginBottom: Dimensions.get('window').width < 768 ? (Platform.OS === 'android' ? 15 : 35) : 75,
+                                ? 30
+                                : 24,
+                    marginBottom: Dimensions.get('window').width < 768 ? 77 : 90,
                     right: 0,
                     justifyContent: 'center',
                     bottom: 0,
-                    width: Dimensions.get('window').width > 350 ? 62 :  58,
-                    height: Dimensions.get('window').width > 350 ? 62 :  58,
+                    width: Dimensions.get('window').width > 350 ? 62 : 58,
+                    height: Dimensions.get('window').width > 350 ? 62 : 58,
                     borderRadius: Dimensions.get('window').width > 350 ? 31 : 29,
                     backgroundColor: '#006aff',
                     borderColor: '#f2f2f2',

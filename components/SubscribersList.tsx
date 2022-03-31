@@ -961,7 +961,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 <View
                     style={{
                         width: '100%',
-                        maxWidth: 900,
+                        // maxWidth: 900,
                         backgroundColor: 'white',
                     }}
                     key={key}
@@ -1027,7 +1027,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 borderRadius: 1,
                                 borderWidth: 0,
                                 borderColor: '#f2f2f2',
-                                maxWidth: 900,
+                                // maxWidth: 900,
                                 paddingBottom: 150,
                                 paddingHorizontal: 10
                             }}
@@ -1199,7 +1199,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             alignItems: 'center'
                                         }}
                                     >
-                                        <Ionicons name="chevron-back-outline" color="#006AFF" size={23} />
+                                        <Ionicons name="chevron-back-outline" color="#006AFF" size={Dimensions.get('window').width < 800 ? 23 : 26} />
                                         <Text
                                             style={{
                                                 textAlign: 'center',

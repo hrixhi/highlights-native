@@ -66,11 +66,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 : new Date(props.cue.deadline)
             : new Date(current.getTime() + 1000 * 60 * 60 * 24);
     const until =
-            props.cue.availableUntil && props.cue.availableUntil !== ''
-                ? props.cue.availableUntil === 'Invalid Date'
-                    ? new Date(current.getTime() + 1000 * 60 * 60 * 48)
-                    : new Date(props.cue.availableUntil)
-                : new Date(current.getTime() + 1000 * 60 * 60 * 48);
+        props.cue.availableUntil && props.cue.availableUntil !== ''
+            ? props.cue.availableUntil === 'Invalid Date'
+                ? new Date(current.getTime() + 1000 * 60 * 60 * 48)
+                : new Date(props.cue.availableUntil)
+            : new Date(current.getTime() + 1000 * 60 * 60 * 48);
     const [availableUntil, setAvailableUntil] = useState<Date>(until);
     const [deadline, setDeadline] = useState<Date>(dead);
     const [showOriginal, setShowOriginal] = useState(true);
@@ -83,7 +83,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [submit, setSubmit] = useState(false);
     const [exportQuizScores, setExportQuizScores] = useState(false);
     const [viewSubmission, setViewSubmission] = useState((props.cue.submittedAt !== null && props.cue.submittedAt !== undefined) ||
-    (props.cue.graded && props.cue.releaseSubmission));
+        (props.cue.graded && props.cue.releaseSubmission));
     const [showFolder, setShowFolder] = useState(false);
     const [createNewFolder, setCreateNewFolder] = useState(false);
     const [newFolderTitle, setNewFolderTitle] = useState('');
@@ -226,7 +226,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         if (value) {
                             subCues = JSON.parse(value);
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                     if (subCues[props.cueKey].length === 0) {
                         return;
                     }
@@ -280,7 +280,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     setChannelFolders(res.data.folder.getFoldersForChannel);
                 }
             })
-            .catch(e => {});
+            .catch(e => { });
     }, [props.channelId]);
 
     /**
@@ -347,7 +347,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (value) {
                 subCues = JSON.parse(value);
             }
-        } catch (e) {}
+        } catch (e) { }
         if (subCues[props.cueKey].length === 0) {
             return;
         }
@@ -404,7 +404,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         if (value) {
                             subCues = JSON.parse(value);
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                     if (subCues[props.cueKey].length === 0) {
                         return;
                     }
@@ -627,10 +627,12 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const getNavbarIconColor = (op: string) => {
         if (op === activeTab) {
-            return '#000'   
-        } 
+            return '#000'
+        }
         return '#575655'
     }
+
+    const width = Dimensions.get('window').width
 
     /**
      * @description Tabs (Content, Options, Submission, etc)
@@ -652,7 +654,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 style={{
                     backgroundColor: '#fff',
                     width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
-                    flexDirection: 'column',
+                    flexDirection: Dimensions.get('window').width < 800 ? 'column' : 'row',
                     justifyContent: 'center',
                     alignItems: 'center'
                 }}
@@ -671,10 +673,13 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     size={23}
                 />
                 <Text style={{
-                    fontSize: 11,
+                    fontSize: width < 800 ? 11 : 16,
+                    lineHeight: width < 800 ? 11 : 23,
                     color: getNavbarIconColor('Content'),
                     fontWeight: 'bold',
-                    fontFamily: 'Inter'                    
+                    fontFamily: 'Inter',
+                    marginBottom: width < 800 ? 0 : 6,
+                    paddingLeft: width < 800 ? 0 : 5
                 }}>
                     {getNavbarText("Content")}
                 </Text>
@@ -684,9 +689,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 style={{
                     backgroundColor: '#fff',
                     width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
-                    flexDirection: 'column',
+                    flexDirection: Dimensions.get('window').width < 800 ? 'column' : 'row',
                     justifyContent: 'center',
-                    alignItems: 'center'
+                    alignItems: 'center',
                 }}
                 onPress={() => {
                     setShowOptions(true);
@@ -703,10 +708,13 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     size={23}
                 />
                 <Text style={{
-                    fontSize: 11,
+                    fontSize: width < 800 ? 11 : 16,
+                    lineHeight: width < 800 ? 11 : 23,
                     color: getNavbarIconColor('Details'),
                     fontWeight: 'bold',
-                    fontFamily: 'Inter'                    
+                    fontFamily: 'Inter',
+                    marginBottom: width < 800 ? 0 : 6,
+                    paddingLeft: width < 800 ? 0 : 5
                 }}>
                     {getNavbarText("Details")}
                 </Text>
@@ -721,9 +729,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     style={{
                         backgroundColor: '#fff',
                         width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
-                        flexDirection: 'column',
                         justifyContent: 'center',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        flexDirection: Dimensions.get('window').width < 800 ? 'column' : 'row',
                     }}
                     onPress={() => {
                         setViewStatus(false);
@@ -742,16 +750,19 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     >
                         SUBMISSION
                     </Text> */}
-                     <Ionicons
+                    <Ionicons
                         name={getNavbarIconName('Submission')}
                         style={{ color: getNavbarIconColor('Submission'), marginBottom: 6 }}
                         size={23}
                     />
                     <Text style={{
-                        fontSize: 11,
+                        fontSize: width < 800 ? 11 : 16,
+                        lineHeight: width < 800 ? 11 : 23,
                         color: getNavbarIconColor('Submission'),
                         fontWeight: 'bold',
-                        fontFamily: 'Inter'                    
+                        fontFamily: 'Inter',
+                        marginBottom: width < 800 ? 0 : 6,
+                        paddingLeft: width < 800 ? 0 : 5
                     }}>
                         {getNavbarText("Submission")}
                     </Text>
@@ -764,9 +775,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     style={{
                         backgroundColor: '#fff',
                         width: (submission && !channelOwner) || channelOwner ? '33%' : '50%',
-                        flexDirection: 'column',
                         justifyContent: 'center',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        flexDirection: Dimensions.get('window').width < 800 ? 'column' : 'row',
                     }}
                     onPress={() => {
                         setViewStatus(true);
@@ -783,10 +794,13 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         size={23}
                     />
                     <Text style={{
-                        fontSize: 11,
+                        fontSize: width < 800 ? 11 : 16,
+                        lineHeight: width < 800 ? 11 : 23,
                         color: getNavbarIconColor('Feedback'),
                         fontWeight: 'bold',
-                        fontFamily: 'Inter'                    
+                        fontFamily: 'Inter',
+                        marginBottom: width < 800 ? 0 : 6,
+                        paddingLeft: width < 800 ? 0 : 5
                     }}>
                         {getNavbarText("Feedback")}
                     </Text>
@@ -831,7 +845,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             color: '#1F1F1F',
                             paddingBottom: 10,
                             width: '100%',
-                            maxWidth: 900
+                            maxWidth: undefined
                         }}
                     >
                         {folder.title && folder.title !== '' ? folder.title : 'Untitled'}
@@ -841,7 +855,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     <ScrollView
                         style={{
                             width: '100%',
-                            maxWidth: 900,
+                            maxWidth: undefined,
                             backgroundColor: '#f2f2f2',
                             borderTopLeftRadius: 0,
                             borderTopRightRadius: 0,
@@ -947,7 +961,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
 
     const renderNewFolderListRow = (row: any) => {
-        
+
         const { key, index, data, disabled, active } = row;
 
         const { title } = htmlStringParser(data.channelId && data.channelId !== '' ? data.original : data.cue)
@@ -1163,9 +1177,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             <Ionicons name="swap-horizontal-outline" size={14} color="#000000" />{' '}
         </Text>
     );
-    
+
     const renderNewFolderSelectionList = () => {
-        
+
         return (<SortableList
             horizontal={true}
             style={{
@@ -1220,7 +1234,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <ScrollView
                                 style={{
                                     width: '100%',
-                                    maxWidth: 900,
+                                    maxWidth: undefined,
                                     backgroundColor: '#f2f2f2',
                                     borderTopLeftRadius: 0,
                                     borderTopRightRadius: 0,
@@ -1433,7 +1447,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <ScrollView
                                 style={{
                                     width: '100%',
-                                    maxWidth: 900,
+                                    maxWidth: undefined,
                                     backgroundColor: '#f2f2f2',
                                     borderTopLeftRadius: 0,
                                     borderTopRightRadius: 0,
@@ -1443,7 +1457,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 horizontal={true}
                                 showsHorizontalScrollIndicator={true}
                                 indicatorStyle='black'
-                                // showsVerticalScrollIndicator={false}
+                            // showsVerticalScrollIndicator={false}
                             >
                                 {channelCues.map((cue: any) => {
                                     const { title } = htmlStringParser(
@@ -1620,7 +1634,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         <Animated.View
             style={{
                 width: '100%',
-                // maxWidth: 900,
+                // maxWidth: undefined,
                 height: '100%',
                 maxHeight: windowHeight,
                 opacity: modalAnimation,
@@ -1649,7 +1663,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 // >
                 <View
                     style={{
-                        maxWidth: 900,
+                        // maxWidth: undefined,
                         height: '100%',
                         width: '100%'
                     }}
@@ -1704,7 +1718,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             ref={scroll2}
                             contentContainerStyle={{
                                 width: '100%',
-                                maxWidth: 900,
+                                maxWidth: undefined,
                                 alignSelf: 'center',
                                 height: '100%'
                             }}
@@ -1761,7 +1775,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 scrollEventThrottle={1}
                                 keyboardDismissMode={'on-drag'}
                             >
-                                <View style={{ maxWidth: 900, width: '100%' }}>
+                                <View style={{ maxWidth: undefined, width: '100%' }}>
                                     <SubscribersList
                                         key={JSON.stringify(subscribers)}
                                         subscribers={subscribers}
@@ -1858,11 +1872,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 ) : null}
                 {/* Add to existing folder button */}
                 {channelFolders.length > 0 &&
-                channelOwner &&
-                folderId === '' &&
-                !createNewFolder &&
-                !editFolder &&
-                showOriginal ? (
+                    channelOwner &&
+                    folderId === '' &&
+                    !createNewFolder &&
+                    !editFolder &&
+                    showOriginal ? (
                     <Menu
                         onSelect={async (choice: any) => {
                             if (addingToFolder) {
@@ -2267,10 +2281,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     }}
                 >
                     {folderId !== '' &&
-                    folderCuesToDisplay.length !== 0 &&
-                    !editFolder &&
-                    !createNewFolder &&
-                    showOriginal ? (
+                        folderCuesToDisplay.length !== 0 &&
+                        !editFolder &&
+                        !createNewFolder &&
+                        showOriginal ? (
                         <TouchableOpacity
                             onPress={() => setShowExistingFolder(!showExistingFolder)}
                             style={{
@@ -2279,7 +2293,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 bottom: -17,
                                 left: '50%',
                                 width: Platform.OS === 'ios' ? 35 : 40,
-                                height:  Platform.OS === 'ios' ? 35 : 40,
+                                height: Platform.OS === 'ios' ? 35 : 40,
                                 borderRadius: 70,
                                 backgroundColor: '#f2f2f2',
                                 flexDirection: 'row',
@@ -2302,7 +2316,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         </TouchableOpacity>
                     ) : null}
                     <View
-                        style={{ flexDirection: 'row', flex: 1, maxWidth: 900, backgroundColor: '#ffffff', height: 52 }}
+                        style={{ flexDirection: 'row', flex: 1, maxWidth: undefined, backgroundColor: '#ffffff', height: 52 }}
                     >
                         {/* BACK BUTTON */}
                         <TouchableOpacity
@@ -2319,14 +2333,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             <Text>
                                 <Ionicons
                                     name="arrow-back-outline"
-                                    size={31}
-                                    color={'#000'}
+                                    size={35}
+                                    color={'#1f1f1f'}
                                 />
                             </Text>
                         </TouchableOpacity>
 
                         {/* CUE TABS IF THE DIMENSIONS IS BIGGER THAN 1024 */}
-                        {Dimensions.get('window').width >= 1024 && !createNewFolder && !editFolder ? options : null}
+                        {/* {Dimensions.get('window').width >= 1024 && !createNewFolder && !editFolder ? options : null} */}
 
                         {/* Render Folder Title input if Create / Edit */}
 
@@ -2380,10 +2394,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     maxWidth: '100%'
                                 }}
                             >
-                            <TextInput
-                                value={updateFolderTitle}
-                                style={{
-                                    color: '#000',
+                                <TextInput
+                                    value={updateFolderTitle}
+                                    style={{
+                                        color: '#000',
                                         backgroundColor: '#f2f2f2',
                                         borderRadius: 15,
                                         fontSize: 12,
@@ -2396,11 +2410,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         width: 200,
                                         maxWidth: '100%',
                                         height: 30,
-                                }}
-                                placeholderTextColor={'#000'}
-                                placeholder={'Folder Title'}
-                                onChangeText={(val: any) => setUpdateFolderTitle(val)}
-                            />
+                                    }}
+                                    placeholderTextColor={'#000'}
+                                    placeholder={'Folder Title'}
+                                    onChangeText={(val: any) => setUpdateFolderTitle(val)}
+                                />
                             </View>
                         ) : null}
 
@@ -2416,8 +2430,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 }}
                             >
                                 {((channelOwner && showOriginal && !isQuiz) || showOptions || !props.channelId) &&
-                                !editFolder &&
-                                !createNewFolder ? (
+                                    !editFolder &&
+                                    !createNewFolder ? (
                                     <TouchableOpacity
                                         onPress={async () => {
                                             setSave(true);
@@ -2445,8 +2459,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 ) : null}
 
                                 {channelOwner && !showOriginal && !showOptions &&
-                                !editFolder &&
-                                !createNewFolder ? (
+                                    !editFolder &&
+                                    !createNewFolder ? (
                                     <TouchableOpacity
                                         onPress={async () => {
                                             setShareFeedback(true)
@@ -2476,84 +2490,84 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                                 {
                                     channelOwner && !showOriginal && !showOptions &&
-                                    !editFolder &&
-                                    !createNewFolder && isQuiz ?
+                                        !editFolder &&
+                                        !createNewFolder && isQuiz ?
+                                        <TouchableOpacity
+                                            onPress={async () => {
+                                                setExportQuizScores(true)
+                                            }}
+                                            style={{
+                                                paddingLeft: 0,
+                                                backgroundColor: '#ffffff',
+                                                marginLeft: 20,
+                                                paddingTop: 2,
+                                                marginRight: 10
+                                            }}
+                                        >
+                                            <Ionicons name='download-outline' size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
+                                        </TouchableOpacity> : null
+                                }
+
+                                {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && submissionAttempts.length > 0 && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) ?
                                     <TouchableOpacity
                                         onPress={async () => {
-                                            setExportQuizScores(true)
+                                            setViewSubmission(!viewSubmission)
+
                                         }}
                                         style={{
                                             paddingLeft: 0,
                                             backgroundColor: '#ffffff',
-                                            marginLeft: 20,
-                                            paddingTop: 2,
-                                            marginRight: 10
+                                            marginLeft: 20
                                         }}
                                     >
-                                        <Ionicons name='download-outline' size={23}  color="black" />
+                                        <Text
+                                            style={{
+                                                lineHeight: 34,
+                                                backgroundColor: '#ffffff',
+                                                fontWeight: 'bold',
+                                                textTransform: 'uppercase',
+                                                fontSize: 12,
+                                                fontFamily: 'overpass',
+                                                color: '#000'
+                                            }}
+                                        >
+                                            {viewSubmission ? "NEW SUBMISSION" : "VIEW SUBMISSION"}
+                                        </Text>
                                     </TouchableOpacity> : null
-                                } 
-
-                                {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && submissionAttempts.length > 0 && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) ?
-                                    <TouchableOpacity
-                                    onPress={async () => {
-                                        setViewSubmission(!viewSubmission)
-                                       
-                                    }}
-                                    style={{
-                                        paddingLeft: 0,
-                                        backgroundColor: '#ffffff',
-                                        marginLeft: 20
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            lineHeight: 34,
-                                            backgroundColor: '#ffffff',
-                                            fontWeight: 'bold',
-                                            textTransform: 'uppercase',
-                                            fontSize: 12,
-                                            fontFamily: 'overpass',
-                                            color: '#000'
-                                        }}
-                                    >
-                                        {viewSubmission ? "NEW SUBMISSION" : "VIEW SUBMISSION"}
-                                    </Text>
-                                </TouchableOpacity> : null
                                 }
                                 {(!channelOwner && !showOriginal && !viewStatus && !showOptions && !showComments && !isQuiz && !editFolder && !createNewFolder && !props.cue.releaseSubmission && ((!allowLateSubmission && new Date() < deadline) || allowLateSubmission && new Date() < availableUntil)) && !viewSubmission ?
                                     <TouchableOpacity
-                                    onPress={async () => {
-                                        setSubmit(true);
-                                       
-                                    }}
-                                    disabled={props.cue.releaseSubmission}
-                                    style={{
-                                        paddingLeft: 0,
-                                        backgroundColor: '#ffffff',
-                                        marginLeft: 20
-                                    }}
-                                >
-                                    <Text
+                                        onPress={async () => {
+                                            setSubmit(true);
+
+                                        }}
+                                        disabled={props.cue.releaseSubmission}
                                         style={{
-                                            lineHeight: 34,
+                                            paddingLeft: 0,
                                             backgroundColor: '#ffffff',
-                                            fontWeight: 'bold',
-                                            textTransform: 'uppercase',
-                                            fontSize: 12,
-                                            fontFamily: 'overpass',
-                                            color: '#000'
+                                            marginLeft: 20
                                         }}
                                     >
-                                        SUBMIT
-                                    </Text>
-                                </TouchableOpacity> : null
+                                        <Text
+                                            style={{
+                                                lineHeight: 34,
+                                                backgroundColor: '#ffffff',
+                                                fontWeight: 'bold',
+                                                textTransform: 'uppercase',
+                                                fontSize: 12,
+                                                fontFamily: 'overpass',
+                                                color: '#000'
+                                            }}
+                                        >
+                                            SUBMIT
+                                        </Text>
+                                    </TouchableOpacity> : null
                                 }
                                 {((channelOwner && showOriginal) ||
                                     (channelOwner && showOptions) ||
                                     !props.channelId) &&
-                                !editFolder &&
-                                !createNewFolder ? (
+                                    !editFolder &&
+                                    !createNewFolder ? (
                                     <TouchableOpacity
                                         onPress={async () => {
                                             setDel(true);
@@ -2593,11 +2607,11 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     }}
                 >
                     {folderId !== '' &&
-                    folderCuesToDisplay.length !== 0 &&
-                    !editFolder &&
-                    !createNewFolder &&
-                    showOriginal &&
-                    showExistingFolder
+                        folderCuesToDisplay.length !== 0 &&
+                        !editFolder &&
+                        !createNewFolder &&
+                        showOriginal &&
+                        showExistingFolder
                         ? renderExistingFolder()
                         : null}
                 </View>
@@ -2677,7 +2691,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 </View>
             </KeyboardAvoidingView>
             {/* Mobile tabs */}
-            {Dimensions.get('window').width < 1024 && !editorFocus && !loading ? (
+            {!editorFocus && !loading ? (
                 <View
                     style={{
                         position: 'absolute',
@@ -2711,7 +2725,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     {options}
                 </View>
             ) : null}
-             <BottomSheet
+            <BottomSheet
                 isOpen={fullScreenWebview}
                 snapPoints={[0, Dimensions.get('window').height - 60]}
                 close={() => {
@@ -2721,8 +2735,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 }}
                 title={''}
                 renderContent={() => {
-                    return (<View style={{ width: '100%', height:'100%', paddingTop: 10 }} key={fullScreenPdfViewerKey}>
-                         <WebView
+                    return (<View style={{ width: '100%', height: '100%', paddingTop: 10 }} key={fullScreenPdfViewerKey}>
+                        <WebView
                             source={{ uri: fullScreenPdfUrl }}
                         />
                     </View>)

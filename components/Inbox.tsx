@@ -1308,7 +1308,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             }}
                         >
                             <Text style={{
-                                fontSize: 22,
+                               fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
                                 color: '#000',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold'
@@ -1368,7 +1368,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     )}
                     {/* ) : null} */}
                     <View style={{ width: '100%', backgroundColor: 'white' }}>
-                        <View style={{ width: '100%', maxWidth: 900, alignSelf: 'center' }}>
+                        <View style={{ width: '100%', alignSelf: 'center' }}>
                             <View
                                 style={{
                                     backgroundColor: '#fff',

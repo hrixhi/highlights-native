@@ -278,7 +278,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 width: '100%',
                 backgroundColor: 'white',
                 paddingTop: 10,
-                maxHeight: 450,
+                // maxHeight: 450,
                 borderRadius: 1,
                 zIndex: 5000000
             }}
@@ -638,9 +638,10 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             color: '#1f1f1f',
                             fontSize: 18,
                             fontFamily: 'inter',
+                            paddingLeft: 20
                         }}
                     >
-                        Past meetings
+                        Attendance
                     </Text>
                 )}
                 {pastMeetings.length === 0 || channelAttendances.length === 0 || !isOwner ? null : (
@@ -657,7 +658,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             exportAttendance();
                         }}
                     >
-                        <Ionicons name='download-outline' size={23} color="#006AFF" />
+                        <Ionicons name='download-outline' size={Dimensions.get('window').width < 800 ? 23 : 26} color="#006AFF" />
                     </TouchableOpacity>
                 )}
             </View>

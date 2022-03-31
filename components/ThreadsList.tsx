@@ -163,7 +163,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
     // HOOKS
 
-    useEffect(() => {}, []);
+    useEffect(() => { }, []);
 
     /**
      * @description Load categories on init
@@ -209,19 +209,19 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         })();
     }, [threads]);
 
-    
+
 
     /**
      * 
      */
-     const uploadImageHandler = useCallback(
+    const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
-            
+
             const url = await handleImageUpload(takePhoto, userId);
 
             if (!url) {
                 setImportType('')
-                return 
+                return
             }
 
             setImportUrl(url)
@@ -235,7 +235,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     /**
      * 
      */
-     const uploadFileHandler = useCallback(
+    const uploadFileHandler = useCallback(
         async (audioVideo) => {
             const res = await handleFile(audioVideo, userId);
 
@@ -307,45 +307,45 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             file = importUrl;
             text = (
                 <TouchableOpacity
-                        onPress={() => {
-                            if (
-                                Platform.OS === 'web' ||
-                                Platform.OS === 'macos' ||
-                                Platform.OS === 'windows'
-                            ) {
-                                window.open(importUrl, '_blank');
-                            } else {
-                                Linking.openURL(importUrl);
-                            }
-                        }}
+                    onPress={() => {
+                        if (
+                            Platform.OS === 'web' ||
+                            Platform.OS === 'macos' ||
+                            Platform.OS === 'windows'
+                        ) {
+                            window.open(importUrl, '_blank');
+                        } else {
+                            Linking.openURL(importUrl);
+                        }
+                    }}
+                    style={{
+                        // backgroundColor: '#006AFF',
+                        borderRadius: 15,
+                        marginLeft: 15,
+                        marginTop: 6
+                    }}
+                >
+                    <Text
                         style={{
-                            // backgroundColor: '#006AFF',
+                            textAlign: 'center',
+                            lineHeight: 34,
+                            color: 'white',
+                            fontSize: 12,
+                            borderWidth: 1,
+                            // borderColor: '#006AFF',
+                            paddingHorizontal: 20,
+                            fontFamily: 'inter',
+                            height: 35,
                             borderRadius: 15,
-                            marginLeft: 15,
-                            marginTop: 6
+                            textTransform: 'uppercase'
                         }}
                     >
-                        <Text
-                            style={{
-                                textAlign: 'center',
-                                lineHeight: 34,
-                                color: 'white',
-                                fontSize: 12,
-                                borderWidth: 1,
-                                // borderColor: '#006AFF',
-                                paddingHorizontal: 20,
-                                fontFamily: 'inter',
-                                height: 35,
-                                borderRadius: 15,
-                                textTransform: 'uppercase'
-                            }}
-                        >
-                            {importTitle}
-                        </Text>
-                    </TouchableOpacity>
-                );
+                        {importTitle}
+                    </Text>
+                </TouchableOpacity>
+            );
             text = importUrl;
-            
+
             const obj = { title: importTitle, type: importType, url: importUrl };
 
             onSend([
@@ -388,7 +388,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     setThreadCategories(res.data.thread.getChannelThreadCategories);
                 }
             })
-            .catch(err => {});
+            .catch(err => { });
     }, [props.channelId]);
 
     /**
@@ -645,7 +645,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         useNativeControls
                         resizeMode="contain"
                         isLooping
-                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
+                    // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -673,7 +673,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         useNativeControls
                         resizeMode="contain"
                         isLooping
-                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
+                    // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -710,7 +710,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     paddingBottom: props.cueId === null && categoryChoices.length > 1 ? 20 : 0,
                     paddingHorizontal: 20,
                     width: '100%',
-                    maxWidth: 900,
+                    // maxWidth: 900,
                     borderRadius: 1
                 }}
             >
@@ -816,10 +816,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <View
                 style={{
                     width: '100%',
-                    maxWidth: 900,
+                    // maxWidth: 900,
                     borderRadius: 1,
                     padding: 10,
-                    height: Dimensions.get('window').height - 140,
+                    height: Dimensions.get('window').width < 800 ? Dimensions.get('window').height - 140 : Dimensions.get('window').height - 100,
                     // borderLeftWidth: 3,
                     // borderLeftColor: props.channelColor,
                 }}
@@ -838,28 +838,28 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     renderBubble={renderBubble}
                     renderActions={() => (
                         // <View>
-                            <TouchableOpacity 
+                        <TouchableOpacity
+                            style={{
+                                paddingBottom: 10
+                            }}
+                            onPress={() => {
+                                Keyboard.dismiss()
+                                setUploadFileVisible(true)
+                            }}>
+                            <Text
                                 style={{
-                                    paddingBottom: 10
+                                    color: '#006AFF',
+                                    // lineHeight: 40,
+                                    textAlign: 'right',
+                                    fontSize: 12,
+                                    fontFamily: 'overpass',
+                                    textTransform: 'uppercase',
+                                    paddingLeft: 10
                                 }}
-                                onPress={() => {
-                                    Keyboard.dismiss()
-                                    setUploadFileVisible(true)
-                                }}>
-                                <Text
-                                    style={{
-                                        color: '#006AFF',
-                                        // lineHeight: 40,
-                                        textAlign: 'right',
-                                        fontSize: 12,
-                                        fontFamily: 'overpass',
-                                        textTransform: 'uppercase',
-                                        paddingLeft: 10
-                                    }}
-                                >
-                                    <Ionicons name="add-outline" size={27} />
-                                </Text>
-                            </TouchableOpacity>
+                            >
+                                <Ionicons name="add-outline" size={27} />
+                            </Text>
+                        </TouchableOpacity>
                         // </View>
                     )}
                 />
@@ -876,7 +876,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 style={{
                     width: '100%',
                     backgroundColor: '#fff',
-                    maxWidth: 900,
+                    // maxWidth: 900,
                     borderRadius: 1,
                     // borderLeftWidth: threads.length === 0 ? 0 : 3,
                     // borderLeftColor: props.channelColor,
@@ -885,7 +885,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     // borderBottomColor: '#f2f2f2',
                     // borderTopWidth: 1,
                     // borderBottomWidth: 1,
-                    
+
                 }}
             >
                 {threads.length === 0 ? (
@@ -963,14 +963,14 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     </View>
                                     <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 5 }}>
                                         <Text
-                                            style={{ fontSize: 15, padding: 5, fontFamily: 'inter', marginTop: 5  }}
+                                            style={{ fontSize: 15, padding: 5, fontFamily: 'inter', marginTop: 5 }}
                                             ellipsizeMode="tail"
                                             numberOfLines={2}
                                         >
                                             {title}
                                         </Text>
                                         <Text
-                                            style={{  fontSize: 13, margin: 5, fontWeight: 'bold', lineHeight: 18 }}
+                                            style={{ fontSize: 13, margin: 5, fontWeight: 'bold', lineHeight: 18 }}
                                             ellipsizeMode="tail"
                                         >
                                             {thread.anonymous ? 'Anonymous' : thread.fullName}
@@ -991,35 +991,35 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             {emailTimeDisplay(thread.time)}
                                         </Text>
                                         {thread.isPrivate ? (
-                                                <Text
-                                                    style={{
-                                                        fontSize: 13,
-                                                        padding: 5,
-                                                        color: '#006AFF',
-                                                        textAlign: 'center'
-                                                    }}
-                                                    ellipsizeMode="tail"
-                                                >
-                                                    <Ionicons name="eye-off-outline" size={18} />
-                                                </Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: 13,
+                                                    padding: 5,
+                                                    color: '#006AFF',
+                                                    textAlign: 'center'
+                                                }}
+                                                ellipsizeMode="tail"
+                                            >
+                                                <Ionicons name="eye-off-outline" size={18} />
+                                            </Text>
                                         ) : null}
                                         {thread.unreadThreads > 0 ? (
-                                                <View
-                                                    style={{
-                                                        width: 16,
-                                                        height: 16,
-                                                        borderRadius: 8,
-                                                        marginHorizontal: 5,
-                                                        backgroundColor: '#006AFF',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        marginBottom: 3
-                                                    }}
-                                                >
-                                                    <Text style={{ color: 'white', fontSize: 10 }}>
-                                                        {thread.unreadThreads}
-                                                    </Text>
-                                                </View>
+                                            <View
+                                                style={{
+                                                    width: 16,
+                                                    height: 16,
+                                                    borderRadius: 8,
+                                                    marginHorizontal: 5,
+                                                    backgroundColor: '#006AFF',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    marginBottom: 3
+                                                }}
+                                            >
+                                                <Text style={{ color: 'white', fontSize: 10 }}>
+                                                    {thread.unreadThreads}
+                                                </Text>
+                                            </View>
                                         ) : null}
                                         {/* <View
                                             style={{
@@ -1046,7 +1046,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     const renderImportModalContent = () => {
         if (importType && importUrl) {
             return <View style={{ paddingHorizontal: 10, }}>
-                {importType === 'image' ? 
+                {importType === 'image' ?
                     <Image
                         style={{
                             height: 200,
@@ -1055,11 +1055,11 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         }}
                         source={{ uri: importUrl }}
                     /> : importType === 'mp4' ? (
-                        <View style={{ paddingVertical: 15,}}>
+                        <View style={{ paddingVertical: 15, }}>
                             <Video
                                 ref={audioRef}
                                 style={{
-                                    
+
                                     width: 250,
                                     height: 150,
                                     alignSelf: 'center'
@@ -1078,7 +1078,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         </Text>
                     )}
 
-                    {/* <TextInput
+                {/* <TextInput
                         value={importTitle}
                         placeholder={''}
                         onChangeText={val => setImportTitle(val)}
@@ -1086,65 +1086,65 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         required={true}
                     /> */}
 
-                    <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
-                        <TouchableOpacity
+                <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                    <TouchableOpacity
+                        style={{
+                            marginTop: 20,
+                            backgroundColor: '#006AFF',
+                            borderRadius: 19,
+                            width: 150,
+                            alignSelf: 'center',
+                            marginRight: 20
+                        }}
+                        onPress={() => {
+                            setImportTitle('')
+                            setImportUrl('')
+                            setImportFileName('')
+                            setUploadFileVisible(false)
+                        }}
+                    >
+                        <Text
                             style={{
-                                marginTop: 20,
-                                backgroundColor: '#006AFF',
-                                borderRadius: 19,
-                                width: 150,
-                                alignSelf: 'center',
-                                marginRight: 20
-                            }}
-                            onPress={() => {
-                                setImportTitle('')
-                                setImportUrl('')
-                                setImportFileName('')
-                                setUploadFileVisible(false)
+                                textAlign: 'center',
+                                paddingHorizontal: 25,
+                                fontFamily: 'inter',
+                                height: 35,
+                                lineHeight: 34,
+                                color: '#fff'
                             }}
                         >
-                            <Text
-                                style={{
-                                    textAlign: 'center',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    lineHeight: 34,
-                                    color: '#fff'
-                                }}
-                            >
-                                Cancel
-                            </Text>
-                        </TouchableOpacity>
+                            Cancel
+                        </Text>
+                    </TouchableOpacity>
 
-                        <TouchableOpacity
+                    <TouchableOpacity
+                        style={{
+                            marginTop: 20,
+                            backgroundColor: '#006AFF',
+                            borderRadius: 19,
+                            width: 150,
+                            alignSelf: 'center'
+                        }}
+                        onPress={() => {
+                            sendImport()
+                        }}
+                    >
+                        <Text
                             style={{
-                                marginTop: 20,
-                                backgroundColor: '#006AFF',
-                                borderRadius: 19,
-                                width: 150,
-                                alignSelf: 'center'
-                            }}
-                            onPress={() => {
-                                sendImport()
+                                textAlign: 'center',
+                                paddingHorizontal: 25,
+                                fontFamily: 'inter',
+                                height: 35,
+                                lineHeight: 34,
+                                color: '#fff'
                             }}
                         >
-                            <Text
-                                style={{
-                                    textAlign: 'center',
-                                    paddingHorizontal: 25,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    lineHeight: 34,
-                                    color: '#fff'
-                                }}
-                            >
-                                Send
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                            Send
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        } 
+        }
 
         return <View style={{ paddingHorizontal: '20%', paddingTop: 30 }}>
             <TouchableOpacity
@@ -1290,7 +1290,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <View
                 style={{
                     width: '100%',
-                    maxWidth: 900,
+                    // maxWidth: 900,
                     backgroundColor: '#fff',
                     borderRadius: 1,
                     flex: 1,
@@ -1356,7 +1356,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 paddingLeft: 10
                                             }}
                                         >
-                                            <Ionicons name="arrow-back-outline" size={31} color={'#1F1F1F'} />
+                                            <Ionicons name="arrow-back-outline" size={35} color={'#1F1F1F'} />
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1375,19 +1375,19 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     onSend={createNewThread}
                 />
             )}
-             {uploadFileVisible && (
+            {uploadFileVisible && (
                 <BottomSheet
                     snapPoints={[0, 380]}
                     close={() => {
                         setUploadFileVisible(false);
                     }}
                     isOpen={uploadFileVisible}
-                    title={importType ? 'Send ' + (importType !== 'image' && importType !== 'video' ? 'File' : importType) : 'Import' }
+                    title={importType ? 'Send ' + (importType !== 'image' && importType !== 'video' ? 'File' : importType) : 'Import'}
                     renderContent={() => renderImportModalContent()}
                     header={false}
                 />
             )}
-             {uploadFileVisible ? (
+            {uploadFileVisible ? (
                 <Reanimated.View
                     style={{
                         alignItems: 'center',
@@ -1405,7 +1405,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         width: '100%',
                         height: '100%',
                     }}
-                    onPress={() => setUploadFileVisible(false)}
+                        onPress={() => setUploadFileVisible(false)}
                     >
                     </TouchableOpacity>
                 </Reanimated.View>

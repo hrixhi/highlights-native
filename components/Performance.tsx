@@ -195,7 +195,7 @@ const Performance: React.FunctionComponent<{ [label: string]: any }> = (props: a
         <View
             style={{
                 width: '100%',
-                maxWidth: 900,
+                // maxWidth: 900,
                 alignSelf: 'center',
                 backgroundColor: '#fff',
                 paddingBottom: 25,

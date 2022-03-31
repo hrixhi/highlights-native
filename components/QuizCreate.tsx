@@ -1,7 +1,7 @@
 // REACT
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Dimensions, TextInput as DefaultTextInput, Keyboard, StyleSheet } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import lodash from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,7 +17,9 @@ const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
 import { Video } from 'expo-av';
 import RenderHtml from 'react-native-render-html';
+
 // import Board, { Repository } from "react-native-dnd-board";
+
 
 // HELPER
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -149,7 +151,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 useNativeControls
                 resizeMode="contain"
                 isLooping
-                // onPlaybackStatusUpdate={status => setStatus(() => status)}
+            // onPlaybackStatusUpdate={status => setStatus(() => status)}
             />
         );
     };
@@ -362,7 +364,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             allowsInlineMediaPlayback={true}
                             allowsLinkPreview={true}
                             allowsBackForwardNavigationGestures={true}
-                            // onCursorPosition={handleCursorPosition}
+                        // onCursorPosition={handleCursorPosition}
                         />
                     </ScrollView>
                 </View>
@@ -566,56 +568,55 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
         return true;
     };
 
-    const onCardPress = card => {
-        console.log('Card ID: ', card.id);
-    };
-    
-    const onDragEnd = (fromColumnId, toColumnId, row) => {
-        //
-        console.log("From col id", fromColumnId)
-        console.log("To col id", toColumnId)
-        console.log("row", row)
 
-        
+    // const onCardPress = card => {
+    //     console.log('Card ID: ', card.id);
+    // };
 
-    };
+    // const onDragEnd = (fromColumnId, toColumnId, row) => {
+    //     //
+    //     console.log("From col id", fromColumnId)
+    //     console.log("To col id", toColumnId)
+    //     console.log("row", row)
+    //     // OVER HERE !!!
+    // };
 
-    const renderCard = ({ item }) => {
-        return (
-          <View style={styles.card}>
-            <Text>{item.name}</Text>
-            <TouchableOpacity
-              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-            //   onPress={() => deleteCard(item.id)}
-            >
-              <Text>✕</Text>
-            </TouchableOpacity>
-          </View>
-        );
-    };
+    // const renderCard = ({ item }) => {
+    //     return (
+    //         <View style={styles.card}>
+    //             <Text>{item.name}</Text>
+    //             <TouchableOpacity
+    //                 hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+    //             //   onPress={() => deleteCard(item.id)}
+    //             >
+    //                 <Text>✕</Text>
+    //             </TouchableOpacity>
+    //         </View>
+    //     );
+    // };
 
-    const renderColumn = ({ item, columnComponent, layoutProps, index }) => {
-        return (
-          <View style={styles.column} {...layoutProps}>
-            <View style={styles.columnHeader}>
-              <Text style={styles.columnName}>{item.name}</Text>
-              <TouchableOpacity
-                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                // onPress={() => deleteColumn(item.id)}
-                >
-                <Text>✕</Text>
-              </TouchableOpacity>
-            </View>
-            {columnComponent}
-            <TouchableOpacity
-              style={styles.addCard}
-            //   onPress={() => addCard(item.id)}
-              >
-              <Text>+ Add Card</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      };
+    // const renderColumn = ({ item, columnComponent, layoutProps }) => {
+    //     return (
+    //         <View style={styles.column} {...layoutProps}>
+    //             <View style={styles.columnHeader}>
+    //                 <Text style={styles.columnName}>{item.name}</Text>
+    //                 <TouchableOpacity
+    //                     hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+    //                 // onPress={() => deleteColumn(item.id)}
+    //                 >
+    //                     <Text>✕</Text>
+    //                 </TouchableOpacity>
+    //             </View>
+    //             {columnComponent}
+    //             <TouchableOpacity
+    //                 style={styles.addCard}
+    //             //   onPress={() => addCard(item.id)}
+    //             >
+    //                 <Text>+ Add Card</Text>
+    //             </TouchableOpacity>
+    //         </View>
+    //     );
+    // };
 
     // Create refs for current question options
     // let optionRefs: any[] = [];
@@ -675,14 +676,14 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     problem.dragDropData.map((groups: any[], groupIndex: number) => {
 
                         const rows: any[] = [];
-    
+
                         groups.map((label: any) => {
                             rows.push({
                                 id: label.id,
                                 name: label.content
                             })
                         })
-    
+
                         dragdropData.push({
                             id: groupIndex,
                             name: problem.dragDropHeaders[groupIndex],
@@ -691,7 +692,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     })
                 }
 
-                
+
                 return (
                     <View
                         style={{
@@ -713,7 +714,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 <Text
                                     style={{
                                         color: '#000000',
-                                        fontSize: 22,
+                                       fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
                                         paddingBottom: 25,
                                         width: 40,
                                         paddingTop: 15,
@@ -844,7 +845,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     option: 'False',
                                                                     isCorrect: false
                                                                 });
-                                                            } 
+                                                            }
 
                                                             // hotspots
                                                             updatedProblems[index].hotspots = []
@@ -856,52 +857,52 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 updatedProblems[index].dragDropData = [
                                                                     [
                                                                         {
-                                                                            id: '0',
+                                                                            id: '1',
                                                                             content: 'Item 1'
                                                                         },
                                                                         {
-                                                                            id: '1',
+                                                                            id: '2',
                                                                             content: 'Item 2'
                                                                         },
                                                                     ],
                                                                     [
-                                                                        { 
-                                                                            id: '2',
-                                                                            content: 'Item 3' 
-                                                                        },
-                                                                        { 
+                                                                        {
                                                                             id: '3',
-                                                                            content: 'Item 4' 
+                                                                            content: 'Item 3'
+                                                                        },
+                                                                        {
+                                                                            id: '4',
+                                                                            content: 'Item 4'
                                                                         },
                                                                     ]
                                                                 ]
 
                                                                 updatedProblems[index].dragDropHeaders = ['Group 1', 'Group 2']
-                                                      
+
                                                                 const dragdropData: any[] = [];
 
                                                                 updatedProblems[index].dragDropData.map((groups: any[], groupIndex: number) => {
-                                                
+
                                                                     const rows: any[] = [];
-                                                
+
                                                                     groups.map((label: any) => {
                                                                         rows.push({
                                                                             id: label.id,
-                                                                            name: label.content
+                                                                            name: label.content,
+                                                                            description: label.content
                                                                         })
                                                                     })
-                                                
+
                                                                     dragdropData.push({
-                                                                        id: (groupIndex + 1).toString(),
+                                                                        id: (groupIndex + 1),
                                                                         name: updatedProblems[index].dragDropHeaders[groupIndex],
                                                                         rows
                                                                     })
                                                                 })
 
-                                                                console.log("Drag drop data", dragdropData)
-
 
                                                                 // setRepository(new Repository(dragdropData))
+
 
                                                             } else {
                                                                 // clear data if not drag and drop
@@ -1072,8 +1073,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     editQuestionNumber === index + 1
                                                         ? problem.points
                                                         : (problem.points === '' ? 'Enter' : problem.points) +
-                                                          ' ' +
-                                                          (Number(problem.points) === 1 ? 'Point' : 'Points')
+                                                        ' ' +
+                                                        (Number(problem.points) === 1 ? 'Point' : 'Points')
                                                 }
                                                 editable={editQuestionNumber === index + 1}
                                                 style={{
@@ -1086,7 +1087,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     textAlign: 'center',
                                                     marginBottom:
                                                         Dimensions.get('window').width < 768 ||
-                                                        editQuestionNumber !== index + 1
+                                                            editQuestionNumber !== index + 1
                                                             ? 0
                                                             : 30,
                                                     fontWeight: editQuestionNumber === index + 1 ? 'normal' : '700',
@@ -1111,7 +1112,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     alignItems: 'flex-end',
                                                     marginBottom:
                                                         Dimensions.get('window').width < 768 ||
-                                                        editQuestionNumber !== index + 1
+                                                            editQuestionNumber !== index + 1
                                                             ? 0
                                                             : 30
                                                 }}
@@ -1159,7 +1160,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 let initialAudioVideo =
                                                                     problems[index].question[0] === '{' &&
                                                                     problems[index].question[
-                                                                        problems[index].question.length - 1
+                                                                    problems[index].question.length - 1
                                                                     ] === '}';
 
                                                                 let initialContent = '';
@@ -1211,22 +1212,33 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
                         {/* {
                             problem.questionType === 'dragdrop' && editQuestionNumber === (index + 1) ? (
+                                // <SafeAreaView style={{ maxHeight: 500, zIndex: 10000, padding: 0 }}>
                                 <Board
-                                    style={styles.board}
-                                    repository={repository}
-                                    renderRow={renderCard}
-                                    renderColumnWrapper={renderColumn}
-                                    onRowPress={onCardPress}
-                                    onDragEnd={onDragEnd}
-                                    columnWidth={200}
-                                    // accessoryRight={
-                                    // <View style={[styles.column, styles.addColumn]}>
-                                    //     <TouchableOpacity onPress={addColumn}>
-                                    //     <Text>+ Add Column</Text>
-                                    //     </TouchableOpacity>
-                                    // </View>
-                                    // }
+                                    boardRepository={repository}
+                                    open={() => { }}
+                                    onDragEnd={() => { }}
                                 />
+                                // </SafeAreaView>
+                                // <SafeAreaView>
+                                //     <GestureHandlerRootView>
+                                // <Board
+                                //     style={styles.board}
+                                //     repository={repository}
+                                //     renderRow={renderCard}
+                                //     renderColumnWrapper={renderColumn}
+                                //     onRowPress={onCardPress}
+                                //     onDragEnd={onDragEnd}
+                                //     columnWidth={200}
+                                // accessoryRight={
+                                // <View style={[styles.column, styles.addColumn]}>
+                                //     <TouchableOpacity onPress={addColumn}>
+                                //     <Text>+ Add Column</Text>
+                                //     </TouchableOpacity>
+                                // </View>
+                                // }
+                                // />
+                                /* </GestureHandlerRootView>
+                                </SafeAreaView> */
                             ) : null
                         } */}
 
@@ -1427,9 +1439,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 }}
                                                                 initialContentHTML={
                                                                     editQuestion &&
-                                                                    editQuestion.options &&
-                                                                    editQuestion.options[i] &&
-                                                                    editQuestion.options[i].option !== ''
+                                                                        editQuestion.options &&
+                                                                        editQuestion.options[i] &&
+                                                                        editQuestion.options[i].option !== ''
                                                                         ? editQuestion.options[i].option
                                                                         : ''
                                                                 }
@@ -1467,7 +1479,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 allowsInlineMediaPlayback={true}
                                                                 allowsLinkPreview={true}
                                                                 allowsBackForwardNavigationGestures={true}
-                                                                // onCursorPosition={handleCursorPosition}
+                                                            // onCursorPosition={handleCursorPosition}
                                                             />
                                                         </ScrollView>
                                                         <View
@@ -1668,22 +1680,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 4,
-      },
-      columnHeader: {
+    },
+    columnHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 16,
-      },
-      columnName: {
+    },
+    columnName: {
         fontWeight: 'bold',
-      },
-      addColumn: {
+    },
+    addColumn: {
         marginRight: 12,
         padding: 12,
         minWidth: 200,
-      },
-      card: {
+    },
+    card: {
         borderRadius: 4,
         borderWidth: 1,
         borderColor: '#F6F7FB',
@@ -1694,8 +1706,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-      },
-      addCard: {
+    },
+    addCard: {
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgb(233, 233, 233)',
@@ -1703,5 +1715,5 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderWidth: 1,
         borderColor: '#F5F6F8',
-      },
+    },
 })
