@@ -487,6 +487,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                             const { title } = htmlStringParser(event.title);
 
+                            const alertTitle = event.channelName && event.channelName !== '' ? event.channelName + ' - ' + title : title
+
+
                             const dayOffset = 24 * 60 * 60 * 1000; 
                             var twentyFourOffset = new Date();
                             twentyFourOffset.setTime(twentyFourOffset.getTime() - dayOffset);
@@ -502,8 +505,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             if (trigger1 > new Date()) {
                                 scheduleNotifications.push({
                                     content: {
-                                        title,
-                                        subtitle: event.channelName + ' - ' + alertTimeDisplay(event.start, true),
+                                        title: alertTitle,
+                                        subtitle: alertTimeDisplay(event.start, true),
                                         sound: true
                                     },
                                     trigger: trigger1
@@ -513,8 +516,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             if (trigger2 > new Date()) {
                                 scheduleNotifications.push({
                                     content: {
-                                        title,
-                                        subtitle: event.channelName + ' - ' + alertTimeDisplay(event.start, false),
+                                        title: alertTitle,
+                                        subtitle: alertTimeDisplay(event.start, false),
                                         sound: true
                                     },
                                     trigger: trigger2
@@ -524,8 +527,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             if (trigger3 > new Date()) {
                                 scheduleNotifications.push({
                                     content: {
-                                        title,
-                                        subtitle: event.channelName + ' - ' + alertTimeDisplay(event.start, false),
+                                        title: alertTitle,
+                                        subtitle: alertTimeDisplay(event.start, false),
                                         sound: true
                                     },
                                     trigger: trigger3
@@ -565,7 +568,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             trigger1.setTime(trigger1.getTime() - fifteenMinOffset)
 
                     
-                            const title = event.title;
+                            const title = event.channelName && event.channelName !== '' ? event.channelName + ' - ' + event.title : event.title
                             
                             const subtitle = event.channelName && event.channelName !== '' ? (event.channelName + ' - ' + alertTimeDisplay(event.start, false)) : alertTimeDisplay(event.start, false)
 

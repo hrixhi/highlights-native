@@ -1192,6 +1192,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </View>
                             </View>
                         </View>
+                        
                         {problem.questionType === 'freeResponse' ? (
                             <Text
                                 style={{
@@ -1209,38 +1210,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 Free Response Answer
                             </Text>
                         ) : null}
-
-                        {/* {
-                            problem.questionType === 'dragdrop' && editQuestionNumber === (index + 1) ? (
-                                // <SafeAreaView style={{ maxHeight: 500, zIndex: 10000, padding: 0 }}>
-                                <Board
-                                    boardRepository={repository}
-                                    open={() => { }}
-                                    onDragEnd={() => { }}
-                                />
-                                // </SafeAreaView>
-                                // <SafeAreaView>
-                                //     <GestureHandlerRootView>
-                                // <Board
-                                //     style={styles.board}
-                                //     repository={repository}
-                                //     renderRow={renderCard}
-                                //     renderColumnWrapper={renderColumn}
-                                //     onRowPress={onCardPress}
-                                //     onDragEnd={onDragEnd}
-                                //     columnWidth={200}
-                                // accessoryRight={
-                                // <View style={[styles.column, styles.addColumn]}>
-                                //     <TouchableOpacity onPress={addColumn}>
-                                //     <Text>+ Add Column</Text>
-                                //     </TouchableOpacity>
-                                // </View>
-                                // }
-                                // />
-                                /* </GestureHandlerRootView>
-                                </SafeAreaView> */
-                            ) : null
-                        } */}
 
                         {problem.options.map((option: any, i: any) => {
 
