@@ -3362,7 +3362,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const renderUntimedQuiz = () => {
         return <ScrollView
             contentContainerStyle={{
-                paddingBottom: 150,
+                paddingBottom: 100,
                 paddingHorizontal: 10
             }}
             showsVerticalScrollIndicator={false}
@@ -3670,7 +3670,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             return (
                 <ScrollView
                     contentContainerStyle={{
-                        paddingBottom: 150,
+                        paddingBottom: 100,
                         paddingHorizontal: 10
                     }}
                     showsVerticalScrollIndicator={false}
@@ -6044,7 +6044,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         return isQuiz || imported || !props.showOriginal ? (
             <ScrollView
                 contentContainerStyle={{
-                    paddingBottom: 150,
+                    paddingBottom: 100,
                     paddingHorizontal: 10
                 }}
                 showsVerticalScrollIndicator={false}

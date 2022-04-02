@@ -9,7 +9,8 @@ import {
     Switch,
     Keyboard,
     ScrollView,
-    Image
+    Image,
+    useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import lodash from 'lodash';
@@ -26,6 +27,7 @@ import { Video } from 'expo-av';
 import RenderHtml, {
     useIMGElementProps,
     CustomBlockRenderer,
+    domNodeToHTMLString
   } from 'react-native-render-html';
 import { handleFile } from '../helpers/FileUpload';
 import _ from 'lodash';
@@ -75,6 +77,10 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [editorFocus, setEditorFocus] = useState(false);
     const [optionEditorRefs, setOptionEditorRefs] = useState<boolean[]>([]);
     const [solutionEditorRefs, setSolutionEditorRefs] = useState<boolean[]>([]);
+    const [multipartEditorRefs, setMultipartEditorRefs] = useState<boolean[]>([]);
+    // const [testValue, setTestValue] = useState('')
+    const { width: contentWidth } = useWindowDimensions();
+
 
     const OptionImageRenderer: CustomBlockRenderer = props => {
         const imgProps = useIMGElementProps(props);
@@ -144,11 +150,102 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     solutionInit.push({
                         selected: arr
                     });
-                } else {
+                } else if (problem.questionType === 'dragdrop') {
+                    const arr: any = [];
+                    problem.dragDropHeaders.map((i: any) => {
+                        arr.push([]);
+                    });
+                    solutionInit.push({
+                        dragDropChoices: arr
+                    })
+                } else if (problem.questionType === 'hotspot') {
+
+                    const hotspotOptions = problem.hotspotOptions
+
+                    const initSelection = hotspotOptions.map(() => false);
+
+                    solutionInit.push({
+                        hotspotSelection: initSelection
+                    })
+
+                } else if (problem.questionType === 'highlightText') {
+                    const highlightTextChoices = problem.highlightTextChoices
+
+                    const initSelection = highlightTextChoices.map(() => false);
+
+                    solutionInit.push({
+                        highlightTextSelection: initSelection
+                    })
+                } else if (problem.questionType === 'inlineChoice') {
+                    const inlineChoiceOptions = problem.inlineChoiceOptions;
+                    
+                    const initSelection = inlineChoiceOptions.map(() => '');
+
+                    solutionInit.push({
+                        inlineChoiceSelection: initSelection
+                    })
+
+                } else if (problem.questionType === 'textEntry') {
+
+                    const textEntryOptions = problem.textEntryOptions
+
+                    const initSelection = textEntryOptions.map(() => '');
+
+                    solutionInit.push({
+                        textEntrySelection: initSelection
+                    })
+
+
+                } else if (problem.questionType === 'multipart') {
+
+                    const multipartOptions = problem.multipartOptions;
+
+                    const selections: any[] = []
+
+                    // Loop over all parts
+                    multipartOptions.map((part: any) => {
+                        const arr: any = [];
+
+                        // For each part loop over all the options
+                        part.map((i: any) => {
+                            arr.push(false);
+                        });
+
+                        selections.push(arr);
+
+                    })
+
+                    solutionInit.push({
+                        multipartSelection: selections
+                    })
+
+                } else if (problem.questionType === 'equationEditor') {
+                    solutionInit.push({
+                        equationResponse: ''
+                    })
+
+                } else if (problem.questionType === 'matchTableGrid') {
+
+                    const matchTableChoices = problem.matchTableChoices;
+                    
+                    const initSelection = matchTableChoices.map((row: any) => {
+
+                        // Array
+                        let selectionRow = row.map(() => false);
+
+                        return selectionRow;
+                    })
+
+                    solutionInit.push({
+                        matchTableSelection: initSelection
+                    })
+
+                } else {    
                     solutionInit.push({
                         response: ''
                     });
                 }
+
             });
             setSolutions(solutionInit);
             setInitialSolutions(solutionInit)
@@ -601,6 +698,10 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const renderQuestionEditor = (index: number) => {
         if (editQuestionNumber === 0) return null;
 
+        if (problems[index].questionType === 'textEntry' || problems[index].questionType === 'inlineChoice' || problems[index].questionType === 'highlightText' ) {
+            return null;
+        }
+
         let audioVideoQuestion =
             problems[index].question[0] === '{' &&
             problems[index].question[problems[index].question.length - 1] === '}';
@@ -879,6 +980,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         props.setSolutions(updatedSolution);
     };
 
+
+
     if (problems.length !== solutions.length && !props.isOwner) {
         return <View />;
     }
@@ -1109,6 +1212,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </View>
                 ) : instructions !== '' ? (
                     <RenderHtml
+                        contentWidth={contentWidth}
                         source={{
                             html: instructions
                         }}
@@ -1157,6 +1261,10 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 // const solutionRef: any = props.setRef(index.toString());
 
                 const solutionRef: any = {}
+
+                // Refs for Multipart
+                const partARef: any = {}
+                const partBRef: any = {}
 
                 return (
                     <View
@@ -1276,6 +1384,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     {renderAudioVideoPlayer(url, type)}
                                                 </View>
                                                 <RenderHtml
+                                                    contentWidth={contentWidth}
                                                     source={{
                                                         html: content
                                                     }}
@@ -1285,8 +1394,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 />
                                             </View>
                                         ) : (
-                                            <View style={{ paddingTop: 15 }}>
+                                            <View style={{ paddingTop: 15, paddingBottom: 15 }}>
                                                 <RenderHtml
+                                                    contentWidth={contentWidth}
                                                     source={{
                                                         html: problem.question
                                                     }}
@@ -1332,8 +1442,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             fontSize: 11,
                                                             color: '#a2a2ac',
                                                             paddingTop: 15,
-                                                            paddingLeft: 5,
-                                                            marginRight: 15
+                                                            paddingLeft: 10,
+                                                            marginRight: 5
                                                         }}
                                                     >
                                                         Multiple correct answers
@@ -1724,6 +1834,940 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     </View>
                                 );
                             })}
+
+                        
+                    {/* Hotspots */}
+                    {
+                            problem.questionType === 'hotspot' ?
+                            <View style={{
+                                width: '100%',overflow: 'hidden', display: 'flex', flexDirection: 'row', justifyContent: 'center',
+                            }}>
+                                <View style={{
+                                    width: Dimensions.get('window').width < 768 ? 300 : 400, height: Dimensions.get('window').width < 768 ? 300 : 400,
+                                }}>
+                                    <Image 
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            position: 'relative',
+                                        }}
+                                        resizeMode="stretch"
+                                        source={{
+                                            uri: problem.imgUrl
+                                        }}
+                                    />
+                                    {
+                                        // Render all the markers 
+                                        problem.hotspotOptions.map((option: any, ind: number) => {
+
+                                  
+
+                                            const spot = problem.hotspots[ind];
+
+                                            const selection = props.isOwner ?  problem.hotspotOptions[ind].isCorrect : solutions[problemIndex].hotspotSelection[ind] 
+
+                                            console.log("Is hotspot selected", selection)
+
+                                            return (<TouchableOpacity disabled={props.isOwner} 
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: `${spot.y}%`,
+                                                    left: `${spot.x}%`,
+                                                    backgroundColor: selection ? '#006AFF' : '#fff',
+                                                    height: 25, 
+                                                    width: 25, 
+                                                    borderColor: '#006AFF', 
+                                                    borderWidth: 1,
+                                                    borderRadius: 12.5
+                                                }}
+                                                onPress={() => {
+                                                    if (!props.isOwner) {
+                                                        const updatedSolution = [...solutions];
+                                                        updatedSolution[problemIndex].hotspotSelection[ind] = !updatedSolution[problemIndex].hotspotSelection[ind]
+                                                        setSolutions(updatedSolution);
+                                                        props.setSolutions(updatedSolution);
+                                                        return;
+                                                    }
+                                                }}
+                                            > 
+                                                <Text style={{
+                                                    color: selection ? '#fff' : '#006AFF', 
+                                                    lineHeight: 25, 
+                                                    textAlign: 'center',
+                                                }}>
+                                                    {ind + 1}
+                                                </Text>
+                                            </TouchableOpacity> )
+                                        })
+
+                                    }
+                                </View>
+                            </View> : null
+                        }
+
+
+                        {/*  Hotspot Labels */}
+                        {
+                            problem.questionType === 'hotspot' ? ( 
+                                <View style={{
+                                    paddingTop: 50
+                                }}
+                                
+                                >
+                                    <View style={{
+                                        flexDirection: 'column',
+                                    }}>
+                                        {
+                                            problem.hotspotOptions.map((option: any, ind: number) => {
+
+                                                let isSelected = props.isOwner ? option.isCorrect : solutions[problemIndex].hotspotSelection[ind]
+
+                                                console.log("Is label selected", isSelected)
+
+                                                return (<View style={{ 
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    marginRight: 20,
+                                                    marginBottom: 20
+                                                }}>
+
+                                                    <BouncyCheckbox
+                                                        style={{}}
+                                                        // fillColor="#006AFF"
+                                                        disableBuiltInState={true}
+                                                        isChecked={isSelected}
+                                                        onPress={e => { 
+                                                            if (!props.isOwner) {
+                                                                const updatedSolution = [...solutions];
+                                                                updatedSolution[problemIndex].hotspotSelection[ind] = !updatedSolution[problemIndex].hotspotSelection[ind]
+                                                                setSolutions(updatedSolution);
+                                                                props.setSolutions(updatedSolution);
+                                                                return;
+                                                            }
+
+                                                        }}
+                                                        disabled={props.isOwner}
+                                                    />
+
+                                                    {<View style={{
+                                                        // borderWidth: 2,
+                                                        // borderColor: option.isCorrect ? '#ffc484' : '#fff',
+                                                        borderRadius: 8,
+                                                        padding: 7,
+                                                        backgroundColor: '#fff',
+                                                    }}>
+                                                        <Text style={{
+                                                            fontSize: 15,
+                                                            fontFamily: 'Overpass'
+                                                        }}>
+                                                            {ind + 1}. {option.option}
+                                                        </Text>
+                                                        
+                                                    </View>}
+
+                                                </View>)
+                                            })
+                                        }
+                                    </View>
+                                </View>
+                            ) : null
+                        }
+
+                        {   
+                            problem.questionType === 'highlightText' ? <View style={{ paddingTop: editQuestionNumber === (index + 1) ? 20 : 0, paddingBottom: 30 }}>
+                                {
+                                    <RenderHtml
+                                        contentWidth={contentWidth}
+                                        source={{
+                                            html: problems[index].highlightTextHtml
+                                        }}
+                                        defaultTextProps={{
+                                            selectable: false
+                                        }}
+                                        // renderers={renderers}
+                                        renderers={{
+                                            span: ({
+                                                TDefaultRenderer,
+                                                ...rendererProps
+                                              }) => {
+
+                                                const highlightTextChoices = problems[index].highlightTextChoices 
+
+                                                let highlightTextSelection: any;
+
+                                                if (!props.isOwner) {
+                                                    highlightTextSelection = solutions[index].highlightTextSelection
+                                                }
+                                              
+                                                const node = rendererProps.tnode.domNode;
+
+                                                // console.log("T Node domNode", node)
+
+                                                if (!node.attribs.id) {
+                                                    // Default return;
+                                                    return <TDefaultRenderer {...rendererProps} />
+                                                }
+
+                                                const optionIndex = Number(node.attribs.id)
+
+                                                const isCorrect = props.isOwner ? highlightTextChoices[optionIndex] : highlightTextSelection[optionIndex]
+
+                                                return <TDefaultRenderer {...rendererProps} style={{
+                                                        fontSize: 16,
+                                                        // lineHeight: 50,
+                                                        paddingHorizontal: 8,
+                                                        paddingTop: 5,
+                                                        borderWidth: 2,
+                                                        borderColor: isCorrect ? "#006Aff" : "#e6f0ff",
+                                                        backgroundColor: isCorrect ? "#006Aff" : "#e6f0ff",
+                                                        borderRadius: 10,
+                                                        marginHorizontal: 2,
+                                                        padding: 10,
+                                                        paddingBottom: 5,
+                                                        color: isCorrect ? "#fff" : "#000",
+                                                    }}
+                                                    onPress={() => {
+                                                        if (!props.isOwner) {
+                                                            const updatedSolution = [...solutions];
+                                                            const updatedHighlightTextSelection = [...updatedSolution[problemIndex].highlightTextSelection];
+                                                            updatedHighlightTextSelection[optionIndex] = !highlightTextSelection[optionIndex];
+                                                            updatedSolution[index].highlightTextSelection = updatedHighlightTextSelection
+                                                            setSolutions(updatedSolution);
+                                                            props.setSolutions(updatedSolution);
+                                                            return;
+                                                        }
+                                                    }}
+                                                    />
+                                                  
+                                            }
+                                        }}
+                                        tagsStyles={{
+                                            'p': {
+                                                lineHeight: 50,
+                                                fontSize: 16
+                                            }
+                                        }}
+                                    />
+                                }
+                            </View> : null
+                        }
+
+                        {/* Inline Choice */}
+                        {   
+                            problem.questionType === 'inlineChoice' ? <View style={{ paddingTop: editQuestionNumber === (index + 1) ? 20 : 0, paddingBottom: 30 }}>
+                                {
+                                    <RenderHtml
+                                        contentWidth={contentWidth}
+                                        source={{
+                                            html: problems[index].inlineChoiceHtml
+                                        }}
+                                        defaultTextProps={{
+                                            selectable: false
+                                        }}
+                                        renderers={{
+                                            span: ({
+                                                TDefaultRenderer,
+                                                ...rendererProps
+                                              }) => {
+
+                                                const inlineChoiceOptions = problems[index].inlineChoiceOptions
+
+                                                let inlineChoiceSelection;
+
+                                                if (!props.isOwner) {
+                                                    inlineChoiceSelection = solutions[problemIndex].inlineChoiceSelection
+                                                }
+                                              
+                                                const node = rendererProps.tnode.domNode;
+
+                                                if (!node.attribs.id) {
+                                                    // Default return;
+                                                    return <TDefaultRenderer {...rendererProps} />
+                                                }
+
+                                                const options = inlineChoiceOptions[Number(node.attribs.id)];
+                                                
+                                                const optionIndex = Number(node.attribs.id)
+
+                                                const correctAnswer = options.filter((option: any) => {
+                                                    return option.isCorrect;
+                                                })[0]
+
+                                                // return ()
+                                                return <Menu
+                                                    onSelect={(cat: any) => {
+                                                        if (!props.isOwner) {
+                                                            const updatedSolution = [...solutions];
+                                                            updatedSolution[problemIndex].inlineChoiceSelection[optionIndex] = cat;
+                                                            setSolutions(updatedSolution);
+                                                            props.setSolutions(updatedSolution);
+                                                            return;
+                                                        }
+                                                        return;
+                                                    }}
+                                                >
+                                                    <MenuTrigger>
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 14,
+                                                                color: '#000000',
+                                                                width: Dimensions.get('window').width < 768 ? 120 : 200,
+                                                                textAlign: 'center',
+                                                                paddingTop: 7,
+                                                                paddingBottom: 10,
+                                                                paddingHorizontal: 10,
+                                                                borderWidth: 1,
+                                                                borderColor: '#CCC',
+                                                                marginHorizontal: 5
+                                                            }}
+                                                            ellipsizeMode="tail"
+                                                        >
+                                                            {props.isOwner ? correctAnswer.option : (inlineChoiceSelection[optionIndex] ? inlineChoiceSelection[optionIndex] : 'Select')}
+                                                            <Ionicons name="chevron-down-outline" style={{
+                                                                paddingLeft: 3
+                                                            }} size={15} />
+                                                        </Text>
+                                                    </MenuTrigger>
+                                                    <MenuOptions
+                                                        customStyles={{
+                                                            optionsContainer: {
+                                                                padding: 10,
+                                                                borderRadius: 15,
+                                                                shadowOpacity: 0,
+                                                                borderWidth: 1,
+                                                                borderColor: '#f4f4f6',
+                                                                overflow: 'scroll',
+                                                                maxHeight: '100%',
+                                                                width: Dimensions.get('window').width < 768 ? 300 : 400
+                                                            }
+                                                        }}
+                                                    >
+                                                        {options.map((option: any, i: number) => {
+                                                            return (
+                                                                <MenuOption value={option.option}>
+                                                                    <Text style={{
+                                                                        fontSize: 15
+                                                                    }}>
+                                                                        {i + 1}. {option.option}
+                                                                    </Text>
+                                                                </MenuOption>
+                                                            );
+                                                        })}
+                                                    </MenuOptions>
+                                                </Menu>
+
+                                               
+                                            }
+                                        }}
+                                        tagsStyles={{
+                                            'p': {
+                                                lineHeight: 50,
+                                                fontSize: 16
+                                            }
+                                        }}
+                                    />
+                                }
+                            </View> : null
+                        }
+
+                        {/* Text Entry */}
+                        {   
+                            problem.questionType === 'textEntry' ? <View style={{ paddingTop: editQuestionNumber === (index + 1) ? 20 : 0, paddingBottom: 30 }}>
+                                {
+                                    <RenderHtml
+                                        contentWidth={contentWidth}
+                                        source={{
+                                            html: problems[index].textEntryHtml
+                                        }}
+                                        defaultTextProps={{
+                                            selectable: false
+                                        }}
+                                        renderers={{
+                                            span: ({
+                                                TDefaultRenderer,
+                                                ...rendererProps
+                                              }) => {
+
+                                                const textEntryOptions = problems[index].textEntryOptions
+
+                                                console.log("Re-render text entry")
+
+                                                let responses;
+
+                                                if (!props.isOwner) {
+                                                    responses = solutions[index].textEntrySelection
+                                                }
+
+                                                console.log("Text entry span", );
+
+                                                const node = rendererProps.tnode.domNode;
+
+                                                console.log("Text entry span ID", node.attribs.id);
+
+                                                if (!node.attribs.id) {
+                                                    // Default return;
+                                                    return <TDefaultRenderer {...rendererProps} />
+                                                }
+
+                                                const optionIndex = Number(node.attribs.id)
+
+                                                const type = textEntryOptions[optionIndex].type;
+                                                const value = props.isOwner ? textEntryOptions[optionIndex].option : responses[optionIndex];
+
+                                                console.log("Text entry value", value);
+
+                                                return <View><TextInput
+                                                    keyboardType={type === 'number' ? 'numeric' : 'default'}
+                                                    style={{
+                                                        fontSize: 14,
+                                                        color: '#000000',
+                                                        width: Dimensions.get('window').width < 768 ? 120 : 200,
+                                                        textAlign: 'center',
+                                                        paddingTop: 7,
+                                                        paddingBottom: 10,
+                                                        paddingHorizontal: 10,
+                                                        borderWidth: 1,
+                                                        borderColor: '#CCC',
+                                                        marginHorizontal: 5
+                                                    }}
+                                                    value={solutions[problemIndex].textEntrySelection[optionIndex]}
+                                                    editable={!props.isOwner}
+                                                    onChangeText={(text: string) => {
+                                                        if (!props.isOwner) {
+                                                            const updatedSolution = [...solutions];
+                                                            updatedSolution[problemIndex].textEntrySelection[optionIndex] = text;
+                                                            setSolutions(updatedSolution);
+                                                            props.setSolutions(updatedSolution);
+                                                        }
+                                                        // setTestValue(text)
+                                                    }}
+                                                /></View>
+                                            }
+                                        }}
+                                        tagsStyles={{
+                                            'p': {
+                                                lineHeight: 50,
+                                                fontSize: 16
+                                            }
+                                        }}
+                                    />
+                                }
+                            </View> : null
+                        }
+
+                        {
+                            problem.questionType === 'multipart' && props.isOwner && editQuestionNumber === (index + 1) ?
+                                (<View style={{
+                                    flexDirection: 'column', 
+                                    paddingLeft: Dimensions.get("window").width < 768 ? 0 : 40,
+                                    paddingBottom: 30
+                                }}>
+                                    {
+                                        problem.multipartOptions.map((part: any, partIndex: number) => {
+                                            const alphabet = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+                                            return <View style={{
+                                                flexDirection: 'column',
+
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 18,
+                                                    fontFamily: 'Overpass',
+                                                    marginTop: 30,
+                                                    marginBottom: 20
+                                                }}>Part {alphabet[partIndex]}</Text>
+
+                                                {/* Question */}
+                                                <View style={{
+                                                    maxWidth: 600,
+                                                }}>       
+                                                    <View style={{ flexDirection: 'column', width: '100%' }}>
+                                                        <RichToolbar
+                                                            style={{
+                                                                borderColor: '#f2f2f2',
+                                                                borderBottomWidth: 1,
+                                                                backgroundColor: '#fff',
+                                                                maxHeight: 40,
+                                                                height: 40,
+                                                                display: multipartEditorRefs[partIndex] ? 'flex' : 'none'
+                                                            }}
+                                                            flatContainerStyle={{
+                                                                paddingHorizontal: 12
+                                                            }}
+                                                            editor={partIndex === 0 ? partARef : partBRef}
+                                                            disabled={false}
+                                                            selectedIconTint={'#006AFF'}
+                                                            disabledIconTint={'#bfbfbf'}
+                                                            actions={[
+                                                                actions.keyboard,
+                                                                actions.undo,
+                                                                actions.redo,
+                                                                actions.setBold,
+                                                                actions.setItalic,
+                                                                actions.setUnderline,
+                                                                actions.insertImage,
+                                                                actions.insertBulletsList,
+                                                                actions.insertOrderedList,
+                                                                actions.heading1,
+                                                                actions.heading3,
+                                                                actions.setParagraph,
+                                                                actions.setSuperscript,
+                                                                actions.setSubscript,
+                                                                actions.foreColor,
+                                                                actions.hiliteColor,
+                                                                // 'insertEmoji'
+                                                            ]}
+                                                            iconMap={{
+                                                                [actions.keyboard]: ({ tintColor }) => (
+                                                                    <Text style={{ color: 'green', fontSize: 20 }}>✓</Text>
+                                                                ),
+                                                                [actions.insertVideo]: importIcon,
+                                                                insertEmoji: emojiIcon,
+                                                                [actions.heading1]: ({ tintColor }) => (
+                                                                    <Text
+                                                                        style={{
+                                                                            color: tintColor,
+                                                                            fontSize: 19,
+                                                                            paddingBottom: 1
+                                                                        }}
+                                                                    >
+                                                                        H1
+                                                                    </Text>
+                                                                ),
+                                                                [actions.heading3]: ({ tintColor }) => (
+                                                                    <Text
+                                                                        style={{
+                                                                            color: tintColor,
+                                                                            fontSize: 19,
+                                                                            paddingBottom: 1
+                                                                        }}
+                                                                    >
+                                                                        H3
+                                                                    </Text>
+                                                                ),
+                                                                [actions.setParagraph]: ({ tintColor }) => (
+                                                                    <Text
+                                                                        style={{
+                                                                            color: tintColor,
+                                                                            fontSize: 19,
+                                                                            paddingBottom: 1
+                                                                        }}
+                                                                    >
+                                                                        p
+                                                                    </Text>
+                                                                ),
+                                                                [actions.foreColor]: ({ tintColor }) => (
+                                                                    <Text
+                                                                        style={{
+                                                                            fontSize: 19,
+                                                                            fontWeight: 'bold',
+                                                                            color: 'red'
+                                                                        }}
+                                                                    >
+                                                                        A
+                                                                    </Text>
+                                                                ),
+                                                                [actions.hiliteColor]: ({ tintColor }) => (
+                                                                    <Text
+                                                                        style={{
+                                                                            color: 'black',
+                                                                            fontSize: 19,
+                                                                            backgroundColor: '#ffc701',
+                                                                            paddingHorizontal: 2
+                                                                        }}
+                                                                    >
+                                                                        H
+                                                                    </Text>
+                                                                )
+                                                            }}
+                                                            hiliteColor={() => props.handleHiliteColor(solutionRef)}
+                                                            foreColor={() => props.handleForeColor(solutionRef)}
+                                                            insertEmoji={() => props.handleEmoji(solutionRef)}
+                                                            onInsertLink={() => props.handleInsertLink(solutionRef)}
+                                                            onPressAddImage={() => props.handleAddImage(solutionRef)}
+                                                            // hiliteColor={() => props.handleHiliteColorOptions((index.toString()))}
+                                                            // foreColor={() => props.handleForeColorOptions((index.toString()))}
+                                                            // insertEmoji={() => props.handleEmojiOptions((index.toString()))}
+                                                            // onPressAddImage={() => props.handleAddImageQuizOptions((index.toString()))}
+                                                        />
+                                                        <ScrollView
+                                                            horizontal={false}
+                                                            style={{
+                                                                backgroundColor: '#f2f2f2',
+                                                                height: 150,
+                                                                borderColor: '#f2f2f2',
+                                                                borderWidth: 1
+                                                            }}
+                                                            keyboardDismissMode={'none'}
+                                                            // ref={scrollRef}
+                                                            nestedScrollEnabled={true}
+                                                            scrollEventThrottle={20}
+                                                            indicatorStyle={'black'}
+                                                            showsHorizontalScrollIndicator={true}
+                                                            persistentScrollbar={true}
+                                                        >
+                                                            <RichEditor
+                                                                // key={reloadEditorKey.toString()}
+                                                                ref={partIndex === 0 ? partARef : partBRef}
+                                                                useContainer={true}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    paddingHorizontal: 10,
+                                                                    backgroundColor: '#fff',
+                                                                    display: 'flex',
+                                                                    flex: 1,
+                                                                    height: '100%',
+                                                                    minHeight: 150,
+                                                                    borderColor: '#f2f2f2',
+                                                                    borderBottomWidth: 1
+                                                                }}
+                                                                editorStyle={{
+                                                                    backgroundColor: '#fff',
+                                                                    placeholderColor: '#a2a2ac',
+                                                                    color: '#2f2f3c',
+                                                                    contentCSSText: 'font-size: 16px; min-height: 100px;'
+                                                                }}
+                                                                initialContentHTML={problem.multipartQuestions[partIndex]}
+                                                                initialHeight={100}
+                                                                onScroll={() => Keyboard.dismiss()}
+                                                                placeholder={'Part ' + alphabet[partIndex] + ' Question'}
+                                                                onChange={text => {
+                                                                    const modifedText = text.split('&amp;').join('&');
+
+                                                                    const updatedSolution = [...solutions];
+                                                                    updatedSolution[problemIndex].response = modifedText;
+                                                                    setSolutions(updatedSolution);
+                                                                    props.setSolutions(updatedSolution);
+                                                                }}
+                                                                // onHeightChange={handleHeightChange}
+                                                                onFocus={() => {
+                                                                    const updateMultipartEditorRefs: boolean[] = [
+                                                                        ...multipartEditorRefs
+                                                                    ];
+                                                                    updateMultipartEditorRefs[partIndex] = true;
+                                                                    setMultipartEditorRefs(updateMultipartEditorRefs);
+                                                                }}
+                                                                onBlur={() => {
+                                                                    const updateMultipartEditorRefs: boolean[] = [
+                                                                        ...multipartEditorRefs
+                                                                    ];
+                                                                    updateMultipartEditorRefs[partIndex] = false;
+                                                                    setMultipartEditorRefs(updateMultipartEditorRefs);
+                                                                }}
+                                                                allowFileAccess={true}
+                                                                allowFileAccessFromFileURLs={true}
+                                                                allowUniversalAccessFromFileURLs={true}
+                                                                allowsFullscreenVideo={true}
+                                                                allowsInlineMediaPlayback={true}
+                                                                allowsLinkPreview={true}
+                                                                allowsBackForwardNavigationGestures={true}
+                                                                // onCursorPosition={handleCursorPosition}
+                                                            />
+                                                        </ScrollView>
+                                                    </View>
+                                                </View>
+
+                                                {/* Options */}
+
+                                                {
+                                                    problem.multipartOptions[partIndex].map((option: any, optionIndex: number) => {
+                                                        return (<View style={{
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                        }}>
+                                                            <BouncyCheckbox
+                                                                style={{}}
+                                                                isChecked={option.isCorrect}
+                                                                onPress={e => {
+                                                                    const updatedSolution = [...solutions];
+                                                                    updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex] = !updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex]
+                                                                    setSolutions(updatedSolution)
+                                                                    props.setSolutions(updatedSolution)
+                                                                }}
+                                                                disabled={true}
+                                                            />
+                                                            <AutoGrowingTextInput
+                                                                value={option.option}
+                                                                onChange={(event: any) => {
+                                                                    const newProbs = [...problems];
+                                                                    newProbs[index].multipartOptions[partIndex][optionIndex].option = event.nativeEvent.text || '';
+                                                                    setEditQuestion(newProbs[problemIndex]);
+                                                                    setProblems(newProbs)
+                                                                }}
+                                                                style={{
+                                                                    fontFamily: 'overpass',
+                                                                    maxWidth: '100%',
+                                                                    width: '100%',
+                                                                    marginBottom: 10,
+                                                                    marginTop: 10,
+                                                                    paddingTop: 13,
+                                                                    paddingBottom: 13,
+                                                                    fontSize: 14,
+                                                                    // borderBottom: '1px solid #C1C9D2'
+                                                                    borderBottomWidth: 1,
+                                                                    borderBottomColor: '#f2f2f2'
+                                                                }}
+                                                                placeholder={'Option ' + (optionIndex + 1)}
+                                                                placeholderTextColor="#66737C"
+                                                                maxHeight={200}
+                                                                minHeight={45}
+                                                                enableScrollToCaret
+                                                            />
+
+
+                                                        </View>)
+                                                    })
+                                                }
+                                                                        
+                                            </View>
+                                        })
+                                    }
+                                </View>) : null
+                        }
+
+                        {
+                            problem.questionType === 'multipart' && (editQuestionNumber !== (index + 1)) ? <View style={{
+                                flexDirection: 'column', 
+                                paddingBottom: 30
+                                // paddingLeft: Dimensions.get("window").width < 768 ? 0 : 40
+                            }}>
+                                { problem.multipartOptions.map((part: any, partIndex: number) => {
+                                    const alphabet = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+
+                                    return <View style={{
+                                            flexDirection: 'column',
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 18,
+                                                fontFamily: 'Overpass',
+                                                marginTop: 30,
+                                                marginBottom: 20,
+                                            }}>Part {alphabet[partIndex]}</Text>
+
+                                            <RenderHtml
+                                                contentWidth={contentWidth}
+                                                source={{
+                                                    html: problem.multipartQuestions[partIndex]
+                                                }}
+                                                defaultTextProps={{
+                                                    selectable: true
+                                                }}
+                                            />
+
+                                            {
+                                                part.map((option: any, optionIndex: number) => {
+                                                    return <View style={{
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        marginBottom: 20,
+                                                        marginTop: 20,
+                                                    }}>
+                                                        <BouncyCheckbox
+                                                            style={{}}
+                                                            isChecked={props.isOwner ? option.isCorrect : solutions[problemIndex].multipartSelection[partIndex][optionIndex]}
+                                                            onPress={e => {
+                                                                const updatedSolution = [...solutions];
+                                                                updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex] = !updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex]
+                                                                setSolutions(updatedSolution)
+                                                                props.setSolutions(updatedSolution)
+                                                            }}
+                                                            disabled={props.isOwner}
+                                                        />
+
+                                                        <RenderHtml
+                                                            contentWidth={contentWidth}
+                                                            source={{
+                                                                html: option.option
+                                                            }}
+                                                            defaultTextProps={{
+                                                                selectable: true
+                                                            }}
+                                                        />
+                                                    </View>
+                                                })
+                                            }
+
+                                        </View>
+
+                                        
+                                })}
+                            </View> : null
+                        }
+
+                        {
+                            problem.questionType === 'matchTableGrid' ?
+                                <View style={{
+                                    flexDirection: 'column', 
+                                    marginTop: 20,
+                                    paddingBottom: 30
+                                }}>
+                                    {/* Header row */}
+                                    <View style={{ 
+                                        flexDirection: 'row', alignItems: 'center', paddingLeft: 0
+                                    }}>
+                                        <View style={{
+                                            width: '33%',
+                                        }} />
+                                        {
+                                            problem.matchTableHeaders.map((header: any, headerIndex: number) => {
+                                                return <View style={{
+                                                    width: '33%',
+                                                    borderWidth: 1,
+                                                    borderColor: '#DDD',
+                                                    padding: editQuestionNumber === (index + 1) ? 8 : 20,
+                                                    height: '100%'
+                                                }}>
+                                                    {editQuestionNumber === (index + 1) ?
+                                                        <AutoGrowingTextInput
+                                                            value={header}
+                                                            onChange={(event: any) => {
+                                                                const updatedProblems = [...problems]
+                                                                updatedProblems[index].matchTableHeaders[headerIndex] = event.nativeEvent.text || '';
+                                                                setProblems(updatedProblems);
+                                                            }}
+                                                            style={{
+                                                                fontFamily: 'overpass',
+                                                                maxWidth: '100%',
+                                                                width: '100%',
+                                                                marginBottom: 10,
+                                                                marginTop: 10,
+                                                                paddingTop: 13,
+                                                                paddingBottom: 13,
+                                                                fontSize: 14,
+                                                                // borderBottom: '1px solid #C1C9D2'
+                                                                borderBottomWidth: 1,
+                                                                borderBottomColor: '#f2f2f2'
+                                                            }}
+                                                            placeholder={'Header ' + (headerIndex + 1)}
+                                                            placeholderTextColor="#66737C"
+                                                            maxHeight={200}
+                                                            minHeight={45}
+                                                            enableScrollToCaret
+                                                        /> : <Text style={{
+                                                        fontFamily: 'overpass', 
+                                                        fontSize: 14,
+                                                        textAlign: 'center',
+                                                        width: '100%',
+                                                    }}>
+                                                        {header}
+                                                    </Text>}
+                                                </View>
+                                            })
+                                        }
+                                    </View>
+                                    {/* Rows */}
+                                    {
+                                        problem.matchTableChoices.map((choiceRow: any, rowIndex: number) => {
+                                            return (<View style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingLeft: 0
+                                            }}>
+                                                <View style={{
+                                                    width: '33%',
+                                                    borderWidth: 1,
+                                                    borderColor: '#DDD',
+                                                    padding: editQuestionNumber === (index + 1) ? 8 : 20,
+                                                    height: '100%'
+                                                }}>
+                                                    {editQuestionNumber === (index + 1) ? 
+                                                        <AutoGrowingTextInput
+                                                            value={problem.matchTableOptions[rowIndex]}
+                                                            onChange={(event: any) => {
+                                                                const updatedProblems = [...problems]
+                                                                updatedProblems[index].matchTableOptions[rowIndex] =  event.nativeEvent.text || '';
+                                                                setProblems(updatedProblems);
+                                                            }}
+                                                            style={{
+                                                                fontFamily: 'overpass',
+                                                                maxWidth: '100%',
+                                                                width: '100%',
+                                                                marginBottom: 10,
+                                                                marginTop: 10,
+                                                                paddingTop: 13,
+                                                                paddingBottom: 13,
+                                                                fontSize: 14,
+                                                                // borderBottom: '1px solid #C1C9D2'
+                                                                borderBottomWidth: 1,
+                                                                borderBottomColor: '#f2f2f2'
+                                                            }}
+                                                            placeholder={'Row ' + (rowIndex + 1)}
+                                                            placeholderTextColor="#66737C"
+                                                            maxHeight={200}
+                                                            minHeight={45}
+                                                            enableScrollToCaret
+                                                        /> : <Text style={{
+                                                        fontFamily: 'overpass', 
+                                                        fontSize: 14,
+                                                        textAlign: 'center',
+                                                        width: '100%',
+                                                    }}>
+                                                        {problem.matchTableOptions[rowIndex]}
+                                                    </Text>}
+                                                </View>
+                                                {
+                                                    choiceRow.map((choice: boolean, choiceIndex: number) => {
+
+
+                                                        return <View style={{
+                                                            width: '33%',
+                                                            borderWidth: 1,
+                                                            borderColor: '#DDD',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            flexDirection: 'row',
+                                                            justifyContent: 'center',
+                                                            height: '100%'
+                                                        }}>
+                                                            <BouncyCheckbox
+                                                                style={{
+                                                                    padding: 0,
+                                                                    margin: 0
+                                                                }}
+                                                                isChecked={props.isOwner ? choice : solutions[problemIndex].matchTableSelection[rowIndex][choiceIndex]}
+                                                                onPress={e => {
+                                                                    if (!props.isOwner) {
+                                                                        const updatedSolution = [...solutions];
+                                                                        const updatedMatchTableSelection = [...solutions[problemIndex].matchTableSelection]
+
+                                                                        for (let i = 0; i < updatedMatchTableSelection[rowIndex].length; i++) {
+                                                                            updatedMatchTableSelection[rowIndex][i] = (choiceIndex === i)
+                                                                        }
+
+                                                                        updatedSolution[problemIndex].matchTableSelection = updatedMatchTableSelection
+                                                                        setSolutions(updatedSolution);
+                                                                        props.setSolutions(updatedSolution);
+
+                                                                    }
+                                                                }}
+                                                                disabled={props.isOwner}
+                                                                disableBuiltInState={true}
+                                                            />
+                                                        </View>
+                                                    })
+                                                }
+                                                {editQuestionNumber === (index + 1) ? <TouchableOpacity style={{
+                                                    paddingLeft: 25
+                                                }} 
+                                                onPress={() => {
+                                                    const updatedProblems = [...problems];
+                                                    const updatedMatchTableChoices = [...problems[index].matchTableChoices];
+                                                    updatedMatchTableChoices.splice(rowIndex, 1)
+                                                    const updatedMatchTableOptions = [...problems[index].matchTableOptions];
+                                                    updatedMatchTableOptions.splice(rowIndex, 1)
+                                                    updatedProblems[index].matchTableChoices = updatedMatchTableChoices;
+                                                    updatedProblems[index].matchTableOptions = updatedMatchTableOptions;
+                                                    setProblems(updatedProblems);
+                                                }}
+                                                >
+                                                    <Ionicons name='trash-outline' size={18} color="#1f1f1f" />    
+                                                </TouchableOpacity> : null}
+                                            </View>)
+                                        })
+                                    }
+
+                                </View> : null
+                        }
+
                         {problem.questionType === 'freeResponse' ? (
                             <View
                                 style={{
@@ -2070,7 +3114,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             })}
 
             {props.isOwner ? (
-                <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center' }}>
+                <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center', marginTop: 25 }}>
                     <TouchableOpacity
                         onPress={() => {
                             props.modifyQuiz(
@@ -2110,30 +3154,31 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     );
 };
 
-
+export default React.memo(Quiz)
+  
 // export default Quiz;
-export default React.memo(Quiz, (prev, next) => {
-    return _.isEqual(
-                {
-                    ...prev.setSolutions,
-                    ...prev.solutions,
-                    ...prev.problems,
-                    ...prev.headers,
-                    ...prev.unmodifiedProblems,
-                    ...prev.quizAttempts,
-                    ...prev.isOwner,
-                },
-                {
-                    ...next.setSolutions,
-                    ...next.solutions,
-                    ...next.problems,
-                    ...next.headers,
-                    ...next.unmodifiedProblems,
-                    ...next.quizAttempts,
-                    ...next.isOwner,
-                }
-            );
-});
+// export default React.memo(Quiz, (prev, next) => {
+//     return _.isEqual(
+//                 {
+//                     ...prev.setSolutions,
+//                     ...prev.solutions,
+//                     ...prev.problems,
+//                     ...prev.headers,
+//                     ...prev.unmodifiedProblems,
+//                     ...prev.quizAttempts,
+//                     ...prev.isOwner,
+//                 },
+//                 {
+//                     ...next.setSolutions,
+//                     ...next.solutions,
+//                     ...next.problems,
+//                     ...next.headers,
+//                     ...next.unmodifiedProblems,
+//                     ...next.quizAttempts,
+//                     ...next.isOwner,
+//                 }
+//             );
+// });
 
 const styles = StyleSheet.create({
     input: {

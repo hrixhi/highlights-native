@@ -570,7 +570,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     
                             const title = event.channelName && event.channelName !== '' ? event.channelName + ' - ' + event.title : event.title
                             
-                            const subtitle = event.channelName && event.channelName !== '' ? (event.channelName + ' - ' + alertTimeDisplay(event.start, false)) : alertTimeDisplay(event.start, false)
+                            const subtitle = alertTimeDisplay(event.start, false)
 
                             if (trigger1 > new Date()) {
                                 scheduleNotifications.push({

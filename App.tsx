@@ -21,11 +21,11 @@ export default function App() {
     const isLoadingComplete = useCachedResources();
     const colorScheme = useColorScheme();
 
-    // // Ignore log notification by message
-    // LogBox.ignoreLogs(['Warning: ...']);
+    // Ignore log notification by message
+    LogBox.ignoreLogs(['Warning: ...']);
 
-    // //Ignore all log notifications
-    // LogBox.ignoreAllLogs();
+    //Ignore all log notifications
+    LogBox.ignoreAllLogs();
 
     const longerSplashScreen = useCallback(async () => {
         await SplashScreen.preventAutoHideAsync();
