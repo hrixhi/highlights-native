@@ -325,7 +325,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         flexDirection: 'row',
         width: Math.min(Dimensions.get('window').width, 32 * 12),
-        paddingHorizontal: 10
+        paddingHorizontal: 10,
+        zIndex: 10000
     },
     item: {
         // height: 25,

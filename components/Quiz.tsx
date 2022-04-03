@@ -13,7 +13,7 @@ import {
     useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import lodash from 'lodash';
+import lodash, { update } from 'lodash';
 
 // COMPONENT
 import { Text, View } from './Themed';
@@ -31,6 +31,7 @@ import RenderHtml, {
   } from 'react-native-render-html';
 import { handleFile } from '../helpers/FileUpload';
 import _ from 'lodash';
+import { DraxProvider, DraxView } from 'react-native-drax';
 
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
@@ -80,6 +81,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [multipartEditorRefs, setMultipartEditorRefs] = useState<boolean[]>([]);
     // const [testValue, setTestValue] = useState('')
     const { width: contentWidth } = useWindowDimensions();
+    const [editTextEntryQuestionNumber, setEditTextEntryQuestionNumber] = useState(-1);
+    const [editTextEntrySpanId, setEditTextEntrySpanID] = useState(-1)
+    const partARef: any = useRef(null)
+    const partBRef: any = useRef(null)
+    const solutionRef: any = useRef(null)
 
 
     const OptionImageRenderer: CustomBlockRenderer = props => {
@@ -119,6 +125,26 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             setTimer(false);
         }
     }, [props.headers, props.instructions, props.shuffleQuiz, props.duration]);
+
+    // Handle Text Input
+    useEffect(() => {
+
+        if (!props.isOwner && editTextEntryQuestionNumber !== -1 && editTextEntrySpanId !== -1 && !props.showTextEntryInput) {
+            const updatedSolution = [...solutions];
+            updatedSolution[editTextEntryQuestionNumber].textEntrySelection[editTextEntrySpanId] = props.textEntryValue;
+            setSolutions(updatedSolution);
+            props.setSolutions(updatedSolution);
+            // Clear out existing text Entry edit fields
+            props.setTextEntryValue('')
+            props.setTextEntryInputType('default')
+            setEditTextEntryQuestionNumber(-1)
+            setEditTextEntrySpanID(-1)
+            
+        }
+       
+      
+        
+    }, [props.isOwner, props.showTextEntryInput, props.textEntryValue, editTextEntryQuestionNumber, editTextEntrySpanId, solutions])
 
     /**
      * @description Over here the solutions object for Quiz is first set and updated based on changes...
@@ -450,22 +476,28 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         </Text>
                                     </MenuTrigger>
                                     <MenuOptions
-                                        customStyles={{
-                                            optionsContainer: {
-                                                padding: 10,
-                                                borderRadius: 15,
-                                                shadowOpacity: 0,
-                                                borderWidth: 1,
-                                                borderColor: '#f2f2f2',
-                                                overflow: 'scroll',
-                                                maxHeight: '100%'
-                                            }
+                                        optionsContainerStyle={{
+                                            shadowOffset: {
+                                                width: 2,
+                                                height: 2
+                                            },
+                                            shadowColor: '#000',
+                                            // overflow: 'hidden',
+                                            shadowOpacity: 0.07,
+                                            shadowRadius: 7,
+                                            padding: 10,
+                                            borderWidth: 1,
+                                            borderColor: '#CCC'
                                         }}
                                     >
                                         {hours.map((hour: any) => {
                                             return (
                                                 <MenuOption value={hour}>
-                                                    <Text>{hour}</Text>
+                                                    <Text style={{
+                                                        fontSize: 15,
+                                                        fontFamily: 'Inter',
+                                                        paddingBottom: 3
+                                                    }}>{hour}</Text>
                                                 </MenuOption>
                                             );
                                         })}
@@ -492,22 +524,28 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         </Text>
                                     </MenuTrigger>
                                     <MenuOptions
-                                        customStyles={{
-                                            optionsContainer: {
-                                                padding: 10,
-                                                borderRadius: 15,
-                                                shadowOpacity: 0,
-                                                borderWidth: 1,
-                                                borderColor: '#f2f2f2',
-                                                overflow: 'scroll',
-                                                maxHeight: '100%'
-                                            }
+                                        optionsContainerStyle={{
+                                            shadowOffset: {
+                                                width: 2,
+                                                height: 2
+                                            },
+                                            shadowColor: '#000',
+                                            // overflow: 'hidden',
+                                            shadowOpacity: 0.07,
+                                            shadowRadius: 7,
+                                            padding: 10,
+                                            borderWidth: 1,
+                                            borderColor: '#CCC'
                                         }}
                                     >
                                         {minutes.map((min: any) => {
                                             return (
                                                 <MenuOption value={min}>
-                                                    <Text>{min}</Text>
+                                                    <Text style={{
+                                                        fontSize: 15,
+                                                        fontFamily: 'Inter',
+                                                        paddingBottom: 3
+                                                    }}>{min}</Text>
                                                 </MenuOption>
                                             );
                                         })}
@@ -520,6 +558,27 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             </View>
         );
     };
+
+    /**
+    * @description Shuffle Items for drag and drop
+    */
+    function shuffleArray(array: any[]) {
+        let currentIndex = array.length,  randomIndex;
+      
+        // While there remain elements to shuffle...
+        while (currentIndex != 0) {
+      
+          // Pick a remaining element...
+          randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex--;
+      
+          // And swap it with the current element.
+          [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex], array[currentIndex]];
+        }
+      
+        return array;
+    }
 
     /**
      * @description Renders Shuffle quiz option for editing quiz
@@ -949,27 +1008,40 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     /**
      * @description Select MCQ
      */
-    const selectMCQOption = (problem: any, problemIndex: number, optionIndex: number) => {
+     const selectMCQOption = (problem: any, problemIndex: number, optionIndex: number) => {
         if (props.isOwner) return;
 
-        let onlyOneCorrect = true;
+        // let onlyOneCorrect = true;
+        let numOfCorrectAnswers = 0
 
         if (!problem.questionType) {
-            let noOfCorrect = 0;
-
+            
             problem.options.map((option: any) => {
-                if (option.isCorrect) noOfCorrect++;
+                if (option.isCorrect) numOfCorrectAnswers++;
             });
 
-            if (noOfCorrect > 1) onlyOneCorrect = false;
         }
         // Check if one correct or multiple correct
         const updatedSolution = [...solutions];
 
-        if (onlyOneCorrect && !updatedSolution[problemIndex].selected[optionIndex].isSelected) {
+        if (numOfCorrectAnswers === 1 && !updatedSolution[problemIndex].selected[optionIndex].isSelected) {
             problem.options.map((option: any, optionIndex: any) => {
                 updatedSolution[problemIndex].selected[optionIndex].isSelected = false;
             });
+        }
+
+        // Calculate num of correct answers
+        let numOfSelected = 0;
+
+        solutions[problemIndex].selected.map((option: any, i: number) => {
+            if (optionIndex !== i && option.isSelected) {
+                numOfSelected++;
+            }
+        })
+
+        if (numOfCorrectAnswers > 1 && numOfSelected === numOfCorrectAnswers) {
+            alert(`You can select a maximum of ${numOfCorrectAnswers} ${numOfCorrectAnswers === 1 ? 'choice' : 'choices'}. Unselect an existing choice to select a new one.`);
+            return;
         }
 
         updatedSolution[problemIndex].selected[optionIndex].isSelected = !updatedSolution[problemIndex].selected[
@@ -1033,6 +1105,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 justifyContent: 'flex-start'
             }}
         >
+            <DraxProvider>
             <View style={{ flexDirection: 'column', width: '100%', paddingBottom: 25, paddingTop: 15 }}>
                 {props.isOwner ? (
                     <View
@@ -1219,6 +1292,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         defaultTextProps={{
                             selectable: true
                         }}
+                        tagsStyles={{
+                            'p': {
+                                lineHeight: 30,
+                                fontSize: 16
+                            }
+                        }}
                     />
                 ) : null}
             </View>
@@ -1258,13 +1337,67 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     type = parse.type;
                 }
 
+                let dndOptions: any[] = [];
+
+                if (problem.questionType === 'dragdrop' && props.isOwner) {
+                    problem.dragDropData.map((group: any) => {
+                        group.map((label: any) => {
+                            dndOptions.push(label.content)
+                        })
+                    })
+                } else if (problem.questionType === 'dragdrop' && !props.isOwner) {
+                    let allOptions: any[] = []
+
+                    problem.dragDropData.map((group: any[]) => {
+                        group.map((label: any) => {
+                            allOptions.push(label)
+                        })
+                    })
+
+                    // 2D array
+                    const solutionChoices: any[][] = []
+
+                    // array
+                    const usedOptions: any[] = []
+
+                    console.log('Solutions[problemIndex]', solutions[problemIndex])
+                    
+                    solutions[problemIndex].dragDropChoices.map((selections: any[]) => {
+                        let groupOptions: any[] = []
+                        selections.map((label: any) => {
+                            groupOptions.push(label)
+                            usedOptions.push(label)
+                        })
+                        solutionChoices.push(groupOptions)
+                    })
+
+                    allOptions = allOptions.filter((label: any) => {
+                        const used = usedOptions.find((val: any) => {
+                            return val.id === label.id
+                        })
+
+                        if (used && used.id) {
+                            return false
+                        }
+                        return true
+                    })
+
+                    // allOptions = shuffleArray(allOptions)
+
+                    dndOptions = [allOptions, ...solutionChoices]
+
+                }
+
+                const dragDropOptions = (dndOptions)
+
+                console.log("DragDropOptions", dragDropOptions)
+
                 // const solutionRef: any = props.setRef(index.toString());
 
-                const solutionRef: any = {}
+                // const : any = {}
 
                 // Refs for Multipart
-                const partARef: any = {}
-                const partBRef: any = {}
+               
 
                 return (
                     <View
@@ -1391,6 +1524,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     defaultTextProps={{
                                                         selectable: true
                                                     }}
+                                                    tagsStyles={{
+                                                        'p': {
+                                                            lineHeight: 30,
+                                                            fontSize: 16
+                                                        }
+                                                    }}
                                                 />
                                             </View>
                                         ) : (
@@ -1402,6 +1541,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     }}
                                                     defaultTextProps={{
                                                         selectable: true
+                                                    }}
+                                                    tagsStyles={{
+                                                        'p': {
+                                                            lineHeight: 30,
+                                                            fontSize: 16
+                                                        }
                                                     }}
                                                 />
                                             </View>
@@ -1574,6 +1719,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         selectMCQOption(problem, problemIndex, i);
                                                     }}
                                                     disabled={props.isOwner}
+                                                    disableBuiltInState={true}
                                                 />
                                             ) : (
                                                 <BouncyCheckbox
@@ -1604,6 +1750,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             ? false
                                                             : props.isOwner
                                                     }
+                                                    disableBuiltInState={true}
                                                 />
                                             )}
                                         </View>
@@ -1835,10 +1982,298 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 );
                             })}
 
+                    {/* Drag and Drop */}
+
+                    {                   
+                            problem.questionType === 'dragdrop' && props.isOwner ?
+                                <View style={{
+                                    display: 'flex', flexDirection: 'column', width: '100%',
+                                    marginBottom: 30
+                                }}>
+                                    <View style={{
+                                        width: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        flexWrap: 'wrap',
+                                        paddingTop: 20,
+                                    }}>
+                                        {
+                                            dragDropOptions.map((label: string) => {
+                                                return <View style={{
+                                                    width: 120,
+                                                    display: 'flex',
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    paddingVertical: 16,
+                                                    paddingHorizontal: 10,
+                                                    marginRight: 20,
+                                                    marginBottom: 20,
+                                                    borderRadius: 10,
+                                                    // backgroundColor: '#f2f2f2',
+                                                    borderWidth: 1,
+                                                    borderColor: '#ccc',
+                                                    shadowOffset: {
+                                                        width: 2,
+                                                        height: 2
+                                                    },
+                                                    overflow: 'hidden',
+                                                    shadowOpacity: 0.07,
+                                                    shadowRadius: 7,
+                                                }}>
+                                                    <Ionicons name={"ellipsis-vertical-outline"} size={16} color="#1f1f1f" />
+                                                    <Text
+                                                        style={{
+                                                            width: '100%',
+                                                            marginLeft: 5
+                                                        }}
+                                                    >
+                                                        {label}
+                                                    </Text>
+                                                </View>
+                                            })
+                                        }
+                                    </View>
+                                    <ScrollView 
+                                        horizontal={true}
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            // overflow: 'scroll',
+                                            marginTop: 50
+                                        }}
+                                    >
+                                        {problem.dragDropHeaders.map((header: string) => {
+                                            return <View style={{ width: 200, marginRight: 30, justifyContent: 'center', padding: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 15 }}>
+                                                <Text style={{
+                                                    fontSize: 16,
+                                                    width: '100%',
+                                                    textAlign: 'center',
+                                                    marginBottom: 20,    
+                                                    fontFamily: 'Inter'          
+                                                }}>
+                                                    {header}
+                                                </Text>
+                                            </View>
+                                        })}
+                                    </ScrollView>
+                                </View>
+                                : null
+                        }
+
+                    {
+                        problem.questionType === 'dragdrop' && !props.isOwner ?
+                            <View style={{
+                                display: 'flex', flexDirection: 'column', width: '100%',
+                                marginBottom: 30
+                            }}>
+                                {/* Render unselected Dragdrop Options */}
+                                <View style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    flexWrap: 'wrap',
+                                    paddingTop: 20,
+                                }}>
+                                    {
+                                        dragDropOptions[0].map((option: any) => {
+                                            return <DraxView
+                                                style={{
+                                                    width: 100,
+                                                    height: 50,
+                                                    display: 'flex',
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    paddingVertical: 16,
+                                                    paddingHorizontal: 10,
+                                                    marginRight: 20,
+                                                    marginBottom: 20,
+                                                    borderRadius: 10,
+                                                    // backgroundColor: '#f2f2f2',
+                                                    borderWidth: 1,
+                                                    borderColor: '#ccc',
+                                                    shadowOffset: {
+                                                        width: 2,
+                                                        height: 2
+                                                    },
+                                                    overflow: 'hidden',
+                                                    shadowOpacity: 0.07,
+                                                    shadowRadius: 7,
+                                                }}
+                                                draggingStyle={styles.dragging}
+                                                dragReleasedStyle={styles.dragging}
+                                                hoverDraggingStyle={styles.hoverDragging}
+                                                dragPayload={option}
+                                                longPressDelay={0}
+                                            >
+                                                <Ionicons name={"ellipsis-vertical-outline"} size={16} color="#1f1f1f" />
+                                                <Text
+                                                    style={{
+                                                        width: '100%',
+                                                        marginLeft: 5
+                                                    }}
+                                                >
+                                                    {option.content}
+                                                </Text>
+                                            </DraxView>
+                                        })
+                                    }
+                                </View>
+                                {/* Render Dropping zones here */}
+                                {
+                                    dragDropOptions.map((group: any, groupIndex: number) => {
+                                        if (groupIndex === 0) {
+                                            return;
+                                        }
+
+                                        return (<DraxView
+                                            // dragPayload={staged.join(' ')}
+                                            draggable={false}
+                                            renderContent={({ viewState }) => {
+                                                const receivingDrag = viewState && viewState.receivingDrag;
+                                                const payload = receivingDrag && receivingDrag.payload;
+                                                const dragging = viewState && viewState.dragStatus !== 0;
+                                                return (
+                                                    <View style={{
+                                                        width: '100%', marginRight: 30, justifyContent: 'center', padding: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 15,
+                                                        marginBottom: 30
+                                                    }}>
+                                                        <Text>{problem.dragDropHeaders[groupIndex - 1]}</Text>
+                                                        <View style={{
+                                                            width: '100%',
+                                                            display: 'flex',
+                                                            flexDirection: 'row',
+                                                            flexWrap: 'wrap',
+                                                            paddingTop: 20,
+                                                        }}>
+                                                            {
+                                                                dragDropOptions[groupIndex].map((option: any) => {
+                                                                    return <DraxView
+                                                                        style={{
+                                                                            width: 100,
+                                                                            height: 50,
+                                                                            display: 'flex',
+                                                                            flexDirection: 'row',
+                                                                            alignItems: 'center',
+                                                                            paddingVertical: 16,
+                                                                            paddingHorizontal: 10,
+                                                                            marginRight: 20,
+                                                                            marginBottom: 20,
+                                                                            borderRadius: 10,
+                                                                            // backgroundColor: '#f2f2f2',
+                                                                            borderWidth: 1,
+                                                                            borderColor: '#ccc',
+                                                                            shadowOffset: {
+                                                                                width: 2,
+                                                                                height: 2
+                                                                            },
+                                                                            overflow: 'hidden',
+                                                                            shadowOpacity: 0.07,
+                                                                            shadowRadius: 7,
+                                                                        }}
+                                                                        draggingStyle={styles.dragging}
+                                                                        dragReleasedStyle={styles.dragging}
+                                                                        hoverDraggingStyle={styles.hoverDragging}
+                                                                        dragPayload={option}
+                                                                        longPressDelay={0}
+                                                                    >
+                                                                        <Ionicons name={"ellipsis-vertical-outline"} size={16} color="#1f1f1f" />
+                                                                        <Text
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                marginLeft: 5
+                                                                            }}
+                                                                        >
+                                                                            {option.content}
+                                                                        </Text>
+                                                                    </DraxView>
+                                                                })
+                                                            }
+                                                        </View>
+                                                        
+                                                    
+                                                    </View>
+                                                );
+                                            }}
+                                            onReceiveDragDrop={(event) => {
+                                                const { dragged, receiver } = event;
+                                                console.log("dragged payload", dragged.payload)
+                                                console.log("receiver payload", receiver.payload)
+
+                                                // Remove the option from the existing group if in another group
+                                                const updatedSolution = [...solutions]
+                                                const currentDragDropChoices = solutions[problemIndex].dragDropChoices
+
+                                                console.log("Current Drag Drop Choices", currentDragDropChoices)
+
+                                                // Drag drop 
+                                                const updatedDragDropChoices: any[] = currentDragDropChoices.map((group: any, groupIndex: number) => {
+
+                                                    console.log("Group ", group)
+
+                                                    let updatedGroup: any[] = []
+
+                                                    group.map((option: any, optionIndex: number) => {
+                                                        if (option.id !== dragged.payload.id) {
+                                                            updatedGroup.push(option)
+                                                        }
+                                                    })
+
+                                                    if (groupIndex === receiver.payload) {
+                                                        console.log("Insert payload")
+                                                        updatedGroup.push({
+                                                            id: dragged.payload.id,
+                                                            content: dragged.payload.content
+                                                        })
+                                                    }
+
+                                                    console.log("Updated group", updatedGroup)
+
+                                                    return updatedGroup
+                                                    // 
+                                                })
+
+                                                console.log("Updated Drag drop choices", updatedDragDropChoices)
+
+                                                updatedSolution[problemIndex].dragDropChoices = updatedDragDropChoices
+                                                
+                                                setSolutions(updatedSolution);
+                                                props.setSolutions(updatedSolution);
+
+
+                                            }}
+                                            onDragDrop={() => {
+                                                console.log("On Drag drop")
+                                            }}
+                                            payload={groupIndex - 1}
+                                          />)
+                                    }) 
+                                }
+                                {/* <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    overflow: 'scroll',
+                                    marginTop: 50
+                                }}>
+                                    {problem.dragDropHeaders.map((header: string) => {
+                                        return <View style={{ width: 240, marginRight: 30, justifyContent: 'center', padding: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 15 }}>
+                                            <Text style={{
+                                                fontSize: 16,
+                                                width: '100%',
+                                                textAlign: 'center',
+                                                marginBottom: 20,    
+                                                fontFamily: 'Inter'          
+                                            }}>
+                                                {header}
+                                            </Text>
+                                        </View>
+                                    })}
+                                </div> */}
+                            </View> : null
+                    }
                         
                     {/* Hotspots */}
                     {
-                            problem.questionType === 'hotspot' ?
+                        problem.questionType === 'hotspot' ?
                             <View style={{
                                 width: '100%',overflow: 'hidden', display: 'flex', flexDirection: 'row', justifyContent: 'center',
                             }}>
@@ -1860,13 +2295,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         // Render all the markers 
                                         problem.hotspotOptions.map((option: any, ind: number) => {
 
-                                  
-
                                             const spot = problem.hotspots[ind];
 
                                             const selection = props.isOwner ?  problem.hotspotOptions[ind].isCorrect : solutions[problemIndex].hotspotSelection[ind] 
-
-                                            console.log("Is hotspot selected", selection)
 
                                             return (<TouchableOpacity disabled={props.isOwner} 
                                                 style={{
@@ -1882,6 +2313,28 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 }}
                                                 onPress={() => {
                                                     if (!props.isOwner) {
+
+                                                        // Num of correct
+                                                        let numOfCorrectAnswers = 0;
+
+                                                        problem.hotspotOptions.map((option: any) => {
+                                                            if (option.isCorrect) numOfCorrectAnswers++;
+                                                        });
+                                            
+
+                                                        // Num of selected
+                                                        let numOfSelected = 0;
+                                                        solutions[problemIndex].hotspotSelection.map((selection: any, i: number) => {
+                                                            if (i !== ind && selection) {
+                                                                numOfSelected++;
+                                                            }
+                                                        })
+
+                                                        if (numOfCorrectAnswers === numOfSelected) {
+                                                            alert(`You can select a maximum of ${numOfCorrectAnswers} ${numOfCorrectAnswers === 1 ? 'choice' : 'choices'}. Unselect an existing choice to select a new one.`);
+                                                            return;
+                                                        }
+
                                                         const updatedSolution = [...solutions];
                                                         updatedSolution[problemIndex].hotspotSelection[ind] = !updatedSolution[problemIndex].hotspotSelection[ind]
                                                         setSolutions(updatedSolution);
@@ -1938,6 +2391,28 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         isChecked={isSelected}
                                                         onPress={e => { 
                                                             if (!props.isOwner) {
+
+                                                                // Num of correct
+                                                                let numOfCorrectAnswers = 0;
+
+                                                                problem.hotspotOptions.map((option: any) => {
+                                                                    if (option.isCorrect) numOfCorrectAnswers++;
+                                                                });
+                                                    
+
+                                                                // Num of selected
+                                                                let numOfSelected = 0;
+                                                                solutions[problemIndex].hotspotSelection.map((selection: any, i: number) => {
+                                                                    if (i !== ind && selection) {
+                                                                        numOfSelected++;
+                                                                    }
+                                                                })
+
+                                                                if (numOfCorrectAnswers === numOfSelected) {
+                                                                    alert(`You can select a maximum of ${numOfCorrectAnswers} ${numOfCorrectAnswers === 1 ? 'choice' : 'choices'}. Unselect an existing choice to select a new one.`);
+                                                                    return;
+                                                                }
+
                                                                 const updatedSolution = [...solutions];
                                                                 updatedSolution[problemIndex].hotspotSelection[ind] = !updatedSolution[problemIndex].hotspotSelection[ind]
                                                                 setSolutions(updatedSolution);
@@ -1950,8 +2425,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     />
 
                                                     {<View style={{
-                                                        // borderWidth: 2,
-                                                        // borderColor: option.isCorrect ? '#ffc484' : '#fff',
                                                         borderRadius: 8,
                                                         padding: 7,
                                                         backgroundColor: '#fff',
@@ -2012,22 +2485,39 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                                                 const isCorrect = props.isOwner ? highlightTextChoices[optionIndex] : highlightTextSelection[optionIndex]
 
-                                                return <TDefaultRenderer {...rendererProps} style={{
-                                                        fontSize: 16,
-                                                        // lineHeight: 50,
-                                                        paddingHorizontal: 8,
-                                                        paddingTop: 5,
-                                                        borderWidth: 2,
+                                                return <TouchableOpacity
+                                                    style={{
                                                         borderColor: isCorrect ? "#006Aff" : "#e6f0ff",
                                                         backgroundColor: isCorrect ? "#006Aff" : "#e6f0ff",
                                                         borderRadius: 10,
-                                                        marginHorizontal: 2,
-                                                        padding: 10,
-                                                        paddingBottom: 5,
-                                                        color: isCorrect ? "#fff" : "#000",
+                                                        paddingHorizontal: 8,
+                                                        paddingTop: 7,
+                                                        marginVertical: 5,
                                                     }}
                                                     onPress={() => {
                                                         if (!props.isOwner) {
+
+                                                            // Num of correct
+                                                            let numOfCorrectAnswers = 0;
+
+                                                            problems[index].highlightTextChoices.map((option: any) => {
+                                                                if (option) numOfCorrectAnswers++;
+                                                            });
+                                                
+
+                                                            // Num of selected
+                                                            let numOfSelected = 0;
+                                                            solutions[problemIndex].highlightTextSelection.map((selection: any, i: number) => {
+                                                                if (i !== optionIndex && selection) {
+                                                                    numOfSelected++;
+                                                                }
+                                                            })
+
+                                                            if (numOfCorrectAnswers === numOfSelected) {
+                                                                alert(`You can select a maximum of ${numOfCorrectAnswers} ${numOfCorrectAnswers === 1 ? 'choice' : 'choices'}. Unselect an existing choice to select a new one.`);
+                                                                return;
+                                                            }
+
                                                             const updatedSolution = [...solutions];
                                                             const updatedHighlightTextSelection = [...updatedSolution[problemIndex].highlightTextSelection];
                                                             updatedHighlightTextSelection[optionIndex] = !highlightTextSelection[optionIndex];
@@ -2037,7 +2527,18 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             return;
                                                         }
                                                     }}
-                                                    />
+                                                    disabled={props.isOwner}
+                                                >
+                                                    <Text style={{
+                                                        color: isCorrect ? "#fff" : "#000",
+                                                        fontSize: 16,
+                                                        flexWrap: 'wrap',
+                                                        // marginVertical: 5
+                                                    }}>
+                                                        {node.children[0].data}
+                                                    </Text>
+                                                </TouchableOpacity>
+
                                                   
                                             }
                                         }}
@@ -2107,46 +2608,62 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     }}
                                                 >
                                                     <MenuTrigger>
-                                                        <Text
-                                                            style={{
-                                                                fontSize: 14,
-                                                                color: '#000000',
-                                                                width: Dimensions.get('window').width < 768 ? 120 : 200,
-                                                                textAlign: 'center',
-                                                                paddingTop: 7,
-                                                                paddingBottom: 10,
-                                                                paddingHorizontal: 10,
-                                                                borderWidth: 1,
-                                                                borderColor: '#CCC',
-                                                                marginHorizontal: 5
-                                                            }}
-                                                            ellipsizeMode="tail"
-                                                        >
-                                                            {props.isOwner ? correctAnswer.option : (inlineChoiceSelection[optionIndex] ? inlineChoiceSelection[optionIndex] : 'Select')}
-                                                            <Ionicons name="chevron-down-outline" style={{
-                                                                paddingLeft: 3
-                                                            }} size={15} />
-                                                        </Text>
+                                                        <View style={{
+                                                            width: Dimensions.get('window').width < 768 ? 120 : 200,
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            borderWidth: 1,
+                                                            borderColor: '#CCC',
+                                                            paddingHorizontal: 10,
+                                                            marginHorizontal: 5,
+                                                            marginBottom: 3
+                                                        }}>
+                                                            <Text
+                                                                style={{
+                                                                    fontSize: 14,
+                                                                    color: '#000000',
+                                                                    maxWidth: '80%',
+                                                                    textAlign: 'center',
+                                                                    paddingTop: 7,
+                                                                    paddingBottom: 10,
+                                                                }}
+                                                                ellipsizeMode="tail"
+                                                                numberOfLines={1}
+                                                            >
+                                                                {props.isOwner ? correctAnswer.option : (inlineChoiceSelection[optionIndex] ? inlineChoiceSelection[optionIndex] : 'Select')}
+                                                            </Text>
+                                                            <View style={{
+                                                                paddingLeft: 5,
+                                                                marginLeft: 'auto'
+                                                            }}>
+                                                                <Ionicons name="chevron-down-outline" style={{
+                                                                    paddingLeft: 3
+                                                                }} size={15} />
+                                                            </View>
+                                                        </View>
                                                     </MenuTrigger>
                                                     <MenuOptions
-                                                        customStyles={{
-                                                            optionsContainer: {
-                                                                padding: 10,
-                                                                borderRadius: 15,
-                                                                shadowOpacity: 0,
-                                                                borderWidth: 1,
-                                                                borderColor: '#f4f4f6',
-                                                                overflow: 'scroll',
-                                                                maxHeight: '100%',
-                                                                width: Dimensions.get('window').width < 768 ? 300 : 400
-                                                            }
+                                                        optionsContainerStyle={{
+                                                            shadowOffset: {
+                                                                width: 2,
+                                                                height: 2
+                                                            },
+                                                            shadowColor: '#000',
+                                                            // overflow: 'hidden',
+                                                            shadowOpacity: 0.07,
+                                                            shadowRadius: 7,
+                                                            padding: 10,
+                                                            borderWidth: 1,
+                                                            borderColor: '#CCC'
                                                         }}
                                                     >
                                                         {options.map((option: any, i: number) => {
                                                             return (
                                                                 <MenuOption value={option.option}>
                                                                     <Text style={{
-                                                                        fontSize: 15
+                                                                        fontSize: 15,
+                                                                        fontFamily: 'Inter',
+                                                                        paddingBottom: 3
                                                                     }}>
                                                                         {i + 1}. {option.option}
                                                                     </Text>
@@ -2190,19 +2707,13 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                                                 const textEntryOptions = problems[index].textEntryOptions
 
-                                                console.log("Re-render text entry")
-
                                                 let responses;
 
                                                 if (!props.isOwner) {
                                                     responses = solutions[index].textEntrySelection
                                                 }
 
-                                                console.log("Text entry span", );
-
                                                 const node = rendererProps.tnode.domNode;
-
-                                                console.log("Text entry span ID", node.attribs.id);
 
                                                 if (!node.attribs.id) {
                                                     // Default return;
@@ -2214,34 +2725,73 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 const type = textEntryOptions[optionIndex].type;
                                                 const value = props.isOwner ? textEntryOptions[optionIndex].option : responses[optionIndex];
 
-                                                console.log("Text entry value", value);
+                                                return (<TouchableOpacity style={{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    width: 100,
+                                                    // height: 50,
+                                                    paddingVertical: 8,
+                                                    paddingHorizontal: 10,
+                                                    borderWidth: 1,
+                                                    borderColor: '#ccc',
+                                                    marginBottom: 5
+                                                }}
+                                                disabled={props.isOwner}
+                                                onPress={() => {
+                                                    if (!props.isOwner) {
+                                                        props.setTextEntryInputType(type === 'number' ? 'numeric' : 'default')
+                                                        props.setTextEntryValue(value)
+                                                        setEditTextEntryQuestionNumber(problemIndex)
+                                                        setEditTextEntrySpanID(optionIndex)
+                                                        props.setShowTextEntryInput()
+                                                    }
+                                                    
+                                                }}
+                                                >
+                                                    <Text style={{
+                                                        // width: '90%'
+                                                        textAlign: 'center'
+                                                    }}
+                                                        ellipsizeMode='tail'
+                                                        numberOfLines={1}
+                                                    >
+                                                        {props.isOwner ? value : solutions[problemIndex].textEntrySelection[optionIndex] ? solutions[problemIndex].textEntrySelection[optionIndex] : 'Enter'}
+                                                    </Text>
+                                                    {!props.isOwner ? <View style={{
+                                                        paddingLeft: 5,
+                                                        marginLeft: 'auto'
+                                                    }}>
+                                                        <Ionicons name='pencil-outline' size={16} color="#1f1f1f" />
+                                                    </View> : null}
+                                                   
+                                                </TouchableOpacity>)
 
-                                                return <View><TextInput
-                                                    keyboardType={type === 'number' ? 'numeric' : 'default'}
-                                                    style={{
-                                                        fontSize: 14,
-                                                        color: '#000000',
-                                                        width: Dimensions.get('window').width < 768 ? 120 : 200,
-                                                        textAlign: 'center',
-                                                        paddingTop: 7,
-                                                        paddingBottom: 10,
-                                                        paddingHorizontal: 10,
-                                                        borderWidth: 1,
-                                                        borderColor: '#CCC',
-                                                        marginHorizontal: 5
-                                                    }}
-                                                    value={solutions[problemIndex].textEntrySelection[optionIndex]}
-                                                    editable={!props.isOwner}
-                                                    onChangeText={(text: string) => {
-                                                        if (!props.isOwner) {
-                                                            const updatedSolution = [...solutions];
-                                                            updatedSolution[problemIndex].textEntrySelection[optionIndex] = text;
-                                                            setSolutions(updatedSolution);
-                                                            props.setSolutions(updatedSolution);
-                                                        }
-                                                        // setTestValue(text)
-                                                    }}
-                                                /></View>
+                                                // return <View><TextInput
+                                                //     keyboardType={type === 'number' ? 'numeric' : 'default'}
+                                                //     style={{
+                                                //         fontSize: 14,
+                                                //         color: '#000000',
+                                                //         width: Dimensions.get('window').width < 768 ? 120 : 200,
+                                                //         textAlign: 'center',
+                                                //         paddingTop: 7,
+                                                //         paddingBottom: 10,
+                                                //         paddingHorizontal: 10,
+                                                //         borderWidth: 1,
+                                                //         borderColor: '#CCC',
+                                                //         marginHorizontal: 5
+                                                //     }}
+                                                //     value={solutions[problemIndex].textEntrySelection[optionIndex]}
+                                                //     editable={!props.isOwner}
+                                                //     onChangeText={(text: string) => {
+                                                //         if (!props.isOwner) {
+                                                //             const updatedSolution = [...solutions];
+                                                //             updatedSolution[problemIndex].textEntrySelection[optionIndex] = text;
+                                                //             setSolutions(updatedSolution);
+                                                //             props.setSolutions(updatedSolution);
+                                                //         }
+                                                //     }}
+                                                // /></View>
                                             }
                                         }}
                                         tagsStyles={{
@@ -2379,11 +2929,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                     </Text>
                                                                 )
                                                             }}
-                                                            hiliteColor={() => props.handleHiliteColor(solutionRef)}
-                                                            foreColor={() => props.handleForeColor(solutionRef)}
-                                                            insertEmoji={() => props.handleEmoji(solutionRef)}
-                                                            onInsertLink={() => props.handleInsertLink(solutionRef)}
-                                                            onPressAddImage={() => props.handleAddImage(solutionRef)}
+                                                            hiliteColor={() => props.handleHiliteColor(partIndex === 0 ? partARef : partBRef)}
+                                                            foreColor={() => props.handleForeColor(partIndex === 0 ? partARef : partBRef)}
+                                                            insertEmoji={() => props.handleEmoji(partIndex === 0 ? partARef : partBRef)}
+                                                            onInsertLink={() => props.handleInsertLink(partIndex === 0 ? partARef : partBRef)}
+                                                            onPressAddImage={() => props.handleAddImage(partIndex === 0 ? partARef : partBRef)}
                                                             // hiliteColor={() => props.handleHiliteColorOptions((index.toString()))}
                                                             // foreColor={() => props.handleForeColorOptions((index.toString()))}
                                                             // insertEmoji={() => props.handleEmojiOptions((index.toString()))}
@@ -2432,11 +2982,10 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                 placeholder={'Part ' + alphabet[partIndex] + ' Question'}
                                                                 onChange={text => {
                                                                     const modifedText = text.split('&amp;').join('&');
-
-                                                                    const updatedSolution = [...solutions];
-                                                                    updatedSolution[problemIndex].response = modifedText;
-                                                                    setSolutions(updatedSolution);
-                                                                    props.setSolutions(updatedSolution);
+                                                                    const newProbs = [...problems];
+                                                                    newProbs[index].multipartQuestions[partIndex] = modifedText;
+                                                                    setEditQuestion(newProbs[problemIndex]);
+                                                                    setProblems(newProbs)
                                                                 }}
                                                                 // onHeightChange={handleHeightChange}
                                                                 onFocus={() => {
@@ -2478,10 +3027,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                 style={{}}
                                                                 isChecked={option.isCorrect}
                                                                 onPress={e => {
-                                                                    const updatedSolution = [...solutions];
-                                                                    updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex] = !updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex]
-                                                                    setSolutions(updatedSolution)
-                                                                    props.setSolutions(updatedSolution)
+                                                                   return;
                                                                 }}
                                                                 disabled={true}
                                                             />
@@ -2512,8 +3058,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                 minHeight={45}
                                                                 enableScrollToCaret
                                                             />
-
-
                                                         </View>)
                                                     })
                                                 }
@@ -2551,6 +3095,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 defaultTextProps={{
                                                     selectable: true
                                                 }}
+                                                tagsStyles={{
+                                                    'p': {
+                                                        lineHeight: 30,
+                                                        fontSize: 16
+                                                    }
+                                                }}
                                             />
 
                                             {
@@ -2565,11 +3115,33 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             style={{}}
                                                             isChecked={props.isOwner ? option.isCorrect : solutions[problemIndex].multipartSelection[partIndex][optionIndex]}
                                                             onPress={e => {
+                                                                // Num of correct
+                                                                let numOfCorrectAnswers = 0;
+
+                                                                problem.multipartOptions[partIndex].map((option: any) => {
+                                                                    if (option.isCorrect) numOfCorrectAnswers++;
+                                                                });
+                                                     
+
+                                                                // Num of selected
+                                                                let numOfSelected = 0;
+                                                                solutions[problemIndex].multipartSelection[partIndex].map((selection: any, i: number) => {
+                                                                    if (i !== optionIndex && selection) {
+                                                                        numOfSelected++;
+                                                                    }
+                                                                })
+
+                                                                if (numOfCorrectAnswers === numOfSelected) {
+                                                                    alert(`You can select a maximum of ${numOfCorrectAnswers} ${numOfCorrectAnswers === 1 ? 'choice' : 'choices'}. Unselect an existing choice to select a new one.`);
+                                                                    return;
+                                                                }
+
                                                                 const updatedSolution = [...solutions];
                                                                 updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex] = !updatedSolution[problemIndex].multipartSelection[partIndex][optionIndex]
                                                                 setSolutions(updatedSolution)
                                                                 props.setSolutions(updatedSolution)
                                                             }}
+                                                            disableBuiltInState={true}
                                                             disabled={props.isOwner}
                                                         />
 
@@ -2580,6 +3152,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             }}
                                                             defaultTextProps={{
                                                                 selectable: true
+                                                            }}
+                                                            tagsStyles={{
+                                                                'p': {
+                                                                    lineHeight: 30,
+                                                                    fontSize: 16
+                                                                }
                                                             }}
                                                         />
                                                     </View>
@@ -2613,7 +3191,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     width: '33%',
                                                     borderWidth: 1,
                                                     borderColor: '#DDD',
-                                                    padding: editQuestionNumber === (index + 1) ? 8 : 20,
+                                                    paddingVertical: 15,
+                                                    paddingHorizontal: 7,
                                                     height: '100%'
                                                 }}>
                                                     {editQuestionNumber === (index + 1) ?
@@ -2666,7 +3245,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     width: '33%',
                                                     borderWidth: 1,
                                                     borderColor: '#DDD',
-                                                    padding: editQuestionNumber === (index + 1) ? 8 : 20,
+                                                    paddingVertical: 15,
+                                                    paddingHorizontal: 7,
                                                     height: '100%'
                                                 }}>
                                                     {editQuestionNumber === (index + 1) ? 
@@ -2772,7 +3352,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             <View
                                 style={{
                                     width: '100%',
-                                    paddingLeft: props.isOwner ? 40 : 0
+                                    paddingBottom: 30
+                                    // paddingLeft: props.isOwner ? 40 : 0
                                 }}
                             >
                                 {props.isOwner ? (
@@ -2944,6 +3525,13 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 onChange={text => {
                                                     const modifedText = text.split('&amp;').join('&');
 
+
+                                                    if (problem.maxCharCount && problem.maxCharCount !== '' && modifedText.replace(/<[^>]*>/g, '').length > problem.maxCharCount) {
+                                                        solutionRef.current?.setContentHTML(solutions[problemIndex].response);
+                                                        alert('Cannot exceed character limit.')
+                                                        return;
+                                                    }
+
                                                     const updatedSolution = [...solutions];
                                                     updatedSolution[problemIndex].response = modifedText;
                                                     setSolutions(updatedSolution);
@@ -2974,8 +3562,72 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 // onCursorPosition={handleCursorPosition}
                                             />
                                         </ScrollView>
+                                        {!props.isOwner && problem.maxCharCount && problem.maxCharCount !== '' ? <View style={{
+                                            flexDirection: 'row',
+                                            width: '100%',
+                                            paddingTop: 10
+                                        }}>
+                                            <Text style={{
+                                                marginLeft: 'auto',
+                                                fontSize: 12
+                                            }}>
+                                                {solutions[problemIndex].response.replace(/<[^>]*>/g, '').length} / {problem.maxCharCount.toString()} characters
+                                            </Text>
+                                        </View> : null}
                                     </View>
                                 )}
+                                {props.isOwner ? <View style={{
+                                    flexDirection: 'column',
+                                }}> 
+                                    {editQuestionNumber === (index + 1) ? <View style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingLeft: 0
+                                    }}>
+                                        <Text style={{
+                                            fontSize: 13,
+
+                                        }}>
+                                            Character limit
+                                        </Text>
+                                        <TextInput 
+                                            style={{
+                                                width: 150,
+                                                borderColor: '#e8e8e8',
+                                                borderBottomWidth: 1,
+                                                fontSize: 14,
+                                                paddingTop: 13,
+                                                paddingBottom: 13,
+                                                marginTop: 0,
+                                                paddingHorizontal: 10,
+                                                marginLeft: 10,
+                                                marginBottom: 0
+                                            }}
+                                            editable={(editQuestionNumber === (index + 1))}
+                                            value={problem.maxCharCount.toString()}
+                                            onChangeText={(text) => {
+
+                                                if (Number.isNaN(Number(text))){
+                                                    alert('Character count must be a number.')
+                                                    return;
+                                                }
+
+                                                const updatedProblems = [...problems]
+                                                updatedProblems[index].maxCharCount = text
+                                                setProblems(updatedProblems)
+
+                                            }}
+                                            placeholder='optional'
+                                            placeholderTextColor={'#a2a2ac'}
+                                        />
+                                    </View> : <Text style={{
+                                        fontSize: 12,
+                                        marginLeft: 'auto'
+                                    }}>
+                                        {problem.maxCharCount && problem.maxCharCount !== '' ? problem.maxCharCount + ' character limit' : 'No character limit'}
+                                        </Text>}
+                                </View> : null}
                             </View>
                         ) : null}
 
@@ -3017,23 +3669,30 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         </Text>
                                     </MenuTrigger>
                                     <MenuOptions
-                                        customStyles={{
-                                            optionsContainer: {
-                                                padding: 10,
-                                                borderRadius: 15,
-                                                shadowOpacity: 0,
-                                                borderWidth: 1,
-                                                borderColor: '#f4f4f6',
-                                                overflow: 'scroll',
-                                                maxHeight: '100%',
-                                                width: Dimensions.get('window').width < 768 ? 300 : 400
-                                            }
+                                        optionsContainerStyle={{
+                                            shadowOffset: {
+                                                width: 2,
+                                                height: 2
+                                            },
+                                            shadowColor: '#000',
+                                            // overflow: 'hidden',
+                                            shadowOpacity: 0.07,
+                                            shadowRadius: 7,
+                                            padding: 10,
+                                            borderWidth: 1,
+                                            borderColor: '#CCC'
                                         }}
                                     >
                                         {Object.keys(regradeOptions).map((option: any, i: number) => {
                                             return (
                                                 <MenuOption value={option}>
-                                                    <Text>
+                                                    <Text 
+                                                        style={{
+                                                            fontSize: 15,
+                                                            fontFamily: 'Inter',
+                                                            paddingBottom: 3
+                                                        }}
+                                                    >
                                                         {i + 1}: {regradeOptions[option]}
                                                     </Text>
                                                 </MenuOption>
@@ -3150,6 +3809,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </TouchableOpacity>
                 </View>
             ) : null}
+        </DraxProvider>
         </View>
     );
 };
@@ -3190,5 +3850,31 @@ const styles = StyleSheet.create({
         paddingBottom: 12,
         marginTop: 5,
         marginBottom: 20
-    }
+    },
+    dragging: {
+        opacity: 0.2,
+    },
+    hoverDragging: {
+        borderColor: 'magenta',
+        borderWidth: 2,
+        width: 100,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 10,
+        marginRight: 20,
+        marginBottom: 20,
+        borderRadius: 10,
+        // backgroundColor: '#f2f2f2',
+        // borderWidth: 1,
+        // borderColor: '#ccc',
+        shadowOffset: {
+            width: 2,
+            height: 2
+        },
+        overflow: 'hidden',
+        shadowOpacity: 0.07,
+        shadowRadius: 7,
+    },
 });

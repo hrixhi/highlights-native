@@ -525,7 +525,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     /**
      * @description Validates Quiz for Creation
      */
-    const isQuizValid = useCallback(() => {
+    /**
+     * @description Validates Quiz for Creation
+     */
+     const isQuizValid = useCallback(() => {
         let error = false;
         if (problems.length === 0) {
             Alert(enterOneProblemAlert);
@@ -537,20 +540,23 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 return;
             }
         }
-        problems.map(problem => {
-            if (problem.question === '' || problem.question === 'formula:') {
-                Alert(fillMissingProblemsAlert);
+        problems.map((problem: any, problemIndex: number) => {
+
+            if (problem.question === "" && (problem.questionType !== 'textEntry' && problem.questionType !== 'inlineChoice' && problem.questionType !== 'highlightText')) {
+                alert(`Question ${problemIndex + 1} has no content.`)
                 error = true;
             }
+
             if (problem.points === '' || Number.isNaN(Number(problem.points))) {
-                Alert(enterNumericPointsAlert);
+                Alert(`Enter numeric points for Question ${problemIndex + 1}.`);
                 error = true;
             }
             let optionFound = false;
 
             // If MCQ then > 2 options
             if (!problem.questionType && problem.options.length < 2) {
-                Alert('Problem must have at least 2 options');
+                Alert(`Question ${problemIndex + 1} must have at least 2 options.`);
+                setIsSubmitting(false);
                 error = true;
             }
 
@@ -560,12 +566,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
                 problem.options.map((option: any) => {
                     if (option.option === '' || option.option === 'formula:') {
-                        Alert(fillMissingOptionsAlert);
+                        Alert(`Fill out missing options in question ${problemIndex + 1}.`);
+                        setIsSubmitting(false);
                         error = true;
                     }
 
                     if (option.option in keys) {
-                        Alert('Option repeated in a question');
+                        Alert(`Option repeated in question ${problemIndex + 1}.`);
+                        setIsSubmitting(false);
                         error = true;
                     }
 
@@ -577,10 +585,351 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 });
 
                 if (!optionFound) {
-                    Alert(eachOptionOneCorrectAlert);
+                    Alert(`Question ${problemIndex + 1} must have at least one correct answer.`);
+                    setIsSubmitting(false);
                     error = true;
                 }
             }
+
+
+            // Drag and Drop
+            // if (problem.questionType === 'dragdrop') {
+
+            //     // At least 2 groups
+            //     if (problem.dragDropHeaders.length < 2) {
+            //         alert(`Question ${problemIndex + 1} must have at least 2 Drag & Drop groups.`)
+            //         return false;
+            //     }
+                
+            //     let groupHeaderMissing = false 
+            //     let labelMissing = false
+            //     let groupEmpty = false
+
+            //     problem.dragDropHeaders.map((header: string) => {
+            //         if (!header) {
+            //             groupHeaderMissing = true
+            //         }
+            //     });
+
+            //     if (groupHeaderMissing) {
+            //         alert(`Group header is missing in Question ${problemIndex + 1}.`)
+            //         return false;
+            //     }
+
+            //     problem.dragDropData.map((items: any[]) => {
+
+            //         if (items.length === 0) {
+            //             groupEmpty = true
+            //         }
+
+            //         items.map((label: any) => {
+            //             if (label.content === '') {
+            //                 labelMissing = true
+            //             }
+            //         })
+
+            //     });
+
+            //     if (labelMissing) {
+            //         alert(`Item missing in Question ${problemIndex + 1}.`)
+            //         return false;
+            //     }
+
+            //     if (groupEmpty) {
+            //         alert(`Each group must have at least 1 item in Question ${problemIndex + 1}.`)
+            //         return false;
+            //     }
+
+            // }
+
+            // // Hotspot
+            // if (problem.questionType === 'hotspot') {
+            //     if(problem.imgUrl === '' || !problem.imgUrl) {
+            //         Alert(`Hotspot image is missing in Question ${problemIndex + 1}.`)
+            //         setIsSubmitting(false);
+            //         error = true;
+            //     }
+            //     if(!problem.hotspots || problem.hotspots.length === 0) {
+            //         Alert(`You must place at least two hotspot marker on the image in Question ${problemIndex + 1}.`);
+            //         setIsSubmitting(false);
+            //         error = true;
+            //     }
+                
+            //     let hasCorrectAnswer = false;
+
+            //     problem.hotspotOptions.map((option: any) => {
+
+            //         if (option.isCorrect) {
+            //             hasCorrectAnswer = true;
+            //         }
+
+            //     })
+
+            //     if (!hasCorrectAnswer) {
+            //         Alert(`Hotspot question ${problemIndex + 1} must have at least correct choice.`);
+            //         return;
+            //     }
+            // }
+
+            // // Highlight Text
+            // if (problem.questionType === 'highlightText') {
+
+            //     const el = document.createElement('html');
+            //     el.innerHTML = problem.highlightTextHtml;
+            //     const spans: HTMLCollection = el.getElementsByTagName('span');
+    
+            //     let spanIdCounter = 0;
+            //     let correctAnswers = 0;
+    
+            //     for (let i = 0; i < spans.length; i++) {
+            //         const span = spans.item(i);
+    
+            //         if (span.style.backgroundColor === 'rgb(97, 189, 109)') {
+            //             spanIdCounter += 1;
+            //             correctAnswers += 1;
+            //         } else if (span.style.backgroundColor === 'rgb(247, 218, 100)') {
+            //             spanIdCounter += 1;
+            //         }
+            //     }
+    
+            //     if (spanIdCounter < 2) {
+            //         Alert(`You must set at least two Hot text choices in Question ${index + 1}.`);
+            //         return;
+            //     }
+                
+            //     if (correctAnswers === 0) {
+            //         Alert(`You must set at least one Hot text choice as correct in Question ${index + 1}.`);
+            //         return;
+            //     }
+            // }
+
+            // // Inline Choice
+            // if (problem.questionType === 'inlineChoice') {
+            //     if (problem.inlineChoiceHtml === '') {
+            //         alert(`Question ${problemIndex + 1} has no content.`)
+            //         return;
+            //     }
+    
+            //     if (problem.inlineChoiceOptions.length === 0) {
+            //         alert(`Question ${problemIndex + 1} must have at lease one dropdown.`)
+            //         return;
+            //     }
+                
+            //     let lessThan2DropdownValues = false
+            //     let missingDropdownValue = false;
+            //     let missingCorrectAnswer = false;
+    
+            //     if (problem.inlineChoiceOptions.length > 0) {
+            //         problem.inlineChoiceOptions.map((choices: any[]) => {
+            //             if (choices.length < 2) {
+            //                 lessThan2DropdownValues = true
+            //             }
+    
+            //             let hasCorrect = false
+            //             choices.map((choice: any) => {
+            //                 if (choice.isCorrect) {
+            //                     hasCorrect = true
+            //                 }
+    
+            //                 if (choice.option === '') {
+            //                     missingDropdownValue = true
+            //                 }
+            //             })
+    
+            //             if (!hasCorrect) {
+            //                 missingCorrectAnswer = true
+            //             }
+    
+            //         })
+    
+            //         if (lessThan2DropdownValues) {
+            //             alert(`Each dropdown in question ${problemIndex + 1} must have at lease two options.`)
+            //             return;
+            //         }
+    
+            //         if (missingDropdownValue) {
+            //             alert(`Each dropdown option must have a value in question ${problemIndex + 1}.`)
+            //             return;
+            //         }
+    
+            //         if (missingCorrectAnswer) {
+            //             alert(`Each dropdown must have a correct answer in question ${problemIndex + 1}.`)
+            //             return;
+            //         }
+            //     }
+    
+            // }
+
+            // // Text Entry
+            // if (problem.questionType === 'textEntry') {
+            //     if (problem.textEntryHtml === '') {
+            //         alert(`Question ${problemIndex + 1} has no content.`)
+            //         return;
+            //     }
+
+            //     if (problem.textEntryOptions.length === 0) {
+            //         alert(`Text entry question ${problemIndex + 1} must have at lease one entry.`)
+            //         return;
+            //     }
+
+            //     let missingEntryAnswer = false;
+            //     let missingEntryPoints = false;
+            //     let pointsNotANumber = false;
+
+            //     problem.textEntryOptions.map((choice: any, problemIndex: number) => {
+            //         if (choice.option === '') {
+            //             missingEntryAnswer = true;
+            //         }
+
+            //         if (choice.points === '') {
+            //             missingEntryPoints = true
+            //         }
+
+            //         if (Number.isNaN(Number(choice.points))) {
+            //             pointsNotANumber = true
+            //         }
+
+            //     })
+
+            //     if (missingEntryAnswer) {
+            //         alert(`Each Text entry option must have an answer in question ${problemIndex + 1}.`)
+            //         return;
+            //     }
+
+            //     if (missingEntryPoints) {
+            //         alert(`Each Text entry must have points in question ${problemIndex + 1}.`)
+            //         return;
+            //     }
+
+            //     if (pointsNotANumber) {
+            //         alert(`Each Text entry must have numeric points in question ${problemIndex + 1}.`)
+            //         return;
+            //     }
+
+            // }
+
+            // // Multipart 
+            // if (problem.questionType === 'multipart') {
+            //     if (problem.multipartQuestions[0] === '' || problem.multipartQuestions[1] === '') {
+            //         alert(`Part A and Part B questions cannot be empty in question ${problemIndex + 1}`);
+            //         return;
+            //     }
+
+            //     // Part A
+            //     let hasOneCorrect = false;
+            //     let hasMissingOption = false;
+
+            //     // At least two choices
+            //     if (problem.multipartOptions[0].length < 2) {
+            //         alert(`Part A must have at least two choices in question ${problemIndex + 1}`)
+            //         return;
+            //     }
+
+            //     problem.multipartOptions[0].map((option: any) => {
+            //         if (option.isCorrect) {
+            //             hasOneCorrect = true
+            //         }
+
+            //         if (option.option === '') {
+            //             hasMissingOption = true;
+            //         }
+            //     })
+
+            //     if (!hasOneCorrect) {
+            //         alert(`Part A must have at least one correct choice in question ${problemIndex + 1}`)
+            //         return;
+            //     }
+
+            //     if (hasMissingOption) {
+            //         alert(`Part A option is empty in question ${problemIndex + 1}`)
+            //     }
+
+            //     if (problem.multipartOptions[0].length < 2) {
+            //         alert(`Part A must have at least two choices in question ${problemIndex + 1}`)
+            //         return;
+            //     }
+
+            //     // Part B
+            //     problem.multipartOptions[1].map((option: any) => {
+            //         if (option.isCorrect) {
+            //             hasOneCorrect = true
+            //         }
+
+            //         if (option.option === '') {
+            //             hasMissingOption = true;
+            //         }
+            //     })
+
+            //     if (!hasOneCorrect) {
+            //         alert(`Part A must have at least one correct choice in question ${problemIndex + 1}`)
+            //         return;
+            //     }
+
+            //     if (hasMissingOption) {
+            //         alert(`Part A option is empty in question ${problemIndex + 1}`)
+            //     }
+            // }
+
+            // // Equation Editor
+            // if (problem.questionType === 'equationEditor') {
+            //     if (problem.correctEquations[0] === '') {
+            //         alert('Correct equation cannot be empty.')
+            //         return;
+            //     }
+            // }
+    
+            // // Match table grid
+            // if (problem.questionType === 'matchTableGrid') {
+    
+            //     let missingColHeader = false;
+            //     let missingRowHeader = false;
+            //     let missingCorrect = false;
+    
+            //     problem.matchTableHeaders.map((header: string) => {
+            //         if (header === '') {
+            //             missingColHeader = true;
+            //         }
+            //     })
+    
+            //     if (missingColHeader) {
+            //         alert(`Column header cannot be empty in question ${problemIndex + 1}.`)
+            //         return;
+            //     }
+    
+            //     problem.matchTableOptions.map((rowHeader: string) => {
+            //         if (rowHeader === '') {
+            //             missingRowHeader = true
+            //         }
+            //     })
+    
+            //     if (missingRowHeader) {
+            //         alert(`Row header cannot be empty in question ${problemIndex + 1}.`)
+            //         return;
+            //     }
+    
+            //     problem.matchTableChoices.map((row: any) => {
+            //         let hasCorrect = false;
+    
+            //         if (missingCorrect) {
+            //             return;
+            //         }
+    
+            //         row.map((option: boolean) => {
+            //             if (option) {
+            //                 hasCorrect = true
+            //             }
+            //         })
+    
+            //         if (!hasCorrect) {
+            //             missingCorrect = true
+            //         }
+            //     })
+    
+            //     if (missingCorrect) {
+            //         alert(`Each row must have a correct response in question ${problemIndex + 1}.`)
+            //         return;
+            //     }
+            // }
         });
         if (error) {
             // Alert

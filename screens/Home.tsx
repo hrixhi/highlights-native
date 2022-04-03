@@ -592,8 +592,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         return a.trigger > b.trigger ? 1 : -1
                     })
 
-                    console.log("Sorted notifications", sortedNotifications)
-
                     if (sortedNotifications.length === 0) {
                         // no requests to process
                         return;

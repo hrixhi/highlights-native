@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TextInput, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, TextInput, ActivityIndicator, TouchableOpacity, Dimensions, useWindowDimensions, Image } from 'react-native';
 import { Text, View } from './Themed';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 import { RichEditor } from 'react-native-pell-rich-editor';
@@ -19,6 +19,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [percentage, setPercentage] = useState("");
     const [comment, setComment] = useState(props.comment ? props.comment : "");
     const [headers, setHeaders] = useState<any>(props.headers)
+    const { width: contentWidth } = useWindowDimensions();
 
     if (!props.solutions) {
         return null;
@@ -472,63 +473,825 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     </View>
                                 </View>
 
-                                
-                            
                             </View>
 
                         {
                             (!problem.questionType || problem.questionType === "trueFalse") && problem.options.map((option: any, i: any) => {
 
+                                let selected = solutions[index].selected[i].isSelected;
+                                let isCorrectAnswer = option.isCorrect;
+
                                 let color = '#000000'
-                                if (option.isCorrect) {
-                                    color = '#006AFF'
-                                } else if (!option.isCorrect && solutions[index].selected[i].isSelected) {
+                                let background = 'none'
+
+                                if (selected && isCorrectAnswer) {
+                                    color = '#35ac78'
+                                    background = '#d4f3e5'
+                                } else if (selected && !isCorrectAnswer) {
                                     color = '#f94144'
+                                    background = '#ffe6f3'
+                                } else if (!selected && isCorrectAnswer) {
+                                    color = '#35ac78'
+                                    background = '#d4f3e5'
                                 }
 
-                                return <View style={{ flexDirection: 'row' }} key={solutions.toString() + i.toString()}>
-                                    <View style={{ width: '20%', paddingRight: 10, paddingTop: 21 }}>
-                                        <BouncyCheckbox
-                                            style={{}}
-                                            isChecked={
-                                                solutions[index].selected[i].isSelected
-                                            }
-                                            onPress={e => {
-                                                return;
-                                            }}
+                                return <View style={{
+                                    flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                                }}>
+                                    
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        marginBottom: 10,
+                                        marginTop: 20,
+                                    }}>
+                                        <View style={{ }}>
+                                            <BouncyCheckbox
+                                                style={{}}
+                                                isChecked={
+                                                    solutions[index].selected[i].isSelected
+                                                }
+                                                onPress={e => {
+                                                    return;
+                                                }}
                                                 disabled={true}
-                                        />
-                                    </View>
+                                            />
+                                        </View>
 
-                                    <View
-                                        style={{
-                                            paddingTop: 10,
-                                            width: '100%',
-                                            height: '100%',
-                                            flex: 1
-                                        }}
-                                    >
-                                        {/* <RichEditor
-                                            initialContentHTML={option.option}
-                                            disabled={true}
-                                            style={{
-                                                width: '100%',
-                                                height: '100%',
-                                                flex: 1
-                                            }}
-                                        /> */}
-                                         <RenderHtml
-                                            source={{
-                                                html: option.option
-                                            }}
-                                            defaultTextProps={{
-                                                selectable: true
-                                            }}
-                                        />
+                                        <View style={{
+                                            width: Dimensions.get('window').width < 768 ? '80%' : '50%',
+                                            fontSize: 14,
+                                            paddingHorizontal: 15,
+                                            color,
+                                            lineHeight: 25,
+                                            backgroundColor: (selected || isCorrectAnswer) ? background : '#fff',
+                                            borderColor: (selected || isCorrectAnswer) ? color : 'none',
+                                            borderWidth: (selected || isCorrectAnswer) ? 1 : 0, 
+                                            padding: 7,
+                                            borderRadius: 5
+                                        }}>
+                                            <RenderHtml
+                                                source={{
+                                                    html: option.option
+                                                }}
+                                                defaultTextProps={{
+                                                    selectable: true
+                                                }}
+                                            />
+                                        </View>
                                     </View>
+                                    {/* Correct */}
+                                    <View style={{
+                                        paddingLeft: 30
+                                    }}>
+                                        {
+                                            (selected || isCorrectAnswer) ? 
+                                                <Text style={{
+                                                    fontSize: 12,
+                                                    fontFamily: 'Overpass',
+                                                    paddingLeft: 15,
+                                                    textTransform: 'uppercase',
+                                                    flexDirection: 'column',
+                                                    color: '#006AFF'
+                                                                        
+                                                }}>
+                                                    {(selected && isCorrectAnswer) ? 'Correct response' : (selected && !isCorrectAnswer) ? (props.isOwner ? 'Student response' : 'Your response') : 'Missing Correct answer'}
+                                                </Text> : null
+                                        }
+                                    </View>
+                                    
                                 </View>
                             })
                         }
+
+                        {/* Hotspots */}
+                    {
+                        problem.questionType === 'hotspot' ?
+                            <View style={{
+                                width: '100%',overflow: 'hidden', display: 'flex', flexDirection: 'row', justifyContent: 'center',
+                            }}>
+                                <View style={{
+                                    width: Dimensions.get('window').width < 768 ? 300 : 400, height: Dimensions.get('window').width < 768 ? 300 : 400,
+                                }}>
+                                    <Image 
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            position: 'relative',
+                                        }}
+                                        resizeMode="stretch"
+                                        source={{
+                                            uri: problem.imgUrl
+                                        }}
+                                    />
+                                    {
+                                        // Render all the markers 
+                                        problem.hotspotOptions.map((option: any, ind: number) => {
+
+                                            const spot = problem.hotspots[ind]
+
+                                            const isSelected =  solutions[index].hotspotSelection[ind]
+                                            const optionIsCorrect = problem.hotspotOptions[ind].isCorrect
+
+                                            let backgroundColor = '#fff';
+                                            let borderColor = '#006Aff';
+                                            let color = '#006Aff';
+
+                                            if (isSelected && !optionIsCorrect) {
+                                                backgroundColor = '#ffe6f3';
+                                                borderColor = '#f94144';
+                                                color = '#f94144';
+
+                                            } else if (isSelected && optionIsCorrect) {
+                                                backgroundColor = '#d4f3e5';
+                                                borderColor = '#35ac78';
+                                                color = '#35ac78';
+
+                                            } else if (!isSelected && optionIsCorrect) {
+                                                backgroundColor = '#006Aff';
+                                                borderColor = '#006Aff';
+                                                color = '#fff';
+                                            } 
+
+                                            return (<View 
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: `${spot.y}%`,
+                                                    left: `${spot.x}%`,
+                                                    backgroundColor,
+                                                    height: 25, 
+                                                    width: 25, 
+                                                    borderColor, 
+                                                    borderWidth: 1,
+                                                    borderRadius: 12.5
+                                                }}
+                                            > 
+                                                <Text style={{
+                                                    color, 
+                                                    lineHeight: 25, 
+                                                    textAlign: 'center',
+                                                }}>
+                                                    {ind + 1}
+                                                </Text>
+                                            </View> )
+                                        })
+
+                                    }
+                                </View>
+                            </View> : null
+                        }
+
+
+                        {/*  Hotspot Labels */}
+                        {
+                            problem.questionType === 'hotspot' ? ( 
+                                <View style={{
+                                    paddingTop: 50
+                                }}
+                                
+                                >
+                                    <View style={{
+                                        flexDirection: 'column',
+                                    }}>
+                                        {
+                                            problem.hotspotOptions.map((option: any, ind: number) => {
+
+
+                                                const isSelected = solutions[index].hotspotSelection[ind]
+
+                                                const optionIsCorrect = option.isCorrect
+
+                                                // let classNameHighlight = 'highlightTextOption';
+
+                                                // let backgroundColor = '#e6f0ff'
+                                                let borderColor = '#fff'
+                                                let color = '#000'
+
+                                                if (isSelected && !optionIsCorrect) {
+                                                    // backgroundColor = '#ffe6f3';
+                                                    borderColor = '#f94144';
+                                                    color = '#f94144';
+                                                } else if (isSelected && optionIsCorrect) {
+                                                    // backgroundColor = '#d4f3e5';
+                                                    borderColor = '#35ac78';
+                                                    color = '#35ac78';
+                                                } else if (!isSelected && optionIsCorrect) {
+                                                    // backgroundColor = '#006aff'
+                                                    borderColor = '#006aff'
+                                                    color = '#006aff'
+                                                } 
+
+                                                return (<View style={{ 
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    marginRight: 20,
+                                                    marginBottom: 20
+                                                }}>
+
+                                                    <BouncyCheckbox
+                                                        style={{}}
+                                                        disableBuiltInState={true}
+                                                        isChecked={isSelected}
+                                                        onPress={e => { 
+                                                            return;
+                                                        }}
+                                                        disabled={true}
+                                                    />
+
+                                                    {<View style={{
+                                                        borderRadius: 8,
+                                                        padding: 7,
+                                                        // backgroundColor,
+                                                        borderColor,
+                                                        borderWidth: 2
+                                                    }}>
+                                                        <Text style={{
+                                                            fontSize: 15,
+                                                            fontFamily: 'Overpass',
+                                                            color
+                                                        }}>
+                                                            {ind + 1}. {option.option}
+                                                        </Text>
+                                                        
+                                                    </View>}
+
+                                                </View>)
+                                            })
+                                        }
+                                    </View>
+                                </View>
+                            ) : null
+                        }
+
+                        {
+                            problem.questionType === 'dragdrop' ?
+                                <View style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    paddingTop: 20,
+                                }}>
+                                    {problem.dragDropHeaders.map((header: string, groupIndex: number) => {
+                                        // 
+                                        return (<View style={{ width: 240, marginRight: 30, padding: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 15, marginBottom: Dimensions.get('window').width < 768 ? 30 : 0 }}>
+                                            <Text style={{
+                                                fontSize: 16,
+                                                width: '100%',
+                                                textAlign: 'center',
+                                                marginBottom: 20,    
+                                                fontFamily: 'Inter'           
+                                            }}>
+                                                {header}
+                                            </Text>
+
+                                            {
+                                                solutions[index].dragDropChoices[groupIndex].map((label: any) => {
+                                                    return <View style={{
+                                                        // width: 200,
+                                                        display: 'flex',
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        paddingVertical: 16,
+                                                        paddingHorizontal: 10,
+                                                        marginRight: 20,
+                                                        marginBottom: 20,
+                                                        borderRadius: 10,
+                                                        // backgroundColor: '#f2f2f2',
+                                                        borderWidth: 1,
+                                                        borderColor: '#ccc',
+                                                        shadowOffset: {
+                                                            width: 2,
+                                                            height: 2
+                                                        },
+                                                        overflow: 'hidden',
+                                                        shadowOpacity: 0.07,
+                                                        shadowRadius: 7,
+                                                    }}>
+                                                        <Ionicons name={"ellipsis-vertical-outline"} size={16} color="#1f1f1f" />
+                                                        <Text
+                                                            style={{
+                                                                // width: '100%',
+                                                                marginLeft: 5
+                                                            }}
+                                                        >
+                                                            {label.content}
+                                                        </Text>
+                                                        <View style={{
+                                                            marginLeft: 'auto'
+                                                        }}>
+                                                            <Ionicons name={label.correct ? 'checkmark-circle-outline' : 'close-circle-outline'} size={16} color={label.correct ? '#35AC78' : '#ff0000'} />
+                                                        </View>
+                                                    </View>
+                                                })
+                                            }
+                                        </View>)
+                                    })}
+                                </View> : null
+                        }
+
+                        {   
+                            problem.questionType === 'highlightText' ? <View style={{ paddingTop: 20, paddingBottom: 30 }}>
+                                {
+                                    <RenderHtml
+                                        contentWidth={contentWidth}
+                                        source={{
+                                            html: problem.highlightTextHtml
+                                        }}
+                                        defaultTextProps={{
+                                            selectable: false
+                                        }}
+                                        // renderers={renderers}
+                                        renderers={{
+                                            span: ({
+                                                TDefaultRenderer,
+                                                ...rendererProps
+                                              }) => {
+
+                                                const highlightTextChoices = problem.highlightTextChoices
+                                                const highlightTextSelection = solutions[index].highlightTextSelection
+                                              
+                                                const node = rendererProps.tnode.domNode;
+
+                                                // console.log("T Node domNode", node)
+
+                                                if (!node.attribs.id) {
+                                                    // Default return;
+                                                    return <TDefaultRenderer {...rendererProps} />
+                                                }
+
+                                                if (!node.attribs.id) {
+                                                    return <span>{node.children[0].data}</span>
+                                                }
+                                                
+                                                let classNameHighlight = 'highlightTextOption';
+                                                let borderColor = '#e6f0ff'
+                                                let backgroundColor = '#e6f0ff'
+                                                let color = '#006Aff'
+
+                                                if (highlightTextSelection[Number(node.attribs.id)] && !highlightTextChoices[Number(node.attribs.id)]) {
+                                                    classNameHighlight = 'highlightTextWrong'
+                                                    borderColor = '#f94144'
+                                                    backgroundColor = '#ffe6f3'
+                                                    color = '#f94144'
+                                                } else if (highlightTextSelection[Number(node.attribs.id)] && highlightTextChoices[Number(node.attribs.id)]) {
+                                                    classNameHighlight = 'highlightTextCorrect'
+                                                    borderColor = '#35ac78'
+                                                    backgroundColor = '#d4f3e5'
+                                                    color = '#35ac78'
+                                                } else if (!highlightTextSelection[Number(node.attribs.id)] && highlightTextChoices[Number(node.attribs.id)]) {
+                                                    classNameHighlight = 'highlightTextActive'
+                                                    borderColor = '#006Aff'
+                                                    backgroundColor = '#006AFF'
+                                                    color = '#fff'
+                                                } 
+
+                                                return <View
+                                                    style={{
+                                                        borderColor,
+                                                        backgroundColor,
+                                                        borderRadius: 10,
+                                                        paddingHorizontal: 8,
+                                                        paddingTop: 7,
+                                                        marginVertical: 5,
+                                                    }}
+                                                >
+                                                    <Text style={{
+                                                        color,
+                                                        fontSize: 16,
+                                                        flexWrap: 'wrap',
+                                                        // marginVertical: 5
+                                                    }}>
+                                                        {node.children[0].data}
+                                                    </Text>
+                                                </View>
+                                                  
+                                            }
+                                        }}
+                                        tagsStyles={{
+                                            'p': {
+                                                lineHeight: 50,
+                                                fontSize: 16
+                                            }
+                                        }}
+                                    />
+                                }
+                            </View> : null
+                        }
+
+                        {/* Inline Choice */}
+                        {   
+                            problem.questionType === 'inlineChoice' ? <View style={{ paddingTop: 20, paddingBottom: 30 }}>
+                                {
+                                    <RenderHtml
+                                        contentWidth={contentWidth}
+                                        source={{
+                                            html: problem.inlineChoiceHtml
+                                        }}
+                                        defaultTextProps={{
+                                            selectable: false
+                                        }}
+                                        renderers={{
+                                            span: ({
+                                                TDefaultRenderer,
+                                                ...rendererProps
+                                              }) => {
+
+                                                const inlineChoiceOptions = problem.inlineChoiceOptions
+
+                                                let inlineChoiceSelection = solutions[index].inlineChoiceSelection
+
+                                              
+                                                const node = rendererProps.tnode.domNode;
+
+                                                if (!node.attribs.id) {
+                                                    // Default return;
+                                                    return <TDefaultRenderer {...rendererProps} />
+                                                }
+
+                                                let isCorrect = false;
+
+                                                inlineChoiceOptions[Number(node.attribs.id)].map((option: any, optionIndex: number) => {
+                                                    if (option.option === solutions[index].inlineChoiceSelection[optionIndex] && option.isCorrect) {
+                                                        isCorrect = true;
+                                                    } 
+        
+                                                })
+
+                                                return  <View style={{
+                                                    width: Dimensions.get('window').width < 768 ? 120 : 200,
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    borderWidth: 2,
+                                                    borderColor: isCorrect ? '#35ac78' : '#f94144',
+                                                    paddingHorizontal: 10,
+                                                    marginHorizontal: 5,
+                                                    marginBottom: 3
+                                                }}>
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 14,
+                                                            color: '#000000',
+                                                            maxWidth: '80%',
+                                                            textAlign: 'center',
+                                                            paddingTop: 7,
+                                                            paddingBottom: 10,
+                                                        }}
+                                                        ellipsizeMode="tail"
+                                                        numberOfLines={1}
+                                                    >
+                                                        {(inlineChoiceSelection[Number(node.attribs.id)] ? inlineChoiceSelection[Number(node.attribs.id)] : 'No selection')}
+                                                    </Text>
+                                                    <View style={{
+                                                        paddingLeft: 5,
+                                                        marginLeft: 'auto'
+                                                    }}>
+                                                        <Ionicons name="chevron-down-outline" style={{
+                                                            paddingLeft: 3
+                                                        }} size={15} />
+                                                    </View>
+                                                </View>
+
+                                               
+                                            }
+                                        }}
+                                        tagsStyles={{
+                                            'p': {
+                                                lineHeight: 50,
+                                                fontSize: 16
+                                            }
+                                        }}
+                                    />
+                                }
+                            </View> : null
+                        }
+
+                        {/* Text Entry */}
+                        {   
+                            problem.questionType === 'textEntry' ? <View style={{ paddingTop: 20, paddingBottom: 30 }}>
+                                {
+                                    <RenderHtml
+                                        contentWidth={contentWidth}
+                                        source={{
+                                            html: problem.textEntryHtml
+                                        }}
+                                        defaultTextProps={{
+                                            selectable: false
+                                        }}
+                                        renderers={{
+                                            span: ({
+                                                TDefaultRenderer,
+                                                ...rendererProps
+                                              }) => {
+
+                                                const textEntryOptions = problem.textEntryOptions
+
+                                                let responses;
+
+                                                if (!props.isOwner) {
+                                                    responses = solutions[index].textEntrySelection
+                                                }
+
+                                                const node = rendererProps.tnode.domNode;
+
+                                                if (!node.attribs.id) {
+                                                    // Default return;
+                                                    return <TDefaultRenderer {...rendererProps} />
+                                                }
+
+                                                const option = textEntryOptions[Number(node.attribs.id)];
+
+                                                const value = solutions[index].textEntrySelection[Number(node.attribs.id)]
+
+                                                let isCorrect = value.toString().trim().toLowerCase() === option.option.toString().trim().toLowerCase()
+
+                                                return (<View style={{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    width: 100,
+                                                    // height: 50,
+                                                    paddingVertical: 8,
+                                                    paddingHorizontal: 10,
+                                                    borderWidth: 2,
+                                                    borderColor: isCorrect ? '#35ac78' : '#f94144',
+                                                    marginBottom: 5
+                                                }}>
+                                                    <Text style={{
+                                                        // width: '90%'
+                                                        textAlign: 'center'
+                                                    }}
+                                                        ellipsizeMode='tail'
+                                                        numberOfLines={1}
+                                                    >
+                                                        {solutions[index].textEntrySelection[Number(node.attribs.id)] ? solutions[index].textEntrySelection[Number(node.attribs.id)] : 'No value'}
+                                                    </Text>
+                                                    {!props.isOwner ? <View style={{
+                                                        paddingLeft: 5,
+                                                        marginLeft: 'auto'
+                                                    }}>
+                                                        <Ionicons name='pencil-outline' size={16} color="#1f1f1f" />
+                                                    </View> : null}
+                                                   
+                                                </View>)
+                                            }
+                                        }}
+                                        tagsStyles={{
+                                            'p': {
+                                                lineHeight: 50,
+                                                fontSize: 16
+                                            }
+                                        }}
+                                    />
+                                }
+                            </View> : null
+                        }
+
+                        {       
+                            problem.questionType === 'multipart' ? <View style={{
+                                flexDirection: 'column', 
+                                paddingBottom: 30
+                                // paddingLeft: Dimensions.get("window").width < 768 ? 0 : 40
+                            }}>
+                                { problem.multipartOptions.map((part: any, partIndex: number) => {
+                                    const alphabet = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+
+                                    return <View style={{
+                                            flexDirection: 'column',
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 18,
+                                                fontFamily: 'Overpass',
+                                                marginTop: 30,
+                                                marginBottom: 20,
+                                            }}>Part {alphabet[partIndex]}</Text>
+
+                                            <RenderHtml
+                                                contentWidth={contentWidth}
+                                                source={{
+                                                    html: problem.multipartQuestions[partIndex]
+                                                }}
+                                                defaultTextProps={{
+                                                    selectable: true
+                                                }}
+                                                tagsStyles={{
+                                                    'p': {
+                                                        lineHeight: 30,
+                                                        fontSize: 16
+                                                    }
+                                                }}
+                                            />
+
+                                            {
+                                                part.map((option: any, optionIndex: number) => {
+
+                                                    let selected = solutions[index].multipartSelection[partIndex][optionIndex];
+                                                    let isCorrectAnswer = option.isCorrect;
+
+                                                    let color = '#000000'
+                                                    let background = 'none'
+
+                                                    if (selected && isCorrectAnswer) {
+                                                        color = '#35ac78'
+                                                        background = '#d4f3e5'
+                                                    } else if (selected && !isCorrectAnswer) {
+                                                        color = '#f94144'
+                                                        background = '#ffe6f3'
+                                                    } else if (!selected && isCorrectAnswer) {
+                                                        color = '#35ac78'
+                                                        background = '#d4f3e5'
+                                                    }
+
+                                                    return <View style={{
+                                                        flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+
+                                                    }}>
+                                                        <View style={{
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            marginBottom: 10,
+                                                            marginTop: 20,
+                                                        }}>
+                                                            <BouncyCheckbox
+                                                                style={{}}
+                                                                isChecked={solutions[index].multipartSelection[partIndex][optionIndex]}
+                                                                onPress={e => {
+                                                                    // Num of correct
+                                                                    return;
+                                                                }}
+                                                                disableBuiltInState={true}
+                                                                disabled={true}
+                                                            />
+
+
+                                                            <View style={{
+                                                                width: Dimensions.get('window').width < 768 ? '80%' : '50%',
+                                                                fontSize: 14,
+                                                                paddingHorizontal: 15,
+                                                                color,
+                                                                lineHeight: 25,
+                                                                backgroundColor: (selected || isCorrectAnswer) ? background : '#fff',
+                                                                borderColor: (selected || isCorrectAnswer) ? color : 'none',
+                                                                borderWidth: (selected || isCorrectAnswer) ? 1 : 0, 
+                                                                padding: 7,
+                                                                borderRadius: 5
+                                                            }}>
+                                                                <RenderHtml
+                                                                    contentWidth={contentWidth}
+                                                                    source={{
+                                                                        html: option.option
+                                                                    }}
+                                                                    defaultTextProps={{
+                                                                        selectable: true
+                                                                    }}
+                                                                    tagsStyles={{
+                                                                        'p': {
+                                                                            lineHeight: 30,
+                                                                            fontSize: 16
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </View>
+                                                        </View>
+                                                        <View style={{
+                                                            paddingLeft: 30
+                                                        }}>
+                                                            {
+                                                                (selected || isCorrectAnswer) ? 
+                                                                    <Text style={{
+                                                                        fontSize: 12,
+                                                                        fontFamily: 'Overpass',
+                                                                        paddingLeft: 15,
+                                                                        textTransform: 'uppercase',
+                                                                        flexDirection: 'column',
+                                                                        color: '#006AFF'
+                                                                        
+                                                                    }}>
+                                                                        {(selected && isCorrectAnswer) ? 'Correct response' : (selected && !isCorrectAnswer) ? (props.isOwner ? 'Student response' : 'Your response') : 'Missing Correct answer'}
+                                                                    </Text> : null
+                                                            }
+                                                        </View>
+                                                    </View>
+                                                })
+                                            }
+
+                                        </View>
+
+                                        
+                                })}
+                            </View> : null
+                        }
+
+                        {
+                            problem.questionType === 'matchTableGrid' ?
+                                <View style={{
+                                    flexDirection: 'column', 
+                                    marginTop: 20,
+                                    paddingBottom: 30
+                                }}>
+                                    {/* Header row */}
+                                    <View style={{ 
+                                        flexDirection: 'row', alignItems: 'center', paddingLeft: 0
+                                    }}>
+                                        <View style={{
+                                            width: '33%',
+                                        }} />
+                                        {
+                                            problem.matchTableHeaders.map((header: any, headerIndex: number) => {
+                                                return <View style={{
+                                                    width: '33%',
+                                                    borderWidth: 1,
+                                                    borderColor: '#DDD',
+                                                    paddingVertical: 15,
+                                                    paddingHorizontal: 7,
+                                                    height: '100%'
+                                                }}>
+                                                    <Text style={{
+                                                        fontFamily: 'overpass', 
+                                                        fontSize: 14,
+                                                        textAlign: 'center',
+                                                        width: '100%',
+                                                    }}>
+                                                        {header}
+                                                    </Text>
+                                                </View>
+                                            })
+                                        }
+                                    </View>
+                                    {/* Rows */}
+                                    {
+                                        problem.matchTableChoices.map((choiceRow: any, rowIndex: number) => {
+                                            return (<View style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingLeft: 0
+                                            }}>
+                                                <View style={{
+                                                    width: '33%',
+                                                    borderWidth: 1,
+                                                    borderColor: '#DDD',
+                                                    paddingVertical: 15,
+                                                    paddingHorizontal: 7,
+                                                    height: '100%'
+                                                }}>
+                                                    <Text style={{
+                                                        fontFamily: 'overpass', 
+                                                        fontSize: 14,
+                                                        textAlign: 'center',
+                                                        width: '100%',
+                                                    }}>
+                                                        {problem.matchTableOptions[rowIndex]}
+                                                    </Text>
+                                                </View>
+                                                {
+                                                    choiceRow.map((choice: boolean, choiceIndex: number) => {
+
+                                                        let borderColor = '#DDD';
+                                                        let background = 'none';
+
+                                                        const selected = solutions[index].matchTableSelection[rowIndex][choiceIndex]
+                                                        
+                                                        if (choice) {
+                                                            borderColor = '#35ac78'
+                                                            background = '#d4f3e5'
+                                                        } else if (!choice && selected) {
+                                                            borderColor = '#f94144'
+                                                            background = '#ffe6f3'
+                                                        }
+
+                                                        return <View style={{
+                                                            width: '33%',
+                                                            borderWidth: 1,
+                                                            borderColor,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            flexDirection: 'row',
+                                                            justifyContent: 'center',
+                                                            height: '100%',
+                                                            backgroundColor: background
+                                                        }}>
+                                                            <BouncyCheckbox
+                                                                style={{
+                                                                    padding: 0,
+                                                                    margin: 0
+                                                                }}
+                                                                isChecked={solutions[index].matchTableSelection[rowIndex][choiceIndex]}
+                                                                onPress={e => {
+                                                                    return;
+                                                                }}
+                                                                disabled={true}
+                                                                disableBuiltInState={true}
+                                                            />
+                                                        </View>
+                                                    })
+                                                }
+                                            </View>)
+                                        })
+                                    }
+
+                                </View> : null
+                        }
+
+
                         {
                             problem.questionType === "freeResponse" ?
                                 <View style={{ width: '100%', paddingHorizontal: 40 }}>
