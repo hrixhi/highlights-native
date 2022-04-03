@@ -570,7 +570,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     
                             const title = event.channelName && event.channelName !== '' ? event.channelName + ' - ' + event.title : event.title
                             
-                            const subtitle = event.channelName && event.channelName !== '' ? (event.channelName + ' - ' + alertTimeDisplay(event.start, false)) : alertTimeDisplay(event.start, false)
+                            const subtitle = alertTimeDisplay(event.start, false)
 
                             if (trigger1 > new Date()) {
                                 scheduleNotifications.push({
@@ -591,8 +591,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     const sortedNotifications = scheduleNotifications.sort((a: any, b: any) => {
                         return a.trigger > b.trigger ? 1 : -1
                     })
-
-                    console.log("Sorted notifications", sortedNotifications)
 
                     if (sortedNotifications.length === 0) {
                         // no requests to process

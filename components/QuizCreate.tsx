@@ -40,22 +40,22 @@ const questionTypeOptions = [
         label: 'True/False',
         value: 'trueFalse'
     },
-    {
-        label: "Drag & Drop",
-        value: "dragdrop"
-    },
-    {
-        label: "Hotspot",
-        value: "hotspot"
-    }
+    // {
+    //     label: "Drag & Drop",
+    //     value: "dragdrop"
+    // },
+    // {
+    //     label: "Hotspot",
+    //     value: "hotspot"
+    // }
 ];
 
 const questionTypeLabels = {
     '': 'MCQ',
     freeResponse: 'Free response',
     trueFalse: 'True/False',
-    dragdrop: 'Drag Drop',
-    hotspot: 'Hotspot'
+    // dragdrop: 'Drag Drop',
+    // hotspot: 'Hotspot'
 };
 
 const requiredOptions = [
@@ -1193,7 +1193,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             </View>
                         </View>
                         
-                        {problem.questionType === 'freeResponse' ? (
+                        {problem.questionType === 'freeResponse' ? (<View style={{
+                            flexDirection: 'column'
+                        }}>
                             <Text
                                 style={{
                                     marginTop: 20,
@@ -1209,7 +1211,59 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             >
                                 Free Response Answer
                             </Text>
+                            {editQuestionNumber === (index + 1) ? <View style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingLeft: (Dimensions.get('window').width < 768 || (editQuestionNumber !== (index + 1))) ? 0 : 60
+                                }}>
+                                    <Text style={{
+                                        fontSize: 13,
+
+                                    }}>
+                                        Character limit
+                                    </Text>
+                                    <DefaultTextInput 
+                                        style={{
+                                            width: 100,
+                                            borderColor: '#e8e8e8',
+                                            borderBottomWidth: 1,
+                                            fontSize: 14,
+                                            paddingTop: 13,
+                                            paddingBottom: 13,
+                                            marginTop: 0,
+                                            paddingHorizontal: 10,
+                                            marginLeft: 10,
+                                            marginBottom: 0
+                                        }}
+                                        editable={(editQuestionNumber === (index + 1))}
+                                        value={problem.maxCharCount}
+                                        onChangeText={(text) => {
+
+                                            if (Number.isNaN(Number(text))){
+                                                alert('Character count must be a number.')
+                                                return;
+                                            }
+
+                                            const updatedProblems = [...problems]
+                                            updatedProblems[index].maxCharCount = text
+                                            setProblems(updatedProblems)
+                                            props.setProblems(updatedProblems)
+
+                                        }}
+                                        placeholder='optional'
+                                        placeholderTextColor={'#a2a2ac'}
+                                    />
+                                </View> : <Text style={{
+                                    fontSize: 12,
+                                    marginLeft: 'auto'
+                                }}>
+                                    {problem.maxCharCount && problem.maxCharCount !== '' ? problem.maxCharCount + ' character limit' : 'No character limit'}
+                                </Text>}
+                            </View>
                         ) : null}
+
+                            
 
                         {problem.options.map((option: any, i: any) => {
 

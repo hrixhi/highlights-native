@@ -232,6 +232,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [downloadOriginalInProgress, setDownloadOriginalInProgress] = useState(false)
     const [downloadSubmissionInProgress, setDownloadSubmissionInProgress] = useState(false)
 
+    const [showTextEntryInput, setShowTextEntryInput] = useState(false)
+    const [textEntryValue, setTextEntryValue] = useState('')
+    const [textEntryInputType, setTextEntryInputType] = useState('default');
+
     // ALERTS
     const unableToStartQuizAlert = PreferredLanguageText('unableToStartQuiz');
     const cueDeletedAlert = PreferredLanguageText('cueDeleted');
@@ -1263,6 +1267,73 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         [RichText, RichText.current, quizEditorRef]
     );
 
+    console.log("Show Text Entry", showTextEntryInput)
+
+    const renderTextEntryInputModal = () => {
+        return <View style={{
+            paddingHorizontal: 30,
+            paddingTop: 50,
+            // height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10000
+        }}>
+            <TextInput
+                value={textEntryValue}
+                keyboardType={textEntryInputType}
+                onChangeText={(text: string) => {
+                    setTextEntryValue(text)
+                }}
+                placeholder={''}
+                style={{
+                    borderBottomColor: '#1f1f1f',
+                    borderBottomWidth: 2,
+                    fontSize: 18,
+                    padding: 8,
+                    // height: 50
+                    width: '100%',
+                    marginBottom: 30
+                }}
+                onSubmitEditing={(e) => {
+                    setShowTextEntryInput(false)
+                    Keyboard.dismiss()
+                }}
+                autoFocus={true}
+            />
+            <TouchableOpacity
+                style={{
+                    width: 120,
+                    borderRadius: 15,
+                    backgroundColor: '#006AFF',
+                    marginTop: 20
+                }}
+                onPress={() => {
+                    setShowTextEntryInput(false)
+                    Keyboard.dismiss()
+                }}
+            >
+                <Text 
+                    style={{
+                        textAlign: 'center',
+                        lineHeight: 34,
+                        paddingHorizontal: 20,
+                        fontFamily: 'inter',
+                        height: 35,
+                        color: 'white',
+                        // borderRadius: 15,
+                        // backgroundColor: '#006AFF',
+                        fontSize: 12,
+                        // width: 120,
+                        textTransform: 'uppercase'
+                    }}
+                >
+                    Done
+                </Text>
+            </TouchableOpacity>
+        </View>
+    }
+
 
     /**
      * @description Insert equation into Cue
@@ -1945,6 +2016,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         // Here check if required questions have been answered
 
         let requiredMissing = false;
+        let requiredMissingQuestions = [];
 
         for (let i = 0; i < problems.length; i++) {
             const problem = problems[i];
@@ -1966,22 +2038,186 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (!selectionMade) {
                     requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
                 }
             } else if (problem.questionType === 'freeResponse' && problem.required) {
                 // Check completeness for free response
-
                 const { response } = solution;
 
                 if (response === '') {
                     requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
                 }
+
+            } else if (problem.questionType === 'dragdrop' && problem.required) {
+                // Drag & Drop
+                let atleaseOneResponse = false;
+
+                const { dragDropChoices } = solution;
+
+                dragDropChoices.map((group: any[]) => {
+                    if (group.length > 0) {
+                        atleaseOneResponse = true
+                    }
+                })
+
+                if (!atleaseOneResponse) {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+
+            } else if (problem.questionType === 'hotspot' && problem.required) {
+                // Hotspot
+                let atleaseOneResponse = false;
+
+                const { hotspotSelection } = solution;
+
+                hotspotSelection.map((selected: boolean) => {
+                    if (selected) {
+                        atleaseOneResponse = true;
+                    }
+                })
+
+                if (!atleaseOneResponse) {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+
+
+            } else if (problem.questionType === 'highlightText' && problem.required) {
+                // Hot text
+                let atleaseOneResponse = false;
+
+                const { highlightTextSelection } = solution
+
+                highlightTextSelection.map((selected: boolean) => {
+                    if (selected) {
+                        atleaseOneResponse = true;
+                    }
+                })
+
+                if (!atleaseOneResponse) {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+
+            } else if (problem.questionType === 'inlineChoice' && problem.required) {
+                // Inline choice
+                let missing = false;
+
+                const { inlineChoiceSelection } = solution
+
+                inlineChoiceSelection.map((selected: string) => {
+                    if (selected === '') {
+                        missing = true;
+                    }
+                })
+
+                if (missing) {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+                
+            } else if (problem.questionType === 'textEntry' && problem.required) {
+                // Text Entry
+                let missing = false;
+
+                const { textEntrySelection } = solution
+
+                textEntrySelection.map((selected: string) => {
+                    if (selected === '') {
+                        missing = true;
+                    }
+                })
+
+                if (missing) {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+                
+            } else if (problem.questionType === 'equationEditor' && problem.required) {
+                // Equation Editor
+                const { equationResponse } = solution;
+
+                if (equationResponse === '') {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+
+            } else if (problem.questionType === 'multipart' && problem.required) {
+                // Multipart
+                let missingResponse = false;
+
+                const { multipartSelection } = solution;
+
+                multipartSelection.map((part: any) => {
+
+                    if (missingResponse) return;
+
+                    let hasAnswer = false;
+
+                    part.map((option: boolean) => {
+                        if (option) {
+                            hasAnswer = true
+                        }
+                    })
+
+                    if (!hasAnswer) {
+                        missingResponse = true;
+                    }
+
+                })
+
+                if (missingResponse) {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+
+
+            } else if (problem.questionType === 'matchTableGrid' && problem.required) {
+                // Match Table grid
+                let missingResponse = false;
+
+                const { matchTableSelection } = solution;
+
+                matchTableSelection.map((row: any[]) => {
+
+                    if (missingResponse) return;
+
+                    let hasAnswer = false;
+
+                    row.map((option: boolean) => {
+                        if (option) {
+                            hasAnswer = true
+                        }
+                    })
+
+                    if (!hasAnswer) {
+                        missingResponse = true;
+                    }
+
+                })
+
+                if (missingResponse) {
+                    requiredMissing = true;
+                    requiredMissingQuestions.push((i + 1))
+                }
+
             } else {
                 // Optional
             }
         }
 
+        let missingString = '';
+
+        if (requiredMissing && requiredMissingQuestions.length === 1) {
+            missingString = 'Required question ' + requiredMissingQuestions[0] + ' is missing a response.';
+        } else if (requiredMissing && requiredMissingQuestions.length > 1) {
+            missingString = 'Required questions ' + requiredMissingQuestions.join(', ') + ' are missing responses.'
+        }
+
         if (requiredMissing) {
-            Alert('A required question is missing a response.', 'Would you still like to submit?', [
+            Alert(missingString, 'Would you still like to submit?', [
                 {
                     text: 'Cancel',
                     style: 'cancel',
@@ -2230,6 +2466,28 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         return Math.abs(Math.round(diff));
     };
 
+    const omitDeep = (obj: any, key: string) => {
+        const keys = Object.keys(obj)
+        const newObj: any = {}
+        keys.forEach((i) => {
+          if (i !== key) {
+            const val = obj[i]
+            if (Array.isArray(val)) newObj[i] = omitDeepArrayWalk(val, key)
+            else if (typeof val === 'object' && val !== null) newObj[i] = omitDeep(val, key)
+            else newObj[i] = val
+          }
+        })
+        return newObj
+    }
+    
+    const omitDeepArrayWalk = (arr: any[], key: string) => {
+        return arr.map((val) => {
+          if (Array.isArray(val)) return omitDeepArrayWalk(val, key)
+          else if (typeof val === 'object') return omitDeep(val, key)
+          return val
+        })
+    }
+
     /**
      * @description Update quiz
      */
@@ -2264,60 +2522,395 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     // Check if any question without a correct answer
 
                     let error = false;
-                    problems.map((problem: any) => {
-                        if (problem.question === '' || problem.question === 'formula:') {
-                            Alert(fillMissingProblemsAlert);
+                    problems.map((problem: any, problemIndex: number) => {
+
+                        if (problem.question === "" && (problem.questionType !== 'textEntry' && problem.questionType !== 'inlineChoice' && problem.questionType !== 'highlightText')) {
+                            alert(`Question ${problemIndex + 1} has no content.`)
                             error = true;
                         }
-
+            
                         if (problem.points === '' || Number.isNaN(Number(problem.points))) {
-                            Alert(enterNumericPointsAlert);
+                            Alert(`Enter numeric points for Question ${problemIndex + 1}.`);
                             error = true;
                         }
-
                         let optionFound = false;
-
+            
+                        // If MCQ then > 2 options
+                        if (!problem.questionType && problem.options.length < 2) {
+                            Alert(`Question ${problemIndex + 1} must have at least 2 options.`);
+                            setIsSubmitting(false);
+                            error = true;
+                        }
+            
                         // If MCQ, check if any options repeat:
                         if (!problem.questionType || problem.questionType === 'trueFalse') {
                             const keys: any = {};
-
+            
                             problem.options.map((option: any) => {
                                 if (option.option === '' || option.option === 'formula:') {
-                                    Alert(fillMissingOptionsAlert);
+                                    Alert(`Fill out missing options in question ${problemIndex + 1}.`);
+                                    setIsSubmitting(false);
                                     error = true;
                                 }
-
+            
                                 if (option.option in keys) {
-                                    Alert('Option repeated in a question');
+                                    Alert(`Option repeated in question ${problemIndex + 1}.`);
+                                    setIsSubmitting(false);
                                     error = true;
                                 }
-
+            
                                 if (option.isCorrect) {
                                     optionFound = true;
                                 }
-
+            
                                 keys[option.option] = 1;
                             });
-
+            
                             if (!optionFound) {
-                                Alert(eachOptionOneCorrectAlert);
+                                Alert(`Question ${problemIndex + 1} must have at least one correct answer.`);
+                                setIsSubmitting(false);
                                 error = true;
                             }
                         }
-                    });
-
-                    // Check if any regrade choice has not been selected
-                    modifiedCorrectAnswerProblems.map((prob: boolean, index: number) => {
-                        if (prob && regradeChoices[index] === '') {
-                            Alert('Select regrade option for any questions with modified correct answers.');
-                            error = true;
+            
+            
+                        // Drag and Drop
+                        if (problem.questionType === 'dragdrop') {
+                            let groupHeaderMissing = false 
+                            let labelMissing = false
+                            let groupEmpty = false
+            
+                            problem.dragDropHeaders.map((header: string) => {
+                                if (!header) {
+                                    groupHeaderMissing = true
+                                }
+                            });
+            
+                            if (groupHeaderMissing) {
+                                alert(`Group header is missing in Question ${problemIndex + 1}.`)
+                                return false;
+                            }
+            
+                            problem.dragDropData.map((items: any[]) => {
+            
+                                if (items.length === 0) {
+                                    groupEmpty = true
+                                }
+            
+                                items.map((label: any) => {
+                                    if (label.content === '') {
+                                        labelMissing = true
+                                    }
+                                })
+            
+                            });
+            
+                            if (labelMissing) {
+                                alert(`Item missing in Question ${problemIndex + 1}.`)
+                                return false;
+                            }
+            
+                            if (groupEmpty) {
+                                alert(`Each group must have at least 1 item in Question ${problemIndex + 1}.`)
+                                return false;
+                            }
+            
                         }
+            
+                        // Hotspot
+                        if (problem.questionType === 'hotspot') {
+                            if(problem.imgUrl === '' || !problem.imgUrl) {
+                                Alert(`Hotspot image is missing in Question ${problemIndex + 1}.`)
+                                setIsSubmitting(false);
+                                error = true;
+                            }
+                            if(!problem.hotspots || problem.hotspots.length === 0) {
+                                Alert(`You must place at least two hotspot marker on the image in Question ${problemIndex + 1}.`);
+                                setIsSubmitting(false);
+                                error = true;
+                            }
+                            
+                            let hasCorrectAnswer = false;
+            
+                            problem.hotspotOptions.map((option: any) => {
+            
+                                if (option.isCorrect) {
+                                    hasCorrectAnswer = true;
+                                }
+            
+                            })
+            
+                            if (!hasCorrectAnswer) {
+                                Alert(`Hotspot question ${problemIndex + 1} must have at least correct choice.`);
+                                return;
+                            }
+                        }
+            
+                        // Highlight Text
+                        if (problem.questionType === 'highlightText') {
+            
+                            if (problem.highlightTextChoices.length < 2) {
+                                Alert(`You must set multiple highlight text choices and mark one as correct in Question ${problemIndex + 1}.`);
+                                return;
+                            }
+                            
+                            let atleastOneCorrect = false;
+                
+                            problem.highlightTextChoices.map((choice: boolean) => {
+                                if (choice) {
+                                    atleastOneCorrect = true;
+                                }
+                            })
+                
+                            if (!atleastOneCorrect) {
+                                Alert(`You must set at least one highlight text choice as correct in Question ${problemIndex + 1}.`);
+                                return;
+                            }
+                        }
+            
+                        // Inline Choice
+                        if (problem.questionType === 'inlineChoice') {
+                            if (problem.inlineChoiceHtml === '') {
+                                alert(`Question ${problemIndex + 1} has no content.`)
+                                return;
+                            }
+                
+                            if (problem.inlineChoiceOptions.length === 0) {
+                                alert(`Question ${problemIndex + 1} must have at lease one dropdown.`)
+                                return;
+                            }
+                            
+                            let lessThan2DropdownValues = false
+                            let missingDropdownValue = false;
+                            let missingCorrectAnswer = false;
+                
+                            if (problem.inlineChoiceOptions.length > 0) {
+                                problem.inlineChoiceOptions.map((choices: any[]) => {
+                                    if (choices.length < 2) {
+                                        lessThan2DropdownValues = true
+                                    }
+                
+                                    let hasCorrect = false
+                                    choices.map((choice: any) => {
+                                        if (choice.isCorrect) {
+                                            hasCorrect = true
+                                        }
+                
+                                        if (choice.option === '') {
+                                            missingDropdownValue = true
+                                        }
+                                    })
+                
+                                    if (!hasCorrect) {
+                                        missingCorrectAnswer = true
+                                    }
+                
+                                })
+                
+                                if (lessThan2DropdownValues) {
+                                    alert(`Each dropdown in question ${problemIndex + 1} must have at lease two options.`)
+                                    return;
+                                }
+                
+                                if (missingDropdownValue) {
+                                    alert(`Each dropdown option must have a value in question ${problemIndex + 1}.`)
+                                    return;
+                                }
+                
+                                if (missingCorrectAnswer) {
+                                    alert(`Each dropdown must have a correct answer in question ${problemIndex + 1}.`)
+                                    return;
+                                }
+                            }
+                
+                        }
+            
+                        // Text Entry
+                        if (problem.questionType === 'textEntry') {
+                            if (problem.textEntryHtml === '') {
+                                alert(`Question ${problemIndex + 1} has no content.`)
+                                return;
+                            }
+            
+                            if (problem.textEntryOptions.length === 0) {
+                                alert(`Text entry question ${problemIndex + 1} must have at lease one entry.`)
+                                return;
+                            }
+            
+                            let missingEntryAnswer = false;
+                            let missingEntryPoints = false;
+                            let pointsNotANumber = false;
+            
+                            problem.textEntryOptions.map((choice: any, problemIndex: number) => {
+                                if (choice.option === '') {
+                                    missingEntryAnswer = true;
+                                }
+            
+                                if (choice.points === '') {
+                                    missingEntryPoints = true
+                                }
+            
+                                if (Number.isNaN(Number(choice.points))) {
+                                    pointsNotANumber = true
+                                }
+            
+                            })
+            
+                            if (missingEntryAnswer) {
+                                alert(`Each Text entry option must have an answer in question ${problemIndex + 1}.`)
+                                return;
+                            }
+            
+                            if (missingEntryPoints) {
+                                alert(`Each Text entry must have points in question ${problemIndex + 1}.`)
+                                return;
+                            }
+            
+                            if (pointsNotANumber) {
+                                alert(`Each Text entry must have numeric points in question ${problemIndex + 1}.`)
+                                return;
+                            }
+            
+                        }
+            
+                        // Multipart 
+                        if (problem.questionType === 'multipart') {
+                            if (problem.multipartQuestions[0] === '' || problem.multipartQuestions[1] === '') {
+                                alert(`Part A and Part B questions cannot be empty in question ${problemIndex + 1}`);
+                                return;
+                            }
+            
+                            // Part A
+                            let hasOneCorrect = false;
+                            let hasMissingOption = false;
+            
+                            // At least two choices
+                            if (problem.multipartOptions[0].length < 2) {
+                                alert(`Part A must have at least two choices in question ${problemIndex + 1}`)
+                                return;
+                            }
+            
+                            problem.multipartOptions[0].map((option: any) => {
+                                if (option.isCorrect) {
+                                    hasOneCorrect = true
+                                }
+            
+                                if (option.option === '') {
+                                    hasMissingOption = true;
+                                }
+                            })
+            
+                            if (!hasOneCorrect) {
+                                alert(`Part A must have at least one correct choice in question ${problemIndex + 1}`)
+                                return;
+                            }
+            
+                            if (hasMissingOption) {
+                                alert(`Part A option is empty in question ${problemIndex + 1}`)
+                            }
+            
+                            if (problem.multipartOptions[0].length < 2) {
+                                alert(`Part A must have at least two choices in question ${problemIndex + 1}`)
+                                return;
+                            }
+            
+                            // Part B
+                            problem.multipartOptions[1].map((option: any) => {
+                                if (option.isCorrect) {
+                                    hasOneCorrect = true
+                                }
+            
+                                if (option.option === '') {
+                                    hasMissingOption = true;
+                                }
+                            })
+            
+                            if (!hasOneCorrect) {
+                                alert(`Part A must have at least one correct choice in question ${problemIndex + 1}`)
+                                return;
+                            }
+            
+                            if (hasMissingOption) {
+                                alert(`Part A option is empty in question ${problemIndex + 1}`)
+                            }
+                        }
+            
+                        // Equation Editor
+                        if (problem.questionType === 'equationEditor') {
+                            if (problem.correctEquations[0] === '') {
+                                alert('Correct equation cannot be empty.')
+                                return;
+                            }
+                        }
+                
+                        // Match table grid
+                        if (problem.questionType === 'matchTableGrid') {
+                
+                            let missingColHeader = false;
+                            let missingRowHeader = false;
+                            let missingCorrect = false;
+                
+                            problem.matchTableHeaders.map((header: string) => {
+                                if (header === '') {
+                                    missingColHeader = true;
+                                }
+                            })
+                
+                            if (missingColHeader) {
+                                alert(`Column header cannot be empty in question ${problemIndex + 1}.`)
+                                return;
+                            }
+                
+                            problem.matchTableOptions.map((rowHeader: string) => {
+                                if (rowHeader === '') {
+                                    missingRowHeader = true
+                                }
+                            })
+                
+                            if (missingRowHeader) {
+                                alert(`Row header cannot be empty in question ${problemIndex + 1}.`)
+                                return;
+                            }
+                
+                            problem.matchTableChoices.map((row: any) => {
+                                let hasCorrect = false;
+                
+                                if (missingCorrect) {
+                                    return;
+                                }
+                
+                                row.map((option: boolean) => {
+                                    if (option) {
+                                        hasCorrect = true
+                                    }
+                                })
+                
+                                if (!hasCorrect) {
+                                    missingCorrect = true
+                                }
+                            })
+                
+                            if (missingCorrect) {
+                                alert(`Each row must have a correct response in question ${problemIndex + 1}.`)
+                                return;
+                            }
+                        }
+
+                        // Check if any regrade choice has not been selected
+                        modifiedCorrectAnswerProblems.map((prob: boolean, index: number) => {
+                            if (prob && regradeChoices[index] === '') {
+                                Alert('Select regrade option for any questions with modified correct answers.');
+                                error = true;
+                            }
+                        });
                     });
 
                     if (error) {
                         setLoadingAfterModifyingQuiz(false);
                         return;
                     }
+
+                    
 
                     // Points should be a string not a number
 
@@ -2341,6 +2934,27 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     });
 
                     const durationMinutes = duration.hours * 60 + duration.minutes + duration.seconds / 60;
+
+                    let variables = {
+                        cueId: props.cue._id,
+                        quiz: {
+                            instructions,
+                            problems: sanitizeProblems,
+                            headers: JSON.stringify(headers),
+                            duration: timer ? durationMinutes.toString() : null,
+                            shuffleQuiz
+                        },
+                        modifiedCorrectAnswers: modifiedCorrectAnswerProblems.map((o: any) =>
+                            o ? 'yes' : 'no'
+                        ),
+                        regradeChoices: regradeChoices.map((choice: string) =>
+                            choice === '' ? 'none' : choice
+                        )
+                    }
+
+                    const sanitizeWithoutTypename = omitDeep(variables, '__typename');
+
+                    console.log("SanitizeWithoutTypename", sanitizeWithoutTypename)
 
                     server
                         .mutate({
@@ -3316,6 +3930,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     handleForeColorOptions={handleForeColorOptions}
                     handleEmojiOptions={handleEmojiOptions}
                     resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
+                    // Handle Text entry inputs
+                    showTextEntryInput={showTextEntryInput}
+                    setShowTextEntryInput={() => setShowTextEntryInput(true)}
+                    setTextEntryInputType={(inputType: string) => setTextEntryInputType(inputType)}
+                    textEntryValue={textEntryValue}
+                    setTextEntryValue={(value: string) => setTextEntryValue(value)}
                 />
                 {renderFooter()}
             </View>
@@ -3362,10 +3982,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const renderUntimedQuiz = () => {
         return <ScrollView
             contentContainerStyle={{
-                paddingBottom: 150,
+                paddingBottom: 100,
                 paddingHorizontal: 10
             }}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
+            indicatorStyle='black'
             scrollEnabled={true}
             scrollEventThrottle={1}
             // keyboardDismissMode={'on-drag'}
@@ -3404,6 +4025,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     handleForeColorOptions={handleForeColorOptions}
                     handleEmojiOptions={handleEmojiOptions}
                     resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
+                    // Handle Text entry
+                    showTextEntryInput={showTextEntryInput}
+                    setShowTextEntryInput={() => setShowTextEntryInput(true)}
+                    setTextEntryInputType={(inputType: string) => setTextEntryInputType(inputType)}
+                    textEntryValue={textEntryValue}
+                    setTextEntryValue={(value: string) => setTextEntryValue(value)}
                 />
                 {renderFooter()}
             </View>
@@ -3670,7 +4297,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             return (
                 <ScrollView
                     contentContainerStyle={{
-                        paddingBottom: 150,
+                        paddingBottom: 100,
                         paddingHorizontal: 10
                     }}
                     showsVerticalScrollIndicator={false}
@@ -6044,10 +6671,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         return isQuiz || imported || !props.showOriginal ? (
             <ScrollView
                 contentContainerStyle={{
-                    paddingBottom: 150,
+                    paddingBottom: 100,
                     paddingHorizontal: 10
                 }}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
+                indicatorStyle='black'
                 scrollEnabled={true}
                 scrollEventThrottle={1}
                 // keyboardDismissMode={'on-drag'}
@@ -6167,7 +6795,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             paddingBottom: 150,
                             paddingHorizontal: 10
                         }}
-                        showsVerticalScrollIndicator={false}
+                        showsVerticalScrollIndicator={true}
+                        indicatorStyle='black'
                         scrollEnabled={true}
                         scrollEventThrottle={1}
                         // keyboardDismissMode={'on-drag'}
@@ -6266,35 +6895,22 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 </React.Fragment>
             ) : null}
 
-            {emojiVisible || insertImageVisible || insertLinkVisible || hiliteColorVisible || foreColorVisible ? (
-                <Reanimated.View
-                    style={{
-                        alignItems: 'center',
-                        backgroundColor: 'black',
-                        opacity: animatedShadowOpacity,
-                        height: '100%',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        position: 'absolute'
-                    }}
-                >
-                    <TouchableOpacity
-                    style={{
-                        backgroundColor: 'transparent',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                    onPress={() => {
-                        setEmojiVisible(false)
-                        setInsertImageVisible(false)
-                        setInsertLinkVisible(false)
-                        setHiliteColorVisible(false)
-                        setForeColorVisible(false)
-                    }}>
-                    </TouchableOpacity>
-                </Reanimated.View>
-            ) : null}
+            {
+                showTextEntryInput && (
+                    <BottomSheet
+                        snapPoints={[0, 350]}
+                        close={() => {                        
+                            setShowTextEntryInput(false)
+                            Keyboard.dismiss()
+                        }}
+                        isOpen={showTextEntryInput}
+                        title={'Text Entry'}
+                        renderContent={() => renderTextEntryInputModal()}
+                        header={false}
+                    />
+                )
+            }
+
             {emojiVisible && (
                 <BottomSheet
                     snapPoints={[0, 350]}
@@ -6316,7 +6932,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     isOpen={insertImageVisible}
                     title={'Insert image'}
                     renderContent={() => (
-                        <View style={{ paddingHorizontal: 10 }}>
+                        <View style={{ paddingHorizontal: 10, zIndex: 10000 }}>
                             <TouchableOpacity
                                 style={{
                                     marginTop: 20,
@@ -6400,7 +7016,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 paddingHorizontal: 10,
                                 paddingTop: 20,
                                 flexDirection: 'column',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                zIndex: 10000
                             }}
                         >
                             <ColorPicker
@@ -6447,7 +7064,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 paddingHorizontal: 10,
                                 paddingTop: 20,
                                 flexDirection: 'column',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                zIndex: 10000
                             }}
                         >
                             <ColorPicker
@@ -6480,6 +7098,37 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     header={false}
                 />
             )}
+
+            {showTextEntryInput || emojiVisible || insertImageVisible || insertLinkVisible || hiliteColorVisible || foreColorVisible ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: 0.3,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute',
+                    }}
+                >
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
+                        onPress={() => {
+                            setEmojiVisible(false)
+                            setInsertImageVisible(false)
+                            setInsertLinkVisible(false)
+                            setHiliteColorVisible(false)
+                            setForeColorVisible(false)
+                            setShowTextEntryInput(false)
+                        }}>
+                    </TouchableOpacity>
+                </Reanimated.View>
+            ) : null}
         </View>
     );
 };
