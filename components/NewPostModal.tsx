@@ -13,6 +13,7 @@ import BottomSheet from './BottomSheet';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
+import { useOrientation } from '../hooks/useOrientation';
 
 const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [message, setMessage] = useState('');
@@ -22,24 +23,17 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     // const [dropdownHeight, setDropdownHeight] = useState(250);
 
+    const orientation = useOrientation()
+
     const styles = styleObject();
 
     const width = Dimensions.get('window').width;
-
-    // useEffect(() => {
-    //     setDropdownHeight(
-    //         Object.keys(props.categoriesOptions).length * 60 + 50 > 260
-    //             ? 250
-    //             : Object.keys(props.categoriesOptions).length * 60 + 50
-    //     );
-    // }, [props.categoriesOptions]);
-
 
     /**
      * @description Renders option to select Category for new discussion post
      */
     const customCategoryInput = (
-        <View style={{ backgroundColor: '#ffffff', marginVertical: 20, paddingHorizontal: 20 }}>
+        <View style={{ backgroundColor: '#ffffff', width: '100%', maxWidth: 600, }}>
             <View
                 style={{
                     width: '100%',
@@ -51,13 +45,12 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     style={{
                         width: '100%',
                         backgroundColor: 'white',
-                        flexDirection: width < 768 ? 'column' : 'row',
-                        paddingTop: width < 768 ? 0 : 40
+                        flexDirection: 'column',
+                        paddingTop: 30
                     }}
                 >
                     <View
                         style={{
-                            // flex: 1,
                             flexDirection: 'row',
                             paddingBottom: 15,
                             backgroundColor: 'white'
@@ -65,7 +58,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     >
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter'
                             }}
@@ -76,16 +69,15 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     <View
                         style={{
                             flexDirection: 'row',
-                            backgroundColor: 'white'
-                            // alignItems: 'center'
+                            backgroundColor: 'white',
+                            alignItems: 'center',
+                            width: '100%',
                         }}
                     >
                         <View
                             style={{
-                                maxWidth: 400,
-                                width: '85%',
+                                width: '90%',
                                 backgroundColor: 'white',
-                                marginLeft: width < 768 ? 0 : 'auto'
                             }}
                         >
                             {addCustomCategory ? (
@@ -111,7 +103,9 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             ) : (
                                 <View
                                     style={{
-                                        height: isCategoryDropdownOpen ? getDropdownHeight(props.categoriesOptions.length) : 50
+                                        height: isCategoryDropdownOpen ? getDropdownHeight(props.categoriesOptions.length) : 50,
+                                        marginBottom: 10,
+                                        zIndex: isCategoryDropdownOpen ? 1 : 0
                                     }}
                                 >
                                     <DropDownPicker
@@ -121,27 +115,29 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         items={props.categoriesOptions}
                                         setOpen={setIsCategoryDropdownOpen}
                                         setValue={setCustomCategory}
-                                        zIndex={1000001}
+                                        // zIndex={1000001}
                                         style={{
                                             borderWidth: 0,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#f2f2f2'
+                                            borderBottomColor: '#f2f2f2',
+                                            // elevation: !showFrequencyDropdown ? 0 : 2
                                         }}
                                         dropDownContainerStyle={{
                                             borderWidth: 0,
-                                            zIndex: 1000001,
-                                            elevation: 1000001
+                                            // elevation: !showFrequencyDropdown ? 0 : 2
                                         }}
                                         containerStyle={{
                                             shadowColor: '#000',
                                             shadowOffset: {
-                                                width: 4,
-                                                height: 4
+                                                width: 1,
+                                                height: 3
                                             },
                                             shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.08,
                                             shadowRadius: 12,
-                                            zIndex: 1000001,
-                                            elevation: 1000001
+                                        }}
+                                        textStyle={{
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                            fontFamily: 'overpass'
                                         }}
                                     />
                                 </View>
@@ -149,9 +145,8 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         </View>
                         <View
                             style={{
-                                // width: '15%',
                                 backgroundColor: 'white',
-                                marginLeft: 20
+                                marginLeft: 'auto'
                             }}
                         >
                             <TouchableOpacity
@@ -190,25 +185,35 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
 
     const renderNewPostContent = () => {
         return (
-            <ScrollView style={{ backgroundColor: '#ffffff' }} scrollEnabled={false}>
-                <View
-                    style={{
-                        flexDirection: 'column',
-                        paddingHorizontal: 20,
-                        marginVertical: 20,
-                        backgroundColor: '#ffffff'
-                    }}
-                >
+            <ScrollView
+                style={{ 
+                    backgroundColor: '#ffffff',
+                    width: '100%'
+                }} 
+                scrollEnabled={false}
+                contentContainerStyle={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    width: '100%',
+                    paddingHorizontal: 20,
+                    marginTop: orientation === 'PORTRAIT' && width > 768 ? 50 : 0 
+                }}
+            >
+                <View style={{
+                    width: '100%',
+                    maxWidth: 600,
+                }}>
                     <AutoGrowingTextInput
                         value={message}
                         onChange={(event: any) => setMessage(event.nativeEvent.text || '')}
                         style={{
                             fontFamily: 'overpass',
                             width: '100%',
-                            maxWidth: 500,
-                            borderBottomColor: '#d9dcdf',
+                            maxWidth: 600,
+                            borderBottomColor: '#f2f2f2',
                             borderBottomWidth: 1,
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             paddingTop: 13,
                             paddingBottom: 13,
                             marginTop: 12,
@@ -229,16 +234,15 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     <View
                         style={{
                             flexDirection: 'column',
-                            paddingHorizontal: 20,
-                            marginVertical: 20,
-                            minWidth: Dimensions.get('window').width > 768 ? 400 : 200,
-                            maxWidth: Dimensions.get('window').width > 768 ? 400 : 300,
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#ffffff',
+                            width: '100%',
+                            maxWidth: 600,
+                            marginTop: 40
                         }}
                     >
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 fontFamily: 'Inter',
                                 color: '#000000',
                                 fontWeight: 'bold'
@@ -272,7 +276,8 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         backgroundColor: '#006AFF',
                         borderRadius: 19,
                         width: 120,
-                        alignSelf: 'center'
+                        alignSelf: 'center',
+                        marginTop: 50
                     }}
                     onPress={() => {
                         props.onSend(message, customCategory, isPrivate);
@@ -346,13 +351,13 @@ const styleObject = () => {
             overflow: 'hidden'
         },
         cusCategory: {
-            fontSize: 14,
+            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
             backgroundColor: 'white',
             paddingHorizontal: 10,
             height: 22
         },
         cusCategoryOutline: {
-            fontSize: 14,
+            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
             backgroundColor: 'white',
             paddingHorizontal: 10,
             height: 22,

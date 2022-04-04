@@ -15,14 +15,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Walkthrough from './Walkthrough';
 import Channels from './Channels';
+import { blueButtonAccountMB, blueButtonMR } from '../helpers/BlueButtonPosition';
+import { useOrientation } from '../hooks/useOrientation';
 
 
 const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [activeTab, setActiveTab] = useState('profile');
-    const windowHeight =
-        Dimensions.get('window').width < 768 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
+    // const windowHeight =
+    //     Dimensions.get('window').width < 768 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
 
     const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+    const orientation = useOrientation()
+
+    let windowHeight = 0;
+
+    // iPhone
+    if (Dimensions.get('window').width < 768 && Platform.OS === 'ios') {
+        windowHeight = Dimensions.get('window').height - 115
+    // Android Phone
+    } else if (Dimensions.get('window').width < 768 && Platform.OS === 'android') {
+        windowHeight = Dimensions.get('window').height - 30
+    // Tablet potrait
+    } else if (orientation === 'PORTRAIT' && Dimensions.get('window').width > 768) {
+        windowHeight = Dimensions.get('window').height - 30
+    // Tablet landscape 
+    } else if (orientation === 'LANDSCAPE' && Dimensions.get('window').width > 768) {
+        windowHeight = Dimensions.get('window').height - 60
+    } else {
+        windowHeight = Dimensions.get('window').height - 30
+    }
 
     return (
         <Animated.View
@@ -30,7 +51,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 // opacity: modalAnimation,
                 width: '100%',
                 // height: windowHeight,
-                height: windowHeight - (Platform.OS === 'android' ? 0 : 35),
+                height: windowHeight,
                 backgroundColor: 'white',
                 borderTopRightRadius: 0,
                 borderTopLeftRadius: 0
@@ -166,13 +187,8 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 }}
                 style={{
                     position: 'absolute',
-                    marginRight:
-                        Dimensions.get('window').width >= 1100
-                            ? (Dimensions.get('window').width - 1100) / 2 - 25
-                            : Dimensions.get('window').width >= 768
-                                ? 30
-                                : 24,
-                    marginBottom: Dimensions.get('window').width < 768 ? 77 : 90,
+                    marginRight: blueButtonMR(Dimensions.get('window').width, orientation, Platform.OS),
+                    marginBottom: blueButtonAccountMB(Dimensions.get('window').width, orientation, Platform.OS),
                     right: 0,
                     justifyContent: 'center',
                     bottom: 0,
@@ -196,7 +212,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
                     <Ionicons
                         name={activeTab === 'profile' ? 'help-outline' : 'add-outline'}
-                        size={activeTab === 'profile' ? (Dimensions.get('window').width > 350 ? 22 : 21) : (Dimensions.get('window').width > 350 ? 36 : 35)}
+                        size={activeTab === 'profile' ? (Dimensions.get('window').width > 350 ? 25 : 23) : (Dimensions.get('window').width > 350 ? 36 : 35)}
                     />
                 </Text>
             </TouchableOpacity>

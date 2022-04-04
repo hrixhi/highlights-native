@@ -50,9 +50,9 @@ const ColorPicker: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
     return (
         <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', backgroundColor: 'white' }}>
-            {colorChoices.map((color: string) => {
+            {colorChoices.map((color: string, ind: number) => {
                 return (
-                    <TouchableOpacity style={{ width: '20%', marginBottom: 15 }} onPress={() => props.onChange(color)}>
+                    <TouchableOpacity key={ind.toString()} style={{ width: '20%', marginBottom: 15 }} onPress={() => props.onChange(color)}>
                         <View
                             style={{
                                 marginBottom: 10,

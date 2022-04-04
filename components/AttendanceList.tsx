@@ -263,9 +263,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         });
     };
 
-    console.log('Past meetings', pastMeetings);
-    console.log('Past attendances', channelAttendances);
-
     const renderViewerAttendanceList = () => {
 
         const studentCount = attendanceTotalMap[userId];
@@ -463,7 +460,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                         key={'-'}
                     >
                         {isOwner ? <View style={styles.col} key={'0,0'} /> : null}
-                        <View style={styles.col} key={'0,0'}>
+                        <View style={styles.col} key={'1,1'}>
                             <Text
                                 style={{
                                     fontSize: 13,

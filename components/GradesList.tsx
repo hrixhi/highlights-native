@@ -131,24 +131,30 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
      * @description Handles exporting of grades into Spreadsheet
      */
     const exportGrades = async () => {
-        const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
-        const fileExtension = '.xlsx';
-
-        const ws = XLSX.utils.aoa_to_sheet(exportAoa);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Grades ");
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
-
-        const uri = FileSystem.cacheDirectory + 'grades.xlsx';
-        await FileSystem.writeAsStringAsync(uri, wbout, {
-            encoding: FileSystem.EncodingType.Base64
-        });
-
-        await Sharing.shareAsync(uri, {
-            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'MyWater data',
-            UTI: 'com.microsoft.excel.xlsx'
-        });
+        try {
+            const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+            const fileExtension = '.xlsx';
+    
+            const ws = XLSX.utils.aoa_to_sheet(exportAoa);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Grades ");
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
+    
+            const uri = FileSystem.cacheDirectory + 'grades.xlsx';
+            await FileSystem.writeAsStringAsync(uri, wbout, {
+                encoding: FileSystem.EncodingType.Base64
+            });
+    
+            await Sharing.shareAsync(uri, {
+                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                dialogTitle: 'MyWater data',
+                UTI: 'com.microsoft.excel.xlsx'
+            });
+        } catch (e) {
+            alert('Failed to export grades. Try again.')
+            console.log("Error", e)
+        }
+        
 
     }
 
@@ -163,8 +169,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     }
 
     useEffect(() => {
-        exportGrades()
-        props.setExportScores(false)
+
+        if (props.exportScores) {
+            exportGrades()
+            props.setExportScores(false)
+        }
+        
     }, [props.exportScores])
 
     /**
@@ -208,7 +218,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     }
 
     const renderTabs = () => {
-        return (<View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center', paddingBottom: 15 }}>
+        return (<View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center', paddingBottom: 10, paddingTop: Dimensions.get('window').width < 768 ? 10 : 20 }}>
             <TouchableOpacity
                 style={activeTab === 'overview' ? styles.selectedButton : styles.unselectedButton}
                 onPress={() => {
@@ -223,19 +233,19 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     setActiveTab('scores')
                 }}
             >
-                <Text style={activeTab !== 'overview' ? styles.selectedText : styles.unselectedText}>Assignments</Text>
+                <Text style={activeTab !== 'overview' ? styles.selectedText : styles.unselectedText}>Submissions</Text>
             </TouchableOpacity>
         </View>)
     }
 
     const renderPerformanceOverview = () => {
-        return <View style={{ display: 'flex', flexDirection: 'column', maxWidth: 300, width: '100%', paddingTop: 0, paddingBottom: 25, alignContent: 'center' }}>
-            <View style={{ flexDirection: 'row', paddingTop: 37, backgroundColor: 'white', }}>
+        return <View style={{ display: 'flex', flexDirection: 'column', maxWidth: Dimensions.get('window').width < 768 ? 350 : 500, width: '100%', paddingTop: 0, paddingBottom: 25, alignContent: 'center' }}>
+            <View style={{ width: '100%', flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 10, paddingTop: 37, backgroundColor: 'white', }}>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 17, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Meetings
@@ -247,12 +257,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     </Text>
                 </View>
             </View>
-            <View style={{ flexDirection: 'row', paddingTop: 10, backgroundColor: 'white', }}>
+            <View style={{ flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 10, paddingTop: 10, backgroundColor: 'white', }}>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 17, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Posts
@@ -264,12 +274,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     </Text>
                 </View>
             </View>
-            <View style={{ flexDirection: 'row', marginTop: 10, backgroundColor: 'white', }}>
+            <View style={{ flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 10, marginTop: 10, backgroundColor: 'white', }}>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 17, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Assessments
@@ -281,63 +291,63 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     </Text>
                 </View>
             </View>
-            <View style={{ flexDirection: 'row', paddingTop: 10, backgroundColor: 'white', }}>
-                <View style={{ backgroundColor: 'white', paddingLeft: 25 }}>
+            <View style={{ flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 10, paddingTop: 10, backgroundColor: 'white', }}>
+                <View style={{ backgroundColor: 'white', paddingLeft: Dimensions.get('window').width < 768 ? 25 : 40 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 14, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 16 : 16, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Late
                     </Text>
                 </View>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10, marginLeft: 'auto' }}>
-                    <Text style={{ fontSize: 17, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
+                    <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
                         {props.report[props.channelId] ? props.report[props.channelId].lateAssessments : 0}
                     </Text>
                 </View>
             </View>
-            <View style={{ flexDirection: 'row', paddingTop: 10, backgroundColor: 'white', }}>
-                <View style={{ backgroundColor: 'white', paddingLeft: 25 }}>
+            <View style={{ flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 10, paddingTop: 10, backgroundColor: 'white', }}>
+                <View style={{ backgroundColor: 'white', paddingLeft: Dimensions.get('window').width < 768 ? 25 : 40 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 14, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 16 : 16, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Graded
                     </Text>
                 </View>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10, marginLeft: 'auto' }}>
-                    <Text style={{ fontSize: 17, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
+                    <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
                         {props.report[props.channelId] ? props.report[props.channelId].gradedAssessments : 0}
                     </Text>
                 </View>
             </View>
-            <View style={{ flexDirection: 'row', paddingTop: 10, backgroundColor: 'white', }}>
-                <View style={{ backgroundColor: 'white', paddingLeft: 25 }}>
+            <View style={{ flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 15, paddingTop: 10, backgroundColor: 'white', }}>
+                <View style={{ backgroundColor: 'white', paddingLeft: Dimensions.get('window').width < 768 ? 25 : 40 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 14, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 16 : 16, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Submitted
                     </Text>
                 </View>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10, marginLeft: 'auto' }}>
-                    <Text style={{ fontSize: 17, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
+                    <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25, textAlign: 'right' }} ellipsizeMode='tail'>
                         {props.report[props.channelId] ? props.report[props.channelId].submittedAssessments : 0}
                     </Text>
                 </View>
             </View>
-            <View style={{ flexDirection: 'row', paddingTop: 10, backgroundColor: 'white', }}>
+            <View style={{ flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 10, paddingTop: 10, backgroundColor: 'white', }}>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 17, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Grade
@@ -349,12 +359,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     </Text>
                 </View>
             </View>
-            <View style={{ flexDirection: 'row', paddingTop: 10, paddingBottom: 20, backgroundColor: 'white', }}>
+            <View style={{ flexDirection: 'row', marginBottom: Dimensions.get('window').width < 768 ? 5 : 10, paddingTop: 10, paddingBottom: 20, backgroundColor: 'white', }}>
                 <View style={{ backgroundColor: 'white', paddingLeft: 10 }}>
                     <Text style={{
                         flexDirection: 'row',
                         color: '#1F1F1F',
-                        fontSize: 17, lineHeight: 25,
+                        fontSize: Dimensions.get('window').width < 768 ? 18 : 20, lineHeight: 25,
                         fontFamily: 'inter'
                     }} ellipsizeMode='tail'>
                         Progress
@@ -583,11 +593,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         key={JSON.stringify(props.scores)}
                     >
                         {/* Performance report */}
-                        {/* {props.isOwner ? null : renderTabs()} */}
+                        {props.isOwner ? null : renderTabs()}
 
                         <View style={{ flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', flex: 1 }}>
-                            {props.isOwner ? null : renderPerformanceOverview()}
-                            {renderScoresList()}
+                            {props.isOwner || activeTab !== 'overview' ? null : renderPerformanceOverview()}
+                            {!props.isOwner && activeTab === 'overview' ? null : renderScoresList()}
                         </View>
                     </View> : null
                     )
@@ -603,20 +613,20 @@ const stylesObject: any = (isOwner: any) => StyleSheet.create({
     row: { minHeight: 70, flexDirection: isOwner ? 'row' : 'column', borderBottomColor: '#f2f2f2', borderBottomWidth: (!isOwner && Dimensions.get('window').width < 768) || isOwner ? 1 : 0 },
     col: { height: isOwner ? 'auto' : 90, paddingBottom: isOwner ? 0 : 10, width: isOwner ? (Dimensions.get('window').width < 768 ? 120 : 120) : 180, justifyContent: 'center', display: 'flex', flexDirection: 'column', padding: 7, borderBottomColor: '#f2f2f2', borderBottomWidth: isOwner || (Dimensions.get('window').width < 768) ? 0 : 1, },
     selectedText: {
-        fontSize: Dimensions.get('window').width < 1024 ? 12 : 14,
+        fontSize: Dimensions.get('window').width < 768 ? 12 : 14,
         color: '#fff',
         backgroundColor: '#000',
-        lineHeight: 24,
-        height: 25,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
+        height: Dimensions.get('window').width < 768 ? 25 : 30,
         fontFamily: 'inter',
         textTransform: 'uppercase'
     },
     unselectedText: {
-        fontSize: Dimensions.get('window').width < 1024 ? 12 : 14,
+        fontSize: Dimensions.get('window').width < 768 ? 12 : 14,
         color: '#000',
-        height: 25,
+        height: Dimensions.get('window').width < 768 ? 25 : 30,
         // backgroundColor: '#000',
-        lineHeight: 25,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
         fontFamily: 'overpass',
         textTransform: 'uppercase',
         fontWeight: 'bold'
@@ -624,20 +634,20 @@ const stylesObject: any = (isOwner: any) => StyleSheet.create({
     selectedButton: {
         backgroundColor: '#000',
         borderRadius: 20,
-        height: 25,
-        maxHeight: 25,
-        lineHeight: 24,
+        height: Dimensions.get('window').width < 768 ? 25 : 30,
+        maxHeight: Dimensions.get('window').width < 768 ? 25 : 30,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
         paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
-        marginHorizontal: 2,
+        marginHorizontal: Dimensions.get('window').width < 768 ? 2 : 4,
     },
     unselectedButton: {
         // backgroundColor: '#000',
-        height: 25,
-        maxHeight: 25,
-        lineHeight: 24,
+        height:  Dimensions.get('window').width < 768 ? 25 : 30,
+        maxHeight:  Dimensions.get('window').width < 768 ? 25 : 30,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
         borderRadius: 20,
         color: '#000000',
         paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
-        marginHorizontal: 2,
+        marginHorizontal:  Dimensions.get('window').width < 768 ? 2 : 4,
     },
 })

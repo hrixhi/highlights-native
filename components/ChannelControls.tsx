@@ -1331,11 +1331,15 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 {props.showAddCourseModal ? <View
                     style={{
                         flexDirection: 'row',
-                        justifyContent: 'center',
-                        paddingHorizontal: 20,
+                        justifyContent: 'flex-start',
+                        // paddingHorizontal: 20,
                         paddingTop: 10,
                         paddingBottom: 15,
-                        
+                        display: 'flex',
+                        width: '100%',
+                        // maxWidth: 400,
+                        // alignSelf: 'center'
+                        paddingLeft: 25
                     }}
                 >
                     {/* <TouchableOpacity
@@ -1368,7 +1372,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 color: '#656565',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold',
-                                fontSize: Dimensions.get('window').width < 768 ? 20 : 30
+                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26
                             }}
                         >
                             Profile
@@ -1390,7 +1394,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 color: '#000',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold',
-                                fontSize: Dimensions.get('window').width < 768 ? 20 : 30
+                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26
                             }}
                         >
                             Courses

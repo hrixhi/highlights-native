@@ -53,10 +53,13 @@ import { validateEmail } from '../helpers/emailCheck';
 import { PreferredLanguageText, LanguageSelect } from '../helpers/LanguageContext';
 import { defaultCues } from '../helpers/DefaultData';
 import { htmlStringParser } from '../helpers/HTMLParser';
-import { getNextDate } from '../helpers/DateParser';
 
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Updates from 'expo-updates';
+
+import { useOrientation } from '../hooks/useOrientation';
+
+import { blueButtonHomeMB, blueButtonMR } from '../helpers/BlueButtonPosition';
 
 // import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -167,13 +170,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const height = Dimensions.get('window').height
     const width = Dimensions.get('window').width
 
+    const orientation = useOrientation()
+
     const onOrientationChange = useCallback(async () => {
         await Updates.reloadAsync();
     }, []);
 
-    useEffect(() => {
-        setWorkspaceActiveTab('Content')
-    }, [selectedWorkspace])
+    // useEffect(() => {
+    //     if (selectedWorkspace && !loadDiscussionForChannelId) {
+    //         setWorkspaceActiveTab('Content')
+    //     } else if (selectedWorkspace && loadDiscussionForChannelId) {
+    //         setWorkspaceActiveTab('Discuss')
+    //     }
+    // }, [selectedWorkspace, loadDiscussionForChannelId])
 
     useEffect(() => {
         (async () => {
@@ -820,6 +829,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     //     },
     //     [cues, responseListener]
     // );
+
+    console.log("Workspace active tab", workspaceActiveTab)
 
     const refreshUnreadInbox = useCallback(async () => {
         const u = await AsyncStorage.getItem('user');
@@ -2009,6 +2020,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     };
 
     const getCreateNavbarIconName = (op: string) => {
+        console.log("Create navbar op", op)
         switch (op) {
             case 'Content':
                 return createActiveTab === op ? 'create' : 'create-outline';
@@ -2039,7 +2051,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const getCreateNavbarIconColor = (op: string) => {
         if (op === createActiveTab) {
-            return selectedWorkspace.split('-SPLIT-')[3]
+            return '#1f1f1f'
         }
         return '#797979'
     }
@@ -2126,7 +2138,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [searchTerm, setSearchTerm] = useState('')
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
+        <SafeAreaView key={orientation} style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
             {/* {
                 height <= width ? (
                     <View
@@ -2828,13 +2840,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         }}
                         style={{
                             position: 'absolute',
-                            marginRight:
-                                Dimensions.get('window').width >= 1100
-                                    ? (Dimensions.get('window').width - 1100) / 2 - 25
-                                    : Dimensions.get('window').width >= 768
-                                    ? 30
-                                    : 24,
-                            marginBottom: Dimensions.get('window').width < 768 ? 77 : 90,
+                            marginRight: blueButtonMR(Dimensions.get('window').width, orientation, Platform.OS),
+                            marginBottom: blueButtonHomeMB(Dimensions.get('window').width, orientation, Platform.OS),
                             right: 0,
                             justifyContent: 'center',
                             bottom: 0,
@@ -2978,6 +2985,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     openDiscussionFromActivity={(channelId: string) => {
                                         setOption('Classroom');
                                         setLoadDiscussionForChannelId(channelId);
+                                        setWorkspaceActiveTab('Discuss')
                                     }}
                                     openChannelFromActivity={(channelId: string) => {
                                         setOption('Classroom');
@@ -3052,6 +3060,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     createActiveTab={createActiveTab}
                                     setDisableCreateNavbar={(disable: boolean) => setDisableCreateNavbar(disable)}
                                     setShowWorkspaceFilterModal={(show: boolean) => setShowWorkspaceFilterModal(show)}
+                                    setWorkspaceActiveTab={setWorkspaceActiveTab}
                                 />
                             )}
                         </View>
@@ -3104,23 +3113,23 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 backgroundColor: '#fff',
                                 alignSelf: 'flex-end',
                                 width: '100%',
-                                paddingTop: 12,
-                                paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
+                                paddingTop:  Platform.OS === 'ios' ? 12 : 8,
+                                paddingBottom: Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 15) : 20,
                                 paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
                                 flexDirection: 'row',
                                 justifyContent: 'center',
-                                height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
+                                height: Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 68,
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 0,
-                                    height: 0
+                                    height: -10
                                 },
                                 bottom: 0,
                                 right: 0,
                                 shadowOpacity: 0.03,
                                 shadowRadius: 12,
                                 zIndex: showLoginWindow ? 40 : 100,
-                                elevation: showLoginWindow ? 40 : 100,
+                                elevation: showLoginWindow ? 40 : 120,
                                 borderTopColor: '#e8e8e8',
                                 borderTopWidth: 1,
                             }}
@@ -3145,7 +3154,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             justifyContent: 'center',
                                             alignItems: 'center'
                                         }}
-                                        key={ind}
+                                        key={ind.toString()}
                                         onPress={() => {
                                             if (op === 'Import') {
                                                 setShowImportCreate(true)
@@ -3186,27 +3195,27 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 backgroundColor: '#fff',
                                 alignSelf: 'flex-end',
                                 width: '100%',
-                                paddingTop: 12,
-                                paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
+                                paddingTop:  Platform.OS === 'ios' ? 12 : 8,
+                                paddingBottom: Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 15) : 20,
                                 paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
                                 flexDirection: 'row',
                                 justifyContent: 'center',
-                                height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
+                                height: Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 68,
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 0,
-                                    height: 0
+                                    height: -10
                                 },
                                 bottom: 0,
                                 right: 0,
                                 shadowOpacity: 0.03,
                                 shadowRadius: 12,
                                 zIndex: showLoginWindow ? 40 : 100,
-                                elevation: showLoginWindow ? 40 : 100,
+                                elevation: showLoginWindow ? 40 : 120,
                                 borderTopColor: '#e8e8e8',
                                 borderTopWidth: 1,
                             }}
-                            key={selectedWorkspace}
+                            key={selectedWorkspace + orientation + workspaceActiveTab}
                         >
 
                             {workspaceOptions.map((op: any, ind: number) => {
@@ -3254,21 +3263,22 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                 {modalType !== 'Create' && showHome && !showLoginWindow && (option !== 'Classroom' || selectedWorkspace === "" || selectedWorkspace === 'My Notes') && (option !== 'Inbox' || !hideNewChatButton) ? (
                     <View
+                        key={orientation}
                         style={{
                             position: 'absolute',
                             backgroundColor: '#fff',
                             alignSelf: 'flex-end',
                             width: '100%',
-                            paddingTop: 12,
-                            paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
+                            paddingTop:  Platform.OS === 'ios' ? 12 : 8,
+                            paddingBottom: Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 15) : 20,
                             paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
+                            height: Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 68,
                             shadowColor: '#000',
                             shadowOffset: {
                                 width: 0,
-                                height: 0
+                                height: -10
                             },
                             bottom: 0,
                             right: 0,

@@ -432,7 +432,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     })
                     .then(res => {
                         const tempChat: any[] = [];
-                        res.data.message.getMessagesThread.map((msg: any) => {
+                        res.data.message.getMessagesThread.map((msg: any, ind: number) => {
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -448,9 +448,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity style={{
-                                                // backgroundColor: '#006AFF' 
-                                            }}>
+                                        <TouchableOpacity key={ind.toString()}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
@@ -725,7 +723,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     })
                     .then(res => {
                         const tempChat: any[] = [];
-                        res.data.message.getMessagesThread.map((msg: any) => {
+                        res.data.message.getMessagesThread.map((msg: any, ind: number) => {
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -741,7 +739,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity style={{ backgroundColor: '#006AFF' }}>
+                                        <TouchableOpacity key={ind.toString()} style={{ backgroundColor: '#006AFF' }}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
@@ -873,7 +871,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     })
                     .then(res => {
                         const tempChat: any[] = [];
-                        res.data.message.getMessagesThread.map((msg: any) => {
+                        res.data.message.getMessagesThread.map((msg: any, ind: number) => {
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -889,7 +887,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity style={{ backgroundColor: '#006AFF' }}>
+                                        <TouchableOpacity key={ind.toString()} style={{ backgroundColor: '#006AFF' }}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
@@ -1520,9 +1518,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     }
                                                                 }}
                                                             >
-                                                                {channelOptions.map((channel: any) => {
+                                                                {channelOptions.map((channel: any, ind: number) => {
                                                                     return (
-                                                                        <MenuOption value={channel.value}>
+                                                                        <MenuOption key={ind.toString()} value={channel.value}>
                                                                             <Text>{channel.label}</Text>
                                                                         </MenuOption>
                                                                     );
@@ -1741,6 +1739,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 {groupUsers.map((user: any, ind: any) => {
                                                     return (
                                                         <View
+                                                            key={ind.toString()}
                                                             style={{
                                                                 flexDirection: 'row',
                                                                 alignItems: 'center',
@@ -2148,6 +2147,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 }
                                                 return (
                                                     <TouchableOpacity
+                                                        key={ind.toString()}
                                                         onPress={() => {
                                                             loadNewChat(user._id);
                                                         }}
@@ -2260,7 +2260,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     </Text>
                                                 </View>
                                             ) : null}
-                                            {sortChatsByLastMessage.map((chat: any, index) => {
+                                            {sortChatsByLastMessage.map((chat: any, index: number) => {
 
                                                 // Group name or individual user name
                                                 let fName = '';
@@ -2292,6 +2292,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 const { title } = htmlStringParser(chat.lastMessage);
                                                 return (
                                                     <TouchableOpacity
+                                                        key={index.toString()}
                                                         onPress={() => {
                                                             if (chat.userNames.length > 2) {
                                                                 loadGroupChat(chat.users, chat._id);

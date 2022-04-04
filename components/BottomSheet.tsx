@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import BottomSheet from 'reanimated-bottom-sheet';
 import { View, TouchableOpacity, Text } from './Themed';
 import { Ionicons } from '@expo/vector-icons';
+import { Dimensions } from 'react-native';
 
 const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const sheetRef: any = useRef();
@@ -82,24 +83,24 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                                     position: 'absolute',
                                     left: 0,
                                     borderRadius: 20,
-                                    width: 30,
-                                    height: 30,
+                                    width: Dimensions.get('window').width < 768 ? 30 : 35,
+                                    height: Dimensions.get('window').width < 768 ? 30: 35,
                                     backgroundColor: 'white',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    shadowOffset: {
-                                        width: 3,
-                                        height: 3
-                                    },
-                                    // overflow: 'hidden',
-                                    elevation: 5,
-                                    shadowOpacity: 0.12,
-                                    shadowRadius: 8
+                                    // shadowOffset: {
+                                    //     width: 3,
+                                    //     height: 3
+                                    // },
+                                    // // overflow: 'hidden',
+                                    // elevation: 5,
+                                    // shadowOpacity: 0.12,
+                                    // shadowRadius: 8
                                 }}
                             >
-                                <Ionicons size={24} name="close-outline" />
+                                <Ionicons size={Dimensions.get('window').width < 768 ? 26 : 30} name="close-outline" />
                             </TouchableOpacity>
-                            {props.title ? <Text style={{ fontFamily: 'Inter', fontSize: 20, fontWeight: 'bold', paddingTop: 5 }}>
+                            {props.title ? <Text style={{ fontFamily: 'Inter', fontSize: Dimensions.get('window').width < 768 ? 20 : 24, fontWeight: 'bold', paddingTop: 5 }}>
                                 {props.title}
                             </Text> : props.tabs ? props.tabs : <View  style={{ height: 20 }} />}
 
@@ -111,7 +112,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                     <Text
                         style={{
                             fontFamily: 'Inter',
-                            fontSize: 20,
+                            fontSize: Dimensions.get('window').width < 768 ? 20 : 24,
                             fontWeight: 'bold',
                             paddingTop: 5,
                             textAlign: 'center',
@@ -141,4 +142,4 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
     );
 };
 
-export default CustomBottomSheet;
+export default React.memo(CustomBottomSheet);

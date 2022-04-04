@@ -36,7 +36,7 @@ import moment from 'moment';
 //     MenuTrigger,
 // } from 'react-native-popup-menu';
 import { htmlStringParser } from '../helpers/HTMLParser';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import FileUpload from './UploadFiles';
 import { Video } from 'expo-av';
 import NewPostModal from './NewPostModal';
@@ -46,6 +46,8 @@ import { handleImageUpload } from '../helpers/ImageUpload';
 import { handleFile } from '../helpers/FileUpload'
 import Reanimated from 'react-native-reanimated';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
+import { useOrientation } from '../hooks/useOrientation';
+import { discussionThreadsHeight, selectedThreadHeight } from '../helpers/ComponentHeights';
 
 const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     // State
@@ -77,6 +79,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     const [importType, setImportType] = useState('');
     const [importFileName, setImportFileName] = useState('');
     const [importUrl, setImportUrl] = useState('');
+
+    const orientation = useOrientation()
 
     const audioRef: any = useRef();
     const videoRef: any = useRef();
@@ -506,7 +510,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 .then(res => {
                     setThreadWithReplies(res.data.thread.getThreadWithReplies);
                     const tempChat: any[] = [];
-                    res.data.thread.getThreadWithReplies.map((msg: any) => {
+                    res.data.thread.getThreadWithReplies.map((msg: any, ind: number) => {
                         let text: any = '';
                         let img: any = '';
                         let audio: any = '';
@@ -522,7 +526,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 video = url;
                             } else {
                                 text = (
-                                    <TouchableOpacity style={{ backgroundColor: '#006AFF' }}>
+                                    <TouchableOpacity style={{ backgroundColor: '#006AFF' }} key={ind.toString()}>
                                         <Text
                                             style={{
                                                 textDecorationLine: 'underline',
@@ -752,6 +756,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 shadowOpacity: !isFilterDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
                             }}
+                            textStyle={{
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontFamily: 'overpass'
+                            }}
                         />
                     </View>
                 ) : null}
@@ -819,13 +827,32 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     // maxWidth: 900,
                     borderRadius: 1,
                     padding: 10,
-                    height: Dimensions.get('window').width < 800 ? Dimensions.get('window').height - 140 : Dimensions.get('window').height - 100,
+                    height: selectedThreadHeight(Dimensions.get('window').height, Dimensions.get('window').width, Platform.OS, orientation),
                     // borderLeftWidth: 3,
                     // borderLeftColor: props.channelColor,
                 }}
             >
                 <GiftedChat
-                    bottomOffset={Platform.OS === "ios" ? 50 : 40}
+                    renderInputToolbar={(props) => {
+                        return (
+                          <InputToolbar
+                            {...props}
+                            containerStyle={{
+                                // backgroundColor: '#f2f2f2',
+                                paddingVertical: 5
+                            }}
+                            placeholder="Message..."
+                            textInputStyle={{
+                                // borderWidth: 1,
+                                // borderColor: '#ccc',
+                                padding: 10,
+                                paddingBottom: 15,
+                                borderRadius: 10
+                            }}
+                          />
+                        );
+                    }}
+                    bottomOffset={Platform.OS === "ios" ? 50 : 0}
                     renderMessageAudio={renderMessageAudio}
                     renderMessageVideo={renderMessageVideo}
                     renderUsernameOnMessage={true}
@@ -840,7 +867,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         // <View>
                         <TouchableOpacity
                             style={{
-                                paddingBottom: 10
+                                // paddingVertical: 10
+                                paddingBottom: 12
                             }}
                             onPress={() => {
                                 Keyboard.dismiss()
@@ -876,20 +904,12 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 style={{
                     width: '100%',
                     backgroundColor: '#fff',
-                    // maxWidth: 900,
                     borderRadius: 1,
-                    // borderLeftWidth: threads.length === 0 ? 0 : 3,
-                    // borderLeftColor: props.channelColor,
-                    maxHeight: Dimensions.get('window').height - 300,
-                    // borderTopColor: '#f2f2f2',
-                    // borderBottomColor: '#f2f2f2',
-                    // borderTopWidth: 1,
-                    // borderBottomWidth: 1,
-
+                    maxHeight: discussionThreadsHeight(Dimensions.get('window').height, Dimensions.get('window').width, Platform.OS, orientation),
                 }}
             >
                 {threads.length === 0 ? (
-                    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+                    <View style={{ backgroundColor: '#fff' }}>
                         <Text
                             style={{
                                 width: '100%',
@@ -897,7 +917,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 fontSize: 18,
                                 paddingVertical: 50,
                                 fontFamily: 'inter',
-                                flex: 1,
                                 backgroundColor: '#fff',
                                 paddingHorizontal: 20,
                             }}
@@ -909,13 +928,13 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <ScrollView
                         showsVerticalScrollIndicator={true}
                         horizontal={false}
-                        // style={{ height: '100%' }}
                         contentContainerStyle={{
                             paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 10,
                             borderColor: '#f2f2f2',
                             borderRadius: 1,
                             width: '100%'
                         }}
+                        indicatorStyle="black"
                     >
                         {filteredThreads.map((thread: any, ind) => {
                             let title = '';
@@ -1284,7 +1303,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 flexDirection: 'row',
                 flex: 1,
                 height: '100%',
-                // maxHeight: '100%'
             }}
         >
             <View
