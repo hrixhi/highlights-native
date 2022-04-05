@@ -350,65 +350,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     {/* Question */}
                                     <View style={{ flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row', flex: 1 }}>
 
-                                    {
-                                        (audioVideoQuestion ? <View style={{ width: '100%', marginBottom: 10, paddingTop: 10, flex: 1 }}>
-                                                {renderAudioVideoPlayer(url, type)}
-                                                <View
-                                                    style={{
-                                                        paddingTop: 10,
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        flex: 1
-                                                    }}
-                                                >
-                                                    {/* <RichEditor
-                                                        initialContentHTML={content}
-                                                        disabled={true}
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            flex: 1
-                                                        }}
-                                                    /> */}
-                                                     <RenderHtml
-                                                        source={{
-                                                            html: content
-                                                        }}
-                                                        defaultTextProps={{
-                                                            selectable: true
-                                                        }}
-                                                    />
-                                                </View>
-                                            </View> : <View
-                                                    style={{
-                                                        paddingTop: 10,
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        flex: 1
-                                                    }}
-                                                >
-                                                    {/* <RichEditor
-                                                        initialContentHTML={problem.question}
-                                                        disabled={true}
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            flex: 1
-                                                        }}
-                                                    /> */}
-                                                     <RenderHtml
-                                                        source={{
-                                                            html: problem.question
-                                                        }}
-                                                        defaultTextProps={{
-                                                            selectable: true
-                                                        }}
-                                                    />
-                                                </View>)
-                                    }
                                     
-                                       
-
+                                    
                                        {/* Scoring */}
                                         <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingLeft: Dimensions.get('window').width > 768 ? 20 : 0, marginBottom: Dimensions.get('window').width > 768 ? 20 : 0, marginLeft: 'auto', paddingTop: 7 }}>
                                             <View style={{ flexDirection: 'row', marginRight: 20 }}>
@@ -475,6 +418,65 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                             </View>
 
+                            {
+                                        (audioVideoQuestion ? <View style={{ width: '100%', marginBottom: 10, paddingTop: 10, flex: 1 }}>
+                                                {renderAudioVideoPlayer(url, type)}
+                                                <View
+                                                    style={{
+                                                        paddingTop: 10,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        flex: 1
+                                                    }}
+                                                >
+                                                    {/* <RichEditor
+                                                        initialContentHTML={content}
+                                                        disabled={true}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            flex: 1
+                                                        }}
+                                                    /> */}
+                                                     <RenderHtml
+                                                        contentWidth={contentWidth}
+                                                        source={{
+                                                            html: content
+                                                        }}
+                                                        defaultTextProps={{
+                                                            selectable: true
+                                                        }}
+                                                    />
+                                                </View>
+                                            </View> : <View
+                                                    style={{
+                                                        paddingTop: 10,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        flex: 1
+                                                    }}
+                                                >
+                                                    {/* <RichEditor
+                                                        initialContentHTML={problem.question}
+                                                        disabled={true}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            flex: 1
+                                                        }}
+                                                    /> */}
+                                                    <RenderHtml
+                                                        contentWidth={contentWidth}
+                                                        source={{
+                                                            html: problem.question
+                                                        }}
+                                                        defaultTextProps={{
+                                                            selectable: true
+                                                        }}
+                                                    />
+                                                </View>)
+                                    }
+
                         {
                             (!problem.questionType || problem.questionType === "trueFalse") && problem.options.map((option: any, i: any) => {
 
@@ -497,6 +499,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                                 return <View style={{
                                     flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                                    alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center'
                                 }}>
                                     
                                     <View style={{
@@ -531,6 +534,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             borderRadius: 5
                                         }}>
                                             <RenderHtml
+                                                contentWidth={contentWidth}
                                                 source={{
                                                     html: option.option
                                                 }}
@@ -542,7 +546,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     </View>
                                     {/* Correct */}
                                     <View style={{
-                                        paddingLeft: 30
+                                        paddingLeft:  Dimensions.get('window').width < 768 ? 30 : 10,
+                                        marginBottom: Dimensions.get('window').width < 768 ? 0 : 10 ,
+                                        marginTop: Dimensions.get('window').width < 768 ? 0 : 20,
                                     }}>
                                         {
                                             (selected || isCorrectAnswer) ? 
@@ -728,12 +734,13 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 <View style={{
                                     width: '100%',
                                     display: 'flex',
+                                    flexDirection: 'row',
                                     flexWrap: 'wrap',
                                     paddingTop: 20,
                                 }}>
                                     {problem.dragDropHeaders.map((header: string, groupIndex: number) => {
                                         // 
-                                        return (<View style={{ width: 240, marginRight: 30, padding: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 15, marginBottom: Dimensions.get('window').width < 768 ? 30 : 0 }}>
+                                        return (<View style={{ width: 240, marginRight: 30, padding: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 15, marginBottom: Dimensions.get('window').width < 768 ? 30 : 30, }}>
                                             <Text style={{
                                                 fontSize: 16,
                                                 width: '100%',
@@ -793,6 +800,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             problem.questionType === 'highlightText' ? <View style={{ paddingTop: 20, paddingBottom: 30 }}>
                                 {
                                     <RenderHtml
+                                        contentWidth={contentWidth}
                                         contentWidth={contentWidth}
                                         source={{
                                             html: problem.highlightTextHtml
@@ -884,6 +892,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 {
                                     <RenderHtml
                                         contentWidth={contentWidth}
+                                        contentWidth={contentWidth}
                                         source={{
                                             html: problem.inlineChoiceHtml
                                         }}
@@ -970,6 +979,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             problem.questionType === 'textEntry' ? <View style={{ paddingTop: 20, paddingBottom: 30 }}>
                                 {
                                     <RenderHtml
+                                        contentWidth={contentWidth}
                                         contentWidth={contentWidth}
                                         source={{
                                             html: problem.textEntryHtml
@@ -1067,6 +1077,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                                             <RenderHtml
                                                 contentWidth={contentWidth}
+                                                contentWidth={contentWidth}
                                                 source={{
                                                     html: problem.multipartQuestions[partIndex]
                                                 }}
@@ -1103,13 +1114,14 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                                                     return <View style={{
                                                         flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-
+                                                        alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center'
                                                     }}>
                                                         <View style={{
                                                             flexDirection: 'row',
                                                             alignItems: 'center',
                                                             marginBottom: 10,
                                                             marginTop: 20,
+                                                            maxWidth: Dimensions.get('window').width < 768 ? '80%' : '50%',
                                                         }}>
                                                             <BouncyCheckbox
                                                                 style={{}}
@@ -1124,7 +1136,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
 
                                                             <View style={{
-                                                                width: Dimensions.get('window').width < 768 ? '80%' : '50%',
                                                                 fontSize: 14,
                                                                 paddingHorizontal: 15,
                                                                 color,
@@ -1136,6 +1147,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                 borderRadius: 5
                                                             }}>
                                                                 <RenderHtml
+                                                                    contentWidth={contentWidth}
                                                                     contentWidth={contentWidth}
                                                                     source={{
                                                                         html: option.option
@@ -1153,7 +1165,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             </View>
                                                         </View>
                                                         <View style={{
-                                                            paddingLeft: 30
+                                                            paddingLeft:  Dimensions.get('window').width < 768 ? 30 : 10,
+                                                            marginBottom: Dimensions.get('window').width < 768 ? 0 : 10 ,
+                                                            marginTop: Dimensions.get('window').width < 768 ? 0 : 20,
                                                         }}>
                                                             {
                                                                 (selected || isCorrectAnswer) ? 
@@ -1314,6 +1328,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 }}
                                             /> */}
                                              <RenderHtml
+                                                contentWidth={contentWidth}
                                                 source={{
                                                     html: solutions[index].response
                                                 }}
@@ -1329,7 +1344,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 null
                         }
 
-                        {!props.isOwner && problemComments[index] === '' ? null : <View style={{ width: Dimensions.get('window').width < 1024 ? '100%' : '80%' , maxWidth: 400, marginLeft: 40, marginBottom: 40 }}>
+                        {!props.isOwner && problemComments[index] === '' ? null : <View style={{ width: '100%', marginBottom: 40 }}>
                             {props.isOwner ? 
                             // <TextareaAutosize
                             //     value={problemComments[index]}
@@ -1364,14 +1379,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 }}
                                 style={{
                                     fontFamily: 'overpass',
-                                    maxWidth: '100%', marginBottom: 10, marginTop: 10,
-                                    borderRadius: 1,
-                                    paddingTop: 13, paddingBottom: 13, fontSize: 14, borderBottom: '1px solid #C1C9D2',
+                                    maxWidth: 400, 
+                                    marginBottom: 10, 
+                                    marginTop: 10,
+                                    // borderRadius: 10,
+                                    borderBottomWidth: 1,
+                                    borderStyle: 'solid',
+                                    borderColor: '#CCC',
+                                    paddingTop: 13, 
+                                    paddingBottom: 13, fontSize: 14, 
+                                    paddingLeft: 13
                                 }}
                                 placeholder={'Remark'}
                                 placeholderTextColor="#66737C"
                                 maxHeight={200}
-                                minHeight={45}
+                                minHeight={80}
                                 enableScrollToCaret
                                 // ref={}
                             />
@@ -1385,11 +1407,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </View>
                 })
             }
-            {!props.isOwner && !comment ? null : <View style={{ width: '100%', paddingVertical: 50, paddingHorizontal: 40, borderTopWidth: 1, borderColor: '#f2f2f2' }}>
+            {!props.isOwner && !comment ? null : <View style={{ width: '100%', paddingVertical: 50, borderTopWidth: 1, borderColor: '#f2f2f2' }}>
                 {!props.isOwner ? <Text style={{ width: '100%', textAlign: 'left' }}>
                     Feedback
                 </Text> : null}
-                {props.isOwner ? <View style={{ width: Dimensions.get('window').width < 1024 ? '100%' : '80%' , maxWidth: 400 }}>
+                {props.isOwner ? <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '80%' , maxWidth: 600 }}>
                     {/* <TextareaAutosize
                         style={{ 
                             fontFamily: 'overpass',
@@ -1413,14 +1435,21 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             onChange={(event: any) => setComment(event.nativeEvent.text || '')}
                             style={{
                                 fontFamily: 'overpass',
-                                maxWidth: '100%', marginBottom: 10, marginTop: 10,
-                                borderRadius: 1,
-                                paddingTop: 13, paddingBottom: 13, fontSize: 14, borderBottomWidth: 1, borderBottomColor: '#f2f2f2'
+                                maxWidth: 400, 
+                                marginBottom: 10, 
+                                marginTop: 10,
+                                // borderRadius: 10,
+                                borderBottomWidth: 1,
+                                borderStyle: 'solid',
+                                borderColor: '#CCC',
+                                paddingTop: 13, 
+                                paddingBottom: 13, fontSize: 14, 
+                                paddingLeft: 13
                             }}
                             placeholder={'Feedback'}
                             placeholderTextColor="#66737C"
                             maxHeight={200}
-                            minHeight={100}
+                            minHeight={80}
                             enableScrollToCaret
                             // ref={}
                         />

@@ -1968,7 +1968,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             style={{
                 flexDirection: 'column',
                 paddingHorizontal: 20,
-                marginVertical: 20,
+                // marginVertical: 20,
+                marginTop: Dimensions.get('window').width < 768 && orientation === 'PORTRAIT' ? 50 : 30,
+                marginBottom: 20,
+                width: '100%',
+                alignItems: 'center',
+                // maxWidth: 600
             }}>
             <AutoGrowingTextInput
                 value={emails}
@@ -1976,10 +1981,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 style={{
                     fontFamily: 'overpass',
                     width: '100%',
-                    maxWidth: '100%',
+                    maxWidth: 600,
                     borderBottomWidth: 1,
                     borderBottomColor: '#f2f2f2',
-                    fontSize: 14,
+                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                     paddingTop: 13,
                     paddingBottom: 13,
                     marginRight: 10,
@@ -1989,18 +1994,39 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 onChange={(event: any) => setEmails(event.nativeEvent.text || '')}
                 minHeight={120}
             />
-            <Text
+            <View
                 style={{
-                    fontSize: 10,
-                    color: '#000000',
-                    textTransform: 'uppercase',
-                    lineHeight: 20,
-                    fontFamily: 'Inter',
-                    paddingTop: 50
+                    marginTop: 30,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 10,
+                    paddingHorizontal: 15,
+                    backgroundColor: '#f2f2f2',
+                    borderRadius: 1,
+                    width: '100%',
+                    maxWidth: 600,
+                    borderRadius: 10
                 }}
             >
-                NOTE: EMAIL IDS ALREADY IN USE WITH ANOTHER CUES ORGANIZATION/INSTRUCTOR MAY NOT BE ADDED. REACH OUT TO SUPPORT FOR ANY QUERIES.
-            </Text>
+                <View style={{
+                    width: '10%',
+                    backgroundColor: '#f2f2f2'
+                }}>
+                    <Ionicons name="warning-outline" size={Dimensions.get('window').width < 768 ? 22 : 24} color={'#f3722c'} />
+                </View>     
+                <View style={{
+                    width: '90%',
+                    // paddingRight: 20,
+                    flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                    alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
+                    backgroundColor: '#f2f2f2'
+                }}>
+                    <Text style={{ paddingLeft: 5, width: '100%', fontSize: Dimensions.get('window').width < 768 ? 14 : 16 }}>
+                        Email IDs already in use with another Cues organization/instructor may not get added. Reach out to Support for any queries.
+                    </Text>
+                </View>
+            </View>
+
 
             <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
                 <RNTouchableOpacity
@@ -2017,7 +2043,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         let error = false;
                         let invalidEmail = ""
 
-                        const santizedEmails = splitEmails.map((e: string) => {
+                        const santizedEmails: string[] = splitEmails.map((e: string) => {
 
                             if (error) return;
 
@@ -3797,7 +3823,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     fontWeight: 'bold',
                                 }}
                             >
-                                {selectedWorkspace.split('-SPLIT-')[0]}  {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? "/" : '' }
+                                {selectedWorkspace.split('-SPLIT-')[0]} {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? "/" : '' }
                             </Text>
                             {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? <Text
                                 ellipsizeMode={'tail'}
@@ -4050,7 +4076,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         horizontal={false}
                         indicatorStyle="black"
                         contentContainerStyle={{
-                            paddingBottom: 30
+                            paddingBottom: 200
                         }}
                         refreshControl={
                             <RefreshControl
@@ -5641,7 +5667,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setShowInviteByEmailsModal(false)
                         }}
                         isOpen={showInviteByEmailsModal}
-                        title={'Add Viewers with emails'}
+                        title={'Add Students with emails'}
                         renderContent={() => renderInviteEmailsModalContent()}
                         header={true}
                         callbackNode={fall}

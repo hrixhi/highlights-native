@@ -3184,7 +3184,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </View>
             <View
                 style={{ flex: 1, marginBottom: Dimensions.get('window').width < 1024 ? 24 : 0 }}
-                key={activeTab.toString() + channels.length.toString()}
+                key={activeTab.toString() + channels.length.toString() + orientation}
             >
                 {activeTab === 'agenda' ? (
                     loadingEvents ? (
@@ -3228,7 +3228,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 )}
             </View>
 
-            <BottomSheet
+            {showAddEvent ? <BottomSheet
                 snapPoints={[0, newEventModalHeight(windowHeight, Dimensions.get('window').width, Platform.OS, orientation)]}
                 close={() => {
                     setEditEvent(null);
@@ -3243,7 +3243,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 renderContent={() => renderEventModalContent()}
                 header={true}
                 callbackNode={fall}
-            /> 
+            /> : null}
 
             {showAddEvent ? (
                 <Reanimated.View
@@ -3293,7 +3293,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 </Reanimated.View>
             ) : null}
 
-            {activeTab === 'agenda' ? 
+            {activeTab === 'agenda' && showFilterModal ? 
                 <BottomSheet
                 snapPoints={[0, filterEventModalHeight(Dimensions.get('window').width, Platform.OS, orientation)]}
                 close={() => {
@@ -3308,7 +3308,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             /> : null}
             
             {
-                activeTab !== 'agenda' ? 
+                activeTab !== 'agenda' && showFilterModal ? 
                 <BottomSheet
                     snapPoints={[0, filterActivityModalHeight(Dimensions.get('window').width, Platform.OS, orientation)]}
                     close={() => {

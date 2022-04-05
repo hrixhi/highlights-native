@@ -1,6 +1,6 @@
 // REACT
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Dimensions, TextInput as DefaultTextInput, Keyboard, StyleSheet } from 'react-native';
+import { Dimensions, TextInput as DefaultTextInput, Keyboard, StyleSheet, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import lodash from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
@@ -97,6 +97,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const [insertImageVisible, setInsertImageVisible] = useState(false);
     const [questionEditorFocus, setQuestionEditorFocus] = useState(false);
     const [repository, setRepository] = useState(null);
+    const { width: contentWidth } = useWindowDimensions();
+
 
     useEffect(() => {
         setProblems(props.problems)
@@ -641,6 +643,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 marginTop: 35,
                 paddingTop: 25,
                 flexDirection: 'column',
+                alignSelf: 'center',
                 justifyContent: 'flex-start'
             }}
         >
@@ -717,7 +720,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                        fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
                                         paddingBottom: 25,
                                         width: 40,
-                                        paddingTop: 15,
+                                        paddingTop: editQuestionNumber === (index + 1) ? 15 : 0,
                                         fontFamily: 'inter'
                                     }}
                                 >
@@ -743,7 +746,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             paddingRight: Dimensions.get('window').width < 768 ? 0 : 20
                                         }}
                                     >
-                                        <View style={{ width: '100%' }}>
+                                        <View style={{ width: '100%', paddingTop: (editQuestionNumber === index + 1) || Dimensions.get('window').width < 768 ? 0 : 10   }} >
                                             {editQuestionNumber === index + 1 ? (
                                                 <View
                                                     style={{
@@ -781,11 +784,12 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             {editQuestionNumber === index + 1 ? (
                                                 renderQuestionEditor(index)
                                             ) : audioVideoQuestion ? (
-                                                <View style={{}}>
+                                                <View >
                                                     <View style={{ marginBottom: 20 }}>
                                                         {renderAudioVideoPlayer(url, type)}
                                                     </View>
                                                     <RenderHtml
+                                                        contentWidth={contentWidth}
                                                         source={{
                                                             html: content
                                                         }}
@@ -796,6 +800,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 </View>
                                             ) : (
                                                 <RenderHtml
+                                                    contentWidth={contentWidth}
                                                     source={{
                                                         html: problem.question
                                                     }}
@@ -823,7 +828,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     style={{
                                                         display: 'flex',
                                                         flexDirection: 'row',
-                                                        paddingTop: Dimensions.get('window').width < 768 ? 0 : 15,
+                                                        paddingTop: Dimensions.get('window').width < 768 ? 0 : 25,
                                                         alignItems: 'flex-start',
                                                         paddingBottom: Dimensions.get('window').width < 768 ? 0 : 30
                                                     }}
@@ -935,22 +940,28 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             </Text>
                                                         </MenuTrigger>
                                                         <MenuOptions
-                                                            customStyles={{
-                                                                optionsContainer: {
-                                                                    padding: 10,
-                                                                    borderRadius: 15,
-                                                                    shadowOpacity: 0,
-                                                                    borderWidth: 1,
-                                                                    borderColor: '#f4f4f6',
-                                                                    overflow: 'scroll',
-                                                                    maxHeight: '100%'
-                                                                }
+                                                            optionsContainerStyle={{
+                                                                shadowOffset: {
+                                                                    width: 2,
+                                                                    height: 2
+                                                                },
+                                                                shadowColor: '#000',
+                                                                // overflow: 'hidden',
+                                                                shadowOpacity: 0.07,
+                                                                shadowRadius: 7,
+                                                                padding: 10,
+                                                                // borderWidth: 1,
+                                                                // borderColor: '#CCC'
                                                             }}
                                                         >
                                                             {questionTypeOptions.map((item: any) => {
                                                                 return (
                                                                     <MenuOption value={item.value}>
-                                                                        <Text>
+                                                                        <Text style={{
+                                                                            fontSize: 15,
+                                                                            fontFamily: 'Inter',
+                                                                            paddingBottom: 3
+                                                                        }}>
                                                                             {item.value === '' ? 'MCQ' : item.label}
                                                                         </Text>
                                                                     </MenuOption>
@@ -966,7 +977,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     style={{
                                                         display: 'flex',
                                                         flexDirection: 'row',
-                                                        paddingTop: Dimensions.get('window').width < 768 ? 0 : 15,
+                                                        paddingTop: Dimensions.get('window').width < 768 ? 0 : 25,
                                                         paddingLeft: 20,
                                                         alignItems: 'flex-start',
                                                         paddingBottom: Dimensions.get('window').width < 768 ? 0 : 30
@@ -995,22 +1006,28 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         </MenuTrigger>
 
                                                         <MenuOptions
-                                                            customStyles={{
-                                                                optionsContainer: {
-                                                                    padding: 10,
-                                                                    borderRadius: 15,
-                                                                    shadowOpacity: 0,
-                                                                    borderWidth: 1,
-                                                                    borderColor: '#f4f4f6',
-                                                                    overflow: 'scroll',
-                                                                    maxHeight: '100%'
-                                                                }
+                                                            optionsContainerStyle={{
+                                                                shadowOffset: {
+                                                                    width: 2,
+                                                                    height: 2
+                                                                },
+                                                                shadowColor: '#000',
+                                                                // overflow: 'hidden',
+                                                                shadowOpacity: 0.07,
+                                                                shadowRadius: 7,
+                                                                padding: 10,
+                                                                // borderWidth: 1,
+                                                                // borderColor: '#CCC'
                                                             }}
                                                         >
                                                             {requiredOptions.map((item: any) => {
                                                                 return (
                                                                     <MenuOption value={item.value}>
-                                                                        <Text>{item.label}</Text>
+                                                                        <Text style={{
+                                                                            fontSize: 15,
+                                                                            fontFamily: 'Inter',
+                                                                            paddingBottom: 3
+                                                                        }}>{item.label}</Text>
                                                                     </MenuOption>
                                                                 );
                                                             })}
@@ -1050,8 +1067,8 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             style={{
                                                 flexDirection: 'row',
                                                 alignItems: 'flex-start',
-                                                paddingTop: 15,
-                                                marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 'none'
+                                                paddingTop: Dimensions.get('window').width < 768 ? 15 : 0,
+                                                marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 0
                                             }}
                                         >
                                             {editQuestionNumber === index + 1 ? null : !problem.required ? null : (
@@ -1304,9 +1321,10 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                         }}
                                     >
                                         {
-                                            <View style={{ width: '100%', marginBottom: 10, paddingTop: 20 }}>
+                                            <View style={{ width: '100%', marginBottom: 10, paddingTop:  20 }}>
                                                 {questionType === 'trueFalse' || editQuestionNumber !== index + 1 ? (
                                                     <RenderHtml
+                                                        contentWidth={contentWidth}
                                                         source={{
                                                             html: option.option
                                                         }}

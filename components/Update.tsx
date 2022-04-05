@@ -646,7 +646,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 // backgroundColor: '#000',
                 paddingTop: Dimensions.get('window').width < 1024 ? 9 : 12,
                 height: 48,
-                justifyContent: Dimensions.get('window').width < 1024 ? 'center' : 'flex-start'
+                justifyContent: 'center' 
             }}
         >
             <TouchableOpacity
@@ -865,7 +865,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         showsHorizontalScrollIndicator={true}
                         indicatorStyle='black'
                     >
-                        {folderCuesToDisplay.map((cue: any) => {
+                        {folderCuesToDisplay.map((cue: any, ind: number) => {
                             if (!cue || !cue.channelId) return;
 
                             const { title } = htmlStringParser(
@@ -903,6 +903,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         zIndex: 500000,
                                         marginRight: 15
                                     }}
+                                    key={ind.toString()}
                                 >
                                     <TouchableOpacity
                                         onPress={() => props.openCue(cue._id)}
@@ -1217,7 +1218,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     height: 180
                 }}
             >
-                <View style={{ width: '100%', flexDirection: 'column', paddingHorizontal: 10 }}>
+                <View style={{ width: '100%', flexDirection: 'column', paddingHorizontal: 10, backgroundColor: '#f2f2f2' }}>
                     {/* Section 1: Shows all cues from Channel */}
                     {/* All cues being rendered here instead of filtered */}
                     <View
@@ -1244,7 +1245,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 showsHorizontalScrollIndicator={true}
                                 indicatorStyle='black'
                             >
-                                {channelCues.map((cue: any) => {
+                                {channelCues.map((cue: any, ind: number) => {
                                     if (cue.folderId !== '') return;
 
                                     const { title } = htmlStringParser(
@@ -1282,6 +1283,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 zIndex: 500000,
                                                 marginRight: 15
                                             }}
+                                            key={ind.toString()}
                                         >
                                             <View
                                                 key={'textPage'}
@@ -1459,7 +1461,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 indicatorStyle='black'
                             // showsVerticalScrollIndicator={false}
                             >
-                                {channelCues.map((cue: any) => {
+                                {channelCues.map((cue: any, ind: number) => {
                                     const { title } = htmlStringParser(
                                         cue.channelId && cue.channelId !== '' ? cue.original : cue.cue
                                     );
@@ -1495,6 +1497,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 zIndex: 500000,
                                                 marginRight: 15
                                             }}
+                                            key={ind.toString()}
                                         >
                                             <View
                                                 key={'textPage'}
@@ -1931,23 +1934,29 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             </View>
                         </MenuTrigger>
                         <MenuOptions
-                            customStyles={{
-                                optionsContainer: {
-                                    padding: 10,
-                                    borderRadius: 15,
-                                    shadowOpacity: 0,
-                                    borderWidth: 1,
-                                    borderColor: '#e9e9ec',
-                                    overflow: 'scroll',
-                                    maxHeight: '100%'
-                                }
+                            optionsContainerStyle={{
+                                shadowOffset: {
+                                    width: 2,
+                                    height: 2
+                                },
+                                shadowColor: '#000',
+                                // overflow: 'hidden',
+                                shadowOpacity: 0.07,
+                                shadowRadius: 7,
+                                padding: 10,
+                                // borderWidth: 1,
+                                // borderColor: '#CCC'
                             }}
                         >
                             {channelFolders.map((folder: any) => {
                                 return (
                                     <MenuOption key={folder._id} value={folder._id}>
                                         <View style={{ display: 'flex', flexDirection: 'row' }}>
-                                            <Text style={{ fontSize: 14, fontFamily: 'inter', color: '#000000' }}>
+                                            <Text style={{
+                                                fontSize: 15,
+                                                fontFamily: 'Inter',
+                                                paddingBottom: 3
+                                            }}>
                                                 {folder.title && folder.title !== '' ? folder.title : 'Untitled'}
                                             </Text>
                                         </View>

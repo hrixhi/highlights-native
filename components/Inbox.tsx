@@ -25,7 +25,7 @@ import FileUpload from './UploadFiles';
 // import { Select } from '@mobiscroll/react';
 import { TextInput } from './CustomTextInput';
 // import ReactPlayer from 'react-native-video';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { Video } from 'expo-av';
 import BottomSheet from './BottomSheet';
@@ -448,11 +448,11 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity key={ind.toString()}>
+                                        <TouchableOpacity key={ind.toString()} style={{ backgroundColor: '#006AFF' }}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
-                                                    // backgroundColor: '#006AFF',
+                                                    backgroundColor: '#006AFF',
                                                     color: '#fff'
                                                 }}
                                                 onPress={() => {
@@ -467,7 +467,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     }
                                                 }}
                                             >
-                                                {obj.title}
+                                                {obj.title + '.' + obj.type}
                                             </Text>
                                         </TouchableOpacity>
                                     );
@@ -1506,22 +1506,28 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             </Text>
                                                             </MenuTrigger>
                                                             <MenuOptions
-                                                                customStyles={{
-                                                                    optionsContainer: {
-                                                                        padding: 10,
-                                                                        borderRadius: 15,
-                                                                        shadowOpacity: 0,
-                                                                        borderWidth: 1,
-                                                                        borderColor: '#f2f2f2',
-                                                                        overflow: 'scroll',
-                                                                        maxHeight: '100%'
-                                                                    }
+                                                                optionsContainerStyle={{
+                                                                    shadowOffset: {
+                                                                        width: 2,
+                                                                        height: 2
+                                                                    },
+                                                                    shadowColor: '#000',
+                                                                    // overflow: 'hidden',
+                                                                    shadowOpacity: 0.07,
+                                                                    shadowRadius: 7,
+                                                                    padding: 10,
+                                                                    // borderWidth: 1,
+                                                                    // borderColor: '#CCC'
                                                                 }}
                                                             >
                                                                 {channelOptions.map((channel: any, ind: number) => {
                                                                     return (
                                                                         <MenuOption key={ind.toString()} value={channel.value}>
-                                                                            <Text>{channel.label}</Text>
+                                                                            <Text style={{
+                                                                                fontSize: 15,
+                                                                                fontFamily: 'Inter',
+                                                                                paddingBottom: 3
+                                                                            }}>{channel.label}</Text>
                                                                         </MenuOption>
                                                                     );
                                                                 })}
@@ -1711,12 +1717,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 style={{
                                                     borderWidth: 0,
                                                     borderBottomWidth: 1,
-                                                    borderBottomColor: '#f2f2f2'
+                                                    borderBottomColor: '#f2f2f2',
+                                                    // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                 }}
                                                 dropDownContainerStyle={{
                                                     borderWidth: 0,
-                                                    zIndex: 1000001,
-                                                    elevation: 1000001
+                                                    // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                 }}
                                                 containerStyle={{
                                                     shadowColor: '#000',
@@ -1726,8 +1732,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     },
                                                     shadowOpacity: !isNewUsersDropdownOpen ? 0 : 0.08,
                                                     shadowRadius: 12,
-                                                    zIndex: 1000001,
-                                                    elevation: 1000001
+                                                }}
+                                                textStyle={{
+                                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                                    fontFamily: 'overpass'
                                                 }}
                                             />
                                         ) : (
@@ -1840,7 +1848,26 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         }}
                                     >   
                                         <GiftedChat
-                                            bottomOffset={Platform.OS === "ios" ? 40 : 20}
+                                            renderInputToolbar={(props) => {
+                                                return (
+                                                <InputToolbar
+                                                    {...props}
+                                                    containerStyle={{
+                                                        // backgroundColor: '#f2f2f2',
+                                                        paddingVertical: 5
+                                                    }}
+                                                    placeholder="Message..."
+                                                    textInputStyle={{
+                                                        // borderWidth: 1,
+                                                        // borderColor: '#ccc',
+                                                        padding: 10,
+                                                        paddingBottom: 15,
+                                                        borderRadius: 10
+                                                    }}
+                                                />
+                                                );
+                                            }}
+                                            bottomOffset={Platform.OS === "ios" ? 40 : 0}
                                             renderMessageAudio={renderMessageAudio}
                                             renderMessageVideo={renderMessageVideo}
                                             renderUsernameOnMessage={isChatGroup}
@@ -1855,7 +1882,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 // <View>
                                                     <TouchableOpacity 
                                                         style={{
-                                                            paddingBottom: 10
+                                                            paddingBottom: 12
                                                         }}
                                                         onPress={() => {
                                                             Keyboard.dismiss()
@@ -2048,6 +2075,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     /> */}
                                                     <View style={{ height: isUpdateUsersDropdownOpen ? getDropdownHeight(options.length) : 50 }}>
                                                         <DropDownPicker
+                                                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                                             multiple={true}
                                                             open={isUpdateUsersDropdownOpen}
                                                             value={selected}
@@ -2057,12 +2085,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             style={{
                                                                 borderWidth: 0,
                                                                 borderBottomWidth: 1,
-                                                                borderBottomColor: '#f2f2f2'
+                                                                borderBottomColor: '#f2f2f2',
+                                                                // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                             }}
                                                             dropDownContainerStyle={{
                                                                 borderWidth: 0,
-                                                                zIndex: 1000001,
-                                                                elevation: 1000001
+                                                                // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                             }}
                                                             containerStyle={{
                                                                 shadowColor: '#000',
@@ -2072,8 +2100,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 },
                                                                 shadowOpacity: !isUpdateUsersDropdownOpen ? 0 : 0.08,
                                                                 shadowRadius: 12,
-                                                                zIndex: 1000001,
-                                                                elevation: 1000001
+                                                            }}
+                                                            textStyle={{
+                                                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                                                fontFamily: 'overpass'
                                                             }}
                                                         />
                                                     </View>

@@ -431,7 +431,8 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     paddingHorizontal: 20,
                     flex: 1,
                     flexDirection: 'column',
-                    paddingBottom: 50
+                    paddingBottom: 50,
+                    paddingTop: Dimensions.get('window').width < 768 ? 0 : 50
                     // maxHeight:
                     //     Dimensions.get('window').width < 1024
                     //         ? Dimensions.get('window').height - 104

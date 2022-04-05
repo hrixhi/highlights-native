@@ -3059,7 +3059,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 maxWidth: '65%',
                                 borderBottomWidth: isOwner || !props.cue.channelId ? 1 : 0,
                                 borderBottomColor: '#f2f2f2',
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 paddingTop: 13,
                                 paddingBottom: 13,
                                 marginRight: 10,
@@ -3090,9 +3090,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 </TouchableOpacity>
                             ) : null}
                             
-                            {downloadOriginalInProgress ?
-                                <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> :
-                                <TouchableOpacity
+                            {<TouchableOpacity
                                     onPress={async () => {
                                         // Linking.openURL(props.showOriginal ? url : submissionUrl)
 
@@ -3106,8 +3104,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         backgroundColor: 'white',
                                         borderRadius: 15, 
                                         marginTop: 5,
-                                        paddingLeft: 20
+                                        paddingLeft: 20,
+                                        opacity: downloadOriginalInProgress ? 0.5 : 1
                                     }}
+                                    disabled={downloadOriginalInProgress}
                                 >
                                     <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
                                 </TouchableOpacity>}
@@ -3705,14 +3705,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     {quizAttempted ? (
                         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                             <Ionicons name="checkmark-outline" size={22} color={'#53BE68'} />
-                            <Text style={{ fontSize: 14, paddingLeft: 5 }}>
+                            <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 14 : 16, paddingLeft: 5 }}>
                                 Submitted at {moment(new Date(latestSubmission.submittedAt)).format('MMMM Do, h:mm a')}
                             </Text>
                         </View>
                     ) : (
                         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
                             <Ionicons name="alert-circle-outline" size={22} color={'#D91D56'} />
-                            <Text style={{ fontSize: 14, paddingLeft: 5 }}>Not Attempted</Text>
+                            <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 14 : 16, paddingLeft: 5 }}>Not Attempted</Text>
                         </View>
                     )}
                 </View>
@@ -3721,7 +3721,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     <View>
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 fontFamily: 'inter',
                                 color: '#2f2f3c',
                                 paddingTop: 40,
@@ -3759,13 +3759,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     {props.cue.submittedAt && props.cue.submittedAt !== '' && viewSubmission ? (
                         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 0 }}>
                             <Ionicons name="checkmark-outline" size={22} color={'#53BE68'} />
-                            <Text style={{ fontSize: 14, paddingLeft: 5 }}>
+                            <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 14 : 16, paddingLeft: 5 }}>
                                 {moment(new Date(props.cue.submittedAt)).format('MMMM Do, h:mm a')}
                             </Text>
                         </View>
                     ) : <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
                         <Ionicons name="alert-circle-outline" size={22} color={'#D91D56'} />
-                        <Text style={{ fontSize: 14, paddingLeft: 5 }}>No Submission</Text>
+                        <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 14 : 16, paddingLeft: 5 }}>No Submission</Text>
                     </View>}
 
                     {!isOwner &&
@@ -3792,7 +3792,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     <View style={{ paddingLeft: 20 }}>
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 fontFamily: 'inter',
                                 color: '#2f2f3c',
                                 // paddingTop: 20,
@@ -3841,7 +3841,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                         marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                         fontFamily: 'Inter',
-                        fontSize: 14,
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                         paddingBottom: 7
                     }}
                 >
@@ -3852,7 +3852,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                         marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                         fontFamily: 'Inter',
-                        fontSize: 14,
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                         paddingBottom: 7
                     }}
                 >
@@ -3864,7 +3864,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         style={{
                             marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                             fontFamily: 'Inter',
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             paddingBottom: 7
                         }}
                     >
@@ -3875,7 +3875,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         style={{
                             marginRight: Dimensions.get('window').width < 768 ? 10 : 30,
                             fontFamily: 'Inter',
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             paddingBottom: 7
                         }}
                     >
@@ -3884,7 +3884,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 )}
 
                 {!isOwner ? (
-                    <Text style={{ fontFamily: 'Inter', fontSize: 14,  paddingBottom: 7 }}>
+                    <Text style={{ fontFamily: 'Inter', fontSize: Dimensions.get('window').width < 768 ? 14 : 16,  paddingBottom: 7 }}>
                         {allowedAttempts && allowedAttempts !== null
                             ? 'Attempts left: ' + (remainingAttempts >= 0 ? remainingAttempts : '0')
                             : 'Unlimited Attempts'}
@@ -4650,7 +4650,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 {attempt.title !== '' ? (
                                     <Text
                                         style={{
-                                            fontSize: 14,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             paddingRight: 15,
                                             paddingTop: 12,
                                             paddingBottom: 12,
@@ -4665,7 +4665,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{
                                     flexDirection: 'row', marginLeft: 'auto'
                                 }}>
-                                    {downloadSubmissionInProgress ? <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> : <TouchableOpacity
+                                    {<TouchableOpacity
                                         onPress={async () => {
                                             if (downloadSubmissionInProgress) return;
 
@@ -4678,8 +4678,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             backgroundColor: 'white',
                                             borderRadius: 15, 
                                             marginTop: 5,
-                                            paddingLeft: 20
+                                            paddingLeft: 20,
+                                            opacity: downloadSubmissionInProgress ? 0.5 : 1
                                         }}
+                                        disabled={downloadSubmissionInProgress}
                                     >
                                         <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
                                     </TouchableOpacity>}
@@ -4722,7 +4724,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 {attempt.title !== '' ? (
                                     <Text
                                         style={{
-                                            fontSize: 14,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             paddingRight: 15,
                                             paddingTop: 12,
                                             paddingBottom: 12,
@@ -4737,7 +4739,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{
                                     flexDirection: 'row', marginLeft: 'auto'
                                 }}>
-                                    {downloadSubmissionInProgress ? <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> : <TouchableOpacity
+                                    {<TouchableOpacity
                                         onPress={async () => {
                                             if (downloadSubmissionInProgress) return;
 
@@ -4750,8 +4752,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             backgroundColor: 'white',
                                             borderRadius: 15, 
                                             marginTop: 5,
-                                            paddingLeft: 20
+                                            paddingLeft: 20,
+                                            opacity: downloadSubmissionInProgress ? 0.5 : 1
                                         }}
+                                        disabled={downloadSubmissionInProgress}
                                     >
                                         <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
                                     </TouchableOpacity>}
@@ -4812,7 +4816,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 {attempt.title !== '' ? (
                                     <Text
                                         style={{
-                                            fontSize: 14,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             paddingRight: 15,
                                             paddingTop: 12,
                                             paddingBottom: 12,
@@ -4827,7 +4831,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <View style={{
                                     flexDirection: 'row', marginLeft: 'auto'
                                 }}>
-                                    {downloadSubmissionInProgress ? <ActivityIndicator color={'#006AFF'} style={{ alignSelf: 'center', paddingLeft: 20,  marginTop: 5, }} /> : <TouchableOpacity
+                                    {<TouchableOpacity
                                         onPress={async () => {
                                             if (downloadOriginalInProgress) return;
 
@@ -4840,8 +4844,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             backgroundColor: 'white',
                                             borderRadius: 15, 
                                             marginTop: 5,
-                                            paddingLeft: 20
+                                            paddingLeft: 20,
+                                            opacity: downloadSubmissionInProgress ? 0.5 : 1
                                         }}
+                                        disabled={downloadSubmissionInProgress}
                                     >
                                         <Ionicons size={22} name={'cloud-download-outline'} color="#006AFF" />
                                     </TouchableOpacity>}
@@ -5220,7 +5226,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderShareWithOptions = () => {
         return props.cue.channelId !== '' && isOwner ? (
-            <View style={{ width: '100%', flexDirection: width < 768 ? 'column' : 'row', paddingTop: 40 }}>
+            <View style={{ width: '100%', maxWidth: props.isOwner ? 600 : 'auto', flexDirection: 'column', paddingTop: 40 }}>
                 <View
                     style={{
                         paddingBottom: 15,
@@ -5231,7 +5237,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 >
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000',
                             fontFamily: 'Inter'
                             // textTransform: 'uppercase'
@@ -5246,7 +5252,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <View
                                 style={{
                                     flexDirection: 'row',
-                                    justifyContent: width < 768 ? 'flex-start' : 'flex-end'
+                                    justifyContent: 'flex-start'
                                 }}
                             >
                                 <View
@@ -5276,7 +5282,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         <View style={{
                             flexDirection: 'column', marginTop: 25,
                         }}>
-                            <View style={{ maxWidth: 320, width: '100%', height: isRestrictAccessDropdownOpen ? getDropdownHeight(subscribers.length) : 50, }}>
+                            <View style={{ width: '100%', height: isRestrictAccessDropdownOpen ? getDropdownHeight(subscribers.length) : 50, }}>
                                 <DropDownPicker
                                     listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                     multiple={true}
@@ -5287,15 +5293,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     setValue={(val: any) => {
                                         setSelected(val)
                                     }}
-                                    zIndex={999999}
                                     style={{
                                         borderWidth: 0,
                                         borderBottomWidth: 1,
-                                        borderBottomColor: '#f2f2f2'
+                                        borderBottomColor: '#f2f2f2',
+                                        // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     dropDownContainerStyle={{
                                         borderWidth: 0,
-                                        zIndex: 999999
+                                        // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     containerStyle={{
                                         shadowColor: '#000',
@@ -5305,7 +5311,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         },
                                         shadowOpacity: !isRestrictAccessDropdownOpen ? 0 : 0.08,
                                         shadowRadius: 12,
-                                        zIndex: 999999
+                                    }}
+                                    textStyle={{
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                        fontFamily: 'overpass'
                                     }}
                                     
                                 />
@@ -5324,8 +5333,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         return props.cue.channelId !== '' ? (
             <View
                 style={{
-                    width: width < 768 ? '100%' : '33.33%',
-                    backgroundColor: 'white'
+                    width: '100%',
+                    backgroundColor: 'white',
+                    maxWidth: props.isOwner ? 600 : 'auto'
                 }}
             >
                 <View
@@ -5338,7 +5348,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 >
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000',
                             fontFamily: 'Inter'
                         }}
@@ -5359,7 +5369,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 height: 40,
                                 marginRight: 10,
                                 flexDirection: 'row',
-                                justifyContent: width < 768 ? 'flex-start' : 'flex-end'
+                                justifyContent: 'flex-start'
                             }}
                         >
                             <Switch
@@ -5385,7 +5395,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         >
                             <Text
                                 style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     color: '#000000',
                                     fontFamily: 'Inter'
                                 }}
@@ -5410,7 +5420,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             >
                                 <Text
                                     style={{
-                                        fontSize: 14,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         color: '#000000',
                                         fontFamily: 'Inter',
                                         paddingRight: 10
@@ -5426,7 +5436,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 ) : (
                                     <Text
                                         style={{
-                                            fontSize: 14,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             color: '#000000',
                                             fontFamily: 'Inter'
                                         }}
@@ -5456,7 +5466,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             >
                                 <Text
                                     style={{
-                                        fontSize: 14,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         color: '#000000',
                                         fontFamily: 'Inter',
                                         paddingRight: 10
@@ -5472,7 +5482,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 ) : (
                                     <Text
                                         style={{
-                                            fontSize: 14,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             color: '#000000',
                                             fontFamily: 'Inter'
                                         }}
@@ -5500,7 +5510,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderGradeOptions = () => {
         return submission ? (
-            <View style={{ width: '100%', flexDirection: width < 768 ? 'column' : 'row', paddingTop: 40 }}>
+            <View style={{ width: '100%', maxWidth: props.isOwner ? 600 : 'auto', flexDirection: 'column', paddingTop: 40 }}>
                 <View
                     style={{
                         flexDirection: 'row',
@@ -5511,7 +5521,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 >
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000',
                             fontFamily: 'Inter'
                         }}
@@ -5525,7 +5535,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         <View
                             style={{
                                 flexDirection: 'row',
-                                justifyContent: width < 768 ? 'flex-start' : 'flex-end',
+                                justifyContent: 'flex-start',
                                 flex: 1
                             }}
                         >
@@ -5567,7 +5577,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     style={{
                                         borderBottomColor: '#f2f2f2',
                                         borderBottomWidth: 1,
-                                        fontSize: 14,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         padding: 15,
                                         paddingVertical: 12,
                                         marginTop: 0,
@@ -5580,11 +5590,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             ) : null}
                             <Text
                                 style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     color: '#1F1F1F',
                                     textAlign: 'left',
                                     paddingHorizontal: isOwner ? 10 : 0,
-                                    fontFamily: 'Inter'
+                                    fontFamily: 'Overpass'
                                 }}
                             >
                                 {!isOwner ? gradeWeight : null} {PreferredLanguageText('percentageOverall')}
@@ -5593,11 +5603,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     ) : !isOwner ? (
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#1F1F1F',
                                 textAlign: 'left',
                                 paddingRight: 10,
-                                fontFamily: 'Inter'
+                                fontFamily: 'Overpass'
                             }}
                         >
                             0%
@@ -5613,7 +5623,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     const renderLateSubmissionOptions = () => {
         return submission ? (
-            <View style={{ width: '100%', flexDirection: width < 768 ? 'column' : 'row', paddingTop: 40 }}>
+            <View style={{ width: '100%', maxWidth: props.isOwner ? 600 : 'auto', flexDirection: 'column', paddingTop: 40 }}>
                 <View
                     style={{
                         flex: 1,
@@ -5624,7 +5634,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 >
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000',
                             fontFamily: 'Inter'
                         }}
@@ -5634,7 +5644,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 </View>
                 <View style={{}}>
                     {isOwner ? (
-                        <View style={{ flexDirection: 'row', justifyContent: width < 768 ? 'flex-start' : 'flex-end' }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
                             <View
                                 style={{
                                     backgroundColor: 'white',
@@ -5669,11 +5679,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         >
                             <Text
                                 style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     color: '#1F1F1F',
                                     textAlign: 'left',
                                     paddingRight: 10,
-                                    fontFamily: 'Inter'
+                                    fontFamily: 'inter'
                                 }}
                             >
                                 {!isOwner
@@ -5687,11 +5697,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     ) : !isOwner ? (
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#1F1F1F',
                                 textAlign: 'left',
                                 paddingRight: 10,
-                                fontFamily: 'Inter'
+                                fontFamily: 'Overpass'
                             }}
                         >
                             No
@@ -5708,7 +5718,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const renderAttemptsOptions = () => {
         return isQuiz ? (
             !isOwner ? (
-                <View style={{ width: '100%', flexDirection: width < 768 ? 'column' : 'row', paddingTop: 40 }}>
+                <View style={{ width: '100%', maxWidth: props.isOwner ? 600 : 'auto', flexDirection: 'column', paddingTop: 40 }}>
                     <View
                         style={{
                             flexDirection: 'row',
@@ -5719,7 +5729,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     >
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter'
                             }}
@@ -5733,16 +5743,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             display: 'flex',
                             flexDirection: 'row',
                             backgroundColor: 'white',
-                            justifyContent: Dimensions.get('window').width < 768 ? 'flex-start' : 'flex-end'
+                            justifyContent: 'flex-start' 
                         }}
                     >
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#1F1F1F',
                                 textAlign: 'right',
                                 paddingRight: 10,
-                                fontFamily: 'Inter'
+                                fontFamily: 'Overpass'
                             }}
                         >
                             {unlimitedAttempts ? 'Unlimited' : allowedAttempts}
@@ -5750,7 +5760,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     </View>
                 </View>
             ) : (
-                <View style={{ width: '100%', flexDirection: width < 768 ? 'column' : 'row', paddingTop: 40 }}>
+                <View style={{ width: '100%', maxWidth: props.isOwner ? 600 : 'auto', flexDirection: 'column', paddingTop: 40 }}>
                     <View
                         style={{
                             flexDirection: 'row',
@@ -5761,7 +5771,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     >
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter'
                             }}
@@ -5776,7 +5786,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 height: 40,
                                 marginRight: 10,
                                 flexDirection: 'row',
-                                justifyContent: width < 768 ? 'flex-start' : 'flex-end'
+                                justifyContent: 'flex-start'
                             }}
                         >
                             <Switch
@@ -5813,10 +5823,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <TextInput
                                     value={allowedAttempts}
                                     style={{
-                                        width: '25%',
+                                        width: 100,
+                                        textAlign: 'center',
                                         borderBottomColor: '#F8F9FA',
                                         borderBottomWidth: 1,
-                                        fontSize: 14,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         marginLeft: 10,
                                         padding: 15,
                                         paddingVertical: 12,
@@ -5849,9 +5860,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             <View
                 style={{
                     width: '100%',
+                    maxWidth: props.isOwner ? 600 : 'auto',
                     borderRightWidth: 0,
-                    flexDirection: width < 768 ? 'column' : 'row',
-                    alignItems: width < 768 ? 'flex-start' : 'center',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
                     paddingTop: 40,
                     paddingBottom: 20,
                     borderColor: '#f2f2f2'
@@ -5862,12 +5874,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         flexDirection: 'row',
                         flex: 1,
                         backgroundColor: 'white',
-                        paddingBottom: width < 768 ? 15 : 0
+                        paddingBottom: 15
                     }}
                 >
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000',
                             fontFamily: 'Inter'
                         }}
@@ -5875,7 +5887,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         {PreferredLanguageText('category')}
                     </Text>
                 </View>
-                <View style={{}}>
+                <View style={{ width: '100%' }}>
                     {props.cue.channelId && !props.channelOwner ? (
                         <View
                             style={{
@@ -5885,7 +5897,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 backgroundColor: 'white'
                             }}
                         >
-                            <View style={{ width: '80%', backgroundColor: 'white' }}>
+                            <View style={{ width: '100%', backgroundColor: 'white' }}>
                                 <View style={styles.colorBar}>
                                     <TouchableOpacity style={styles.allGrayOutline} onPress={() => {}}>
                                         <Text
@@ -5907,6 +5919,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         <View
                             style={{
                                 flexDirection: 'row',
+                                width: '100%',
                                 // alignItems: 'center',
                                 backgroundColor: 'white'
                             }}
@@ -5914,8 +5927,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <View
                                 style={{
                                     backgroundColor: 'white',
-                                    maxWidth: 400,
-                                    width: '85%',
+                                    width: '90%',
                                     height: isCategoryDropdownOpen ? getDropdownHeight(categoryOptions.length) : 50
                                 }}
                             >
@@ -5927,7 +5939,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                 borderRadius: 0,
                                                 borderColor: '#f2f2f2',
                                                 borderBottomWidth: 1,
-                                                fontSize: 14,
+                                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                 padding: 10,
                                                 paddingVertical: 15,
                                                 width: '100%'
@@ -5947,16 +5959,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         items={categoryOptions}
                                         setOpen={setIsCategoryDropdownOpen}
                                         setValue={setCustomCategory}
-                                        zIndex={1000001}
                                         style={{
                                             borderWidth: 0,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#f2f2f2'
+                                            borderBottomColor: '#f2f2f2',
+                                            // elevation: !showFrequencyDropdown ? 0 : 2
                                         }}
                                         dropDownContainerStyle={{
                                             borderWidth: 0,
-                                            zIndex: 1000001,
-                                            elevation: 1000001
+                                            // elevation: !showFrequencyDropdown ? 0 : 2
                                         }}
                                         containerStyle={{
                                             shadowColor: '#000',
@@ -5966,8 +5977,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             },
                                             shadowOpacity: !isCategoryDropdownOpen ? 0 : 0.08,
                                             shadowRadius: 12,
-                                            zIndex: 1000001,
-                                            elevation: 1000001
+                                        }}
+                                        textStyle={{
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                            fontFamily: 'overpass'
                                         }}
                                     />
                                 )}
@@ -5975,7 +5988,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <View
                                 style={{
                                     backgroundColor: 'white',
-                                    marginLeft: 20,
+                                    marginLeft: 'auto',
                                     paddingTop: 20
                                 }}
                             >
@@ -6021,10 +6034,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             <View
                 style={{
                     width: '100%',
+                    maxWidth: props.isOwner ? 600 : 'auto',
                     borderRightWidth: 0,
-                    flexDirection: width < 768 ? 'column' : 'row',
-                    alignItems: width < 768 ? 'flex-start' : 'center',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
                     paddingTop: 40,
+                    paddingBottom: 50,
                     borderColor: '#f2f2f2'
                 }}
             >
@@ -6033,12 +6048,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         flexDirection: 'row',
                         flex: 1,
                         backgroundColor: 'white',
-                        paddingBottom: width < 768 ? 15 : 0
+                        paddingBottom: 15 
                     }}
                 >
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000',
                             fontFamily: 'Inter'
                         }}
@@ -6097,8 +6112,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             <View
                 style={{
                     width: '100%',
-                    flexDirection: width < 768 ? 'column' : 'row',
-                    alignItems: width < 768 ? 'flex-start' : 'center',
+                    maxWidth: props.isOwner ? 600 : 'auto',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
                     borderRightWidth: 0,
                     borderColor: '#f2f2f2',
                     paddingTop: 40
@@ -6109,12 +6125,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         flexDirection: 'row',
                         flex: 1,
                         backgroundColor: 'white',
-                        paddingBottom: width < 768 ? 15 : 0
+                        paddingBottom: 15
                     }}
                 >
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000',
                             fontFamily: 'Inter'
                         }}
@@ -6124,16 +6140,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 </View>
                 <View
                     style={{
-                        flexDirection: 'row'
-                        // backgroundColor: 'white'
-                        // alignItems: 'center'
+                        flexDirection: 'row',
+                        width: '100%'
                     }}
                 >
                     <View
                         style={{
                             height: isShareWithDropdownOpen ? getDropdownHeight(channelOptions.length) : 50,
-                            width: '80%',
-                            minWidth: '80%',
+                            width: '90%',
                             marginBottom: 20
                         }}
                     >
@@ -6149,16 +6163,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             })}
                             setOpen={setIsShareWithDropdownOpen}
                             setValue={setShareWithChannelId}
-                            zIndex={1000001}
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
+                                borderBottomColor: '#f2f2f2',
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
@@ -6168,12 +6181,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 },
                                 shadowOpacity: !isShareWithDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                            }}
+                            textStyle={{
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontFamily: 'overpass'
                             }}
                         />
                     </View>
-                    <View style={{ marginLeft: 20, paddingTop: 20 }}>
+                    <View style={{ marginLeft: 'auto', paddingTop: 20,  }}>
                         <TouchableOpacity
                             disabled={shareWithChannelId === 'None'}
                             onPress={() => {
@@ -6238,7 +6253,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     >
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter'
                             }}
@@ -6286,7 +6301,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         >
                             <Text
                                 style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     color: '#000000',
                                     fontFamily: 'Inter'
                                 }}
@@ -6324,7 +6339,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 >
                                     <Text
                                         style={{
-                                            fontSize: 14,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             color: '#1F1F1F',
                                             textAlign: 'right',
                                             paddingRight: 10,
@@ -6370,6 +6385,29 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         })}
                                         setOpen={setIsFrequencyDropdownOpen}
                                         setValue={setFrequency}
+                                        style={{
+                                            borderWidth: 0,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#f2f2f2',
+                                            // elevation: !showFrequencyDropdown ? 0 : 2
+                                        }}
+                                        dropDownContainerStyle={{
+                                            borderWidth: 0,
+                                            // elevation: !showFrequencyDropdown ? 0 : 2
+                                        }}
+                                        containerStyle={{
+                                            shadowColor: '#000',
+                                            shadowOffset: {
+                                                width: 1,
+                                                height: 3
+                                            },
+                                            shadowOpacity: !isFrequencyDropdownOpen ? 0 : 0.08,
+                                            shadowRadius: 12,
+                                        }}
+                                        textStyle={{
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                            fontFamily: 'overpass'
+                                        }}
                                     />
                                     {/* <Menu
                                         onSelect={(cat: any) => {
@@ -6486,7 +6524,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         >
                             <Text
                                 style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     color: '#000000',
                                     fontFamily: 'Inter'
                                 }}
@@ -6840,30 +6878,40 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             <View
                                 style={{
                                     width: '100%',
-                                    // maxWidth: 900,
-                                    alignSelf: 'center',
+                                    flexDirection: 'column',    
+                                    alignItems: 'center',
                                     paddingLeft: Dimensions.get('window').width < 768 ? 10 : 15
                                 }}
                             >
-                                <View style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    {props.cue.channelId ? (
-                                        <View
-                                            style={{
-                                                display: 'flex',
-                                                flexDirection: 'column'
-                                            }}
-                                        >
-                                            {renderShareWithOptions()}
-                                            {renderSubmissionRequiredOptions()}
-                                            {renderGradeOptions()}
-                                            {renderLateSubmissionOptions()}
-                                            {renderAttemptsOptions()}
-                                        </View>
-                                    ) : null}
+                                {props.cue.channelId ? (
+                                    <View
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        {renderShareWithOptions()}
+                                        {renderSubmissionRequiredOptions()}
+                                        {renderGradeOptions()}
+                                        {renderLateSubmissionOptions()}
+                                        {renderAttemptsOptions()}
+                                    </View>
+                                ) : null}
+
+                                <View
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        width: '100%'
+                                    }}
+                                >
+                                    {renderForwardOptions()}
+                                    {renderCategoryOptions()}
+                                    {renderPriorityOptions()}
                                 </View>
-                                {renderForwardOptions()}
-                                {renderCategoryOptions()}
-                                {renderPriorityOptions()}
                                 {/* {renderReminderOptions()} */}
                             </View>
                         ) : null}
@@ -7171,7 +7219,7 @@ const styles: any = StyleSheet.create({
         // flex: 1,
         borderBottomColor: '#f2f2f2',
         borderBottomWidth: 1,
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         paddingTop: 12,
         paddingBottom: 12,
         // marginTop: 5,

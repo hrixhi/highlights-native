@@ -2138,7 +2138,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [searchTerm, setSearchTerm] = useState('')
 
     return (
-        <SafeAreaView key={orientation} style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
             {/* {
                 height <= width ? (
                     <View

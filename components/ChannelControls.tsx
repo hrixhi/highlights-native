@@ -27,6 +27,7 @@ import Reanimated from 'react-native-reanimated';
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
+import { useOrientation } from '../hooks/useOrientation';
 
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
@@ -59,6 +60,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [showChannelPasswordInput, setShowChannelPasswordInput] = useState(false);
     const [channelPasswordId, setChannelPasswordId] = useState('')
     const [channelPassword, setChannelPassword] = useState('')
+
+    const orientation = useOrientation()
 
      // NATIVE DROPDOWN
      const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
@@ -626,7 +629,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
     const renderSubscriberFilters = () => {
         return (<View style={{ width: '100%', flexDirection: 'column', backgroundColor: 'white', marginTop: 20 }}>
             <View style={{ backgroundColor: 'white', }}>
-                <View style={{ backgroundColor: 'white', maxWidth: 320, height: isRoleDropdownOpen ? 210 : 50 }}>
+                <View style={{ backgroundColor: 'white', maxWidth: Dimensions.get('window').width < 768 ? 320 : 600, height: isRoleDropdownOpen ? 210 : 50 }}>
                     <DropDownPicker
                         listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                         open={isRoleDropdownOpen}
@@ -637,12 +640,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         style={{
                             borderWidth: 0,
                             borderBottomWidth: 1,
-                            borderBottomColor: '#f2f2f2'
+                            borderBottomColor: '#f2f2f2',
+                            // elevation: !showFrequencyDropdown ? 0 : 2
                         }}
                         dropDownContainerStyle={{
                             borderWidth: 0,
-                            zIndex: 1000001,
-                            elevation: 1000001
+                            // elevation: !showFrequencyDropdown ? 0 : 2
                         }}
                         containerStyle={{
                             shadowColor: '#000',
@@ -652,8 +655,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             },
                             shadowOpacity: !isRoleDropdownOpen ? 0 : 0.08,
                             shadowRadius: 12,
-                            zIndex: 1000001,
-                            elevation: 1000001
+                        }}
+                        textStyle={{
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                            fontFamily: 'overpass'
                         }}
                     />
 
@@ -662,7 +667,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
             <View style={{ flexDirection: 'row', marginTop: 15 }}>
                 <View style={{ backgroundColor: 'white', paddingRight: 20 }}>
-                    <View style={{ backgroundColor: 'white', maxWidth: 150, height: isGradeDropdownOpen ? 250 : 50  }}>
+                    <View style={{ backgroundColor: 'white', maxWidth: Dimensions.get('window').width < 768 ? 150 : 250, height: isGradeDropdownOpen ? 250 : 50  }}>
                         <DropDownPicker
                             listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={isGradeDropdownOpen}
@@ -673,12 +678,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
+                                borderBottomColor: '#f2f2f2',
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
@@ -688,14 +693,16 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 },
                                 shadowOpacity: !isGradeDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                            }}
+                            textStyle={{
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontFamily: 'overpass'
                             }}
                         />
                     </View>
                 </View>
-                <View style={{ backgroundColor: 'white',  }}>
-                    <View style={{ backgroundColor: 'white', maxWidth: 150, height: isSectionDropdownOpen ? 250 : 50, }}>
+                <View style={{ backgroundColor: 'white', marginLeft: 'auto'  }}>
+                    <View style={{ backgroundColor: 'white', maxWidth: Dimensions.get('window').width < 768 ? 150 : 250, height: isSectionDropdownOpen ? 250 : 50, }}>
                         <DropDownPicker
                             listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                             open={isSectionDropdownOpen}
@@ -706,12 +713,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             style={{
                                 borderWidth: 0,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2'
+                                borderBottomColor: '#f2f2f2',
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
                                 borderWidth: 0,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                                // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             containerStyle={{
                                 shadowColor: '#000',
@@ -721,8 +728,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 },
                                 shadowOpacity: !isSectionDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
-                                zIndex: 1000001,
-                                elevation: 1000001
+                            }}
+                            textStyle={{
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontFamily: 'overpass'
                             }}
                         />
                     </View>
@@ -762,11 +771,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             contentContainerStyle={{
                 backgroundColor: 'white',
                 width: '100%',
-                maxWidth: 500,
+                maxWidth: 600,
                 alignSelf: 'center',
                 paddingTop: Dimensions.get('window').width < 768 ? 20 : 0,
+                marginTop: orientation === 'PORTRAIT' && Dimensions.get('window').width > 768  ? 50 : 0,
                 paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
-                paddingBottom: 150
+                paddingBottom:  orientation === 'PORTRAIT' && Dimensions.get('window').width > 768 ? 250 : 200
             }}
         >
 
@@ -856,7 +866,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 </View> */}
                 <View style={{ backgroundColor: 'white' }}>
                     <Text style={{
-                        fontSize: 14,
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                         color: '#000000'
                     }}>
                         {/* {PreferredLanguageText('name')} */}
@@ -878,7 +888,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
                 {/* {!school ? <View style={{ backgroundColor: 'white' }}>
                     <Text style={{
-                        fontSize: 14,
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                         color: '#000000'
                     }}>
                         Description
@@ -891,7 +901,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             width: "100%",
                             maxWidth: 500,
                             borderBottom: '1px solid #f2f2f2',
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             paddingTop: 13,
                             paddingBottom: 13,
                             marginTop: 12,
@@ -910,7 +920,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
 
                 <View style={{ backgroundColor: 'white' }}>
                     <Text style={{
-                        fontSize: 14,
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                         color: '#000000'
                     }}>
                         {/* {PreferredLanguageText('enrolmentPassword')} */}
@@ -940,7 +950,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     backgroundColor: "white"
                                 }}>
                                 <Text style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     color: '#000000'
                                 }}>Temporary</Text>
                             </View> */}
@@ -948,7 +958,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 flexDirection: 'row', alignItems: 'center', marginTop: 15, marginBottom: 10,
                             }}>
                                 <Text style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     marginRight: 8,
                                     color: '#000000', 
                                 }}>
@@ -971,12 +981,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Switch
                                     value={temporary}
                                     onValueChange={() => setTemporary(!temporary)}
-                                    style={{ height: 20 }}
+                                    thumbColor={'#f4f4f6'}
                                     trackColor={{
-                                        false: "#f2f2f2",
-                                        true: "#006AFF"
+                                        false: '#f4f4f6',
+                                        true: '#006AFF'
                                     }}
-                                    activeThumbColor="white"
+                                    style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                 />
                             </View>
                             {/* <Text style={{ color: '#1F1F1F', fontSize: 12, paddingTop: 10 }}>
@@ -998,7 +1008,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     backgroundColor: "white"
                                 }}>
                                 <Text style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     color: '#000000'
                                 }}>Public</Text>
                             </View>
@@ -1039,7 +1049,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 backgroundColor: "white"
                             }}>
                             <Text style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000'
                             }}>Tags</Text>
                         </View>
@@ -1070,7 +1080,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             backgroundColor: "white"
                         }}>
                         <Text style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             color: '#000000'
                         }}>Theme</Text>
                     </View>
@@ -1086,7 +1096,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     flexDirection: 'row', alignItems: 'center', marginTop: 20
                 }}>
                     <Text style={{
-                        fontSize: 14,
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                         marginRight: 8,
                         color: '#000000'
                     }}>
@@ -1105,7 +1115,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                 {school ? <View style={{
                     flexDirection: 'column', marginTop: 25,
                 }}>
-                    <View style={{ maxWidth: 320, width: '100%', height: isViewersDropdownOpen ? getDropdownHeight(options.length) : 50, }}>
+                    <View style={{ maxWidth: Dimensions.get('window').width < 768 ? 320 : 600, width: '100%', height: isViewersDropdownOpen ? getDropdownHeight(options.length) : 50, }}>
                                 <DropDownPicker
                                     listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
                                     multiple={true}
@@ -1124,12 +1134,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     style={{
                                         borderWidth: 0,
                                         borderBottomWidth: 1,
-                                        borderBottomColor: '#f2f2f2'
+                                        borderBottomColor: '#f2f2f2',
+                                        // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     dropDownContainerStyle={{
                                         borderWidth: 0,
-                                        zIndex: 1000001,
-                                        elevation: 1000001
+                                        // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     containerStyle={{
                                         shadowColor: '#000',
@@ -1139,8 +1149,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         },
                                         shadowOpacity: !isViewersDropdownOpen ? 0 : 0.08,
                                         shadowRadius: 12,
-                                        zIndex: 1000001,
-                                        elevation: 1000001
+                                    }}
+                                    textStyle={{
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                        fontFamily: 'overpass'
                                     }}
                                 />
                             </View>
@@ -1149,7 +1161,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 flexDirection: 'row', alignItems: 'center', marginTop: 25, marginBottom: 20,
                             }}>
                                 <Text style={{
-                                    fontSize: 14,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     marginRight: 8,
                                     color: '#000000', 
                                 }}>
@@ -1179,12 +1191,12 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     style={{
                         borderWidth: 0,
                         borderBottomWidth: 1,
-                        borderBottomColor: '#f2f2f2'
+                        borderBottomColor: '#f2f2f2',
+                        // elevation: !showFrequencyDropdown ? 0 : 2
                     }}
                     dropDownContainerStyle={{
                         borderWidth: 0,
-                        zIndex: 1000001,
-                        elevation: 1000001
+                        // elevation: !showFrequencyDropdown ? 0 : 2
                     }}
                     containerStyle={{
                         shadowColor: '#000',
@@ -1194,8 +1206,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         },
                         shadowOpacity: !isEditorsDropdownOpen ? 0 : 0.08,
                         shadowRadius: 12,
-                        zIndex: 1000001,
-                        elevation: 1000001
+                    }}
+                    textStyle={{
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                        fontFamily: 'overpass'
                     }}
                />
                 </View>
@@ -1583,7 +1597,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             {
                 props.showAddCourseModal ?
                     <BottomSheet 
-                        snapPoints={[0, windowHeight - (Platform.OS === 'android' ? 0 : 30
+                        snapPoints={[0, windowHeight - (Platform.OS === 'android' ? 0 : (Dimensions.get('window').width < 768 ? 30 : 50)
                         )]}
                         close={() => {
                             props.closeAddCourseModal()
@@ -1663,14 +1677,14 @@ const styles = StyleSheet.create({
         borderColor: '#1F1F1F'
     },
     all: {
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         color: '#1F1F1F',
         height: 22,
         paddingHorizontal: 10,
         backgroundColor: 'white'
     },
     allOutline: {
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         color: '#fff',
         height: 22,
         paddingHorizontal: 10,
@@ -1696,20 +1710,20 @@ const styles = StyleSheet.create({
         marginBottom: 20
     },
     selectedText: {
-        fontSize: Dimensions.get('window').width < 1024 ? 13 : 14,
+        fontSize: Dimensions.get('window').width < 768 ? 12 : 14,
         color: '#fff',
         backgroundColor: '#000',
-        lineHeight: 24,
-        height: 25,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
+        height: Dimensions.get('window').width < 768 ? 25 : 30,
         fontFamily: 'inter',
         textTransform: 'uppercase'
     },
     unselectedText: {
-        fontSize: Dimensions.get('window').width < 1024 ? 13 : 14,
+        fontSize: Dimensions.get('window').width < 768 ? 12 : 14,
         color: '#000',
-        height: 25,
+        height: Dimensions.get('window').width < 768 ? 25 : 30,
         // backgroundColor: '#000',
-        lineHeight: 25,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
         fontFamily: 'overpass',
         textTransform: 'uppercase',
         fontWeight: 'bold'
@@ -1717,20 +1731,20 @@ const styles = StyleSheet.create({
     selectedButton: {
         backgroundColor: '#000',
         borderRadius: 20,
-        height: 25,
-        maxHeight: 25,
-        lineHeight: 24,
+        height: Dimensions.get('window').width < 768 ? 25 : 30,
+        maxHeight: Dimensions.get('window').width < 768 ? 25 : 30,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
         paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
-        marginHorizontal: 2,
+        marginHorizontal: Dimensions.get('window').width < 768 ? 2 : 4,
     },
     unselectedButton: {
         // backgroundColor: '#000',
-        height: 25,
-        maxHeight: 25,
-        lineHeight: 24,
+        height:  Dimensions.get('window').width < 768 ? 25 : 30,
+        maxHeight:  Dimensions.get('window').width < 768 ? 25 : 30,
+        lineHeight: Dimensions.get('window').width < 768 ? 25 : 30,
         borderRadius: 20,
         color: '#000000',
         paddingHorizontal: Dimensions.get('window').width < 1024 ? 12 : 15,
-        marginHorizontal: 2,
+        marginHorizontal:  Dimensions.get('window').width < 768 ? 2 : 4,
     },
 });

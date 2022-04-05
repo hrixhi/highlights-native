@@ -867,7 +867,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         // <View>
                         <TouchableOpacity
                             style={{
-                                // paddingVertical: 10
                                 paddingBottom: 12
                             }}
                             onPress={() => {

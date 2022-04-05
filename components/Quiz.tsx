@@ -393,7 +393,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 style={{
                     width: '100%',
                     borderRightWidth: 0,
-                    flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                    flexDirection: 'column',
                     paddingTop: 20,
                     marginBottom: 50,
                     borderColor: '#f2f2f2'
@@ -419,8 +419,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 <View
                     style={{
                         backgroundColor: 'white',
-                        flexDirection: Dimensions.get('window').width < 768 ? 'row' : 'column',
-                        alignItems: Dimensions.get('window').width < 768 ? 'center' : 'flex-end',
+                        flexDirection: 'row',
                         justifyContent: 'flex-start'
                     }}
                 >
@@ -451,7 +450,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 borderColor: '#f2f2f2',
                                 flexDirection: 'row',
                                 paddingTop: 10,
-                                paddingLeft: Dimensions.get('window').width < 768 ? 20 : 0
+                                paddingLeft: 20
                             }}
                         >
                             <View>
@@ -486,8 +485,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             shadowOpacity: 0.07,
                                             shadowRadius: 7,
                                             padding: 10,
-                                            borderWidth: 1,
-                                            borderColor: '#CCC'
+                                            // borderWidth: 1,
+                                            // borderColor: '#CCC'
                                         }}
                                     >
                                         {hours.map((hour: any) => {
@@ -534,8 +533,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             shadowOpacity: 0.07,
                                             shadowRadius: 7,
                                             padding: 10,
-                                            borderWidth: 1,
-                                            borderColor: '#CCC'
+                                            // borderWidth: 1,
+                                            // borderColor: '#CCC'
                                         }}
                                     >
                                         {minutes.map((min: any) => {
@@ -589,7 +588,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 style={{
                     width: '100%',
                     borderRightWidth: 0,
-                    flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                    flexDirection: 'column',
                     paddingTop: 20,
                     borderColor: '#f2f2f2',
                     marginBottom: 50
@@ -750,6 +749,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         setShowImportOptions(false);
 
     }, [props.userId, problems])
+
 
     /**
      * @description Renders Rich editor for Question
@@ -1470,93 +1470,17 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         ? 'column-reverse'
                                                         : 'column'
                                                     : 'row',
-                                            justifyContent: 'space-between'
+                                            flex: 1,
+                                            // justifyContent: 'space-between'
                                         }}
                                     >
-                                        {props.isOwner && editQuestionNumber === index + 1 ? (
-                                            <View style={{ flexDirection: 'column', width: '100%' }}>
-                                                {editQuestionNumber === index + 1 ? (
-                                                    <View
-                                                        style={{
-                                                            flexDirection: 'row',
-                                                            marginTop: 20,
-                                                            marginBottom: 10,
-                                                            justifyContent: 'flex-end'
-                                                        }}
-                                                    >
-                                                        {audioVideoQuestion ? (
-                                                            <TouchableOpacity
-                                                                onPress={() => {
-                                                                    const updateProblems = lodash.cloneDeep(problems);
-                                                                    const question = updateProblems[index].question;
-                                                                    const parse = JSON.parse(question);
-                                                                    updateProblems[index].question = parse.content;
-                                                                    setProblems(updateProblems);
-                                                                }}
-                                                            >
-                                                                <Text
-                                                                    style={{
-                                                                        color: '#006AFF',
-                                                                        fontFamily: 'Overpass',
-                                                                        fontSize: 10
-                                                                    }}
-                                                                >
-                                                                    {' '}
-                                                                    Remove upload
-                                                                </Text>
-                                                            </TouchableOpacity>
-                                                        ) : null}
-                                                    </View>
-                                                ) : null}
-
-                                                {renderQuestionEditor(editQuestionNumber - 1)}
-                                            </View>
-                                        ) : audioVideoQuestion ? (
-                                            <View style={{ width: '100%', marginBottom: 25 }}>
-                                                <View style={{ marginVertical: 20 }}>
-                                                    {renderAudioVideoPlayer(url, type)}
-                                                </View>
-                                                <RenderHtml
-                                                    contentWidth={contentWidth}
-                                                    source={{
-                                                        html: content
-                                                    }}
-                                                    defaultTextProps={{
-                                                        selectable: true
-                                                    }}
-                                                    tagsStyles={{
-                                                        'p': {
-                                                            lineHeight: 30,
-                                                            fontSize: 16
-                                                        }
-                                                    }}
-                                                />
-                                            </View>
-                                        ) : (
-                                            <View style={{ paddingTop: 15, paddingBottom: 15 }}>
-                                                <RenderHtml
-                                                    contentWidth={contentWidth}
-                                                    source={{
-                                                        html: problem.question
-                                                    }}
-                                                    defaultTextProps={{
-                                                        selectable: true
-                                                    }}
-                                                    tagsStyles={{
-                                                        'p': {
-                                                            lineHeight: 30,
-                                                            fontSize: 16
-                                                        }
-                                                    }}
-                                                />
-                                            </View>
-                                        )}
 
                                         <View
                                             style={{
                                                 flexDirection: 'row',
                                                 marginBottom: Dimensions.get('window').width < 768 ? 15 : 0,
-                                                justifyContent: 'flex-end'
+                                                // justifyContent: 'flex-end',
+                                                marginLeft: 'auto'
                                             }}
                                         >
                                             <View
@@ -1688,6 +1612,85 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 </View>
                             </View>
                         </View>
+
+                        {props.isOwner && editQuestionNumber === index + 1 ? (
+                            <View style={{ flexDirection: 'column', width: '100%' }}>
+                                {editQuestionNumber === index + 1 ? (
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            marginTop: 20,
+                                            marginBottom: 10,
+                                            justifyContent: 'flex-end'
+                                        }}
+                                    >
+                                        {audioVideoQuestion ? (
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    const updateProblems = lodash.cloneDeep(problems);
+                                                    const question = updateProblems[index].question;
+                                                    const parse = JSON.parse(question);
+                                                    updateProblems[index].question = parse.content;
+                                                    setProblems(updateProblems);
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: '#006AFF',
+                                                        fontFamily: 'Overpass',
+                                                        fontSize: 10
+                                                        }}
+                                                    >
+                                                    {' '}
+                                                    Remove upload
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ) : null}
+                                    </View>
+                                ) : null}
+
+                                {renderQuestionEditor(editQuestionNumber - 1)}
+                            </View>
+                        ) : audioVideoQuestion ? (
+                                            <View style={{ width: '100%', marginBottom: 25 }}>
+                                                <View style={{ marginVertical: 20 }}>
+                                                    {renderAudioVideoPlayer(url, type)}
+                                                </View>
+                                                <RenderHtml
+                                                    contentWidth={contentWidth}
+                                                    source={{
+                                                        html: content
+                                                    }}
+                                                    defaultTextProps={{
+                                                        selectable: true
+                                                    }}
+                                                    tagsStyles={{
+                                                        'p': {
+                                                            lineHeight: 30,
+                                                            fontSize: 16
+                                                        }
+                                                    }}
+                                                />
+                                            </View>
+                                        ) : (
+                                            <View style={{ paddingTop: 15, paddingBottom: 15 }}>
+                                                <RenderHtml
+                                                    contentWidth={contentWidth}
+                                                    source={{
+                                                        html: problem.question
+                                                    }}
+                                                    defaultTextProps={{
+                                                        selectable: true
+                                                    }}
+                                                    tagsStyles={{
+                                                        'p': {
+                                                            lineHeight: 30,
+                                                            fontSize: 16
+                                                        }
+                                                    }}
+                                                />
+                                            </View>
+                                        )}
 
                         {(!problem.questionType || problem.questionType === 'trueFalse') &&
                             problem.options.map((option: any, i: any) => {
@@ -2078,7 +2081,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         dragDropOptions[0].map((option: any) => {
                                             return <DraxView
                                                 style={{
-                                                    width: 100,
+                                                    // width: 100,
                                                     height: 50,
                                                     display: 'flex',
                                                     flexDirection: 'row',
@@ -2108,7 +2111,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 <Ionicons name={"ellipsis-vertical-outline"} size={16} color="#1f1f1f" />
                                                 <Text
                                                     style={{
-                                                        width: '100%',
+                                                        // width: '100%',
                                                         marginLeft: 5
                                                     }}
                                                 >
@@ -2149,7 +2152,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                 dragDropOptions[groupIndex].map((option: any) => {
                                                                     return <DraxView
                                                                         style={{
-                                                                            width: 100,
+                                                                            // width: 100,
                                                                             height: 50,
                                                                             display: 'flex',
                                                                             flexDirection: 'row',
@@ -2179,7 +2182,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                         <Ionicons name={"ellipsis-vertical-outline"} size={16} color="#1f1f1f" />
                                                                         <Text
                                                                             style={{
-                                                                                width: '100%',
+                                                                                // width: '100%',
                                                                                 marginLeft: 5
                                                                             }}
                                                                         >
@@ -2653,8 +2656,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             shadowOpacity: 0.07,
                                                             shadowRadius: 7,
                                                             padding: 10,
-                                                            borderWidth: 1,
-                                                            borderColor: '#CCC'
+                                                            // borderWidth: 1,
+                                                            // borderColor: '#CCC'
                                                         }}
                                                     >
                                                         {options.map((option: any, i: number) => {
@@ -3679,8 +3682,8 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             shadowOpacity: 0.07,
                                             shadowRadius: 7,
                                             padding: 10,
-                                            borderWidth: 1,
-                                            borderColor: '#CCC'
+                                            // borderWidth: 1,
+                                            // borderColor: '#CCC'
                                         }}
                                     >
                                         {Object.keys(regradeOptions).map((option: any, i: number) => {
@@ -3855,7 +3858,7 @@ const styles = StyleSheet.create({
         opacity: 0.2,
     },
     hoverDragging: {
-        borderColor: 'magenta',
+        borderColor: '#1f1f1f',
         borderWidth: 2,
         width: 100,
         display: 'flex',

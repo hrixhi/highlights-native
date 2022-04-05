@@ -61,6 +61,7 @@ const importIcon = require('../assets/images/importIcon.png');
 import Reanimated from 'react-native-reanimated';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import useDynamicRefs from 'use-dynamic-refs';
+import { useOrientation } from '../hooks/useOrientation';
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
@@ -177,6 +178,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const scrollViewRef: any = useRef();
     const [getRef, setRef] = useDynamicRefs();
     const [quizOptionEditorIndex, setQuizOptionEditorIndex] = useState('')
+
+    const orientation = useOrientation()
 
 
     let testEditorRef: any = {}
@@ -525,14 +528,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }
         problems.map((problem: any, problemIndex: number) => {
 
+            if (error) return;
+
             if (problem.question === "" && (problem.questionType !== 'textEntry' && problem.questionType !== 'inlineChoice' && problem.questionType !== 'highlightText')) {
                 alert(`Question ${problemIndex + 1} has no content.`)
                 error = true;
+                return;
             }
 
             if (problem.points === '' || Number.isNaN(Number(problem.points))) {
                 Alert(`Enter numeric points for Question ${problemIndex + 1}.`);
                 error = true;
+                return;
             }
             let optionFound = false;
 
@@ -541,6 +548,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 Alert(`Question ${problemIndex + 1} must have at least 2 options.`);
                 setIsSubmitting(false);
                 error = true;
+                return;
             }
 
             // If MCQ, check if any options repeat:
@@ -548,29 +556,39 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 const keys: any = {};
 
                 problem.options.map((option: any) => {
+
+                    if (error) return;
+
                     if (option.option === '' || option.option === 'formula:') {
                         Alert(`Fill out missing options in question ${problemIndex + 1}.`);
                         setIsSubmitting(false);
                         error = true;
+                        return;
                     }
+
 
                     if (option.option in keys) {
                         Alert(`Option repeated in question ${problemIndex + 1}.`);
                         setIsSubmitting(false);
                         error = true;
+                        return;
                     }
 
                     if (option.isCorrect) {
                         optionFound = true;
+                        return;
                     }
 
                     keys[option.option] = 1;
                 });
 
+                if (error) return;
+
                 if (!optionFound) {
                     Alert(`Question ${problemIndex + 1} must have at least one correct answer.`);
                     setIsSubmitting(false);
                     error = true;
+                    return;
                 }
             }
 
@@ -2436,7 +2454,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         backgroundColor: 'white',
                                                         display: 'flex',
                                                         height: isChannelDropdownOpen ? getDropdownHeight(channelOptions.length) : 50,
-                                                        maxWidth: 600,
+                                                        maxWidth: Dimensions.get('window').width < 768 ? 320 : 600,
+                                                        width: '100%',
                                                         marginBottom: isChannelDropdownOpen ? 20 : 0
                                                     }}
                                                 >
@@ -2882,7 +2901,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             <View
                                                 style={{
                                                     width: '100%',
-                                                    flexDirection: width < 768 ? 'column' : 'row',
+                                                    flexDirection: 'column',
                                                     paddingTop: 40
                                                 }}
                                             >
@@ -2911,7 +2930,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             height: 40,
                                                             marginRight: 10,
                                                             flexDirection: 'row',
-                                                            justifyContent: width < 768 ? 'flex-start' : 'flex-end'
+                                                            justifyContent: 'flex-start'
                                                         }}
                                                     >
                                                         <Switch
@@ -2931,23 +2950,24 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             }}
                                                             style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                                         />
-                                                    </View>
-                                                    {!unlimitedAttempts ? (
+                                                        {!unlimitedAttempts ? (
                                                         <View
                                                             style={{
-                                                                width: '100%',
+                                                                // width: '100%',
                                                                 display: 'flex',
                                                                 flexDirection: 'row',
                                                                 backgroundColor: 'white',
-                                                                justifyContent: width < 768 ? 'flex-start' : 'flex-end',
-                                                                alignItems: 'center'
+                                                                justifyContent: 'flex-start',
+                                                                alignItems: 'center',
+                                                                marginLeft: 'auto'
                                                             }}
                                                         >
                                                             <Text style={styles.text}>Allowed attempts</Text>
                                                             <TextInput
                                                                 value={attempts}
                                                                 style={{
-                                                                    width: '25%',
+                                                                    // width: '25%',
+                                                                    minWidth: 100,
                                                                     borderBottomColor: '#F8F9FA',
                                                                     borderBottomWidth: 1,
                                                                     fontSize: width < 768 ? 14 : 16,
@@ -2964,6 +2984,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             />
                                                         </View>
                                                     ) : null}
+                                                    </View>
+                                                    
                                                 </View>
                                             </View>
                                         ) : null}
@@ -3259,7 +3281,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 }}>
                                                 <Text
                                                     style={{
-                                                        fontSize: 14,
+                                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                         color: '#000000',
                                                         fontFamily: 'Inter'
                                                     }}>
@@ -3296,7 +3318,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         }}>
                                                         <Text
                                                             style={{
-                                                                fontSize: 14,
+                                                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                                 color: '#1F1F1F',
                                                                 textAlign: 'right',
                                                                 paddingRight: 10,
@@ -3401,7 +3423,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 }}>
                                                 <Text
                                                     style={{
-                                                        fontSize: 14,
+                                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                         color: '#000000',
                                                         fontFamily: 'Inter'
                                                     }}>
@@ -3479,7 +3501,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     <View
                                         style={{
                                             width: '100%',
-                                            flexDirection: width < 768 ? 'column' : 'row',
+                                            flexDirection: 'column',
                                             paddingTop: 40
                                         }}
                                     >
@@ -3493,7 +3515,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         >
                                             <Text
                                                 style={{
-                                                    fontSize: 14,
+                                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                     color: '#000000',
                                                     fontFamily: 'Inter'
                                                 }}
@@ -3564,22 +3586,28 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 </Text>
                                                             </MenuTrigger>
                                                             <MenuOptions
-                                                                customStyles={{
-                                                                    optionsContainer: {
-                                                                        padding: 10,
-                                                                        borderRadius: 15,
-                                                                        shadowOpacity: 0,
-                                                                        borderWidth: 1,
-                                                                        borderColor: '#f2f2f2',
-                                                                        overflow: 'scroll',
-                                                                        maxHeight: '100%'
-                                                                    }
+                                                                optionsContainerStyle={{
+                                                                    shadowOffset: {
+                                                                        width: 2,
+                                                                        height: 2
+                                                                    },
+                                                                    shadowColor: '#000',
+                                                                    // overflow: 'hidden',
+                                                                    shadowOpacity: 0.07,
+                                                                    shadowRadius: 7,
+                                                                    padding: 10,
+                                                                    // borderWidth: 1,
+                                                                    // borderColor: '#CCC'
                                                                 }}
                                                             >
                                                                 {hours.map((hour: any) => {
                                                                     return (
                                                                         <MenuOption value={hour}>
-                                                                            <Text>{hour}</Text>
+                                                                            <Text style={{
+                                                                            fontSize: 15,
+                                                                            fontFamily: 'Inter',
+                                                                            paddingBottom: 3
+                                                                        }}>{hour}</Text>
                                                                         </MenuOption>
                                                                     );
                                                                 })}
@@ -3608,22 +3636,28 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 </Text>
                                                             </MenuTrigger>
                                                             <MenuOptions
-                                                                customStyles={{
-                                                                    optionsContainer: {
-                                                                        padding: 10,
-                                                                        borderRadius: 15,
-                                                                        shadowOpacity: 0,
-                                                                        borderWidth: 1,
-                                                                        borderColor: '#f2f2f2',
-                                                                        overflow: 'scroll',
-                                                                        maxHeight: '100%'
-                                                                    }
+                                                                optionsContainerStyle={{
+                                                                    shadowOffset: {
+                                                                        width: 2,
+                                                                        height: 2
+                                                                    },
+                                                                    shadowColor: '#000',
+                                                                    // overflow: 'hidden',
+                                                                    shadowOpacity: 0.07,
+                                                                    shadowRadius: 7,
+                                                                    padding: 10,
+                                                                    // borderWidth: 1,
+                                                                    // borderColor: '#CCC'
                                                                 }}
                                                             >
-                                                                {minutes.map((min: any) => {
+                                                                {minutes.map((min: any, ind: number) => {
                                                                     return (
-                                                                        <MenuOption value={min}>
-                                                                            <Text>{min}</Text>
+                                                                        <MenuOption key={ind.toString()} value={min}>
+                                                                            <Text style={{
+                                                                            fontSize: 15,
+                                                                            fontFamily: 'Inter',
+                                                                            paddingBottom: 3
+                                                                        }}>{min}</Text>
                                                                         </MenuOption>
                                                                     );
                                                                 })}
@@ -3641,7 +3675,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     <View
                                         style={{
                                             width: '100%',
-                                            flexDirection: width < 768 ? 'column' : 'row',
+                                            flexDirection: 'column',
                                             paddingTop: 40
                                         }}
                                     >
@@ -3655,7 +3689,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         >
                                             <Text
                                                 style={{
-                                                    fontSize: 14,
+                                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                     color: '#000000',
                                                     fontFamily: 'Inter'
                                                 }}
@@ -3669,7 +3703,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     backgroundColor: 'white',
                                                     height: 40,
                                                     flexDirection: 'row',
-                                                    justifyContent: width < 768 ? 'flex-start' : 'flex-end',
+                                                    justifyContent: 'flex-start',
                                                     marginRight: 10
                                                 }}
                                             >
@@ -3698,7 +3732,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             borderColor: '#f2f2f2',
                                             flexDirection: 'row',
                                             alignItems: 'center',
-                                            paddingHorizontal: 10
+                                            paddingHorizontal: 10,
+                                            justifyContent: orientation === 'LANDSCAPE' ? 'center' : 'flex-start',
                                         }}
                                     >
                                         <AutoGrowingTextInput
@@ -3715,12 +3750,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 fontFamily: 'overpass',
                                                 // width: 300,
                                                 flex: 1,
-                                                marginRight: 20,
+                                                marginRight: isQuiz ? 0 : 20,
                                                 maxWidth: 600,
                                                 // borderBottom: '1px solid #f2f2f2',
                                                 borderBottomWidth: 1,
                                                 borderColor: '#f2f2f2',
-                                                fontSize: 14,
+                                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                 paddingTop: 13,
                                                 paddingBottom: 13,
                                                 marginTop: 12,
@@ -3777,12 +3812,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 style={{
                                                     backgroundColor: '#fff',
                                                     flexDirection: 'row',
+                                                    justifyContent: orientation === 'LANDSCAPE' ? 'center' : 'flex-start',
                                                     width: '100%'
                                                 }}
                                             >
                                                 <View
                                                     style={{
                                                         width: '100%',
+                                                        // alignSelf: orientation === 'LANDSCAPE' ? 'center' : 'flex-start',
                                                         maxWidth: 600,
                                                         paddingTop: 15,
                                                         borderColor: '#f2f2f2',
@@ -3930,7 +3967,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             useContainer={true}
                                                             style={{
                                                                 width: '100%',
-                                                                paddingHorizontal: 10,
+                                                                // paddingHorizontal: 10,
                                                                 backgroundColor: '#fff',
                                                                 display: 'flex',
                                                                 flex: 1,
@@ -4618,7 +4655,7 @@ const styles: any = StyleSheet.create({
         width: '100%',
         borderBottomColor: '#f2f2f2',
         borderBottomWidth: 1,
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         paddingTop: 12,
         paddingBottom: 12,
         marginTop: 0,
@@ -4631,7 +4668,7 @@ const styles: any = StyleSheet.create({
         lineHeight: 25
     },
     text: {
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         color: '#1F1F1F',
         textAlign: 'left',
         paddingRight: 10,

@@ -77,7 +77,7 @@ export const filterLibraryModalHeight = (width: number, platform: string, orient
         height = '50%';
     // Tablet potrait
     } else if (orientation === 'PORTRAIT' && width > 768) {
-        height =  '35%';
+        height =  '40%';
     // Tablet landscape 
     } else if (orientation === 'LANDSCAPE' && width > 768) {
         height =  '35%';

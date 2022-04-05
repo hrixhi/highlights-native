@@ -1112,12 +1112,12 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 onValueChange={() => {
                                                     setDuplicateChannelSubscribers(!duplicateChannelSubscribers);
                                                 }}
-                                                style={{ height: 20 }}
+                                                thumbColor={'#f4f4f6'}
                                                 trackColor={{
-                                                    false: "#f2f2f2",
-                                                    true: "#006AFF"
+                                                    false: '#f4f4f6',
+                                                    true: '#006AFF'
                                                 }}
-                                                activeThumbColor="white"
+                                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                             />
                                         </View>
                                     </View>
@@ -1160,12 +1160,12 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 onValueChange={() => {
                                                     setDuplicateChannelModerators(!duplicateChannelModerators);
                                                 }}
-                                                style={{ height: 20 }}
+                                                thumbColor={'#f4f4f6'}
                                                 trackColor={{
-                                                    false: "#f2f2f2",
-                                                    true: "#006AFF"
+                                                    false: '#f4f4f6',
+                                                    true: '#006AFF'
                                                 }}
-                                                activeThumbColor="white"
+                                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
                                             />
                                         </View>
                                     </View>
