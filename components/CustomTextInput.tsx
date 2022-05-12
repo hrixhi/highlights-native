@@ -1,6 +1,6 @@
 // REACT
 import React, { useState } from 'react';
-import { Text as DefaultText, View as DefaultView, TextInput as DefaultTextInput, StyleSheet } from 'react-native';
+import { Text as DefaultText, View as DefaultView, TextInput as DefaultTextInput, StyleSheet, Dimensions } from 'react-native';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 type FieldTypeProps = {
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
         width: '100%',
         borderColor: '#f2f2f2',
         borderBottomWidth: 1,
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         paddingTop: 13,
         paddingBottom: 13,
         marginTop: 0,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
         width: '100%',
         borderColor: '#e4e6eb',
         borderBottomWidth: 1,
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         paddingTop: 13,
         paddingBottom: 13,
         marginTop: 0,
@@ -104,14 +104,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10
     },
     errorText: {
-        fontSize: 10,
+        width: '100%',
+        fontSize: Dimensions.get('window').width < 768 ? 10 : 11,
         color: 'red',
-        display: 'flex',
-        justifyContent: 'flex-end'
+        textAlign: 'right'
     },
     footer: {
-        fontSize: 10,
-        display: 'flex',
-        justifyContent: 'flex-end'
+        width: '100%',
+        fontSize: Dimensions.get('window').width < 768 ? 10 : 11,
+        textAlign: 'right'
     }
 });

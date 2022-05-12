@@ -1,6 +1,15 @@
 // REACT
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, Platform, Linking, ScrollView, Keyboard, TextInput as DefaultInput } from 'react-native';
+import {
+    ActivityIndicator,
+    Dimensions,
+    Image,
+    Platform,
+    Linking,
+    ScrollView,
+    Keyboard,
+    TextInput as DefaultInput,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
@@ -14,7 +23,7 @@ import {
     markMessagesAsRead,
     sendMessage,
     updateGroup,
-    getGroup
+    getGroup,
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -25,7 +34,7 @@ import FileUpload from './UploadFiles';
 // import { Select } from '@mobiscroll/react';
 import { TextInput } from './CustomTextInput';
 // import ReactPlayer from 'react-native-video';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { Video } from 'expo-av';
 import BottomSheet from './BottomSheet';
@@ -35,7 +44,7 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-m
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { handleImageUpload } from '../helpers/ImageUpload';
-import { handleFile } from '../helpers/FileUpload'
+import { handleFile } from '../helpers/FileUpload';
 import Reanimated from 'react-native-reanimated';
 
 import logo from '../components/default-images/cues-logo-black-exclamation-hidden.jpg';
@@ -79,7 +88,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
 
     const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
         inputRange: [0, 1],
-        outputRange: [0.5, 0]
+        outputRange: [0.5, 0],
     });
 
     const audioRef: any = useRef();
@@ -90,7 +99,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         return {
             value: sub._id,
             label: sub.fullName,
-            group: sub.fullName[0].toUpperCase()
+            group: sub.fullName[0].toUpperCase(),
         };
     });
     options = options.sort((a: any, b: any) => {
@@ -106,7 +115,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
     props.subscriptions.map((subscription: any) => {
         channelOptions.push({
             value: subscription.channelId,
-            label: subscription.channelName
+            label: subscription.channelName,
         });
     });
     const sortChatsByLastMessage = chats.sort((a: any, b: any) => {
@@ -130,9 +139,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
         loadChats();
     }, []);
 
-
     const sendImport = useCallback(() => {
-
         if (importType === 'image') {
             let img: any = importUrl;
             let text: any = '';
@@ -142,15 +149,15 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
 
             const obj = { title: importTitle, type: 'jpg', url: importUrl };
 
-            console.log("onSend", {
+            console.log('onSend', {
                 title: importTitle,
                 text,
                 image: img,
                 audio,
                 video,
                 file,
-                saveCue: JSON.stringify(obj)
-            })
+                saveCue: JSON.stringify(obj),
+            });
 
             onSend([
                 {
@@ -160,8 +167,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     audio,
                     video,
                     file,
-                    saveCue: JSON.stringify(obj)
-                }
+                    saveCue: JSON.stringify(obj),
+                },
             ]);
         } else if (importType === 'mp4') {
             let text: any = '';
@@ -182,10 +189,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     audio,
                     video,
                     file,
-                    saveCue: JSON.stringify(obj)
-                }
+                    saveCue: JSON.stringify(obj),
+                },
             ]);
-
         } else {
             let text: any = '';
             let img: any = '';
@@ -196,43 +202,39 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
             file = importUrl;
             text = (
                 <TouchableOpacity
-                        onPress={() => {
-                            if (
-                                Platform.OS === 'web' ||
-                                Platform.OS === 'macos' ||
-                                Platform.OS === 'windows'
-                            ) {
-                                window.open(importUrl, '_blank');
-                            } else {
-                                Linking.openURL(importUrl);
-                            }
-                        }}
+                    onPress={() => {
+                        if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
+                            window.open(importUrl, '_blank');
+                        } else {
+                            Linking.openURL(importUrl);
+                        }
+                    }}
+                    style={{
+                        backgroundColor: '#007AFF',
+                        borderRadius: 15,
+                        marginLeft: 15,
+                        marginTop: 6,
+                    }}
+                >
+                    <Text
                         style={{
-                            backgroundColor: '#006AFF',
+                            textAlign: 'center',
+                            lineHeight: 34,
+                            color: 'white',
+                            fontSize: 12,
+                            borderWidth: 1,
+                            borderColor: '#007AFF',
+                            paddingHorizontal: 20,
+                            fontFamily: 'inter',
+                            height: 35,
                             borderRadius: 15,
-                            marginLeft: 15,
-                            marginTop: 6
+                            textTransform: 'uppercase',
                         }}
                     >
-                        <Text
-                            style={{
-                                textAlign: 'center',
-                                lineHeight: 34,
-                                color: 'white',
-                                fontSize: 12,
-                                borderWidth: 1,
-                                borderColor: '#006AFF',
-                                paddingHorizontal: 20,
-                                fontFamily: 'inter',
-                                height: 35,
-                                borderRadius: 15,
-                                textTransform: 'uppercase'
-                            }}
-                        >
-                            {importTitle}
-                        </Text>
-                    </TouchableOpacity>
-                );
+                        {importTitle}
+                    </Text>
+                </TouchableOpacity>
+            );
 
             const obj = { title: importTitle, type: importType, url: importUrl };
 
@@ -244,38 +246,34 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     audio,
                     video,
                     file,
-                    saveCue: JSON.stringify(obj)
-                }
+                    saveCue: JSON.stringify(obj),
+                },
             ]);
-
         }
 
-        setImportType('')
-        setImportUrl('')
+        setImportType('');
+        setImportUrl('');
         setUploadFileVisible(false);
-
-    }, [importTitle, importUrl, importType])
+    }, [importTitle, importUrl, importType]);
 
     /**
-     * 
+     *
      */
-     const uploadImageHandler = useCallback(
+    const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
-            
             const url = await handleImageUpload(takePhoto, userId);
 
-            setImportUrl(url)
-            setImportType('image')
-            setImportTitle('Image')
-        
+            setImportUrl(url);
+            setImportType('image');
+            setImportTitle('Image');
         },
         [userId]
     );
 
     /**
-     * 
+     *
      */
-     const uploadFileHandler = useCallback(
+    const uploadFileHandler = useCallback(
         async (audioVideo) => {
             const res = await handleFile(audioVideo, userId);
 
@@ -285,11 +283,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 return;
             }
 
-            setImportType(audioVideo ? 'mp4' : res.type)
-            setImportTitle(audioVideo ? 'Video' : res.name)
-            setImportFileName(res.name)
-            setImportUrl(res.url)
-
+            setImportType(audioVideo ? 'mp4' : res.type);
+            setImportTitle(audioVideo ? 'Video' : res.name);
+            setImportFileName(res.name);
+            setImportUrl(res.url);
         },
         [userId]
     );
@@ -338,8 +335,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
             .query({
                 query: getAllUsers,
                 variables: {
-                    userId: user._id
-                }
+                    userId: user._id,
+                },
             })
             .then((res: any) => {
                 if (res.data.user && res.data.user.getAllUsers) {
@@ -380,8 +377,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
             .query({
                 query: getChats,
                 variables: {
-                    userId: user._id
-                }
+                    userId: user._id,
+                },
             })
             .then((res: any) => {
                 if (res.data && res.data.group.getChats) {
@@ -427,12 +424,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     .query({
                         query: getMessages,
                         variables: {
-                            groupId
-                        }
+                            groupId,
+                        },
                     })
-                    .then(res => {
+                    .then((res) => {
                         const tempChat: any[] = [];
-                        res.data.message.getMessagesThread.map((msg: any) => {
+                        res.data.message.getMessagesThread.map((msg: any, ind: number) => {
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -448,14 +445,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity style={{
-                                                // backgroundColor: '#006AFF' 
-                                            }}>
+                                        <TouchableOpacity key={ind.toString()} style={{ backgroundColor: '#007AFF' }}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
-                                                    // backgroundColor: '#006AFF',
-                                                    color: '#fff'
+                                                    backgroundColor: '#007AFF',
+                                                    color: '#fff',
                                                 }}
                                                 onPress={() => {
                                                     if (
@@ -469,7 +464,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     }
                                                 }}
                                             >
-                                                {obj.title}
+                                                {obj.title + '.' + obj.type}
                                             </Text>
                                         </TouchableOpacity>
                                     );
@@ -490,8 +485,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     name: msg.fullName,
                                     avatar: msg.avatar
                                         ? msg.avatar
-                                        : 'https://cues-files.s3.amazonaws.com/images/default.png'
-                                }
+                                        : 'https://cues-files.s3.amazonaws.com/images/default.png',
+                                },
                             });
                         });
                         tempChat.reverse();
@@ -499,7 +494,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         setShowChat(true);
                         props.hideNewChatButton(true);
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         console.log('Error', err);
                     });
 
@@ -509,11 +504,11 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         mutation: markMessagesAsRead,
                         variables: {
                             userId: parsedUser._id,
-                            groupId
-                        }
+                            groupId,
+                        },
                     })
-                    .then(res => console.log(res))
-                    .catch(e => console.log(e));
+                    .then((res) => console.log(res))
+                    .catch((e) => console.log(e));
             }
         },
         [chats]
@@ -537,10 +532,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     message: 'New Group Created',
                     userId,
                     groupName: newGroupName,
-                    groupImage: newGroupImage
-                }
+                    groupImage: newGroupImage,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 setSelected([]);
                 setNewGroupName('');
                 setNewGroupImage(undefined);
@@ -551,7 +546,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     Alert(unableToPostAlert, checkConnectionAlert);
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 Alert(somethingWentWrongAlert, checkConnectionAlert);
             });
     }, [selected, userId, newGroupName, newGroupImage]);
@@ -578,10 +573,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     groupId,
                     users: [userId, ...chatUsers],
                     groupName: editGroupName,
-                    groupImage: editGroupImage
-                }
+                    groupImage: editGroupImage,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 setNewGroupName('');
                 setNewGroupImage(undefined);
                 setViewGroup(false);
@@ -593,7 +588,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     Alert('Could not update group. Try again.');
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 // setSendingThread(false)
                 Alert('Could not update group. Try again.');
             });
@@ -622,8 +617,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
             messages[0] = {
                 ...messages[0],
                 user: {
-                    _id: userId
-                }
+                    _id: userId,
+                },
             };
 
             setCreatingMessage(true);
@@ -636,19 +631,19 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         users: chatUsers,
                         message,
                         userId,
-                        groupId
-                    }
+                        groupId,
+                    },
                 })
-                .then(async res => {
+                .then(async (res) => {
                     if (res.data.message.createDirect) {
-                        setChat(previousMessages => GiftedChat.append(previousMessages, messages));
+                        setChat((previousMessages) => GiftedChat.append(previousMessages, messages));
 
                         if (!groupId || groupId === '') {
                             const res = await server.query({
                                 query: getGroup,
                                 variables: {
-                                    users: chatUsers
-                                }
+                                    users: chatUsers,
+                                },
                             });
 
                             if (res && res.data.message.getGroupId && res.data.message.getGroupId !== '') {
@@ -662,7 +657,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         setCreatingMessage(false);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     // setSendingThread(false)
                     Alert(somethingWentWrongAlert, checkConnectionAlert);
                     setCreatingMessage(false);
@@ -720,12 +715,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     .query({
                         query: getMessages,
                         variables: {
-                            groupId
-                        }
+                            groupId,
+                        },
                     })
-                    .then(res => {
+                    .then((res) => {
                         const tempChat: any[] = [];
-                        res.data.message.getMessagesThread.map((msg: any) => {
+                        res.data.message.getMessagesThread.map((msg: any, ind: number) => {
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -741,12 +736,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity style={{ backgroundColor: '#006AFF' }}>
+                                        <TouchableOpacity key={ind.toString()} style={{ backgroundColor: '#007AFF' }}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
-                                                    backgroundColor: '#006AFF',
-                                                    color: '#fff'
+                                                    backgroundColor: '#007AFF',
+                                                    color: '#fff',
                                                 }}
                                                 onPress={() => {
                                                     if (
@@ -781,17 +776,17 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     name: msg.fullName,
                                     avatar: msg.avatar
                                         ? msg.avatar
-                                        : 'https://cues-files.s3.amazonaws.com/images/default.png'
-                                }
+                                        : 'https://cues-files.s3.amazonaws.com/images/default.png',
+                                },
                             });
                         });
                         tempChat.reverse();
                         setChat(tempChat);
-                        console.log('tempChat', tempChat)
+                        console.log('tempChat', tempChat);
                         setShowChat(true);
                         props.hideNewChatButton(true);
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         console.log(err);
                         // Alert(unableToLoadMessagesAlert, checkConnectionAlert)
                     });
@@ -801,13 +796,13 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         mutation: markMessagesAsRead,
                         variables: {
                             userId: parsedUser._id,
-                            groupId
-                        }
+                            groupId,
+                        },
                     })
-                    .then(res => {
+                    .then((res) => {
                         // props.refreshUnreadMessagesCount()
                     })
-                    .catch(e => console.log(e));
+                    .catch((e) => console.log(e));
             }
         },
         [chats]
@@ -817,7 +812,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
      * @description Loads a new chat with a user when selected from Directory
      */
     const loadNewChat = useCallback(
-        async uId => {
+        async (uId) => {
             setChat([]);
             const u = await AsyncStorage.getItem('user');
             if (u) {
@@ -852,8 +847,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 const res = await server.query({
                     query: getGroup,
                     variables: {
-                        users: [parsedUser._id, uId]
-                    }
+                        users: [parsedUser._id, uId],
+                    },
                 });
 
                 if (!res || !res.data.message.getGroupId || res.data.message.getGroupId === '') {
@@ -868,12 +863,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     .query({
                         query: getMessages,
                         variables: {
-                            groupId: res.data.message.getGroupId
-                        }
+                            groupId: res.data.message.getGroupId,
+                        },
                     })
-                    .then(res => {
+                    .then((res) => {
                         const tempChat: any[] = [];
-                        res.data.message.getMessagesThread.map((msg: any) => {
+                        res.data.message.getMessagesThread.map((msg: any, ind: number) => {
                             let text: any = '';
                             let img: any = '';
                             let audio: any = '';
@@ -889,12 +884,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     video = url;
                                 } else {
                                     text = (
-                                        <TouchableOpacity style={{ backgroundColor: '#006AFF' }}>
+                                        <TouchableOpacity key={ind.toString()} style={{ backgroundColor: '#007AFF' }}>
                                             <Text
                                                 style={{
                                                     textDecorationLine: 'underline',
-                                                    backgroundColor: '#006AFF',
-                                                    color: '#fff'
+                                                    backgroundColor: '#007AFF',
+                                                    color: '#fff',
                                                 }}
                                                 onPress={() => {
                                                     if (
@@ -929,8 +924,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     name: msg.fullName,
                                     avatar: msg.avatar
                                         ? msg.avatar
-                                        : 'https://cues-files.s3.amazonaws.com/images/default.png'
-                                }
+                                        : 'https://cues-files.s3.amazonaws.com/images/default.png',
+                                },
                             });
                         });
                         tempChat.reverse();
@@ -938,7 +933,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         setShowChat(true);
                         props.hideNewChatButton(true);
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         console.log(err);
                     });
             }
@@ -957,8 +952,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 {...props}
                 wrapperStyle={{
                     right: {
-                        backgroundColor: '#006AFF'
-                    }
+                        backgroundColor: '#007AFF',
+                    },
                 }}
             />
         );
@@ -975,10 +970,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         ref={audioRef}
                         style={{
                             width: 250,
-                            height: 60
+                            height: 60,
                         }}
                         source={{
-                            uri: props.currentMessage.audio
+                            uri: props.currentMessage.audio,
                         }}
                         useNativeControls
                         resizeMode="contain"
@@ -1003,10 +998,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         ref={videoRef}
                         style={{
                             width: 250,
-                            height: 250
+                            height: 250,
                         }}
                         source={{
-                            uri: props.currentMessage.video
+                            uri: props.currentMessage.video,
                         }}
                         useNativeControls
                         resizeMode="contain"
@@ -1033,27 +1028,28 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
 
     const renderImportModalContent = () => {
         if (importType && importUrl) {
-            return <View style={{ paddingHorizontal: 10 }}>
-                {importType === 'image' ? 
-                    <Image
-                        style={{
-                            height: 200,
-                            width: 250,
-                            alignSelf: 'center'
-                        }}
-                        source={{ uri: importUrl }}
-                    /> : importType === 'mp4' ? (
-                        <View style={{ paddingVertical: 15,}}>
+            return (
+                <View style={{ paddingHorizontal: 10 }}>
+                    {importType === 'image' ? (
+                        <Image
+                            style={{
+                                height: 200,
+                                width: 250,
+                                alignSelf: 'center',
+                            }}
+                            source={{ uri: importUrl }}
+                        />
+                    ) : importType === 'mp4' ? (
+                        <View style={{ paddingVertical: 15 }}>
                             <Video
                                 ref={audioRef}
                                 style={{
-                                    
                                     width: 250,
                                     height: 150,
-                                    alignSelf: 'center'
+                                    alignSelf: 'center',
                                 }}
                                 source={{
-                                    uri: importUrl
+                                    uri: importUrl,
                                 }}
                                 useNativeControls
                                 resizeMode="contain"
@@ -1061,11 +1057,19 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             />
                         </View>
                     ) : (
-                        <Text style={{ color: '#000', fontFamily: 'Inter', fontSize: 20, paddingTop: 30, paddingBottom: 30, paddingLeft: 20 }}>
+                        <Text
+                            style={{
+                                color: '#000',
+                                fontFamily: 'Inter',
+                                fontSize: 20,
+                                paddingTop: 30,
+                                paddingBottom: 30,
+                                paddingLeft: 20,
+                            }}
+                        >
                             {importFileName}
                         </Text>
                     )}
-
 
                     {/* <TextInput
                         value={importTitle}
@@ -1080,17 +1084,17 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             style={{
                                 marginTop: 20,
                                 backgroundColor: '#fff',
-                                borderColor: '#006Aff',
+                                borderColor: '#007AFF',
                                 borderRadius: 19,
                                 width: 150,
                                 alignSelf: 'center',
-                                marginRight: 20
+                                marginRight: 20,
                             }}
                             onPress={() => {
-                                setImportTitle('')
-                                setImportUrl('')
-                                setImportFileName('')
-                                setUploadFileVisible(false)
+                                setImportTitle('');
+                                setImportUrl('');
+                                setImportFileName('');
+                                setUploadFileVisible(false);
                             }}
                         >
                             <Text
@@ -1100,8 +1104,8 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     fontFamily: 'inter',
                                     height: 35,
                                     lineHeight: 34,
-                                    color: '#006AFF',
-                                    borderColor: '#006AFF',
+                                    color: '#007AFF',
+                                    borderColor: '#007AFF',
                                     borderWidth: 1,
                                     borderRadius: 19,
                                 }}
@@ -1113,13 +1117,13 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         <TouchableOpacity
                             style={{
                                 marginTop: 20,
-                                backgroundColor: '#006AFF',
+                                backgroundColor: '#007AFF',
                                 borderRadius: 19,
                                 width: 150,
-                                alignSelf: 'center'
+                                alignSelf: 'center',
                             }}
                             onPress={() => {
-                                sendImport()
+                                sendImport();
                             }}
                         >
                             <Text
@@ -1129,144 +1133,147 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     fontFamily: 'inter',
                                     height: 35,
                                     lineHeight: 34,
-                                    color: '#fff'
+                                    color: '#fff',
                                 }}
                             >
                                 Send
                             </Text>
                         </TouchableOpacity>
                     </View>
+                </View>
+            );
+        }
+
+        return (
+            <View style={{ paddingHorizontal: '20%', paddingTop: 30 }}>
+                <TouchableOpacity
+                    style={{
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadImageHandler(true);
+                    }}
+                >
+                    <Ionicons name="camera-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        Camera{' '}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={{
+                        marginTop: 20,
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadImageHandler(false);
+                    }}
+                >
+                    <Ionicons name="image-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        Gallery{' '}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={{
+                        marginTop: 20,
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadFileHandler(false);
+                    }}
+                >
+                    <Ionicons name="document-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        File{' '}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={{
+                        marginTop: 20,
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadFileHandler(true);
+                    }}
+                >
+                    <Ionicons name="videocam-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        Video{' '}
+                    </Text>
+                </TouchableOpacity>
             </View>
-        } 
+        );
+    };
 
-        return <View style={{ paddingHorizontal: '20%', paddingTop: 30 }}>
-            <TouchableOpacity
-                style={{
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadImageHandler(true);
-                }}
-            >
-                <Ionicons name='camera-outline' size={20} color={'#000'} />
-                <Text
-                    style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
-                    }}
-                >
-                    {' '}
-                    Camera{' '}
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    marginTop: 20,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadImageHandler(false);
-                }}
-            >
-                <Ionicons name='image-outline' size={20} color={'#000'} />
-                <Text
-                    style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
-                    }}
-                >
-                    {' '}
-                    Gallery{' '}
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    marginTop: 20,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadFileHandler(false);
-                }}
-            >
-                <Ionicons name='document-outline' size={20} color={'#000'} />
-                <Text
-                    style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
-                    }}
-                >
-                    {' '}
-                    File{' '}
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    marginTop: 20,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadFileHandler(true);
-                }}
-            >
-                <Ionicons name='videocam-outline' size={20} color={'#000'} />
-                <Text
-                    style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
-                    }}
-                >
-                    {' '}
-                    Video{' '}
-                </Text>
-            </TouchableOpacity>
-        </View>
-    }
-
-    const filterChannelLabel = channelOptions.find((channel: any) => channel.value === filterChannelId)?.label
+    const filterChannelLabel = channelOptions.find((channel: any) => channel.value === filterChannelId)?.label;
 
     // MAIN RETURN
     return (
@@ -1291,8 +1298,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     style={{
                         // paddingVertical: 15,
                         width: '100%',
-                        height:
-                            width < 1024 ? Dimensions.get('window').height : Dimensions.get('window').height - 52,
+                        height: width < 1024 ? Dimensions.get('window').height : Dimensions.get('window').height - 52,
                         backgroundColor: 'white',
                     }}
                     key={1}
@@ -1301,18 +1307,20 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     {showNewGroup || showChat || props.showDirectory ? null : (
                         <View
                             style={{
-                                paddingHorizontal:  20,
+                                paddingHorizontal: 20,
                                 paddingBottom: 20,
                                 flexDirection: 'row',
                                 paddingTop: 15,
                             }}
                         >
-                            <Text style={{
-                               fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
-                                color: '#000',
-                                fontFamily: 'Inter',
-                                fontWeight: 'bold'
-                            }}>
+                            <Text
+                                style={{
+                                    fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
+                                    color: '#000',
+                                    fontFamily: 'Inter',
+                                    fontWeight: 'bold',
+                                }}
+                            >
                                 Your Messages
                             </Text>
                             {/* <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingTop: 5 }}>
@@ -1336,7 +1344,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                         paddingVertical: 8,
                                         marginTop: 10,
                                         marginRight: 15,
-                                        backgroundColor: '#f2f2f2',
+                                        backgroundColor: '#f8f8f8',
                                         borderRadius: 18
                                     }}
                                     placeholder="Search..."
@@ -1363,7 +1371,6 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     />
                                 </TouchableOpacity>
                             </View> */}
-
                         </View>
                     )}
                     {/* ) : null} */}
@@ -1376,23 +1383,25 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                     marginBottom: width < 1024 ? 20 : 0,
                                 }}
                             >
-                                {showNewGroup || showChat || props.showDirectory ? (<View 
-                                    style={{ 
-                                        flexDirection: 'row', 
-                                        width: '100%', 
-                                        paddingTop: 15, 
-                                        paddingBottom: showChat ? 0 : 10,
-                                        borderBottomWidth: showChat ? 1 : 0,
-                                        borderBottomColor: '#f2f2f2',
-                                        // shadowOffset: {
-                                        //     width: 2,
-                                        //     height: 2
-                                        // },
-                                        // // overflow: 'hidden',
-                                        // shadowOpacity: 0.07,
-                                        // shadowRadius: 7,
-                                        // zIndex: 500000, 
-                                    }}>
+                                {showNewGroup || showChat || props.showDirectory ? (
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            width: '100%',
+                                            paddingTop: 15,
+                                            paddingBottom: showChat ? 0 : 10,
+                                            borderBottomWidth: showChat ? 1 : 0,
+                                            borderBottomColor: '#f2f2f2',
+                                            // shadowOffset: {
+                                            //     width: 2,
+                                            //     height: 2
+                                            // },
+                                            // // overflow: 'hidden',
+                                            // shadowOpacity: 0.07,
+                                            // shadowRadius: 7,
+                                            // zIndex: 500000,
+                                        }}
+                                    >
                                         <TouchableOpacity
                                             onPress={() => {
                                                 if (viewGroup) {
@@ -1415,7 +1424,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             }}
                                             style={{
                                                 paddingRight: 15,
-                                                alignSelf: 'flex-start'
+                                                alignSelf: 'flex-start',
                                             }}
                                         >
                                             <Text
@@ -1424,41 +1433,40 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     width: '100%',
                                                     textAlign: 'center',
                                                     // paddingTop: 5,
-                                                    paddingLeft: 10
+                                                    paddingLeft: 10,
                                                 }}
                                             >
                                                 <Ionicons name="chevron-back-outline" size={30} color={'#1F1F1F'} />
                                             </Text>
                                         </TouchableOpacity>
-                                    
-                                    {
-                                        showNewGroup ?
-                                        <Text
-                                            style={{
-                                                fontFamily: 'Inter',
-                                                fontSize: 20,
-                                                fontWeight: 'bold',
-                                                paddingTop: 5,
-                                                textAlign: 'center',
-                                                paddingLeft: '22%'
-                                                // marginTop: 10,
-                                                // marginBottom: 10,
-                                            }}
-                                        >
-                                            New Group
-                                        </Text> : null
-                                    }
-                                    {props.showDirectory && !showChat && !showNewGroup ? (
-                                        <View style={{ backgroundColor: '#fff' }}>
-                                            <View
+
+                                        {showNewGroup ? (
+                                            <Text
                                                 style={{
-                                                    flexDirection: 'row',
-                                                    backgroundColor: '#fff',
-                                                    maxWidth: 150,
-                                                    // height: isFilterChannelDropdownOpen ? 250 : 50
+                                                    fontFamily: 'Inter',
+                                                    fontSize: 20,
+                                                    fontWeight: 'bold',
+                                                    paddingTop: 5,
+                                                    textAlign: 'center',
+                                                    paddingLeft: '22%',
+                                                    // marginTop: 10,
+                                                    // marginBottom: 10,
                                                 }}
                                             >
-                                                {/* <DropDownPicker
+                                                New Group
+                                            </Text>
+                                        ) : null}
+                                        {props.showDirectory && !showChat && !showNewGroup ? (
+                                            <View style={{ backgroundColor: '#fff' }}>
+                                                <View
+                                                    style={{
+                                                        flexDirection: 'row',
+                                                        backgroundColor: '#fff',
+                                                        maxWidth: 150,
+                                                        // height: isFilterChannelDropdownOpen ? 250 : 50
+                                                    }}
+                                                >
+                                                    {/* <DropDownPicker
                                                     open={isFilterChannelDropdownOpen}
                                                     value={filterChannelId}
                                                     items={channelOptions}
@@ -1489,10 +1497,10 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 /> */}
                                                     <Menu
                                                         style={{
-                                                            paddingTop: 8
+                                                            paddingTop: 8,
                                                         }}
                                                         onSelect={(channel: any) => {
-                                                            setFilterChannelId(channel)
+                                                            setFilterChannelId(channel);
                                                         }}
                                                     >
                                                         <MenuTrigger>
@@ -1500,109 +1508,125 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 style={{
                                                                     // fontFamily: "inter",
                                                                     fontSize: 15,
-                                                                    color: '#000000'
+                                                                    color: '#000000',
                                                                 }}
                                                             >
-                                                                {filterChannelLabel ? filterChannelLabel : "Filter Course"}
+                                                                {filterChannelLabel
+                                                                    ? filterChannelLabel
+                                                                    : 'Filter Course'}
                                                                 <Ionicons name="chevron-down-outline" size={15} />
                                                             </Text>
-                                                            </MenuTrigger>
-                                                            <MenuOptions
-                                                                customStyles={{
-                                                                    optionsContainer: {
-                                                                        padding: 10,
-                                                                        borderRadius: 15,
-                                                                        shadowOpacity: 0,
-                                                                        borderWidth: 1,
-                                                                        borderColor: '#f2f2f2',
-                                                                        overflow: 'scroll',
-                                                                        maxHeight: '100%'
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {channelOptions.map((channel: any) => {
-                                                                    return (
-                                                                        <MenuOption value={channel.value}>
-                                                                            <Text>{channel.label}</Text>
-                                                                        </MenuOption>
-                                                                    );
-                                                                })}
-                                                            </MenuOptions>
-                                                        </Menu>
+                                                        </MenuTrigger>
+                                                        <MenuOptions
+                                                            optionsContainerStyle={{
+                                                                shadowOffset: {
+                                                                    width: 2,
+                                                                    height: 2,
+                                                                },
+                                                                shadowColor: '#000',
+                                                                // overflow: 'hidden',
+                                                                shadowOpacity: 0.07,
+                                                                shadowRadius: 7,
+                                                                padding: 10,
+                                                                // borderWidth: 1,
+                                                                // borderColor: '#CCC'
+                                                            }}
+                                                        >
+                                                            {channelOptions.map((channel: any, ind: number) => {
+                                                                return (
+                                                                    <MenuOption
+                                                                        key={ind.toString()}
+                                                                        value={channel.value}
+                                                                    >
+                                                                        <Text
+                                                                            style={{
+                                                                                fontSize: 15,
+                                                                                fontFamily: 'Inter',
+                                                                                paddingBottom: 3,
+                                                                            }}
+                                                                        >
+                                                                            {channel.label}
+                                                                        </Text>
+                                                                    </MenuOption>
+                                                                );
+                                                            })}
+                                                        </MenuOptions>
+                                                    </Menu>
+                                                </View>
                                             </View>
-                                        </View>
-                                    ) : null}
-                                    {/* Show user / group name if you open the chat */}
-                                    {showChat ? (
-                                        <TouchableOpacity
-                                            disabled={!isChatGroup}
-                                            onPress={() => setViewGroup(true)}
-                                            style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                flex: 1,
-                                                width: '100%',
-                                                paddingBottom: 10,
-                                                paddingHorizontal: 10
-                                            }}
-                                        >
-                                            <Image
+                                        ) : null}
+                                        {/* Show user / group name if you open the chat */}
+                                        {showChat ? (
+                                            <TouchableOpacity
+                                                disabled={!isChatGroup}
+                                                onPress={() => setViewGroup(true)}
                                                 style={{
-                                                    height: 35,
-                                                    width: 35,
-                                                    borderRadius: 75,
-                                                    alignSelf: 'center'
-                                                }}
-                                                source={{ uri: chatImg }}
-                                            />
-                                            <Text
-                                                style={{
-                                                    fontFamily: 'inter',
-                                                    fontSize: 16,
-                                                    paddingLeft: 20,
-                                                    flex: 1
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    flex: 1,
+                                                    width: '100%',
+                                                    paddingBottom: 10,
+                                                    paddingHorizontal: 10,
                                                 }}
                                             >
-                                                {chatName}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ) : null}
-                                    {showNewGroup || showChat || !props.showDirectory ? null : (
-                                        <View style={{ flexDirection: 'row', flex: 1 }} />
-                                    )}
-                                    {showNewGroup || showChat || !props.showDirectory ? null : (
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                setShowNewGroup(!showNewGroup);
-                                            }}
-                                            style={{
-                                                backgroundColor: 'white',
-                                                overflow: 'hidden',
-                                                height: 35,
-                                                // marginTop: 10,
-                                                // marginRight: 10
-                                            }}
-                                        >
-                                            <Text
+                                                <Image
+                                                    style={{
+                                                        height: 35,
+                                                        width: 35,
+                                                        borderRadius: 75,
+                                                        alignSelf: 'center',
+                                                    }}
+                                                    source={{ uri: chatImg }}
+                                                />
+                                                <Text
+                                                    style={{
+                                                        fontFamily: 'inter',
+                                                        fontSize: 16,
+                                                        paddingLeft: 20,
+                                                        flex: 1,
+                                                    }}
+                                                >
+                                                    {chatName}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ) : null}
+                                        {showNewGroup || showChat || !props.showDirectory ? null : (
+                                            <View style={{ flexDirection: 'row', flex: 1 }} />
+                                        )}
+                                        {showNewGroup || showChat || !props.showDirectory ? null : (
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    setShowNewGroup(!showNewGroup);
+                                                }}
                                                 style={{
-                                                    textAlign: 'center',
-                                                    lineHeight: 34,
-                                                    color: '#006AFF',
-                                                    fontSize: 12,
-                                                    // borderWidth: 1,
-                                                    // borderColor: '#006AFF',
-                                                    paddingHorizontal: 20,
-                                                    fontFamily: 'inter',
+                                                    backgroundColor: 'white',
+                                                    overflow: 'hidden',
                                                     height: 35,
-                                                    borderRadius: 15,
-                                                    textTransform: 'uppercase'
+                                                    // marginTop: 10,
+                                                    // marginRight: 10
                                                 }}
                                             >
-                                                NEW GROUP
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </View>) : null}
+                                                <Text
+                                                    style={{
+                                                        textAlign: 'center',
+                                                        lineHeight: 34,
+                                                        color: '#007AFF',
+                                                        fontSize: 12,
+                                                        // borderWidth: 1,
+                                                        // borderColor: '#007AFF',
+                                                        paddingHorizontal: 20,
+                                                        fontFamily: 'inter',
+                                                        height: 35,
+                                                        borderRadius: 15,
+                                                        textTransform: 'uppercase',
+                                                    }}
+                                                >
+                                                    NEW GROUP
+                                                </Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                ) : null}
                                 {viewGroup ? (
                                     <View style={{ marginTop: 20, paddingHorizontal: 20 }}>
                                         {/*  */}
@@ -1613,12 +1637,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         height: 100,
                                                         width: 100,
                                                         borderRadius: 75,
-                                                        alignSelf: 'center'
+                                                        alignSelf: 'center',
                                                     }}
                                                     source={{
                                                         uri: editGroupImage
                                                             ? editGroupImage
-                                                            : 'https://cues-files.s3.amazonaws.com/images/default.png'
+                                                            : 'https://cues-files.s3.amazonaws.com/images/default.png',
                                                     }}
                                                 />
                                                 <View
@@ -1626,7 +1650,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         flex: 1,
                                                         flexDirection: 'row',
                                                         justifyContent: 'center',
-                                                        paddingTop: 15
+                                                        paddingTop: 15,
                                                     }}
                                                 >
                                                     {editGroupImage ? (
@@ -1637,24 +1661,15 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 overflow: 'hidden',
                                                                 height: 35,
                                                                 justifyContent: 'center',
-                                                                flexDirection: 'row'
+                                                                flexDirection: 'row',
                                                             }}
                                                         >
-                                                            <Text
-                                                                style={{
-                                                                    textAlign: 'center',
-                                                                    lineHeight: 34,
-                                                                    color: '#000000',
-                                                                    fontSize: 12,
-                                                                    backgroundColor: '#f2f2f2',
-                                                                    paddingHorizontal: 20,
-                                                                    fontFamily: 'inter',
-                                                                    height: 35,
-                                                                    borderRadius: 15,
-                                                                    textTransform: 'uppercase'
-                                                                }}
-                                                            >
-                                                                REMOVE
+                                                            <Text>
+                                                                <Ionicons
+                                                                    name={'close-circle-outline'}
+                                                                    size={18}
+                                                                    color={'#1F1F1F'}
+                                                                />
                                                             </Text>
                                                         </TouchableOpacity>
                                                     ) : (
@@ -1672,7 +1687,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             fontSize: 14,
                                                             fontFamily: 'Inter',
                                                             color: '#000000',
-                                                            fontWeight: 'bold'
+                                                            fontWeight: 'bold',
                                                         }}
                                                     >
                                                         {PreferredLanguageText('name')}
@@ -1680,7 +1695,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     <TextInput
                                                         value={editGroupName}
                                                         placeholder={''}
-                                                        onChangeText={val => {
+                                                        onChangeText={(val) => {
                                                             setEditGroupName(val);
                                                         }}
                                                         placeholderTextColor={'#1F1F1F'}
@@ -1695,7 +1710,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 fontSize: 14,
                                                 fontFamily: 'Inter',
                                                 color: '#000000',
-                                                fontWeight: 'bold'
+                                                fontWeight: 'bold',
                                             }}
                                         >
                                             Users
@@ -1703,7 +1718,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
 
                                         {groupCreatedBy === userId ? (
                                             <DropDownPicker
-                                                listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
+                                                listMode={Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'}
                                                 multiple={true}
                                                 open={isNewUsersDropdownOpen}
                                                 value={chatUsers}
@@ -1713,34 +1728,37 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 style={{
                                                     borderWidth: 0,
                                                     borderBottomWidth: 1,
-                                                    borderBottomColor: '#f2f2f2'
+                                                    borderBottomColor: '#f2f2f2',
+                                                    // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                 }}
                                                 dropDownContainerStyle={{
                                                     borderWidth: 0,
-                                                    zIndex: 1000001,
-                                                    elevation: 1000001
+                                                    // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                 }}
                                                 containerStyle={{
                                                     shadowColor: '#000',
                                                     shadowOffset: {
                                                         width: 1,
-                                                        height: 3
+                                                        height: 3,
                                                     },
                                                     shadowOpacity: !isNewUsersDropdownOpen ? 0 : 0.08,
                                                     shadowRadius: 12,
-                                                    zIndex: 1000001,
-                                                    elevation: 1000001
+                                                }}
+                                                textStyle={{
+                                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                                    fontFamily: 'overpass',
                                                 }}
                                             />
                                         ) : (
                                             <ScrollView
                                                 showsVerticalScrollIndicator={false}
                                                 keyboardDismissMode={'on-drag'}
-                                                style={{  paddingTop: 12 }}
+                                                style={{ paddingTop: 12 }}
                                             >
                                                 {groupUsers.map((user: any, ind: any) => {
                                                     return (
                                                         <View
+                                                            key={ind.toString()}
                                                             style={{
                                                                 flexDirection: 'row',
                                                                 alignItems: 'center',
@@ -1750,7 +1768,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 borderBottomWidth:
                                                                     ind === Object.keys(groupUsers).length - 1 ? 0 : 1,
                                                                 borderBottomColor: '#f2f2f2',
-                                                                paddingHorizontal: 10
+                                                                paddingHorizontal: 10,
                                                             }}
                                                         >
                                                             <Image
@@ -1758,19 +1776,19 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     height: 35,
                                                                     width: 35,
                                                                     borderRadius: 75,
-                                                                    alignSelf: 'center'
+                                                                    alignSelf: 'center',
                                                                 }}
                                                                 source={{
                                                                     uri: user.avatar
                                                                         ? user.avatar
-                                                                        : 'https://cues-files.s3.amazonaws.com/images/default.png'
+                                                                        : 'https://cues-files.s3.amazonaws.com/images/default.png',
                                                                 }}
                                                             />
                                                             <Text
                                                                 style={{
                                                                     fontFamily: 'inter',
                                                                     fontSize: 16,
-                                                                    paddingLeft: 20
+                                                                    paddingLeft: 20,
                                                                 }}
                                                             >
                                                                 {user.fullName}
@@ -1780,7 +1798,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     style={{
                                                                         fontSize: 12,
                                                                         paddingRight: 20,
-                                                                        marginLeft: 'auto'
+                                                                        marginLeft: 'auto',
                                                                     }}
                                                                 >
                                                                     Admin
@@ -1797,14 +1815,14 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 onPress={() => handleUpdateGroup()}
                                                 style={{
                                                     maxWidth: 130,
-                                                    backgroundColor: '#006AFF',
+                                                    backgroundColor: '#007AFF',
                                                     alignSelf: 'center',
                                                     overflow: 'hidden',
                                                     marginTop: 50,
                                                     height: 35,
                                                     justifyContent: 'center',
                                                     flexDirection: 'row',
-                                                    borderRadius: 15
+                                                    borderRadius: 15,
                                                 }}
                                             >
                                                 <Text
@@ -1813,13 +1831,13 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         lineHeight: 34,
                                                         color: '#fff',
                                                         fontSize: 12,
-                                                        backgroundColor: '#006AFF',
+                                                        backgroundColor: '#007AFF',
                                                         paddingHorizontal: 20,
                                                         fontFamily: 'inter',
                                                         height: 35,
                                                         // width: 100,
                                                         borderRadius: 15,
-                                                        textTransform: 'uppercase'
+                                                        textTransform: 'uppercase',
                                                     }}
                                                 >
                                                     UPDATE
@@ -1837,45 +1855,65 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     ? windowHeight - (Platform.OS === 'ios' ? 150 : 130)
                                                     : windowHeight - 52 - 80,
                                             zIndex: 5000,
-                                            borderColor: '#f2f2f2'
+                                            borderColor: '#f2f2f2',
                                         }}
-                                    >   
+                                    >
                                         <GiftedChat
-                                            bottomOffset={Platform.OS === "ios" ? 40 : 20}
+                                            renderInputToolbar={(props) => {
+                                                return (
+                                                    <InputToolbar
+                                                        {...props}
+                                                        containerStyle={{
+                                                            // backgroundColor: '#f8f8f8',
+                                                            paddingVertical: 5,
+                                                        }}
+                                                        placeholder="Message..."
+                                                        textInputStyle={{
+                                                            // borderWidth: 1,
+                                                            // borderColor: '#ccc',
+                                                            padding: 10,
+                                                            paddingBottom: 15,
+                                                            borderRadius: 10,
+                                                        }}
+                                                    />
+                                                );
+                                            }}
+                                            bottomOffset={Platform.OS === 'ios' ? 40 : 0}
                                             renderMessageAudio={renderMessageAudio}
                                             renderMessageVideo={renderMessageVideo}
                                             renderUsernameOnMessage={isChatGroup}
                                             messages={chat}
-                                            onSend={messages => onSend(messages)}
+                                            onSend={(messages) => onSend(messages)}
                                             user={{
                                                 _id: userId,
-                                                avatar
+                                                avatar,
                                             }}
                                             renderBubble={renderBubble}
                                             renderActions={() => (
                                                 // <View>
-                                                    <TouchableOpacity 
+                                                <TouchableOpacity
+                                                    style={{
+                                                        paddingBottom: 12,
+                                                    }}
+                                                    onPress={() => {
+                                                        Keyboard.dismiss();
+                                                        setUploadFileVisible(true);
+                                                    }}
+                                                >
+                                                    <Text
                                                         style={{
-                                                            paddingBottom: 10
+                                                            color: '#007AFF',
+                                                            // lineHeight: 40,
+                                                            textAlign: 'right',
+                                                            fontSize: 12,
+                                                            fontFamily: 'overpass',
+                                                            textTransform: 'uppercase',
+                                                            paddingLeft: 10,
                                                         }}
-                                                        onPress={() => {
-                                                            Keyboard.dismiss()
-                                                            setUploadFileVisible(true)
-                                                        }}>
-                                                        <Text
-                                                            style={{
-                                                                color: '#006AFF',
-                                                                // lineHeight: 40,
-                                                                textAlign: 'right',
-                                                                fontSize: 12,
-                                                                fontFamily: 'overpass',
-                                                                textTransform: 'uppercase',
-                                                                paddingLeft: 10
-                                                            }}
-                                                        >
-                                                            <Ionicons name="add-outline" size={27} />
-                                                        </Text>
-                                                    </TouchableOpacity>
+                                                    >
+                                                        <Ionicons name="add-outline" size={27} />
+                                                    </Text>
+                                                </TouchableOpacity>
                                                 // </View>
                                             )}
                                         />
@@ -1886,7 +1924,14 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     setUploadFileVisible(false);
                                                 }}
                                                 isOpen={uploadFileVisible}
-                                                title={importType ? 'Send ' + (importType !== 'image' && importType !== 'video' ? 'File' : importType) : 'Send Attachment' }
+                                                title={
+                                                    importType
+                                                        ? 'Send ' +
+                                                          (importType !== 'image' && importType !== 'video'
+                                                              ? 'File'
+                                                              : importType)
+                                                        : 'Send Attachment'
+                                                }
                                                 renderContent={() => renderImportModalContent()}
                                                 header={false}
                                             />
@@ -1901,17 +1946,17 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     top: 0,
                                                     left: 0,
                                                     width: '100%',
-                                                    position: 'absolute'
+                                                    position: 'absolute',
                                                 }}
                                             >
-                                                <TouchableOpacity style={{
-                                                    backgroundColor: 'transparent',
-                                                    width: '100%',
-                                                    height: '100%',
-                                                }}
-                                                onPress={() => setUploadFileVisible(false)}
-                                                >
-                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={{
+                                                        backgroundColor: 'transparent',
+                                                        width: '100%',
+                                                        height: '100%',
+                                                    }}
+                                                    onPress={() => setUploadFileVisible(false)}
+                                                ></TouchableOpacity>
                                             </Reanimated.View>
                                         ) : null}
                                     </View>
@@ -1928,7 +1973,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     marginTop: 25,
                                                     overflow: 'scroll',
                                                     marginBottom: 25,
-                                                    alignItems: 'center'
+                                                    alignItems: 'center',
                                                 }}
                                             >
                                                 <View
@@ -1937,7 +1982,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         padding: 5,
                                                         maxWidth: 500,
                                                         minHeight: 200,
-                                                        marginBottom: 15
+                                                        marginBottom: 15,
                                                     }}
                                                 >
                                                     <Image
@@ -1945,12 +1990,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             height: 100,
                                                             width: 100,
                                                             borderRadius: 75,
-                                                            alignSelf: 'center'
+                                                            alignSelf: 'center',
                                                         }}
                                                         source={{
                                                             uri: newGroupImage
                                                                 ? newGroupImage
-                                                                : 'https://cues-files.s3.amazonaws.com/images/default.png'
+                                                                : 'https://cues-files.s3.amazonaws.com/images/default.png',
                                                         }}
                                                     />
                                                     <View
@@ -1958,7 +2003,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             flex: 1,
                                                             flexDirection: 'row',
                                                             justifyContent: 'center',
-                                                            paddingTop: 15
+                                                            paddingTop: 15,
                                                         }}
                                                     >
                                                         {newGroupImage ? (
@@ -1969,7 +2014,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     overflow: 'hidden',
                                                                     height: 35,
                                                                     justifyContent: 'center',
-                                                                    flexDirection: 'row'
+                                                                    flexDirection: 'row',
                                                                 }}
                                                             >
                                                                 <Text>
@@ -1996,7 +2041,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 fontSize: 14,
                                                                 fontFamily: 'Inter',
                                                                 color: '#000000',
-                                                                fontWeight: 'bold'
+                                                                fontWeight: 'bold',
                                                             }}
                                                         >
                                                             {PreferredLanguageText('name')}
@@ -2004,7 +2049,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         <TextInput
                                                             value={newGroupName}
                                                             placeholder={''}
-                                                            onChangeText={val => {
+                                                            onChangeText={(val) => {
                                                                 setNewGroupName(val);
                                                             }}
                                                             placeholderTextColor={'#1F1F1F'}
@@ -2019,7 +2064,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             fontFamily: 'Inter',
                                                             color: '#000000',
                                                             fontWeight: 'bold',
-                                                            marginBottom: 15
+                                                            marginBottom: 15,
                                                         }}
                                                     >
                                                         Users
@@ -2047,8 +2092,17 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         }}
                                                         minWidth={[60, 320]}
                                                     /> */}
-                                                    <View style={{ height: isUpdateUsersDropdownOpen ? getDropdownHeight(options.length) : 50 }}>
+                                                    <View
+                                                        style={{
+                                                            height: isUpdateUsersDropdownOpen
+                                                                ? getDropdownHeight(options.length)
+                                                                : 50,
+                                                        }}
+                                                    >
                                                         <DropDownPicker
+                                                            listMode={
+                                                                Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'
+                                                            }
                                                             multiple={true}
                                                             open={isUpdateUsersDropdownOpen}
                                                             value={selected}
@@ -2058,23 +2112,26 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             style={{
                                                                 borderWidth: 0,
                                                                 borderBottomWidth: 1,
-                                                                borderBottomColor: '#f2f2f2'
+                                                                borderBottomColor: '#f2f2f2',
+                                                                // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                             }}
                                                             dropDownContainerStyle={{
                                                                 borderWidth: 0,
-                                                                zIndex: 1000001,
-                                                                elevation: 1000001
+                                                                // elevation: !showFilterByChannelDropdown ? 0 : 2
                                                             }}
                                                             containerStyle={{
                                                                 shadowColor: '#000',
                                                                 shadowOffset: {
                                                                     width: 1,
-                                                                    height: 3
+                                                                    height: 3,
                                                                 },
                                                                 shadowOpacity: !isUpdateUsersDropdownOpen ? 0 : 0.08,
                                                                 shadowRadius: 12,
-                                                                zIndex: 1000001,
-                                                                elevation: 1000001
+                                                            }}
+                                                            textStyle={{
+                                                                fontSize:
+                                                                    Dimensions.get('window').width < 768 ? 14 : 15,
+                                                                fontFamily: 'overpass',
                                                             }}
                                                         />
                                                     </View>
@@ -2090,7 +2147,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                     justifyContent: 'center',
                                                     flexDirection: 'row',
                                                     borderRadius: 15,
-                                                    backgroundColor: '#006AFF'
+                                                    backgroundColor: '#007AFF',
                                                 }}
                                             >
                                                 <Text
@@ -2099,13 +2156,13 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                         lineHeight: 34,
                                                         color: '#fff',
                                                         fontSize: 12,
-                                                        backgroundColor: '#006AFF',
+                                                        backgroundColor: '#007AFF',
                                                         paddingHorizontal: 20,
                                                         fontFamily: 'inter',
                                                         height: 35,
                                                         // width: 100,
                                                         borderRadius: 15,
-                                                        textTransform: 'uppercase'
+                                                        textTransform: 'uppercase',
                                                     }}
                                                 >
                                                     CREATE
@@ -2120,7 +2177,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                             width: '100%',
                                             borderRadius: 1,
                                             borderColor: '#f2f2f2',
-                                            maxHeight: width < 1024 ? windowHeight - 104 - 90 : windowHeight - 52 - 110
+                                            maxHeight: width < 1024 ? windowHeight - 104 - 90 : windowHeight - 52 - 110,
                                             // overflow: 'hidden'
                                         }}
                                     >
@@ -2130,7 +2187,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 borderRadius: 1,
                                                 marginTop: 10,
                                                 paddingHorizontal: 10,
-                                                marginBottom: 100
+                                                marginBottom: 100,
                                             }}
                                             scrollEnabled={true}
                                             indicatorStyle="black"
@@ -2148,6 +2205,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 }
                                                 return (
                                                     <TouchableOpacity
+                                                        key={ind.toString()}
                                                         onPress={() => {
                                                             loadNewChat(user._id);
                                                         }}
@@ -2158,7 +2216,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             borderColor: '#f2f2f2',
                                                             paddingVertical: 5,
                                                             borderBottomWidth: ind === users.length - 1 ? 0 : 1,
-                                                            width: '100%'
+                                                            width: '100%',
                                                         }}
                                                     >
                                                         <View style={{ backgroundColor: '#fff', padding: 5 }}>
@@ -2170,12 +2228,12 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     marginLeft: 5,
                                                                     marginBottom: 5,
                                                                     borderRadius: 75,
-                                                                    alignSelf: 'center'
+                                                                    alignSelf: 'center',
                                                                 }}
                                                                 source={{
                                                                     uri: user.avatar
                                                                         ? user.avatar
-                                                                        : 'https://cues-files.s3.amazonaws.com/images/default.png'
+                                                                        : 'https://cues-files.s3.amazonaws.com/images/default.png',
                                                                 }}
                                                             />
                                                         </View>
@@ -2183,7 +2241,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             style={{
                                                                 flex: 1,
                                                                 backgroundColor: '#fff',
-                                                                paddingLeft: 5
+                                                                paddingLeft: 5,
                                                             }}
                                                         >
                                                             <Text
@@ -2191,7 +2249,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     fontSize: 15,
                                                                     padding: 5,
                                                                     fontFamily: 'inter',
-                                                                    marginTop: 5
+                                                                    marginTop: 5,
                                                                 }}
                                                                 ellipsizeMode="tail"
                                                             >
@@ -2210,7 +2268,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 padding: 0,
                                                                 flexDirection: 'row',
                                                                 alignSelf: 'center',
-                                                                alignItems: 'center'
+                                                                alignItems: 'center',
                                                             }}
                                                         >
                                                             <Text
@@ -2220,7 +2278,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 <Ionicons
                                                                     name="chevron-forward-outline"
                                                                     size={18}
-                                                                    color="#006AFF"
+                                                                    color="#007AFF"
                                                                 />
                                                             </Text>
                                                         </View>
@@ -2253,15 +2311,14 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             fontSize: 20,
                                                             paddingVertical: 100,
                                                             paddingHorizontal: 5,
-                                                            fontFamily: 'inter'
+                                                            fontFamily: 'inter',
                                                         }}
                                                     >
                                                         Click on + to initiate a new chat.
                                                     </Text>
                                                 </View>
                                             ) : null}
-                                            {sortChatsByLastMessage.map((chat: any, index) => {
-
+                                            {sortChatsByLastMessage.map((chat: any, index: number) => {
                                                 // Group name or individual user name
                                                 let fName = '';
 
@@ -2292,6 +2349,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                 const { title } = htmlStringParser(chat.lastMessage);
                                                 return (
                                                     <TouchableOpacity
+                                                        key={index.toString()}
                                                         onPress={() => {
                                                             if (chat.userNames.length > 2) {
                                                                 loadGroupChat(chat.users, chat._id);
@@ -2311,7 +2369,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             borderColor: '#f2f2f2',
                                                             paddingVertical: 3,
                                                             borderBottomWidth: index === chats.length - 1 ? 0 : 1,
-                                                            width: '100%'
+                                                            width: '100%',
                                                         }}
                                                     >
                                                         <View style={{ backgroundColor: '#fff', padding: 5 }}>
@@ -2323,7 +2381,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     marginLeft: 5,
                                                                     marginBottom: 5,
                                                                     borderRadius: 75,
-                                                                    alignSelf: 'center'
+                                                                    alignSelf: 'center',
                                                                 }}
                                                                 source={{ uri: chatImg }}
                                                             />
@@ -2332,7 +2390,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                             style={{
                                                                 flex: 1,
                                                                 backgroundColor: '#fff',
-                                                                paddingLeft: 5
+                                                                paddingLeft: 5,
                                                             }}
                                                         >
                                                             <Text
@@ -2340,7 +2398,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     fontSize: 15,
                                                                     padding: 5,
                                                                     fontFamily: 'inter',
-                                                                    marginTop: 3
+                                                                    marginTop: 3,
                                                                 }}
                                                                 ellipsizeMode="tail"
                                                             >
@@ -2360,7 +2418,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 padding: 0,
                                                                 flexDirection: 'row',
                                                                 alignSelf: 'center',
-                                                                alignItems: 'center'
+                                                                alignItems: 'center',
                                                             }}
                                                         >
                                                             {/* Unread notification badge */}
@@ -2371,9 +2429,9 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                         height: 16,
                                                                         borderRadius: 8,
                                                                         marginRight: 5,
-                                                                        backgroundColor: '#006AFF',
+                                                                        backgroundColor: '#007AFF',
                                                                         alignItems: 'center',
-                                                                        justifyContent: 'center'
+                                                                        justifyContent: 'center',
                                                                     }}
                                                                 >
                                                                     <Text style={{ color: 'white', fontSize: 10 }}>
@@ -2388,7 +2446,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                     padding: 5,
                                                                     lineHeight: 13,
                                                                     color:
-                                                                        chat.unreadMessages > 0 ? '#006AFF' : '#000000'
+                                                                        chat.unreadMessages > 0 ? '#007AFF' : '#000000',
                                                                 }}
                                                                 ellipsizeMode="tail"
                                                             >
@@ -2401,7 +2459,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                                                                 <Ionicons
                                                                     name="chevron-forward-outline"
                                                                     size={18}
-                                                                    color="#006AFF"
+                                                                    color="#007AFF"
                                                                 />
                                                             </Text> */}
                                                         </View>
@@ -2429,7 +2487,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             <TouchableOpacity
                                 style={{
                                     marginTop: 20,
-                                    backgroundColor: '#006AFF',
+                                    backgroundColor: '#007AFF',
                                     borderRadius: 19,
                                     width: 150,
                                     alignSelf: 'center'
@@ -2455,7 +2513,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             <TouchableOpacity
                                 style={{
                                     marginTop: 20,
-                                    backgroundColor: '#006AFF',
+                                    backgroundColor: '#007AFF',
                                     borderRadius: 19,
                                     width: 150,
                                     alignSelf: 'center'
@@ -2481,7 +2539,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             <TouchableOpacity
                                 style={{
                                     marginTop: 20,
-                                    backgroundColor: '#006AFF',
+                                    backgroundColor: '#007AFF',
                                     borderRadius: 19,
                                     width: 150,
                                     alignSelf: 'center'
@@ -2507,7 +2565,7 @@ const Inbox: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             <TouchableOpacity
                                 style={{
                                     marginTop: 20,
-                                    backgroundColor: '#006AFF',
+                                    backgroundColor: '#007AFF',
                                     borderRadius: 19,
                                     width: 150,
                                     alignSelf: 'center'

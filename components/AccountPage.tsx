@@ -15,14 +15,34 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Walkthrough from './Walkthrough';
 import Channels from './Channels';
-
+import { blueButtonAccountMB, blueButtonMR } from '../helpers/BlueButtonPosition';
+import { useOrientation } from '../hooks/useOrientation';
 
 const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [activeTab, setActiveTab] = useState('profile');
-    const windowHeight =
-        Dimensions.get('window').width < 768 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
+    // const windowHeight =
+    //     Dimensions.get('window').width < 768 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
 
     const [showAddCourseModal, setShowAddCourseModal] = useState(false);
+    const orientation = useOrientation();
+
+    let windowHeight = 0;
+
+    // iPhone
+    if (Dimensions.get('window').width < 768 && Platform.OS === 'ios') {
+        windowHeight = Dimensions.get('window').height - 115;
+        // Android Phone
+    } else if (Dimensions.get('window').width < 768 && Platform.OS === 'android') {
+        windowHeight = Dimensions.get('window').height - 30;
+        // Tablet potrait
+    } else if (orientation === 'PORTRAIT' && Dimensions.get('window').width > 768) {
+        windowHeight = Dimensions.get('window').height - 30;
+        // Tablet landscape
+    } else if (orientation === 'LANDSCAPE' && Dimensions.get('window').width > 768) {
+        windowHeight = Dimensions.get('window').height - 60;
+    } else {
+        windowHeight = Dimensions.get('window').height - 30;
+    }
 
     return (
         <Animated.View
@@ -30,10 +50,10 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 // opacity: modalAnimation,
                 width: '100%',
                 // height: windowHeight,
-                height: windowHeight - (Platform.OS === 'android' ? 0 : 35),
+                height: windowHeight,
                 backgroundColor: 'white',
                 borderTopRightRadius: 0,
-                borderTopLeftRadius: 0
+                borderTopLeftRadius: 0,
             }}
         >
             {
@@ -48,7 +68,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         width: '100%',
                         // maxWidth: 400,
                         // alignSelf: 'center'
-                        paddingLeft: 25
+                        paddingLeft: 25,
                     }}
                 >
                     {/* Back button */}
@@ -64,7 +84,6 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         <Ionicons name={'arrow-back-outline'} size={25} color="black" />
                     </TouchableOpacity> */}
 
-
                     <TouchableOpacity
                         style={{
                             // backgroundColor: activeTab === 'agenda' ? '#000' : '#fff',
@@ -72,7 +91,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             paddingBottom: 4,
                             marginHorizontal: 12,
                             borderBottomColor: '#000',
-                            borderBottomWidth: activeTab === 'profile' ? 2 : 0
+                            borderBottomWidth: activeTab === 'profile' ? 2 : 0,
                         }}
                         onPress={() => setActiveTab('profile')}
                     >
@@ -81,7 +100,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 color: activeTab === 'profile' ? '#000' : '#656565',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold',
-                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26
+                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26,
                             }}
                         >
                             Profile
@@ -93,7 +112,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             paddingBottom: 4,
                             marginHorizontal: 12,
                             borderBottomColor: '#000',
-                            borderBottomWidth: activeTab === 'courses' ? 2 : 0
+                            borderBottomWidth: activeTab === 'courses' ? 2 : 0,
                         }}
                         onPress={() => setActiveTab('courses')}
                     >
@@ -102,7 +121,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 color: activeTab === 'courses' ? '#000' : '#656565',
                                 fontFamily: 'Inter',
                                 fontWeight: 'bold',
-                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26
+                                fontSize: Dimensions.get('window').width < 768 ? 22 : 26,
                             }}
                         >
                             Courses
@@ -136,7 +155,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <View>
                 {activeTab === 'profile' ? (
                     <Walkthrough
-                        closeModal={() => { }}
+                        closeModal={() => {}}
                         saveDataInCloud={() => props.saveDataInCloud()}
                         reOpenProfile={() => props.reOpenProfile()}
                         reloadData={() => props.reloadData()}
@@ -147,7 +166,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <Channels
                         setShowCreate={(val: any) => props.setShowCreate(val)}
                         showCreate={props.showCreate}
-                        closeModal={() => { }}
+                        closeModal={() => {}}
                         subscriptions={props.subscriptions}
                         refreshSubscriptions={props.refreshSubscriptions}
                         showAddCourseModal={showAddCourseModal}
@@ -156,50 +175,55 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 )}
             </View>
 
-            <TouchableOpacity
-                onPress={() => {
-                    if (activeTab === 'profile') {
-                        Linking.openURL('https://www.learnwithcues.com/help')
-                    } else {
-                        setShowAddCourseModal(true);
-                    }
-                }}
-                style={{
-                    position: 'absolute',
-                    marginRight:
-                        Dimensions.get('window').width >= 1100
-                            ? (Dimensions.get('window').width - 1100) / 2 - 25
-                            : Dimensions.get('window').width >= 768
-                                ? 30
-                                : 24,
-                    marginBottom: Dimensions.get('window').width < 768 ? 77 : 90,
-                    right: 0,
-                    justifyContent: 'center',
-                    bottom: 0,
-                    width: Dimensions.get('window').width > 350 ? 62 : 58,
-                    height: Dimensions.get('window').width > 350 ? 62 : 58,
-                    borderRadius: Dimensions.get('window').width > 350 ? 31 : 29,
-                    backgroundColor: '#006aff',
-                    borderColor: '#f2f2f2',
-                    borderWidth: 0,
-                    shadowColor: '#000',
-                    shadowOffset: {
-                        width: 4,
-                        height: 4
-                    },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 10,
-                    zIndex: 50,
-                    display: showAddCourseModal ? 'none' : 'flex'
-                }}
-            >
-                <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
-                    <Ionicons
-                        name={activeTab === 'profile' ? 'help-outline' : 'add-outline'}
-                        size={activeTab === 'profile' ? (Dimensions.get('window').width > 350 ? 22 : 21) : (Dimensions.get('window').width > 350 ? 36 : 35)}
-                    />
-                </Text>
-            </TouchableOpacity>
+            {showAddCourseModal ? null : (
+                <TouchableOpacity
+                    onPress={() => {
+                        if (activeTab === 'profile') {
+                            Linking.openURL('https://www.learnwithcues.com/help');
+                        } else {
+                            setShowAddCourseModal(true);
+                        }
+                    }}
+                    style={{
+                        position: 'absolute',
+                        marginRight: blueButtonMR(Dimensions.get('window').width, orientation, Platform.OS),
+                        marginBottom: blueButtonAccountMB(Dimensions.get('window').width, orientation, Platform.OS),
+                        right: 0,
+                        justifyContent: 'center',
+                        bottom: 0,
+                        width: Dimensions.get('window').width > 350 ? 62 : 58,
+                        height: Dimensions.get('window').width > 350 ? 62 : 58,
+                        borderRadius: Dimensions.get('window').width > 350 ? 31 : 29,
+                        backgroundColor: '#007AFF',
+                        borderColor: '#f2f2f2',
+                        borderWidth: 0,
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 4,
+                            height: 4,
+                        },
+                        shadowOpacity: 0.12,
+                        shadowRadius: 10,
+                        zIndex: 50,
+                        display: showAddCourseModal ? 'none' : 'flex',
+                    }}
+                >
+                    <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
+                        <Ionicons
+                            name={activeTab === 'profile' ? 'help-outline' : 'add-outline'}
+                            size={
+                                activeTab === 'profile'
+                                    ? Dimensions.get('window').width > 350
+                                        ? 25
+                                        : 23
+                                    : Dimensions.get('window').width > 350
+                                    ? 36
+                                    : 35
+                            }
+                        />
+                    </Text>
+                </TouchableOpacity>
+            )}
         </Animated.View>
     );
 };

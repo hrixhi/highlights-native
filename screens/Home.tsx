@@ -8,7 +8,7 @@ import {
     Image,
     ScrollView,
     Platform,
-    KeyboardAvoidingView
+    KeyboardAvoidingView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +34,7 @@ import {
     authWithProvider,
     updateNotificationId,
     loginFromSso,
-    getNotificationEvents
+    getNotificationEvents,
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -53,10 +53,13 @@ import { validateEmail } from '../helpers/emailCheck';
 import { PreferredLanguageText, LanguageSelect } from '../helpers/LanguageContext';
 import { defaultCues } from '../helpers/DefaultData';
 import { htmlStringParser } from '../helpers/HTMLParser';
-import { getNextDate } from '../helpers/DateParser';
 
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Updates from 'expo-updates';
+
+import { useOrientation } from '../hooks/useOrientation';
+
+import { blueButtonHomeMB, blueButtonMR } from '../helpers/BlueButtonPosition';
 
 // import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -136,7 +139,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [option, setOption] = useState('To Do');
     const [options] = useState(['To Do', 'Classroom', 'Search', 'Inbox', 'Account']);
     const [workspaceOptions] = useState(['Content', 'Discuss', 'Meet', 'Scores', 'Settings']);
-    const [createOptions] = useState(['Content', 'Import', 'Quiz', 'Library'])
+    const [createOptions] = useState(['Content', 'Import', 'Quiz', 'Library']);
 
     const [createOption, setCreateOption] = useState('');
     const [userId, setUserId] = useState('');
@@ -155,25 +158,35 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [syncingCues, setSyncingCues] = useState(false);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [workspaceActiveTab, setWorkspaceActiveTab] = useState('Content');
-    const [createActiveTab, setCreateActiveTab] = useState('Content')
-    const [disableCreateNavbar, setDisableCreateNavbar] = useState(false)
+    const [createActiveTab, setCreateActiveTab] = useState('Content');
+    const [disableCreateNavbar, setDisableCreateNavbar] = useState(false);
 
     const [closingModal, setClosingModal] = useState(false);
-    const [refreshingWorkspace, setRefreshingWorkspace] = useState(false)
-    const [showImportCreate, setShowImportCreate] = useState(false)
+    const [refreshingWorkspace, setRefreshingWorkspace] = useState(false);
+    const [showImportCreate, setShowImportCreate] = useState(false);
 
     const [showWorkspaceFilterModal, setShowWorkspaceFilterModal] = useState(false);
+    const [reloadBottomBarKey, setReloadBottomBarKey] = useState(Math.random());
 
-    const height = Dimensions.get('window').height
-    const width = Dimensions.get('window').width
+    const height = Dimensions.get('window').height;
+    const width = Dimensions.get('window').width;
+
+    const orientation = useOrientation();
+
+    console.log('Orientation', orientation);
 
     const onOrientationChange = useCallback(async () => {
-        await Updates.reloadAsync();
+        // await Updates.reloadAsync();
+        setReloadBottomBarKey(reloadBottomBarKey);
     }, []);
 
-    useEffect(() => {
-        setWorkspaceActiveTab('Content')
-    }, [selectedWorkspace])
+    // useEffect(() => {
+    //     if (selectedWorkspace && !loadDiscussionForChannelId) {
+    //         setWorkspaceActiveTab('Content')
+    //     } else if (selectedWorkspace && loadDiscussionForChannelId) {
+    //         setWorkspaceActiveTab('Discuss')
+    //     }
+    // }, [selectedWorkspace, loadDiscussionForChannelId])
 
     useEffect(() => {
         (async () => {
@@ -191,22 +204,21 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             if (u) {
                 const user = JSON.parse(u);
 
-                console.log("User id ", user._id);
+                console.log('User id ', user._id);
 
                 if (user && user._id && user._id !== '') {
                     setUserId(user._id);
                     setRole(user.role);
                     await loadDataFromCloud();
-                    setupEventsNotifications(user._id)
+                    setupEventsNotifications(user._id);
                 } else {
-                    setShowLoginWindow(true)
+                    setShowLoginWindow(true);
                 }
             } else {
-                setShowLoginWindow(true)
+                setShowLoginWindow(true);
             }
         })();
-
-    }, [])
+    }, []);
 
     useEffect(() => {
         (async () => {
@@ -230,7 +242,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             .post(
                                 `https://api.learnwithcues.com/checkSSO`,
                                 {
-                                    ssoDomain: split[1]
+                                    ssoDomain: split[1],
                                 },
                                 { cancelToken: cancelTokenRef.current.token }
                             )
@@ -260,8 +272,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     .query({
                         query: loginFromSso,
                         variables: {
-                            code: ssoCode
-                        }
+                            code: ssoCode,
+                        },
                     })
                     .then(async (r: any) => {
                         if (
@@ -278,15 +290,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             }
 
                             if (u._id) {
-                                setUserId(u._id)
-                                setRole(u.role)
+                                setUserId(u._id);
+                                setRole(u.role);
                             }
 
                             const sU = JSON.stringify(u);
                             await AsyncStorage.setItem('jwt_token', token);
                             await AsyncStorage.setItem('user', sU);
 
-                            updateExpoNotificationId(u)
+                            updateExpoNotificationId(u);
 
                             setShowLoginWindow(false);
                             loadDataFromCloud();
@@ -297,7 +309,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             setIsLoggingIn(false);
                         }
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         console.log(e);
                         setIsLoggingIn(false);
                         Alert('Something went wrong. Try again.');
@@ -400,10 +412,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     .query({
                         query: totalInboxUnread,
                         variables: {
-                            userId: user._id
-                        }
+                            userId: user._id,
+                        },
                     })
-                    .then(res => {
+                    .then((res) => {
                         if (res.data.messageStatus.totalInboxUnread) {
                             setUnreadMessages(res.data.messageStatus.totalInboxUnread);
                         }
@@ -413,27 +425,26 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, []);
 
     const setupEventsNotifications = useCallback(async (userId: string) => {
-        console.log("Setup event notifications")
+        console.log('Setup event notifications');
 
         await Notifications.cancelAllScheduledNotificationsAsync();
 
         const settings = await Notifications.getPermissionsAsync();
-                
+
         if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
             // permission granted
         } else {
-            
             await Notifications.requestPermissionsAsync({
                 ios: {
                     allowAlert: true,
                     allowBadge: true,
                     allowSound: true,
-                    allowAnnouncements: true
-                }
+                    allowAnnouncements: true,
+                },
             });
-            
+
             const settings = await Notifications.getPermissionsAsync();
-            
+
             if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
                 // permission granted
             } else {
@@ -444,21 +455,21 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
         // Setting notification handler
         Notifications.setNotificationHandler({
-            handleNotification: async n => {
+            handleNotification: async (n) => {
                 return {
                     shouldShowAlert: true,
                     shouldPlaySound: true,
-                    shouldSetBadge: true
+                    shouldSetBadge: true,
                 };
             },
-            handleError: err => console.log(err),
-            handleSuccess: res => {
+            handleError: (err) => console.log(err),
+            handleSuccess: (res) => {
                 // loadData()
-            }
+            },
         });
 
         // for when user taps on a notification
-        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
             loadData();
         });
 
@@ -467,19 +478,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             .query({
                 query: getNotificationEvents,
                 variables: {
-                    userId
-                }
+                    userId,
+                },
             })
-            .then(async res => {
+            .then(async (res) => {
                 if (res.data.date && res.data.date.getNotificationEvents) {
-
                     const scheduleNotifications: any[] = [];
-                    
-                    res.data.date.getNotificationEvents.map((event: any) => {
 
+                    res.data.date.getNotificationEvents.map((event: any) => {
                         const start = new Date(event.start);
 
-                        // Submissions 
+                        // Submissions
                         if (!event.meeting && event.cueId !== '' && event.dateId === 'channel') {
                             // 24 hours prior, 6 hours prior and 1 hour prior
 
@@ -487,29 +496,30 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                             const { title } = htmlStringParser(event.title);
 
-                            const alertTitle = event.channelName && event.channelName !== '' ? event.channelName + ' - ' + title : title
+                            const alertTitle =
+                                event.channelName && event.channelName !== ''
+                                    ? event.channelName + ' - ' + title
+                                    : title;
 
-
-                            const dayOffset = 24 * 60 * 60 * 1000; 
+                            const dayOffset = 24 * 60 * 60 * 1000;
                             var twentyFourOffset = new Date();
                             twentyFourOffset.setTime(twentyFourOffset.getTime() - dayOffset);
-                            
-                            var trigger1 = new Date(event.start);
-                            trigger1.setTime(trigger1.getTime() - dayOffset)
-                            var trigger2 = new Date(event.start);
-                            trigger2.setTime(trigger2.getTime() - (dayOffset / 4))
-                            var trigger3 = new Date(event.start);
-                            trigger3.setTime(trigger3.getTime() - (dayOffset / 24))
 
-                           
+                            var trigger1 = new Date(event.start);
+                            trigger1.setTime(trigger1.getTime() - dayOffset);
+                            var trigger2 = new Date(event.start);
+                            trigger2.setTime(trigger2.getTime() - dayOffset / 4);
+                            var trigger3 = new Date(event.start);
+                            trigger3.setTime(trigger3.getTime() - dayOffset / 24);
+
                             if (trigger1 > new Date()) {
                                 scheduleNotifications.push({
                                     content: {
                                         title: alertTitle,
                                         subtitle: alertTimeDisplay(event.start, true),
-                                        sound: true
+                                        sound: true,
                                     },
-                                    trigger: trigger1
+                                    trigger: trigger1,
                                 });
                             }
 
@@ -518,9 +528,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     content: {
                                         title: alertTitle,
                                         subtitle: alertTimeDisplay(event.start, false),
-                                        sound: true
+                                        sound: true,
                                     },
-                                    trigger: trigger2
+                                    trigger: trigger2,
                                 });
                             }
 
@@ -529,74 +539,73 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     content: {
                                         title: alertTitle,
                                         subtitle: alertTimeDisplay(event.start, false),
-                                        sound: true
+                                        sound: true,
                                     },
-                                    trigger: trigger3
+                                    trigger: trigger3,
                                 });
                             }
 
-                        // Personal events 
+                            // Personal events
                         } else if (!event.meeting && event.cueId === '' && event.dateId !== 'channel') {
                             // Same time as the actual start
 
                             // console.log("Personal event type");
 
-                            const title = event.title
+                            const title = event.title;
 
-                            const subtitle = moment(event.start).format('h:mm a')
+                            const subtitle = moment(event.start).format('h:mm a');
 
                             if (start > new Date()) {
                                 scheduleNotifications.push({
                                     content: {
                                         title,
                                         subtitle,
-                                        sound: true
+                                        sound: true,
                                     },
-                                    trigger: start
+                                    trigger: start,
                                 });
                             }
 
-                        // Meetings / Other event reminders
+                            // Meetings / Other event reminders
                         } else {
-
                             // console.log("Meeting/Channel event type");
 
                             // 15 minutes prior
-                            const fifteenMinOffset =  15 * 60 * 1000; 
+                            const fifteenMinOffset = 15 * 60 * 1000;
 
                             var trigger1 = new Date(event.start);
-                            trigger1.setTime(trigger1.getTime() - fifteenMinOffset)
+                            trigger1.setTime(trigger1.getTime() - fifteenMinOffset);
 
-                    
-                            const title = event.channelName && event.channelName !== '' ? event.channelName + ' - ' + event.title : event.title
-                            
-                            const subtitle = alertTimeDisplay(event.start, false)
+                            const title =
+                                event.channelName && event.channelName !== ''
+                                    ? event.channelName + ' - ' + event.title
+                                    : event.title;
+
+                            const subtitle = alertTimeDisplay(event.start, false);
 
                             if (trigger1 > new Date()) {
                                 scheduleNotifications.push({
                                     content: {
                                         title,
                                         subtitle,
-                                        sound: true
+                                        sound: true,
                                     },
-                                    trigger: trigger1
+                                    trigger: trigger1,
                                 });
-                            }                       
-
+                            }
                         }
-
-                    })
+                    });
 
                     // Sort all the scheduleNotifications
                     const sortedNotifications = scheduleNotifications.sort((a: any, b: any) => {
-                        return a.trigger > b.trigger ? 1 : -1
-                    })
+                        return a.trigger > b.trigger ? 1 : -1;
+                    });
 
                     if (sortedNotifications.length === 0) {
                         // no requests to process
                         return;
                     }
-    
+
                     let lastTriggerDate = new Date();
                     lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 5);
                     const iterateUpTo = scheduleNotifications.length >= 64 ? 63 : scheduleNotifications.length;
@@ -614,25 +623,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 content: {
                                     title: 'Continue receiving notifications?',
                                     subtitle: "Open Cues! It's been a while...",
-                                    sound: true
+                                    sound: true,
                                 },
-                                trigger: lastTriggerDate
+                                trigger: lastTriggerDate,
                             });
                         }
                     }
-
-
-
                 }
-
             })
-            .catch(err => {
+            .catch((err) => {
                 console.log(err);
                 // Alert('Unable to load calendar.', 'Check connection.');
-
             });
-
-    }, [])
+    }, []);
 
     // const notificationScheduler = useCallback(
     //     async c => {
@@ -821,6 +824,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     //     [cues, responseListener]
     // );
 
+    console.log('Workspace active tab', workspaceActiveTab);
+
     const refreshUnreadInbox = useCallback(async () => {
         const u = await AsyncStorage.getItem('user');
         if (u) {
@@ -829,17 +834,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
     }, []);
 
-    const updateInboxCount = useCallback(userId => {
+    const updateInboxCount = useCallback((userId) => {
         const server = fetchAPI('');
         server
             .query({
                 query: totalInboxUnread,
                 variables: {
                     userId,
-                    channelId
-                }
+                    channelId,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 if (
                     res.data.messageStatus.totalInboxUnread !== undefined &&
                     res.data.messageStatus.totalInboxUnread !== null
@@ -847,35 +852,33 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     setUnreadMessages(res.data.messageStatus.totalInboxUnread);
                 }
             })
-            .catch(err => console.log(err));
+            .catch((err) => console.log(err));
     }, []);
 
     const handleRefreshWorkspace = useCallback(async (subscriptions: boolean) => {
-
         let user = await AsyncStorage.getItem('user');
         const unparsedCues = await AsyncStorage.getItem('cues');
 
         if (user && unparsedCues) {
-            setRefreshingWorkspace(true)
+            setRefreshingWorkspace(true);
 
             if (subscriptions) {
-                await refreshSubscriptions()
+                await refreshSubscriptions();
             }
 
             const parsedUser = JSON.parse(user);
             const server = fetchAPI(parsedUser._id);
 
-
-            const allCues: any = JSON.parse(unparsedCues)
+            const allCues: any = JSON.parse(unparsedCues);
 
             server
                 .query({
                     query: getCuesFromCloud,
                     variables: {
-                        userId: parsedUser._id
-                    }
+                        userId: parsedUser._id,
+                    },
                 })
-                .then(async res => {
+                .then(async (res) => {
                     if (res.data.cue.getCuesFromCloud) {
                         const allCues: any = {};
                         res.data.cue.getCuesFromCloud.map((cue: any) => {
@@ -900,19 +903,20 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             allCues['local'] = [];
                         }
                         const customC: any[] = [];
-                        Object.keys(custom).map(item => {
+                        Object.keys(custom).map((item) => {
                             customC.push(item);
                         });
                         customC.sort();
                         setCues(allCues);
                         setCustomCategories(customC);
                         const stringCues = JSON.stringify(allCues);
+                        console.log('Size of saved Cues', byteCount(stringCues));
                         await AsyncStorage.setItem('cues', stringCues);
                         // await notificationScheduler(allCues);
                         setRefreshingWorkspace(false);
                     }
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
 
             // try {
             //     const res = await server.query({
@@ -1000,8 +1004,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             //     setRefreshingWorkspace(false)
             // }
         }
+    }, []);
 
-    }, [])
+    function byteCount(s: string) {
+        return encodeURI(s).split(/%..|./).length - 1;
+    }
 
     // imp
     const loadNewChannelCues = useCallback(async () => {
@@ -1017,8 +1024,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 const res = await server.query({
                     query: getCues,
                     variables: {
-                        userId: parsedUser._id
-                    }
+                        userId: parsedUser._id,
+                    },
                 });
 
                 if (res.data.cue.findByUserId) {
@@ -1037,7 +1044,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         if (index === -1) {
                             let cue: any = {};
                             cue = {
-                                ...item
+                                ...item,
                             };
                             delete cue.__typename;
                             if (allCues[cue.channelId]) {
@@ -1065,7 +1072,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             }
                         });
                         const customC: any[] = [];
-                        Object.keys(custom).map(item => {
+                        Object.keys(custom).map((item) => {
                             customC.push(item);
                         });
                         customC.sort();
@@ -1078,7 +1085,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     Animated.timing(fadeAnimation, {
                         toValue: 1,
                         duration: 150,
-                        useNativeDriver: true
+                        useNativeDriver: true,
                     }).start();
                 }
             } catch (err) {
@@ -1095,7 +1102,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         }
                     });
                     const customC: any[] = [];
-                    Object.keys(custom).map(item => {
+                    Object.keys(custom).map((item) => {
                         customC.push(item);
                     });
                     customC.sort();
@@ -1105,7 +1112,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 Animated.timing(fadeAnimation, {
                     toValue: 1,
                     duration: 150,
-                    useNativeDriver: true
+                    useNativeDriver: true,
                 }).start();
             }
         } else if (unparsedCues) {
@@ -1122,7 +1129,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     }
                 });
                 const customC: any[] = [];
-                Object.keys(custom).map(item => {
+                Object.keys(custom).map((item) => {
                     customC.push(item);
                 });
                 customC.sort();
@@ -1132,7 +1139,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             Animated.timing(fadeAnimation, {
                 toValue: 1,
                 duration: 150,
-                useNativeDriver: true
+                useNativeDriver: true,
             }).start();
         }
     }, []);
@@ -1158,7 +1165,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 }
             });
             const customC: any[] = [];
-            Object.keys(custom).map(item => {
+            Object.keys(custom).map((item) => {
                 customC.push(item);
             });
             customC.sort();
@@ -1168,30 +1175,31 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             Animated.timing(fadeAnimation, {
                 toValue: 1,
                 duration: 150,
-                useNativeDriver: true
+                useNativeDriver: true,
             }).start();
         }
     }, []);
 
     const updateExpoNotificationId = useCallback(async (user: any) => {
-
         let existingStatus = await Notifications.getPermissionsAsync();
 
-        if (!existingStatus.granted && existingStatus.ios?.status !== Notifications.IosAuthorizationStatus.PROVISIONAL) {
+        if (
+            !existingStatus.granted &&
+            existingStatus.ios?.status !== Notifications.IosAuthorizationStatus.PROVISIONAL
+        ) {
             // permission granted
 
             await Notifications.requestPermissionsAsync({
                 ios: {
-                allowAlert: true,
+                    allowAlert: true,
                     allowBadge: true,
                     allowSound: true,
-                    allowAnnouncements: true
-                }
+                    allowAnnouncements: true,
+                },
             });
 
             existingStatus = await Notifications.getPermissionsAsync();
-
-        } 
+        }
 
         if (existingStatus.granted || existingStatus.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
             // const user = JSON.parse(u);
@@ -1201,12 +1209,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 experienceId = user._id + Platform.OS;
             }
             const expoToken = await Notifications.getExpoPushTokenAsync({
-                experienceId
+                experienceId,
             });
 
             const notificationId = expoToken.data;
 
-            console.log("Update notification id INIT", notificationId);
+            console.log('Update notification id INIT', notificationId);
 
             if (!user.notificationId || !user.notificationId.includes(notificationId)) {
                 const server = fetchAPI('');
@@ -1217,25 +1225,22 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         notificationId:
                             user.notificationId === 'NOT_SET' || user.notificationId === 'undefined'
                                 ? notificationId
-                                : user.notificationId + '-BREAK-' + notificationId
-                    }
+                                : user.notificationId + '-BREAK-' + notificationId,
+                    },
                 });
             }
         }
-
-    }, [])
+    }, []);
 
     // FETCH NEW DATA
     const loadData = useCallback(
         async (saveData?: boolean) => {
             try {
-
                 let u = await AsyncStorage.getItem('user');
 
                 // HANDLE PROFILE
                 if (u) {
                     // UPDATE NOTIFICATION ID
-
 
                     const parsedUser = JSON.parse(u);
                     if (parsedUser.email) {
@@ -1266,8 +1271,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     email: email.toLowerCase(),
                     fullName: name,
                     provider: user._provider,
-                    avatar: profilePicURL
-                }
+                    avatar: profilePicURL,
+                },
             })
             .then(async (r: any) => {
                 if (
@@ -1293,7 +1298,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     Alert(error);
                 }
             })
-            .catch(e => {
+            .catch((e) => {
                 console.log(e);
                 Alert('Something went wrong. Try again.');
             });
@@ -1329,8 +1334,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 variables: {
                     email: email.toLowerCase(),
                     fullName,
-                    password
-                }
+                    password,
+                },
             })
             .then(async (r: any) => {
                 if (r.data.user.signup && r.data.user.signup === 'SUCCESS') {
@@ -1344,7 +1349,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 }
                 setSigningUp(false);
             })
-            .catch(e => {
+            .catch((e) => {
                 setSigningUp(false);
                 console.log(e);
             });
@@ -1357,11 +1362,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             return;
         }
 
-        let redirect = AuthSession.makeRedirectUri(
-            {
-                useProxy: true
-            }
-        ).toString();
+        let redirect = AuthSession.makeRedirectUri({
+            useProxy: true,
+        }).toString();
 
         const split = email.toLowerCase().split('@');
 
@@ -1370,8 +1373,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 query: getSsoLink,
                 variables: {
                     ssoDomain: split[1].trim(),
-                    redirectURI: redirect
-                }
+                    redirectURI: redirect,
+                },
             })
             .then(async (r: any) => {
                 if (r.data && r.data.user.getSsoLinkNative) {
@@ -1387,11 +1390,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                             setSsoCode(code);
                         }
-
                     }
                 }
             })
-            .catch(e => {
+            .catch((e) => {
                 console.log(e);
             });
     }, [email, isSsoEnabled]);
@@ -1405,8 +1407,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 query: login,
                 variables: {
                     email: email.toLowerCase(),
-                    password
-                }
+                    password,
+                },
             })
             .then(async (r: any) => {
                 if (r.data.user.login.user && r.data.user.login.token && !r.data.user.login.error) {
@@ -1417,26 +1419,24 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     }
 
                     if (u._id) {
-                        setUserId(u._id)
-                        setRole(u.role)
+                        setUserId(u._id);
+                        setRole(u.role);
                     }
 
                     const sU = JSON.stringify(u);
                     await AsyncStorage.setItem('jwt_token', token);
                     await AsyncStorage.setItem('user', sU);
 
-                    updateExpoNotificationId(u)
+                    updateExpoNotificationId(u);
                     setShowLoginWindow(false);
                     loadDataFromCloud();
                     setIsLoggingIn(false);
-
-                    
                 } else {
                     const { error } = r.data.user.login;
                     Alert(error);
                 }
             })
-            .catch(e => {
+            .catch((e) => {
                 console.log(e);
                 Alert('Something went wrong. Try again.');
                 setIsLoggingIn(false);
@@ -1445,18 +1445,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const timeToString = (time: any) => {
         const date = new Date(time);
-        return moment(date).format('YYYY-MM-DD')
+        return moment(date).format('YYYY-MM-DD');
     };
 
     function alertTimeDisplay(dbDate: string, twentyFourOffset: boolean) {
         let date = moment(dbDate);
 
-        if (!twentyFourOffset) { 
-            return 'Today at ' + date.format('h:mm a')
-        } else { 
-            return 'Tomorrow at ' + date.format('h:mm a')
-        } 
-
+        if (!twentyFourOffset) {
+            return 'Today at ' + date.format('h:mm a');
+        } else {
+            return 'Tomorrow at ' + date.format('h:mm a');
+        }
     }
 
     // imp
@@ -1475,10 +1474,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 .query({
                     query: findUserById,
                     variables: {
-                        id: user._id
-                    }
+                        id: user._id,
+                    },
                 })
-                .then(async res => {
+                .then(async (res) => {
                     const u = res.data.user.findById;
                     if (u) {
                         // await AsyncStorage.setItem('cueDraft', u.currentDraft);
@@ -1489,16 +1488,16 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         setLoadingUser(false);
                     }
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
             // Get user cues
             server
                 .query({
                     query: getCuesFromCloud,
                     variables: {
-                        userId: user._id
-                    }
+                        userId: user._id,
+                    },
                 })
-                .then(async res => {
+                .then(async (res) => {
                     if (res.data.cue.getCuesFromCloud) {
                         const allCues: any = {};
                         res.data.cue.getCuesFromCloud.map((cue: any) => {
@@ -1523,28 +1522,38 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             allCues['local'] = [];
                         }
                         const customC: any[] = [];
-                        Object.keys(custom).map(item => {
+                        Object.keys(custom).map((item) => {
                             customC.push(item);
                         });
                         customC.sort();
                         setCues(allCues);
                         setCustomCategories(customC);
+
+                        let cueCount = 0;
+                        let channelCount = Object.keys(allCues).length;
+
+                        Object.keys(allCues).map((cId: string) => {
+                            cueCount += allCues[cId].length;
+                        });
+
                         const stringCues = JSON.stringify(allCues);
+
+                        // Print size
                         await AsyncStorage.setItem('cues', stringCues);
                         // await notificationScheduler(allCues);
                         setLoadingCues(false);
                     }
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
             // Get subscription information
             server
                 .query({
                     query: getSubscriptions,
                     variables: {
-                        userId: user._id
-                    }
+                        userId: user._id,
+                    },
                 })
-                .then(async res => {
+                .then(async (res) => {
                     if (res.data.subscription.findByUserId) {
                         const sortedSubs = res.data.subscription.findByUserId.sort((a: any, b: any) => {
                             if (a.channelName < b.channelName) {
@@ -1561,16 +1570,16 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         setLoadingSubs(false);
                     }
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
             // Get org
             server
                 .query({
                     query: getOrganisation,
                     variables: {
-                        userId: user._id
-                    }
+                        userId: user._id,
+                    },
                 })
-                .then(async res => {
+                .then(async (res) => {
                     if (res.data && res.data.school.findByUserId) {
                         const stringOrg = JSON.stringify(res.data.school.findByUserId);
                         await AsyncStorage.setItem('school', stringOrg);
@@ -1579,7 +1588,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         setLoadingOrg(false);
                     }
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
         }
     }, []);
 
@@ -1597,7 +1606,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         const allCues: any[] = [];
 
         if (parsedCues !== {}) {
-            Object.keys(parsedCues).map(key => {
+            Object.keys(parsedCues).map((key) => {
                 parsedCues[key].map((cue: any) => {
                     const cueInput = {
                         ...cue,
@@ -1607,7 +1616,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         gradeWeight: cue.submission && cue.gradeWeight ? cue.gradeWeight.toString() : undefined,
                         endPlayAt: cue.endPlayAt && cue.endPlayAt !== '' ? new Date(cue.endPlayAt).toISOString() : '',
                         allowedAttempts:
-                            cue.allowedAttempts && cue.allowedAttempts !== null ? cue.allowedAttempts.toString() : null
+                            cue.allowedAttempts && cue.allowedAttempts !== null ? cue.allowedAttempts.toString() : null,
                     };
                     allCuesToSave.push({ ...cueInput });
                     // Deleting these because they should not be changed ...
@@ -1643,10 +1652,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 mutation: saveCuesToCloud,
                 variables: {
                     userId: parsedUser._id,
-                    cues: allCues
-                }
+                    cues: allCues,
+                },
             })
-            .then(async res => {
+            .then(async (res) => {
                 if (res.data.cue.saveCuesToCloud) {
                     const newIds: any = res.data.cue.saveCuesToCloud;
                     const updatedCuesArray: any[] = [];
@@ -1658,7 +1667,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         if (updatedItem) {
                             updatedCuesArray.push({
                                 ...c,
-                                _id: updatedItem.newId
+                                _id: updatedItem.newId,
                             });
                         } else {
                             updatedCuesArray.push(c);
@@ -1689,7 +1698,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                 setSaveDataInProgress(false);
             })
-            .catch(err => console.log(err));
+            .catch((err) => console.log(err));
     }, [cues]);
 
     const updateCuesHelper = useCallback(
@@ -1711,12 +1720,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const openModal = useCallback(
         async (type) => {
-
             if (option === 'Classroom' && selectedWorkspace !== '') {
-                await AsyncStorage.setItem('activeWorkspace', selectedWorkspace)
-                setSelectedWorkspace('')
+                await AsyncStorage.setItem('activeWorkspace', selectedWorkspace);
+                setSelectedWorkspace('');
             }
-
 
             setModalType(type);
             // AsyncStorage.setItem('lastopened', type);
@@ -1726,26 +1733,23 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const openCueFromCalendar = useCallback(
         async (channelId, _id, by) => {
-
             setShowHome(false);
 
             const fetchAsyncCues = await AsyncStorage.getItem('cues');
 
             if (!fetchAsyncCues) {
-                "Failed to open. Try again"
+                ('Failed to open. Try again');
                 return;
             }
 
             const storageCues = JSON.parse(fetchAsyncCues);
 
-
-
-            // Get the latest cues from async storage and not state (Error in quiz) 
+            // Get the latest cues from async storage and not state (Error in quiz)
             let cueKey = '';
             let cueIndex = 0;
 
             if (storageCues !== {}) {
-                Object.keys(storageCues).map(key => {
+                Object.keys(storageCues).map((key) => {
                     storageCues[key].map((cue: any, index: number) => {
                         if (cue._id === _id) {
                             cueKey = key;
@@ -1772,7 +1776,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             }
             setCreatedBy(by);
             setCueId(_id);
-
         },
         [subscriptions]
     );
@@ -1815,7 +1818,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     }
                 });
                 const customC: any[] = [];
-                Object.keys(custom).map(item => {
+                Object.keys(custom).map((item) => {
                     customC.push(item);
                 });
                 customC.sort();
@@ -1825,7 +1828,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             Animated.timing(fadeAnimation, {
                 toValue: 1,
                 duration: 150,
-                useNativeDriver: true
+                useNativeDriver: true,
             }).start();
         }
         if (u) {
@@ -1842,10 +1845,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             .mutate({
                 mutation: resetPassword,
                 variables: {
-                    email
-                }
+                    email,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 if (res.data && res.data.user.resetPassword) {
                     Alert(weHaveEmailedPasswordAlert);
                     setShowForgotPassword(false);
@@ -1865,10 +1868,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 .query({
                     query: getSubscriptions,
                     variables: {
-                        userId: parsedUser._id
-                    }
+                        userId: parsedUser._id,
+                    },
                 })
-                .then(async res => {
+                .then(async (res) => {
                     if (res.data.subscription.findByUserId) {
                         const sortedSubs = res.data.subscription.findByUserId.sort((a: any, b: any) => {
                             if (a.channelName < b.channelName) {
@@ -1884,7 +1887,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         await AsyncStorage.setItem('subscriptions', stringSub);
                     }
                 })
-                .catch(e => {
+                .catch((e) => {
                     alert('Could not refresh Subscriptions');
                 });
         }
@@ -1897,7 +1900,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             if (value) {
                 subCues = JSON.parse(value);
             }
-        } catch (e) { }
+        } catch (e) {}
         if (subCues[updateModalKey].length === 0) {
             return;
         }
@@ -1908,7 +1911,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
         const modified = {
             ...unmodified,
-            status: 'read'
+            status: 'read',
         };
 
         subCues[updateModalKey][updateModalIndex] = modified;
@@ -1918,47 +1921,45 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         reloadCueListAfterUpdate();
     }, [cues, updateModalKey, updateModalIndex]);
 
-    const closeModal = useCallback(async (submit?: boolean) => {
+    const closeModal = useCallback(
+        async (submit?: boolean) => {
+            setClosingModal(true);
 
-        setClosingModal(true);
+            // Check if active workspace
+            if (option === 'Classroom') {
+                const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
 
-        // Check if active workspace
-        if (option === 'Classroom') {
-
-            const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
-
-            if (activeWorkspace) {
-
-                setSelectedWorkspace(activeWorkspace)
+                if (activeWorkspace) {
+                    setSelectedWorkspace(activeWorkspace);
+                }
             }
-        }
 
-        const cueDraftHome = await AsyncStorage.getItem('cueDraft');
+            const cueDraftHome = await AsyncStorage.getItem('cueDraft');
 
-        await loadData();
+            await loadData();
 
-        setModalType('');
+            setModalType('');
 
-        // Mark as read
-        if (modalType === 'Update' && !submit) {
-            await markCueAsRead();
-        }
+            // Mark as read
+            if (modalType === 'Update' && !submit) {
+                await markCueAsRead();
+            }
 
-        setCueId('');
-        setShowHome(true);
-        setCreatedBy('');
+            setCueId('');
+            setShowHome(true);
+            setCreatedBy('');
 
-        if (modalType === 'Update') {
-            setChannelId('');
-        }
+            if (modalType === 'Update') {
+                setChannelId('');
+            }
 
-        setDisableCreateNavbar(false);
-        setCreateActiveTab('Content')
+            setDisableCreateNavbar(false);
+            setCreateActiveTab('Content');
 
-        setClosingModal(false);
-
-
-    }, [fadeAnimation, modalType, option]);
+            setClosingModal(false);
+        },
+        [fadeAnimation, modalType, option]
+    );
 
     /**
      * @description Helpter for icon to use in navbar
@@ -1970,7 +1971,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             case 'Classroom':
                 return option === op ? 'library' : 'library-outline';
             case 'Search':
-                return option === op ? 'search' : 'search-outline'
+                return option === op ? 'search' : 'search-outline';
             case 'Inbox':
                 return option === op ? 'chatbubble' : 'chatbubble-outline';
             default:
@@ -1985,7 +1986,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             case 'Classroom':
                 return option === op ? '#f2f2f2' : '#fff';
             case 'Search':
-                return option === op ? '#f2f2f2' : '#fff'
+                return option === op ? '#f2f2f2' : '#fff';
             case 'Inbox':
                 return option === op ? '#f2f2f2' : '#fff';
             default:
@@ -2000,7 +2001,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             case 'Discuss':
                 return workspaceActiveTab === op ? 'chatbubbles' : 'chatbubbles-outline';
             case 'Meet':
-                return workspaceActiveTab === op ? 'videocam' : 'videocam-outline'
+                return workspaceActiveTab === op ? 'videocam' : 'videocam-outline';
             case 'Scores':
                 return workspaceActiveTab === op ? 'bar-chart' : 'bar-chart-outline';
             default:
@@ -2009,13 +2010,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     };
 
     const getCreateNavbarIconName = (op: string) => {
+        console.log('Create navbar op', op);
         switch (op) {
             case 'Content':
                 return createActiveTab === op ? 'create' : 'create-outline';
             case 'Import':
                 return createActiveTab === op ? 'share' : 'share-outline';
             case 'Quiz':
-                return createActiveTab === op ? 'checkbox' : 'checkbox-outline'
+                return createActiveTab === op ? 'checkbox' : 'checkbox-outline';
             case 'Library':
                 return createActiveTab === op ? 'book' : 'book-outline';
             default:
@@ -2025,79 +2027,79 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const getNavbarIconColor = (op: string) => {
         if (op === option) {
-            return '#000'
+            return '#000';
         }
-        return '#797979'
-    }
+        return '#797979';
+    };
 
     const getWorkspaceNavbarIconColor = (op: string) => {
         if (op === workspaceActiveTab) {
-            return selectedWorkspace.split('-SPLIT-')[3]
+            return selectedWorkspace.split('-SPLIT-')[3];
         }
-        return '#797979'
-    }
+        return '#797979';
+    };
 
     const getCreateNavbarIconColor = (op: string) => {
         if (op === createActiveTab) {
-            return selectedWorkspace.split('-SPLIT-')[3]
+            return '#1f1f1f';
         }
-        return '#797979'
-    }
+        return '#797979';
+    };
 
     const getNavbarText = (op: string) => {
         switch (op) {
             case 'To Do':
-                return 'Agenda'
+                return 'Agenda';
             case 'Classroom':
-                return 'Workspace'
+                return 'Workspace';
             case 'Search':
-                return 'Search'
+                return 'Search';
             case 'Inbox':
-                return 'Inbox'
+                return 'Inbox';
             default:
                 return 'Account';
         }
-    }
+    };
 
     const getWorkspaceNavbarText = (op: string) => {
         switch (op) {
             case 'Content':
-                return 'Library'
+                return 'Library';
             case 'Discuss':
-                return 'Discussion'
+                return 'Discussion';
             case 'Meet':
-                return 'Meetings'
+                return 'Meetings';
             case 'Scores':
-                return 'Scores'
+                return 'Scores';
             default:
                 return 'Settings';
         }
-    }
+    };
 
     const getCreateNavbarText = (op: string) => {
         switch (op) {
             case 'Content':
-                return 'Content'
+                return 'Content';
             case 'Import':
-                return 'Import'
+                return 'Import';
             case 'Quiz':
-                return 'Quiz'
+                return 'Quiz';
             case 'Library':
-                return 'Books'
+                return 'Books';
             default:
                 return 'Settings';
         }
-    }
+    };
 
     const cuesArray: any[] = [];
 
     if (cues !== {}) {
-        Object.keys(cues).map(key => {
+        Object.keys(cues).map((key) => {
             cues[key].map((cue: any, index: number) => {
                 cuesArray.push({
                     ...cue,
                     key,
-                    index
+                    index,
                 });
             });
         });
@@ -2115,7 +2117,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     let dateFilteredCues: any[] = [];
     if (filterStart && filterEnd) {
-        dateFilteredCues = cuesArray.filter(item => {
+        dateFilteredCues = cuesArray.filter((item) => {
             const date = new Date(item.date);
             return date >= filterStart && date <= filterEnd;
         });
@@ -2123,7 +2125,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         dateFilteredCues = cuesArray;
     }
 
-    const [searchTerm, setSearchTerm] = useState('')
+    const [searchTerm, setSearchTerm] = useState('');
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
@@ -2287,7 +2289,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             position: 'absolute',
                             zIndex: 50,
                             overflow: 'hidden',
-                            backgroundColor: 'rgba(16,16,16, 0.7)'
+                            backgroundColor: 'rgba(16,16,16, 0.7)',
                         }}
                     >
                         <View
@@ -2302,7 +2304,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 height: '100%',
                                 borderRadius: 0,
                                 marginTop: 0,
-                                paddingHorizontal: 40
+                                paddingHorizontal: 40,
                             }}
                         >
                             <ScrollView
@@ -2311,7 +2313,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 contentContainerStyle={{
                                     height: '100%',
                                     paddingVertical: 40,
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                 }}
                                 nestedScrollEnabled={true}
                             >
@@ -2320,17 +2322,16 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         display: 'flex',
-                                        paddingBottom: 20
+                                        paddingBottom: 20,
                                     }}
                                 >
                                     <Image
                                         source={{
-                                            uri:
-                                                'https://cues-files.s3.amazonaws.com/logo/cues-logo-black-exclamation-hidden.jpg'
+                                            uri: 'https://cues-files.s3.amazonaws.com/logo/cues-logo-black-exclamation-hidden.jpg',
                                         }}
                                         style={{
                                             width: dimensions.window.height * 0.16 * 0.53456,
-                                            height: dimensions.window.height * 0.16 * 0.2
+                                            height: dimensions.window.height * 0.16 * 0.2,
                                         }}
                                         resizeMode={'contain'}
                                     />
@@ -2341,7 +2342,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         color: '#1F1F1F',
                                         fontFamily: 'overpass',
                                         paddingBottom: 20,
-                                        textAlign: 'center'
+                                        textAlign: 'center',
                                     }}
                                 >
                                     Get started for free.
@@ -2354,7 +2355,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         marginTop: 30,
                                         backgroundColor: 'white',
                                         justifyContent: 'center',
-                                        alignSelf: 'center'
+                                        alignSelf: 'center',
                                     }}
                                 >
                                     <Text style={{ color: '#000000', fontSize: 14, paddingBottom: 5, paddingTop: 10 }}>
@@ -2426,7 +2427,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             marginTop: 15,
                                             width: '100%',
                                             justifyContent: 'center',
-                                            flexDirection: 'row'
+                                            flexDirection: 'row',
                                         }}
                                     >
                                         <Text
@@ -2435,14 +2436,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 lineHeight: 34,
                                                 color: 'white',
                                                 fontSize: 12,
-                                                backgroundColor: '#006aff',
+                                                backgroundColor: '#007AFF',
                                                 paddingHorizontal: 20,
                                                 fontFamily: 'inter',
                                                 height: 35,
                                                 // width: 180,
                                                 width: 175,
                                                 borderRadius: 15,
-                                                textTransform: 'uppercase'
+                                                textTransform: 'uppercase',
                                             }}
                                         >
                                             Sign Up
@@ -2459,13 +2460,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             marginBottom: 30,
                                             width: '100%',
                                             justifyContent: 'center',
-                                            flexDirection: 'row'
+                                            flexDirection: 'row',
                                         }}
                                     >
                                         <Text
                                             style={{
                                                 fontSize: 14,
-                                                color: '#006AFF'
+                                                color: '#007AFF',
                                             }}
                                         >
                                             Back to Sign In
@@ -2486,7 +2487,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             backgroundColor: '#fff',
                             flexDirection: 'column',
                             justifyContent: 'center',
-                            zIndex: 50
+                            zIndex: 50,
                         }}
                     >
                         <View
@@ -2499,7 +2500,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 width: '100%',
                                 borderRadius: 0,
                                 marginTop: 0,
-                                paddingHorizontal: 40
+                                paddingHorizontal: 40,
                             }}
                         >
                             <ScrollView
@@ -2507,7 +2508,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 horizontal={false}
                                 contentContainerStyle={{
                                     paddingVertical: 40,
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
                                 }}
                                 nestedScrollEnabled={true}
                             >
@@ -2516,17 +2517,16 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         display: 'flex',
-                                        paddingBottom: 30
+                                        paddingBottom: 30,
                                     }}
                                 >
                                     <Image
                                         source={{
-                                            uri:
-                                                'https://cues-files.s3.amazonaws.com/logo/cues-logo-black-exclamation-hidden.jpg'
+                                            uri: 'https://cues-files.s3.amazonaws.com/logo/cues-logo-black-exclamation-hidden.jpg',
                                         }}
                                         style={{
                                             width: dimensions.window.height * 0.2 * 0.53456,
-                                            height: dimensions.window.height * 0.2 * 0.2
+                                            height: dimensions.window.height * 0.2 * 0.2,
                                         }}
                                         resizeMode={'contain'}
                                     />
@@ -2537,12 +2537,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         color: '#1F1F1F',
                                         fontFamily: 'overpass',
                                         paddingBottom: showForgotPassword ? 20 : 0,
-                                        textAlign: 'center'
+                                        textAlign: 'center',
                                     }}
                                 >
-                                    {showForgotPassword
-                                        ? PreferredLanguageText('temporaryPassword')
-                                        : ''}
+                                    {showForgotPassword ? PreferredLanguageText('temporaryPassword') : ''}
                                     {/* PreferredLanguageText('continueLeftOff')} */}
                                 </Text>
 
@@ -2552,7 +2550,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         width: '100%',
                                         backgroundColor: 'white',
                                         justifyContent: 'center',
-                                        alignSelf: 'center'
+                                        alignSelf: 'center',
                                     }}
                                 >
                                     <Text style={{ color: '#000000', fontSize: 14, paddingBottom: 5, paddingTop: 10 }}>
@@ -2573,10 +2571,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 style={{
                                                     flexDirection: 'row',
                                                     justifyContent: 'center',
-                                                    alignItems: 'center'
+                                                    alignItems: 'center',
                                                 }}
                                             >
-                                                <Ionicons name="lock-closed" size={18} color="#006AFF" />
+                                                <Ionicons name="lock-closed" size={18} color="#007AFF" />
                                                 <Text style={{ paddingLeft: 7, color: '#1f1f1f', paddingTop: 3 }}>
                                                     Single sign-on enabled
                                                 </Text>
@@ -2589,7 +2587,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 style={{
                                                     flexDirection: 'row',
                                                     justifyContent: 'space-between',
-                                                    alignItems: 'center'
+                                                    alignItems: 'center',
                                                 }}
                                             >
                                                 <Text style={{ color: '#000000', fontSize: 14, paddingBottom: 5 }}>
@@ -2603,13 +2601,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         style={{
                                                             backgroundColor: 'white',
                                                             flexDirection: 'row',
-                                                            justifyContent: 'center'
+                                                            justifyContent: 'center',
                                                         }}
                                                     >
                                                         <Text
                                                             style={{
                                                                 fontSize: 13,
-                                                                color: '#006AFF'
+                                                                color: '#007AFF',
                                                             }}
                                                         >
                                                             Forgot Password?
@@ -2635,7 +2633,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             justifyContent: 'center',
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            paddingBottom: 10
+                                            paddingBottom: 10,
                                         }}
                                     >
                                         <TouchableOpacity
@@ -2650,7 +2648,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 }
                                             }}
                                             style={{
-                                                backgroundColor: '#006aff',
+                                                backgroundColor: '#007AFF',
                                                 borderRadius: 15,
                                                 overflow: 'hidden',
                                                 height: 35,
@@ -2658,7 +2656,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 width: 175,
                                                 alignSelf: 'center',
                                                 justifyContent: 'center',
-                                                flexDirection: 'row'
+                                                flexDirection: 'row',
                                             }}
                                         >
                                             <Text
@@ -2667,14 +2665,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     lineHeight: 34,
                                                     color: 'white',
                                                     fontSize: 12,
-                                                    backgroundColor: '#006aff',
+                                                    backgroundColor: '#007AFF',
                                                     paddingHorizontal: 20,
                                                     fontFamily: 'inter',
                                                     height: 35,
                                                     // width: 180,
                                                     width: 175,
                                                     borderRadius: 15,
-                                                    textTransform: 'uppercase'
+                                                    textTransform: 'uppercase',
                                                 }}
                                             >
                                                 {showForgotPassword
@@ -2701,7 +2699,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 <Text
                                                     style={{
                                                         fontSize: 14,
-                                                        color: '#006AFF'
+                                                        color: '#007AFF'
                                                     }}>
                                                     Sign up now
                                                 </Text>
@@ -2754,13 +2752,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     marginBottom: 30,
                                                     width: '100%',
                                                     justifyContent: 'center',
-                                                    flexDirection: 'row'
+                                                    flexDirection: 'row',
                                                 }}
                                             >
                                                 <Text
                                                     style={{
                                                         fontSize: 14,
-                                                        color: '#006AFF'
+                                                        color: '#007AFF',
                                                     }}
                                                 >
                                                     Back to Sign In
@@ -2775,7 +2773,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         justifyContent: 'flex-start',
                                         paddingLeft: 5,
                                         paddingBottom: 5,
-                                        marginTop: 20
+                                        marginTop: 20,
                                     }}
                                 >
                                     {/* <LanguageSelect /> */}
@@ -2785,16 +2783,22 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </KeyboardAvoidingView>
                 ) : null}
                 {showHome &&
-                    !showWorkspaceFilterModal &&
-                    !loadingCues &&
-                    !loadingUser &&
-                    !loadingSubs &&
-                    !loadingOrg &&
-                    !saveDataInProgress &&
-                    !syncingCues &&
-                    ((option === 'Classroom' && modalType !== 'Create' && (workspaceActiveTab === 'Content' || (workspaceActiveTab === 'Discuss' && !showNewPost && !hideNavbarDiscussions) || (workspaceActiveTab === 'Meet' && selectedWorkspace.split('-SPLIT-')[2] === userId && !showNewMeeting))) ||
-                        (option === 'Inbox' && !showDirectory && !hideNewChatButton) ||
-                        (option === 'Channels' && !showCreate)) ? (
+                !showWorkspaceFilterModal &&
+                !loadingCues &&
+                !loadingUser &&
+                !loadingSubs &&
+                !loadingOrg &&
+                !saveDataInProgress &&
+                !syncingCues &&
+                ((option === 'Classroom' &&
+                    modalType !== 'Create' &&
+                    (workspaceActiveTab === 'Content' ||
+                        (workspaceActiveTab === 'Discuss' && !showNewPost && !hideNavbarDiscussions) ||
+                        (workspaceActiveTab === 'Meet' &&
+                            selectedWorkspace.split('-SPLIT-')[2] === userId &&
+                            !showNewMeeting))) ||
+                    (option === 'Inbox' && !showDirectory && !hideNewChatButton) ||
+                    (option === 'Channels' && !showCreate)) ? (
                     <TouchableOpacity
                         onPress={() => {
                             if (option === 'Classroom') {
@@ -2813,9 +2817,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 if (selectedWorkspace === '' || workspaceActiveTab === 'Content') {
                                     openModal('Create');
                                 } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Discuss') {
-                                    setShowNewPost(true)
+                                    setShowNewPost(true);
                                 } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Meet') {
-                                    setShowNewMeeting(true)
+                                    setShowNewMeeting(true);
                                 }
 
                                 // setShowHome(false)
@@ -2826,45 +2830,55 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 setShowDirectory(true);
                             }
                         }}
+                        key={orientation.toString()}
                         style={{
                             position: 'absolute',
-                            marginRight:
-                                Dimensions.get('window').width >= 1100
-                                    ? (Dimensions.get('window').width - 1100) / 2 - 25
-                                    : Dimensions.get('window').width >= 768
-                                    ? 30
-                                    : 24,
-                            marginBottom: Dimensions.get('window').width < 768 ? 77 : 90,
+                            marginRight: blueButtonMR(Dimensions.get('window').width, orientation, Platform.OS),
+                            marginBottom: blueButtonHomeMB(Dimensions.get('window').width, orientation, Platform.OS),
                             right: 0,
                             justifyContent: 'center',
                             bottom: 0,
-                            width: Dimensions.get('window').width > 350 ? 62 :  58,
-                            height: Dimensions.get('window').width > 350 ? 62 :  58,
+                            width: Dimensions.get('window').width > 350 ? 62 : 58,
+                            height: Dimensions.get('window').width > 350 ? 62 : 58,
                             borderRadius: Dimensions.get('window').width > 350 ? 32 : 29,
-                            backgroundColor: '#006aff',
+                            backgroundColor: '#007AFF',
                             borderColor: '#f2f2f2',
                             borderWidth: 0,
                             shadowColor: '#000',
                             shadowOffset: {
                                 width: 4,
-                                height: 4
+                                height: 4,
                             },
                             shadowOpacity: 0.12,
                             shadowRadius: 10,
                             zIndex: showLoginWindow ? 40 : 100,
-                            opacity: showWorkspaceFilterModal ? 0 : 1
+                            opacity: showWorkspaceFilterModal ? 0 : 1,
                         }}
                     >
                         <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
-                            {option === 'Classroom' && (selectedWorkspace === '' || workspaceActiveTab === 'Content') ? (
+                            {option === 'Classroom' &&
+                            (selectedWorkspace === '' || workspaceActiveTab === 'Content') ? (
                                 <Ionicons name="pencil-outline" size={Dimensions.get('window').width > 350 ? 26 : 25} />
-                            ) : option === 'Channels' || (option === 'Classroom' && selectedWorkspace !== '' && (workspaceActiveTab === 'Discuss' || workspaceActiveTab === 'Meet')) ? (
-                                <Ionicons name={workspaceActiveTab === 'Meet' ? "videocam-outline" : "add-outline"} size={workspaceActiveTab === 'Meet' ? 28 : Dimensions.get('window').width > 350 ? 36 : 35} />
+                            ) : option === 'Channels' ||
+                              (option === 'Classroom' &&
+                                  selectedWorkspace !== '' &&
+                                  (workspaceActiveTab === 'Discuss' || workspaceActiveTab === 'Meet')) ? (
+                                <Ionicons
+                                    name={workspaceActiveTab === 'Meet' ? 'videocam-outline' : 'add-outline'}
+                                    size={
+                                        workspaceActiveTab === 'Meet'
+                                            ? 28
+                                            : Dimensions.get('window').width > 350
+                                            ? 36
+                                            : 35
+                                    }
+                                />
                             ) : option === 'Inbox' ? (
-                                <Ionicons name="person-add-outline" size={Dimensions.get('window').width > 350 ? 22 : 21} />
-                            ) : (
-                                null
-                            )}
+                                <Ionicons
+                                    name="person-add-outline"
+                                    size={Dimensions.get('window').width > 350 ? 22 : 21}
+                                />
+                            ) : null}
                         </Text>
                     </TouchableOpacity>
                 ) : null}
@@ -2879,7 +2893,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             // overflow: 'scroll',
                             zIndex: 50,
                             backgroundColor: '#fff',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
                         }}
                     >
                         <View
@@ -2892,16 +2906,16 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 width: '100%',
                                 height: '100%',
                                 borderRadius: 0,
-                                marginTop: 0
+                                marginTop: 0,
                             }}
                         >
                             {loadingCues ||
-                                loadingUser ||
-                                loadingSubs ||
-                                loadingOrg ||
-                                saveDataInProgress ||
-                                closingModal ||
-                                syncingCues ? (
+                            loadingUser ||
+                            loadingSubs ||
+                            loadingOrg ||
+                            saveDataInProgress ||
+                            closingModal ||
+                            syncingCues ? (
                                 <View style={[styles(channelId).activityContainer, styles(channelId).horizontal]}>
                                     <ActivityIndicator color={'#1F1F1F'} />
                                 </View>
@@ -2978,6 +2992,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     openDiscussionFromActivity={(channelId: string) => {
                                         setOption('Classroom');
                                         setLoadDiscussionForChannelId(channelId);
+                                        setWorkspaceActiveTab('Discuss');
                                     }}
                                     openChannelFromActivity={(channelId: string) => {
                                         setOption('Classroom');
@@ -3025,18 +3040,18 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         setModalType('');
                                         // setPageNumber(0);
                                     }}
-                                    closeOnCreate={async () => {
-                                        setDisableCreateNavbar(false)
-                                        setCreateActiveTab('Content')
+                                    closeAfterCreatingMyNotes={async () => {
+                                        setDisableCreateNavbar(false);
+                                        setCreateActiveTab('Content');
                                         setModalType('');
                                         // setPageNumber(0);
                                         await loadData(true);
-                                        await loadData();
                                     }}
                                     unreadMessages={unreadMessages}
                                     refreshUnreadInbox={refreshUnreadInbox}
                                     hideNewChatButton={(hide: boolean) => setHideNewChatButton(hide)}
                                     activeWorkspaceTab={workspaceActiveTab}
+                                    setWorkspaceActiveTab={setWorkspaceActiveTab}
                                     hideNavbarDiscussions={hideNavbarDiscussions}
                                     setHideNavbarDiscussions={(hide: boolean) => setHideNavbarDiscussions(hide)}
                                     showNewPost={showNewPost}
@@ -3045,7 +3060,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     setShowNewMeeting={(show: boolean) => setShowNewMeeting(show)}
                                     refreshingWorkspace={refreshingWorkspace}
                                     onRefreshWorkspace={(subs: boolean) => handleRefreshWorkspace(subs)}
-                                    // 
                                     setShowImportCreate={(showImport: boolean) => setShowImportCreate(showImport)}
                                     showImportCreate={showImportCreate}
                                     setCreateActiveTab={(tab: any) => setCreateActiveTab(tab)}
@@ -3067,7 +3081,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         backgroundColor: 'white',
                         alignSelf: 'center',
                         borderTopLeftRadius: 0,
-                        borderTopRightRadius: 0
+                        borderTopRightRadius: 0,
                         // maxWidth: dimensions.window.width
                         // overflow: 'hidden'
                     }}
@@ -3075,7 +3089,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     {modalType === 'Update' ? (
                         <Update
                             version={version}
-                            key={cueId.toString()}
+                            key={cueId.toString() + updateModalIndex.toString() + updateModalKey.toString()}
                             customCategories={customCategories}
                             cue={cues[updateModalKey][updateModalIndex]}
                             cueIndex={updateModalIndex}
@@ -3090,185 +3104,197 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             target={target}
                             openCue={(cueId: string) => openCueFromCalendar(channelId, cueId, channelCreatedBy)}
                             refreshCues={loadNewChannelCues}
-                        // refreshAfterSubmittingQuiz={refreshAfterSubmittingQuiz}
+                            // refreshAfterSubmittingQuiz={refreshAfterSubmittingQuiz}
                         />
                     ) : null}
                 </View>
 
                 {/* Create navbar */}
-                {
-                    modalType === 'Create' && !disableCreateNavbar ? (
-                        <View
-                            style={{
-                                position: 'absolute',
-                                backgroundColor: '#fff',
-                                alignSelf: 'flex-end',
-                                width: '100%',
-                                paddingTop: 12,
-                                paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
-                                paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 0
-                                },
-                                bottom: 0,
-                                right: 0,
-                                shadowOpacity: 0.03,
-                                shadowRadius: 12,
-                                zIndex: showLoginWindow ? 40 : 100,
-                                elevation: showLoginWindow ? 40 : 100,
-                                borderTopColor: '#e8e8e8',
-                                borderTopWidth: 1,
-                            }}
-                        >
-
-                            {createOptions.map((op: any, ind: number) => {
-
-                                if (role !== 'instructor' && op === 'Quiz') {
-                                    return null
-                                }
-
-                                if (disableCreateNavbar) {
-                                    return null
-                                }
-
-                                return (
-                                    <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#fff',
-                                            width: role === 'instructor' ? '25%' : '33%',
-                                            flexDirection: width < 800 ? 'column' : 'row',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}
-                                        key={ind}
-                                        onPress={() => {
-                                            if (op === 'Import') {
-                                                setShowImportCreate(true)
-                                            } else {
-                                                setCreateActiveTab(op)
-                                            }
-                                        }}
-                                    >
-                                        <Ionicons
-                                            name={getCreateNavbarIconName(op)}
-                                            style={{ color: getCreateNavbarIconColor(op), marginBottom: 6 }}
-                                            size={23}
-                                        />
-                                        <Text style={{
-                                           fontSize: width < 800 ? 11 : 16,
-                                           lineHeight: width < 800 ? 11 : 23,
-                                           color: getCreateNavbarIconColor(op),
-                                           fontWeight: 'bold',
-                                           fontFamily: 'Inter',
-                                           marginBottom: width < 800 ? 0 : 6,
-                                           paddingLeft: width < 800 ? 0 : 5
-                                        }}>
-                                            {getCreateNavbarText(op)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    ) : null
-                }
-
-
-                {
-                    modalType !== 'Create' && option === 'Classroom' && selectedWorkspace !== '' && showHome && selectedWorkspace !== 'My Notes' && (workspaceActiveTab !== "Discuss" || !hideNavbarDiscussions) ? (
-                        <View
-                            style={{
-                                position: 'absolute',
-                                backgroundColor: '#fff',
-                                alignSelf: 'flex-end',
-                                width: '100%',
-                                paddingTop: 12,
-                                paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
-                                paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 0
-                                },
-                                bottom: 0,
-                                right: 0,
-                                shadowOpacity: 0.03,
-                                shadowRadius: 12,
-                                zIndex: showLoginWindow ? 40 : 100,
-                                elevation: showLoginWindow ? 40 : 100,
-                                borderTopColor: '#e8e8e8',
-                                borderTopWidth: 1,
-                            }}
-                            key={selectedWorkspace}
-                        >
-
-                            {workspaceOptions.map((op: any, ind: number) => {
-
-                                if (selectedWorkspace.split('-SPLIT-')[2] !== userId && op === 'Settings') {
-                                    return
-                                }
-
-                                return (
-                                    <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#fff',
-                                            width: selectedWorkspace.split('-SPLIT-')[2] === userId || selectedWorkspace === 'My Notes' ? '20%' : '25%',
-                                            flexDirection: width < 800 ? 'column' : 'row',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}
-                                        key={ind}
-                                        onPress={() => {
-                                            setWorkspaceActiveTab(op)
-                                        }}
-                                    >
-                                        <Ionicons
-                                            name={getWorkspaceNavbarIconName(op)}
-                                            style={{ color: getWorkspaceNavbarIconColor(op), marginBottom: 6 }}
-                                            size={23}
-                                        />
-                                        <Text style={{
-                                           fontSize: width < 800 ? 11 : 16,
-                                           lineHeight: width < 800 ? 11 : 23,
-                                           color: getWorkspaceNavbarIconColor(op),
-                                           fontWeight: 'bold',
-                                           fontFamily: 'Inter',
-                                           marginBottom: width < 800 ? 0 : 6,
-                                           paddingLeft: width < 800 ? 0 : 5
-                                        }}>
-                                            {getWorkspaceNavbarText(op)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    ) : null
-                }
-
-                {modalType !== 'Create' && showHome && !showLoginWindow && (option !== 'Classroom' || selectedWorkspace === "" || selectedWorkspace === 'My Notes') && (option !== 'Inbox' || !hideNewChatButton) ? (
+                {modalType === 'Create' && !disableCreateNavbar ? (
                     <View
                         style={{
                             position: 'absolute',
                             backgroundColor: '#fff',
                             alignSelf: 'flex-end',
                             width: '100%',
-                            paddingTop: 12,
-                            paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
+                            paddingTop: Platform.OS === 'ios' ? 12 : 8,
+                            paddingBottom:
+                                Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 15) : 20,
                             paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
                             flexDirection: 'row',
                             justifyContent: 'center',
-                            height: Platform.OS === 'android' ? 65 : Dimensions.get('window').width < 1024 ? 60 : 68,
+                            height: Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 68,
                             shadowColor: '#000',
                             shadowOffset: {
                                 width: 0,
-                                height: 0
+                                height: -10,
+                            },
+                            bottom: 0,
+                            right: 0,
+                            shadowOpacity: 0.03,
+                            shadowRadius: 12,
+                            zIndex: showLoginWindow ? 40 : 100,
+                            elevation: showLoginWindow ? 40 : 120,
+                            borderTopColor: '#e8e8e8',
+                            borderTopWidth: 1,
+                        }}
+                    >
+                        {createOptions.map((op: any, ind: number) => {
+                            if (role !== 'instructor' && op === 'Quiz') {
+                                return null;
+                            }
+
+                            if (disableCreateNavbar) {
+                                return null;
+                            }
+
+                            return (
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: '#fff',
+                                        width: role === 'instructor' ? '25%' : '33%',
+                                        flexDirection: width < 800 ? 'column' : 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}
+                                    key={ind.toString()}
+                                    onPress={() => {
+                                        if (op === 'Import') {
+                                            setShowImportCreate(true);
+                                        } else {
+                                            setCreateActiveTab(op);
+                                        }
+                                    }}
+                                >
+                                    <Ionicons
+                                        name={getCreateNavbarIconName(op)}
+                                        style={{ color: getCreateNavbarIconColor(op), marginBottom: 6 }}
+                                        size={23}
+                                    />
+                                    <Text
+                                        style={{
+                                            fontSize: width < 800 ? 11 : 16,
+                                            lineHeight: width < 800 ? 11 : 23,
+                                            color: getCreateNavbarIconColor(op),
+                                            fontWeight: 'bold',
+                                            fontFamily: 'Inter',
+                                            marginBottom: width < 800 ? 0 : 6,
+                                            paddingLeft: width < 800 ? 0 : 5,
+                                        }}
+                                    >
+                                        {getCreateNavbarText(op)}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                ) : null}
+
+                {modalType !== 'Create' &&
+                option === 'Classroom' &&
+                selectedWorkspace !== '' &&
+                showHome &&
+                selectedWorkspace !== 'My Notes' &&
+                (workspaceActiveTab !== 'Discuss' || !hideNavbarDiscussions) ? (
+                    <View
+                        style={{
+                            position: 'absolute',
+                            backgroundColor: '#fff',
+                            alignSelf: 'flex-end',
+                            width: '100%',
+                            paddingTop: Platform.OS === 'ios' ? 12 : 8,
+                            paddingBottom:
+                                Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 15) : 20,
+                            paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            height: Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 68,
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: -10,
+                            },
+                            bottom: 0,
+                            right: 0,
+                            shadowOpacity: 0.03,
+                            shadowRadius: 12,
+                            zIndex: showLoginWindow ? 40 : 100,
+                            elevation: showLoginWindow ? 40 : 120,
+                            borderTopColor: '#e8e8e8',
+                            borderTopWidth: 1,
+                        }}
+                        key={selectedWorkspace + orientation + workspaceActiveTab}
+                    >
+                        {workspaceOptions.map((op: any, ind: number) => {
+                            if (selectedWorkspace.split('-SPLIT-')[2] !== userId && op === 'Settings') {
+                                return;
+                            }
+
+                            return (
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: '#fff',
+                                        width:
+                                            selectedWorkspace.split('-SPLIT-')[2] === userId ||
+                                            selectedWorkspace === 'My Notes'
+                                                ? '20%'
+                                                : '25%',
+                                        flexDirection: width < 800 ? 'column' : 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}
+                                    key={ind}
+                                    onPress={() => {
+                                        setWorkspaceActiveTab(op);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name={getWorkspaceNavbarIconName(op)}
+                                        style={{ color: getWorkspaceNavbarIconColor(op), marginBottom: 6 }}
+                                        size={23}
+                                    />
+                                    <Text
+                                        style={{
+                                            fontSize: width < 800 ? 11 : 16,
+                                            lineHeight: width < 800 ? 11 : 23,
+                                            color: getWorkspaceNavbarIconColor(op),
+                                            fontWeight: 'bold',
+                                            fontFamily: 'Inter',
+                                            marginBottom: width < 800 ? 0 : 6,
+                                            paddingLeft: width < 800 ? 0 : 5,
+                                        }}
+                                    >
+                                        {getWorkspaceNavbarText(op)}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                ) : null}
+
+                {modalType !== 'Create' &&
+                showHome &&
+                !showLoginWindow &&
+                (option !== 'Classroom' || selectedWorkspace === '' || selectedWorkspace === 'My Notes') &&
+                (option !== 'Inbox' || !hideNewChatButton) ? (
+                    <View
+                        key={orientation + reloadBottomBarKey}
+                        style={{
+                            position: 'absolute',
+                            backgroundColor: '#fff',
+                            alignSelf: 'flex-end',
+                            width: '100%',
+                            paddingTop: Platform.OS === 'ios' ? 12 : 8,
+                            paddingBottom:
+                                Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 15) : 20,
+                            paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            height: Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 68,
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: -10,
                             },
                             bottom: 0,
                             right: 0,
@@ -3288,7 +3314,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         width: '20%',
                                         flexDirection: width < 800 ? 'column' : 'row',
                                         justifyContent: 'center',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
                                     }}
                                     key={ind}
                                     onPress={() => {
@@ -3318,15 +3344,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         style={{ color: getNavbarIconColor(op), marginBottom: 5 }}
                                         size={23}
                                     />
-                                    <Text style={{
-                                        fontSize: width < 800 ? 11 : 16,
-                                        lineHeight: width < 800 ? 11 : 23,
-                                        color: getNavbarIconColor(op),
-                                        fontWeight: 'bold',
-                                        fontFamily: 'Inter',
-                                        marginBottom: width < 800 ? 0 : 6,
-                                        paddingLeft: width < 800 ? 0 : 5
-                                    }}>
+                                    <Text
+                                        style={{
+                                            fontSize: width < 800 ? 11 : 16,
+                                            lineHeight: width < 800 ? 11 : 23,
+                                            color: getNavbarIconColor(op),
+                                            fontWeight: 'bold',
+                                            fontFamily: 'Inter',
+                                            marginBottom: width < 800 ? 0 : 6,
+                                            paddingLeft: width < 800 ? 0 : 5,
+                                        }}
+                                    >
                                         {getNavbarText(op)}
                                     </Text>
                                 </TouchableOpacity>
@@ -3335,7 +3363,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     </View>
                 ) : null}
             </View>
-        </SafeAreaView >
+        </SafeAreaView>
     );
 };
 
@@ -3347,7 +3375,7 @@ const styles = (channelId: string) =>
             // flex: 1,
             flexDirection: 'row',
             height: '100%',
-            width: '100%'
+            width: '100%',
         },
         all: {
             fontSize: 12,
@@ -3358,18 +3386,18 @@ const styles = (channelId: string) =>
             backgroundColor: '#000000',
             lineHeight: 25,
             fontFamily: 'overpass',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
         },
         allGrayFill: {
             fontSize: 12,
             color: '#fff',
             paddingHorizontal: 12,
             borderRadius: 12,
-            backgroundColor: '#006aff',
+            backgroundColor: '#007AFF',
             lineHeight: 25,
             height: 25,
             fontFamily: 'inter',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
         },
         activityContainer: {
             borderTopWidth: 0,
@@ -3380,11 +3408,11 @@ const styles = (channelId: string) =>
             height: '100%',
             width: '100%',
             justifyContent: 'center',
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
         },
         horizontal: {
             flexDirection: 'row',
-            justifyContent: 'space-around'
+            justifyContent: 'space-around',
         },
         input: {
             width: '100%',
@@ -3394,6 +3422,6 @@ const styles = (channelId: string) =>
             paddingTop: 13,
             paddingBottom: 13,
             marginTop: 5,
-            marginBottom: 20
-        }
+            marginBottom: 20,
+        },
     });

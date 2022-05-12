@@ -15,19 +15,20 @@ export const RadioButton = (props: RadioButtonProps) => {
                     width: 16,
                     borderRadius: 8,
                     borderWidth: 2,
-                    borderColor: '#006AFF',
+                    borderColor: '#007AFF',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
                 },
-                props.style
-            ]}>
+                props.style,
+            ]}
+        >
             {props.selected ? (
                 <View
                     style={{
                         height: 8,
                         width: 8,
                         borderRadius: 4,
-                        backgroundColor: '#006AFF'
+                        backgroundColor: '#007AFF',
                     }}
                 />
             ) : null}

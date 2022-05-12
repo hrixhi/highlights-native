@@ -3,6 +3,7 @@ import * as Permissions from 'expo-permissions';
 import * as MediaLibrary from 'expo-media-library';
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
+import { StorageAccessFramework } from 'expo-file-system';
 import Alert from '../components/Alert';
 
 
@@ -19,12 +20,44 @@ export async function downloadFileToDevice(url: string) {
 
             console.log("Download result", shareResult)
             return true
-        } else {
+        } else  {
             const perm = await MediaLibrary.requestPermissionsAsync(true);
 
             if (perm.status != 'granted') {
                 Alert("You need to grant permission to save media files")
                 return;
+            }
+
+
+            if (Platform.OS === 'android') {
+
+                const split = url.split('/')
+
+                const extension = split[split.length - 2]
+
+                if (extension === 'pdf') {
+                    const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+                    if (!permissions.granted) {
+                        return;
+                    }
+
+                    try {
+                        await StorageAccessFramework.createFileAsync(permissions.directoryUri, split[split.length - 1], 'application/pdf')
+                        .then((r) => {
+                            console.log(r);
+                            return true;
+                        })
+                        .catch((e) => {
+                            console.log(e);
+                            return false;
+
+                        });
+                    } catch(e) {
+                        console.log(e)
+                        return false
+                    }
+                }
+
             }
 
             try {
@@ -38,13 +71,14 @@ export async function downloadFileToDevice(url: string) {
                 Alert('Media saved under Albums > Learn with Cues')
                 return true
             } catch (e) {
+                console.log("Error downloading file", e);
                 Alert("Something went wrong. Try again")
                 return false
             }
         }
     })
     .catch(error => {
-        console.error(error);
+        console.log("Error downloading file", error);
         return false
     });
 

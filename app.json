@@ -2,11 +2,10 @@
   "expo": {
     "name": "Cues - learn",
     "slug": "cues",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "icon": "./assets/images/cues-app-logo.png",
     "scheme": "cues",
     "userInterfaceStyle": "automatic",
-    "orientation": "portrait",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -21,7 +20,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cues-technologies.learnwithcues",
-      "buildNumber": "1.3",
+      "buildNumber": "1.1",
       "usesIcloudStorage": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Allow access to camera for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
@@ -30,14 +29,14 @@
     },
     "android": {
       "useNextNotificationsApi": true,
-      "versionCode": 4,
+      "versionCode": 1,
       "softwareKeyboardLayoutMode": "pan",
+      "backgroundColor": "#ffffff",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/cues-app-logo.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.vora.cues",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.cuestechnologies.learnwithcues"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -49,7 +48,8 @@
         "jsx",
         "css"
       ],
-      "transformer": "node_modules/react-native-css-transformer/index.js"
+      "transformer": "node_modules/react-native-css-transformer/index.js",
+      "permissions": ["CAMERA", "WRITE_EXTERNAL_STORAGE", "RECORD_AUDIO"]
     },
     "plugins": [
       "sentry-expo",  [
@@ -57,7 +57,7 @@
         {
           "photosPermission": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
           "savePhotosPermission": "Allow access to save photos from coursework, notes, messages, discussion posts on your device.",
-          "isAccessMediaLocationEnabled": "false"
+          "isAccessMediaLocationEnabled": "true"
         }
       ],
       [

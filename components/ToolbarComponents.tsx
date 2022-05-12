@@ -208,7 +208,7 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
     const [insertDisabled, setInsertDisabled] = useState(true);
 
     async function isValidHttpUrl(string: string) {
-        const res = await Linking.canOpenURL(string)
+        const res = await Linking.canOpenURL(string);
         return res;
     }
 
@@ -225,22 +225,24 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
             style={{
                 paddingHorizontal: 20,
                 width: '100%',
-                marginTop: 10
+                marginTop: 10,
             }}
         >
             <View
                 style={{
-                    width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                    backgroundColor: '#fff'
+                    width: '100%',
+                    backgroundColor: '#fff',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                 }}
             >
-                <View style={{ width: '100%', maxWidth: 400 }}>
+                <View style={{ width: '100%', maxWidth: 600 }}>
                     <Text
                         style={{
-                            fontSize: 14,
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             fontFamily: 'Inter',
                             color: '#000000',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
                         }}
                     >
                         Title
@@ -248,47 +250,49 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
                     <TextInput
                         value={title}
                         placeholder={''}
-                        onChangeText={val => setTitle(val)}
+                        onChangeText={(val) => setTitle(val)}
                         placeholderTextColor={'#1F1F1F'}
                         required={true}
                     />
                 </View>
-            </View>
-            <View
-                style={{
-                    width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                    backgroundColor: '#fff',
-                    marginLeft: Dimensions.get('window').width < 768 ? 0 : 50
-                }}
-            >
-                <Text
+
+                <View
                     style={{
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        color: '#000000',
-                        fontWeight: 'bold'
+                        width: '100%',
+                        backgroundColor: '#fff',
+                        maxWidth: 600,
+                        // marginLeft: Dimensions.get('window').width < 768 ? 0 : 50
                     }}
                 >
-                    URL
-                </Text>
-                <TextInput
-                    value={link}
-                    placeholder="https://www.abc.com"
-                    onChangeText={val => setLink(val)}
-                    placeholderTextColor={'#a2a2ac'}
-                />
+                    <Text
+                        style={{
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'Inter',
+                            color: '#000000',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        URL
+                    </Text>
+                    <TextInput
+                        value={link}
+                        placeholder="https://www.abc.com"
+                        onChangeText={(val) => setLink(val)}
+                        placeholderTextColor={'#a2a2ac'}
+                    />
+                </View>
             </View>
 
             <TouchableOpacity
                 style={{
                     marginTop: 20,
-                    backgroundColor: '#006AFF',
+                    backgroundColor: '#007AFF',
                     borderRadius: 19,
                     width: 120,
-                    alignSelf: 'center'
+                    alignSelf: 'center',
                 }}
                 onPress={async () => {
-                    const valid = await isValidHttpUrl(link)
+                    const valid = await isValidHttpUrl(link);
                     if (valid) {
                         props.onInsertLink(title, link);
                     } else {
@@ -304,7 +308,7 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
                         fontFamily: 'inter',
                         height: 35,
                         lineHeight: 34,
-                        color: '#fff'
+                        color: '#fff',
                     }}
                 >
                     {' '}
@@ -326,13 +330,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: Math.min(Dimensions.get('window').width, 32 * 12),
         paddingHorizontal: 10,
-        zIndex: 10000
+        zIndex: 10000,
     },
     item: {
         // height: 25,
         // width: 25,
         fontSize: 20,
         paddingHorizontal: 3,
-        paddingVertical: 5
-    }
+        paddingVertical: 5,
+    },
 });

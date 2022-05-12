@@ -201,7 +201,13 @@ export const authWithProvider = gql`
         }
     }
 `;
-
+export const saveSubmissionDraft = gql`
+    mutation($userId: String!, $cueId: String!, $cue: String!) {
+        cue {
+            saveSubmissionDraft(userId: $userId, cueId: $cueId, cue: $cue) 
+        }
+    }
+`;
 export const saveCuesToCloud = gql`
     mutation($userId: String!, $cues: [CueInputObject!]!) {
         cue {
@@ -1050,6 +1056,7 @@ export const getEvents = gql`
                 zoomMeetingId
                 zoomStartUrl
                 zoomJoinUrl
+                zoomRegistrationJoinUrl
                 zoomMeetingScheduledBy
                 zoomMeetingCreatorProfile
                 meetingLink

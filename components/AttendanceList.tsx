@@ -29,7 +29,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     const [start, setStart] = useState<any>(null);
     const [attendanceTotalMap, setAttendanceTotalMap] = useState<any>({});
     const [exportAoa, setExportAoa] = useState<any[]>();
-    const [userId, setUserId] = useState('')
+    const [userId, setUserId] = useState('');
 
     // HOOKS
 
@@ -69,9 +69,9 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         // Calculate total for each student and add it to the end
         const studentTotalMap: any = {};
 
-        channelAttendances.forEach(att => {
+        channelAttendances.forEach((att) => {
             let count = 0;
-            pastMeetings.forEach(meeting => {
+            pastMeetings.forEach((meeting) => {
                 const attendanceObject = att.attendances.find((s: any) => {
                     return s.dateId.toString().trim() === meeting.dateId.toString().trim();
                 });
@@ -89,7 +89,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         // Add row 1 with past meetings and total
         let row1 = [''];
 
-        pastMeetings.forEach(meeting => {
+        pastMeetings.forEach((meeting) => {
             row1.push(moment(new Date(meeting.start)).format('MMMM Do, h:mm a'));
         });
 
@@ -97,12 +97,12 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 
         exportAoa.push(row1);
 
-        channelAttendances.forEach(att => {
+        channelAttendances.forEach((att) => {
             let userRow = [];
 
             userRow.push(att.fullName);
 
-            pastMeetings.forEach(meeting => {
+            pastMeetings.forEach((meeting) => {
                 const attendanceObject = att.attendances.find((s: any) => {
                     return s.dateId.toString().trim() === meeting.dateId.toString().trim();
                 });
@@ -127,7 +127,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     useEffect(() => {
         if (start && end) {
-            const filteredPastMeetings = fixedPastMeetings.filter(meeting => {
+            const filteredPastMeetings = fixedPastMeetings.filter((meeting) => {
                 return new Date(meeting.start) > start && new Date(meeting.end) < end;
             });
 
@@ -147,10 +147,10 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
             .query({
                 query: getAttendancesForChannel,
                 variables: {
-                    channelId: props.channelId
-                }
+                    channelId: props.channelId,
+                },
             })
-            .then(async res => {
+            .then(async (res) => {
                 if (res.data && res.data.attendance.getAttendancesForChannel) {
                     const u = await AsyncStorage.getItem('user');
                     if (u) {
@@ -185,10 +185,10 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
             .query({
                 query: getPastDates,
                 variables: {
-                    channelId: props.channelId
-                }
+                    channelId: props.channelId,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 if (res.data && res.data.attendance.getPastDates) {
                     setFixedPastMeetings(res.data.attendance.getPastDates);
                     setPastMeetings(res.data.attendance.getPastDates);
@@ -212,7 +212,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                 style: 'cancel',
                 onPress: () => {
                     return;
-                }
+                },
             },
             {
                 text: 'Yes',
@@ -225,16 +225,16 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 dateId,
                                 userId,
                                 channelId: props.channelId,
-                                markPresent
-                            }
+                                markPresent,
+                            },
                         })
-                        .then(res => {
+                        .then((res) => {
                             if (res.data && res.data.attendance.modifyAttendance) {
                                 loadChannelAttendances();
                             }
                         });
-                }
-            }
+                },
+            },
         ]);
     };
 
@@ -253,204 +253,36 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 
         const uri = FileSystem.cacheDirectory + 'attendance.xlsx';
         await FileSystem.writeAsStringAsync(uri, wbout, {
-            encoding: FileSystem.EncodingType.Base64
+            encoding: FileSystem.EncodingType.Base64,
         });
 
         await Sharing.shareAsync(uri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             dialogTitle: 'MyWater data',
-            UTI: 'com.microsoft.excel.xlsx'
+            UTI: 'com.microsoft.excel.xlsx',
         });
     };
 
-    console.log('Past meetings', pastMeetings);
-    console.log('Past attendances', channelAttendances);
-
     const renderViewerAttendanceList = () => {
-
         const studentCount = attendanceTotalMap[userId];
         const userAttendance = channelAttendances.find((att: any) => {
-            return att.userId === userId
+            return att.userId === userId;
         });
 
-        return <View
-            style={{
-                width: '100%',
-                backgroundColor: 'white',
-                paddingTop: 10,
-                // maxHeight: 450,
-                borderRadius: 1,
-                zIndex: 5000000
-            }}
-            key={JSON.stringify(channelAttendances)}>
-            <ScrollView
-                horizontal={false}
-                showsVerticalScrollIndicator={true}
-                nestedScrollEnabled={true}
-            >
-                {/* Row 1 with total */}
-                <View
-                    style={{
-                        minHeight: 70,
-                        flexDirection: 'row',
-                        overflow: 'hidden',
-                        paddingBottom: 10,
-                        borderBottomWidth: 1,
-                        borderBottomColor: '#f2f2f2',
-                        alignItems: 'center'
-                    }}
-                    key={'-'}
-                >
-                    <View style={{
-                        width: '50%',
-                        borderBottomColor: '#f2f2f2',
-                    }}>
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                color: '#000000',
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}
-                        >
-                            Total
-                        </Text>
-                    </View>
-                    <View style={{
-                        width: '50%',
-                        borderBottomColor: '#f2f2f2',
-                    }}>
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                color: '#000000',
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}
-                        >
-                            {studentCount} / {pastMeetings.length}
-                        </Text>
-                    </View>
-                </View>
-                {/* Render all channel attendances */}
-                {
-                    pastMeetings.map((meeting: any, col: number) => {
-                        
-                        const { start, end } = meeting;
-                        
-                        const attendanceObject = userAttendance.attendances.find((s: any) => {
-                            return s.dateId.toString().trim() === meeting.dateId.toString().trim();
-                        });
-
-                        return <View
-                            style={{
-                                minHeight: 70,
-                                flexDirection: 'row',
-                                overflow: 'hidden',
-                                // paddingBottom: 10,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2',
-                                alignItems: 'center',
-                                width: '100%',
-                            }}
-                            key={'-'}
-                        >
-                            <View style={{ width: '50%', alignContent: 'center', justifyContent: 'center' }}>
-                                <Text
-                                    style={{
-                                        textAlign: 'center',
-                                        fontSize: 12,
-                                        color: '#000000',
-                                        marginBottom: 5
-                                    }}
-                                >
-                                    {moment(new Date(start)).format('MMMM Do')}
-                                </Text>
-                                <Text
-                                    style={{
-                                        textAlign: 'center',
-                                        fontSize: 12,
-                                        color: '#000000',
-                                        marginBottom: 5
-                                    }}
-                                >
-                                    {moment(new Date(start)).format('h:mm')} -{' '}
-                                    {moment(new Date(end)).format('h:mm')}
-                                </Text>
-                            </View>
-                            <View style={{ width: '50%',  alignContent: 'center', justifyContent: 'center' }}>
-                                <View style={{}}>
-                                    <View
-                                        style={{
-                                            marginBottom: 5,
-                                            width: '100%',
-                                            flexDirection: 'row',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <Text>
-                                            {attendanceObject ? (
-                                                <Ionicons
-                                                    name="checkmark-outline"
-                                                    size={15}
-                                                    color={'#006AFF'}
-                                                />
-                                            ) : (
-                                                '-'
-                                            )}
-                                        </Text>
-                                    </View>
-                                    {attendanceObject ? (
-                                        <Text
-                                            style={{
-                                                textAlign: 'center',
-                                                fontSize: 12,
-                                                color: '#000000',
-                                                width: '100%'
-                                            }}
-                                        >
-                                            {attendanceObject.joinedAt
-                                                ? moment(new Date(attendanceObject.joinedAt)).format(
-                                                    'h:mm a'
-                                                )
-                                                : ''}
-                                        </Text>
-                                    ) : null}
-                                </View>
-                            </View>
-
-
-                        </View>
-                        
-                    })
-                }
-            </ScrollView>
-        </View>
-    }
-
-    const renderOwnerAttendanceList = () => {
-        return <View
-            style={{
-                width: '100%',
-                backgroundColor: 'white',
-                paddingTop: 10,
-                maxHeight: 450,
-                borderRadius: 1,
-                zIndex: 5000000
-            }}
-            key={JSON.stringify(channelAttendances)}
-        >
-            <ScrollView
-                showsHorizontalScrollIndicator={true}
-                horizontal={true}
-                contentContainerStyle={{
-                    // height: '100%',
+        return (
+            <View
+                style={{
+                    width: '100%',
+                    backgroundColor: 'white',
+                    paddingTop: 10,
                     // maxHeight: 450,
-                    flexDirection: 'column'
+                    borderRadius: 1,
+                    zIndex: 5000000,
                 }}
-                nestedScrollEnabled={true}
+                key={JSON.stringify(channelAttendances)}
             >
-                <View>
+                <ScrollView horizontal={false} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
+                    {/* Row 1 with total */}
                     <View
                         style={{
                             minHeight: 70,
@@ -458,43 +290,75 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             overflow: 'hidden',
                             paddingBottom: 10,
                             borderBottomWidth: 1,
-                            borderBottomColor: '#f2f2f2'
+                            borderBottomColor: '#f2f2f2',
+                            alignItems: 'center',
                         }}
                         key={'-'}
                     >
-                        {isOwner ? <View style={styles.col} key={'0,0'} /> : null}
-                        <View style={styles.col} key={'0,0'}>
+                        <View
+                            style={{
+                                width: '50%',
+                                borderBottomColor: '#f2f2f2',
+                            }}
+                        >
                             <Text
                                 style={{
                                     fontSize: 13,
                                     color: '#000000',
                                     fontFamily: 'inter',
-                                    textAlign: 'center'
+                                    textAlign: 'center',
                                 }}
                             >
                                 Total
                             </Text>
                         </View>
-                        {pastMeetings.map((meeting: any, col: number) => {
-                            const { title, start, end } = meeting;
-                            return (
-                                <View style={styles.col} key={col.toString()}>
-                                    <Text
-                                        style={{
-                                            textAlign: 'center',
-                                            fontSize: 13,
-                                            color: '#000000',
-                                            fontFamily: 'inter'
-                                        }}
-                                    >
-                                        {title}
-                                    </Text>
+                        <View
+                            style={{
+                                width: '50%',
+                                borderBottomColor: '#f2f2f2',
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    color: '#000000',
+                                    fontFamily: 'inter',
+                                    textAlign: 'center',
+                                }}
+                            >
+                                {studentCount} / {pastMeetings.length}
+                            </Text>
+                        </View>
+                    </View>
+                    {/* Render all channel attendances */}
+                    {pastMeetings.map((meeting: any, col: number) => {
+                        const { start, end } = meeting;
+
+                        const attendanceObject = userAttendance.attendances.find((s: any) => {
+                            return s.dateId.toString().trim() === meeting.dateId.toString().trim();
+                        });
+
+                        return (
+                            <View
+                                style={{
+                                    minHeight: 70,
+                                    flexDirection: 'row',
+                                    overflow: 'hidden',
+                                    // paddingBottom: 10,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: '#f2f2f2',
+                                    alignItems: 'center',
+                                    width: '100%',
+                                }}
+                                key={'-'}
+                            >
+                                <View style={{ width: '50%', alignContent: 'center', justifyContent: 'center' }}>
                                     <Text
                                         style={{
                                             textAlign: 'center',
                                             fontSize: 12,
                                             color: '#000000',
-                                            marginBottom: 5
+                                            marginBottom: 5,
                                         }}
                                     >
                                         {moment(new Date(start)).format('MMMM Do')}
@@ -504,141 +368,276 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                             textAlign: 'center',
                                             fontSize: 12,
                                             color: '#000000',
-                                            marginBottom: 5
+                                            marginBottom: 5,
                                         }}
                                     >
                                         {moment(new Date(start)).format('h:mm')} -{' '}
                                         {moment(new Date(end)).format('h:mm')}
                                     </Text>
                                 </View>
-                            );
-                        })}
-                    </View>
-                </View>
+                                <View style={{ width: '50%', alignContent: 'center', justifyContent: 'center' }}>
+                                    <View style={{}}>
+                                        <View
+                                            style={{
+                                                marginBottom: 5,
+                                                width: '100%',
+                                                flexDirection: 'row',
+                                                justifyContent: 'center',
+                                            }}
+                                        >
+                                            <Text>
+                                                {attendanceObject ? (
+                                                    <Ionicons name="checkmark-outline" size={15} color={'#007AFF'} />
+                                                ) : (
+                                                    '-'
+                                                )}
+                                            </Text>
+                                        </View>
+                                        {attendanceObject ? (
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 12,
+                                                    color: '#000000',
+                                                    width: '100%',
+                                                }}
+                                            >
+                                                {attendanceObject.joinedAt
+                                                    ? moment(new Date(attendanceObject.joinedAt)).format('h:mm a')
+                                                    : ''}
+                                            </Text>
+                                        ) : null}
+                                    </View>
+                                </View>
+                            </View>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+        );
+    };
+
+    const renderOwnerAttendanceList = () => {
+        return (
+            <View
+                style={{
+                    width: '100%',
+                    backgroundColor: 'white',
+                    paddingTop: 10,
+                    maxHeight: 450,
+                    borderRadius: 1,
+                    zIndex: 5000000,
+                }}
+                key={JSON.stringify(channelAttendances)}
+            >
                 <ScrollView
-                    showsVerticalScrollIndicator={true}
-                    horizontal={false}
-                    contentContainerStyle={
-                        {
-                            // height: '100%'
-                        }
-                    }
+                    showsHorizontalScrollIndicator={true}
+                    horizontal={true}
+                    contentContainerStyle={{
+                        // height: '100%',
+                        // maxHeight: 450,
+                        flexDirection: 'column',
+                    }}
                     nestedScrollEnabled={true}
                 >
-                    {channelAttendances.map((channelAttendance: any, row: number) => {
-                        const studentCount = attendanceTotalMap[channelAttendance.userId];
+                    <View>
+                        <View
+                            style={{
+                                minHeight: 70,
+                                flexDirection: 'row',
+                                overflow: 'hidden',
+                                paddingBottom: 10,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#f2f2f2',
+                            }}
+                            key={'-'}
+                        >
+                            {isOwner ? <View style={styles.col} key={'0,0'} /> : null}
+                            <View style={styles.col} key={'1,1'}>
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        color: '#000000',
+                                        fontFamily: 'inter',
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    Total
+                                </Text>
+                            </View>
+                            {pastMeetings.map((meeting: any, col: number) => {
+                                const { title, start, end } = meeting;
+                                return (
+                                    <View style={styles.col} key={col.toString()}>
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 13,
+                                                color: '#000000',
+                                                fontFamily: 'inter',
+                                            }}
+                                        >
+                                            {title}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 12,
+                                                color: '#000000',
+                                                marginBottom: 5,
+                                            }}
+                                        >
+                                            {moment(new Date(start)).format('MMMM Do')}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: 12,
+                                                color: '#000000',
+                                                marginBottom: 5,
+                                            }}
+                                        >
+                                            {moment(new Date(start)).format('h:mm')} -{' '}
+                                            {moment(new Date(end)).format('h:mm')}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+                    <ScrollView
+                        showsVerticalScrollIndicator={true}
+                        horizontal={false}
+                        contentContainerStyle={
+                            {
+                                // height: '100%'
+                            }
+                        }
+                        nestedScrollEnabled={true}
+                    >
+                        {channelAttendances.map((channelAttendance: any, row: number) => {
+                            const studentCount = attendanceTotalMap[channelAttendance.userId];
 
-                        return (
-                            <View style={styles.row} key={row}>
-                                {isOwner ? (
+                            return (
+                                <View style={styles.row} key={row}>
+                                    {isOwner ? (
+                                        <View style={styles.col}>
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontSize: 13,
+                                                    color: '#000000',
+                                                    fontFamily: 'inter',
+                                                }}
+                                            >
+                                                {channelAttendance.fullName}
+                                            </Text>
+                                        </View>
+                                    ) : null}
                                     <View style={styles.col}>
                                         <Text
                                             style={{
                                                 textAlign: 'center',
                                                 fontSize: 13,
                                                 color: '#000000',
-                                                fontFamily: 'inter'
+                                                fontFamily: 'inter',
                                             }}
                                         >
-                                            {channelAttendance.fullName}
+                                            {studentCount} / {pastMeetings.length}
                                         </Text>
                                     </View>
-                                ) : null}
-                                <View style={styles.col}>
-                                    <Text
-                                        style={{
-                                            textAlign: 'center',
-                                            fontSize: 13,
-                                            color: '#000000',
-                                            fontFamily: 'inter'
-                                        }}
-                                    >
-                                        {studentCount} / {pastMeetings.length}
-                                    </Text>
-                                </View>
-                                {pastMeetings.map((meeting: any, col: number) => {
-                                    const attendanceObject = channelAttendance.attendances.find((s: any) => {
-                                        return s.dateId.toString().trim() === meeting.dateId.toString().trim();
-                                    });
-                                    return (
-                                        <View style={styles.col} key={row.toString() + '-' + col.toString()}>
-                                            <TouchableOpacity
-                                                disabled={!isOwner}
-                                                onPress={() =>
-                                                    onChangeAttendance(
-                                                        meeting.dateId,
-                                                        channelAttendance.userId,
-                                                        attendanceObject ? false : true
-                                                    )
-                                                }
-                                                style={{
-                                                    marginBottom: 5,
-                                                    width: '100%',
-                                                    flexDirection: 'row',
-                                                    justifyContent: 'center'
-                                                }}
-                                            >
-                                                <Text>
-                                                    {attendanceObject ? (
-                                                        <Ionicons
-                                                            name="checkmark-outline"
-                                                            size={15}
-                                                            color={'#006AFF'}
-                                                        />
-                                                    ) : isOwner ? (
-                                                        <Ionicons
-                                                            name="checkmark-outline"
-                                                            size={15}
-                                                            color={'#e0e0e0'}
-                                                        />
-                                                    ) : (
-                                                        '-'
-                                                    )}
-                                                </Text>
-                                            </TouchableOpacity>
-                                            {attendanceObject ? (
-                                                <Text
+                                    {pastMeetings.map((meeting: any, col: number) => {
+                                        const attendanceObject = channelAttendance.attendances.find((s: any) => {
+                                            return s.dateId.toString().trim() === meeting.dateId.toString().trim();
+                                        });
+                                        return (
+                                            <View style={styles.col} key={row.toString() + '-' + col.toString()}>
+                                                <TouchableOpacity
+                                                    disabled={!isOwner}
+                                                    onPress={() =>
+                                                        onChangeAttendance(
+                                                            meeting.dateId,
+                                                            channelAttendance.userId,
+                                                            attendanceObject ? false : true
+                                                        )
+                                                    }
                                                     style={{
-                                                        textAlign: 'center',
-                                                        fontSize: 12,
-                                                        color: '#000000',
-                                                        width: '100%'
+                                                        marginBottom: 5,
+                                                        width: '100%',
+                                                        flexDirection: 'row',
+                                                        justifyContent: 'center',
                                                     }}
                                                 >
-                                                    {attendanceObject.joinedAt
-                                                        ? moment(new Date(attendanceObject.joinedAt)).format(
-                                                            'h:mm a'
-                                                        )
-                                                        : ''}
-                                                </Text>
-                                            ) : null}
-                                        </View>
-                                    );
-                                })}
-                            </View>
-                        );
-                    })}
+                                                    <Text>
+                                                        {attendanceObject ? (
+                                                            <Ionicons
+                                                                name="checkmark-outline"
+                                                                size={15}
+                                                                color={'#007AFF'}
+                                                            />
+                                                        ) : isOwner ? (
+                                                            <Ionicons
+                                                                name="checkmark-outline"
+                                                                size={15}
+                                                                color={'#e0e0e0'}
+                                                            />
+                                                        ) : (
+                                                            '-'
+                                                        )}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                                {attendanceObject ? (
+                                                    <Text
+                                                        style={{
+                                                            textAlign: 'center',
+                                                            fontSize: 12,
+                                                            color: '#000000',
+                                                            width: '100%',
+                                                        }}
+                                                    >
+                                                        {attendanceObject.joinedAt
+                                                            ? moment(new Date(attendanceObject.joinedAt)).format(
+                                                                  'h:mm a'
+                                                              )
+                                                            : ''}
+                                                    </Text>
+                                                ) : null}
+                                            </View>
+                                        );
+                                    })}
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
                 </ScrollView>
-            </ScrollView>
-        </View>
-    }
+            </View>
+        );
+    };
 
     // MAIN RETURN
     return (
         <View
             style={{
                 backgroundColor: '#fff',
-                width: '100%'
+                width: '100%',
             }}
         >
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',  paddingHorizontal: 10 }}>
+            <View
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#fff',
+                    paddingHorizontal: 10,
+                }}
+            >
                 {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
                     <Text
                         style={{
                             color: '#1f1f1f',
                             fontSize: 18,
                             fontFamily: 'inter',
-                            paddingLeft: 20
+                            paddingLeft: 20,
                         }}
                     >
                         Attendance
@@ -658,7 +657,11 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             exportAttendance();
                         }}
                     >
-                        <Ionicons name='download-outline' size={Dimensions.get('window').width < 800 ? 23 : 26} color="#006AFF" />
+                        <Ionicons
+                            name="download-outline"
+                            size={Dimensions.get('window').width < 800 ? 23 : 26}
+                            color="#007AFF"
+                        />
                     </TouchableOpacity>
                 )}
             </View>
@@ -668,7 +671,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     flexDirection: 'row',
                     paddingBottom: 20,
                     width: '100%',
-                    justifyContent: 'flex-end'
+                    justifyContent: 'flex-end',
                 }}
             >
                 {channelAttendances.length === 0 || fixedPastMeetings.length === 0 ? null : (
@@ -681,7 +684,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 backgroundColor: '#fff',
                                 alignItems: 'center',
                                 borderBottomColor: '#d9dcdf',
-                                borderBottomWidth: 1
+                                borderBottomWidth: 1,
                             }}
                         >
                             {/* <Datepicker
@@ -710,7 +713,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     </View>
                 )}
                 {/* <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#fff' }} /> */}
-                
             </View>
 
             {channelAttendances.length === 0 || pastMeetings.length === 0 || loadingAttendances || loadingMeetings ? (
@@ -725,7 +727,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                             backgroundColor: '#fff',
                             borderTopRightRadius: 0,
                             borderTopLeftRadius: 0,
-                            paddingVertical: 100
+                            paddingVertical: 100,
                         }}
                     >
                         {/* <ActivityIndicator color={'#1F1F1F'} /> */}
@@ -739,15 +741,21 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 fontSize: 18,
                                 paddingVertical: 10,
                                 paddingHorizontal: 20,
-                                fontFamily: 'inter'
+                                fontFamily: 'inter',
                             }}
                         >
-                            {pastMeetings.length === 0 ? (isOwner ? 'Past meetings and attendances will be displayed here.' : 'Past meetings & attendances will be displayed here.') : 'No Students.'}
+                            {pastMeetings.length === 0
+                                ? isOwner
+                                    ? 'Past meetings and attendances will be displayed here.'
+                                    : 'Past meetings & attendances will be displayed here.'
+                                : 'No Students.'}
                         </Text>
                     </View>
                 )
+            ) : isOwner ? (
+                renderOwnerAttendanceList()
             ) : (
-                (isOwner ? renderOwnerAttendanceList() : renderViewerAttendanceList())
+                renderViewerAttendanceList()
             )}
         </View>
     );
@@ -760,14 +768,14 @@ const styles = StyleSheet.create({
         minHeight: 70,
         flexDirection: 'row',
         overflow: 'hidden',
-        borderBottomColor: '#e0e0e0',
-        borderBottomWidth: 1
+        borderBottomColor: '#f2f2f2',
+        borderBottomWidth: 1,
     },
     col: {
         width: Dimensions.get('window').width < 768 ? 90 : 120,
         justifyContent: 'center',
         display: 'flex',
         flexDirection: 'column',
-        padding: 7
-    }
+        padding: 7,
+    },
 });

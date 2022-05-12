@@ -85,10 +85,11 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             <Text
                                 style={{
                                     fontSize: 9,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     marginLeft: 5,
-                                    textAlign: 'right'
-                                }}>
+                                    textAlign: 'right',
+                                }}
+                            >
                                 {props.cue.score}%
                             </Text>
                         ) : null}
@@ -99,8 +100,9 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             width: '100%',
                             flexDirection: 'row',
                             flex: 1,
-                            height: '70%'
-                        }}>
+                            height: '70%',
+                        }}
+                    >
                         <Text ellipsizeMode={'tail'} numberOfLines={1} style={styleObject.title}>
                             {title}
                         </Text>
@@ -111,7 +113,7 @@ const Card: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     height: 20,
                                     borderRadius: 12,
                                     overflow: 'hidden',
-                                    backgroundColor: '#006AFF',
+                                    backgroundColor: '#007AFF',
                                     textAlign: 'center',
                                     zIndex: 150,
                                     marginLeft: 5,
@@ -145,12 +147,12 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             flexDirection: 'row',
             shadowOffset: {
                 width: 2,
-                height: 2
+                height: 2,
             },
             overflow: 'hidden',
             shadowOpacity: 0.07,
             shadowRadius: 7,
-            zIndex: 500000
+            zIndex: 500000,
         },
         card: {
             height: '100%',
@@ -158,7 +160,7 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             width: '100%',
             padding: 7,
             paddingHorizontal: 10,
-            backgroundColor: '#fff'
+            backgroundColor: '#fff',
         },
         flipCard: {
             height: '100%',
@@ -166,20 +168,20 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             borderRadius: 1,
             padding: 13,
             color: '#fff',
-            backgroundColor: colorScheme === 'light' ? '#000000' : 'white'
+            backgroundColor: colorScheme === 'light' ? '#000000' : 'white',
         },
         descriptionFlip: {
             color: '#fff',
-            fontSize: 13
+            fontSize: 13,
         },
         text: {
             height: '100%',
-            backgroundColor: '#fff'
+            backgroundColor: '#fff',
         },
         flipText: {
             height: '100%',
             color: '#fff',
-            backgroundColor: colorScheme === 'light' ? '#000000' : 'white'
+            backgroundColor: colorScheme === 'light' ? '#000000' : 'white',
         },
         dateContainer: {
             fontSize: 10,
@@ -188,7 +190,7 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             backgroundColor: '#fff',
             display: 'flex',
             flexDirection: 'row',
-            alignItems: 'center'
+            alignItems: 'center',
         },
         flipDateContainer: {
             fontSize: 10,
@@ -196,13 +198,13 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             display: 'flex',
             flexDirection: 'row',
             color: '#fff',
-            backgroundColor: colorScheme === 'light' ? '#000000' : 'white'
+            backgroundColor: colorScheme === 'light' ? '#000000' : 'white',
         },
         date: {
             fontSize: 9,
             color: colorScheme === 'light' ? '#fff' : '#1F1F1F',
             marginLeft: 10,
-            lineHeight: 10
+            lineHeight: 10,
         },
         date2: {
             fontSize: 10,
@@ -210,7 +212,7 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             lineHeight: 12,
             textAlign: 'left',
             paddingVertical: 2,
-            flex: 1
+            flex: 1,
         },
         title: {
             fontFamily: 'inter',
@@ -218,7 +220,7 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             lineHeight: 20,
             flex: 1,
             marginTop: 5,
-            color: '#000000'
+            color: '#000000',
         },
         titleFlip: {
             color: colorScheme === 'light' ? '#fff' : '#000000',
@@ -228,10 +230,10 @@ const styles: any = (colorScheme: any, channelId: any, col: any) =>
             // ,
             height: '75%',
             width: '100%',
-            paddingTop: 5
+            paddingTop: 5,
         },
         description: {
             fontSize: 13,
-            color: colorScheme === 'light' ? '#fff' : '#333333'
-        }
+            color: colorScheme === 'light' ? '#fff' : '#333333',
+        },
     });

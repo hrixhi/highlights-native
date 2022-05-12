@@ -3,7 +3,7 @@ import React from 'react';
 import { StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash';
-import moment from 'moment'
+import moment from 'moment';
 import Alert from './Alert';
 
 // COMPONENTS
@@ -16,7 +16,7 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
     /**
      * @description Formats time in email format
      */
-     function emailTimeDisplay(dbDate: string) {
+    function emailTimeDisplay(dbDate: string) {
         let date = moment(dbDate);
         var currentDate = moment();
         if (currentDate.isSame(date, 'day')) return date.format('h:mm a');
@@ -26,122 +26,117 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
 
     return (
         // <View style={styleObject.swiper}>
-            <TouchableOpacity
-                key={'textPage'}
-                onPress={() => {
-                    props.onPress();
-                }}
-                style={styleObject.swiper}
-            >
-                <View style={styleObject.text}>
-                    <View style={styleObject.dateContainer}>
-                        {
-                            props.option === 'Content' || props.option === 'Discussion' ?
-                            <View 
-                                style={{
-                                    backgroundColor: props.colorCode || 'black',
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: 12,
-                                    marginRight: 7
-                                }}
-                            />
-                            : null
-                        }
-                        {props.channelName !== '' && props.option !== 'Courses' ? (
-                            <Text style={styleObject.date}>{props.channelName}</Text>
-                        ) : 
-                            props.option === 'Messages' ?
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                {
-                                    props.messageSenderAvatar ? 
-                                    <Image source={{
-                                        uri: props.messageSenderAvatar
-                                    }} style={{
+        <TouchableOpacity
+            key={'textPage'}
+            onPress={() => {
+                props.onPress();
+            }}
+            style={styleObject.swiper}
+        >
+            <View style={styleObject.text}>
+                <View style={styleObject.dateContainer}>
+                    {props.option === 'Content' || props.option === 'Discussion' ? (
+                        <View
+                            style={{
+                                backgroundColor: props.colorCode || 'black',
+                                width: 8,
+                                height: 8,
+                                borderRadius: 12,
+                                marginRight: 7,
+                            }}
+                        />
+                    ) : null}
+                    {props.channelName !== '' && props.option !== 'Courses' ? (
+                        <Text style={styleObject.date}>{props.channelName}</Text>
+                    ) : props.option === 'Messages' ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            {props.messageSenderAvatar ? (
+                                <Image
+                                    source={{
+                                        uri: props.messageSenderAvatar,
+                                    }}
+                                    style={{
                                         width: 26,
                                         height: 26,
                                         borderRadius: 24,
-                                        marginRight: 10
-                                    }} 
-                                    // resizeMode="contain" 
-                                    /> : null
-                                }
-                                 <Text style={styleObject.date}>{props.messageSenderName}</Text>
-                            </View>
-                        : (
-                            <Text style={styleObject.date}> </Text>
-                        )}
-                    </View>
-                    <View
-                        style={{
-                            backgroundColor: '#fff',
-                            width: '100%',
-                            flexDirection: 'row',
-                            flex: 1,
-                            // height: '70%',
-                        }}
-                    >
-                        <View style={{ flex: 1, flexDirection: 'row' }}>
-                            <Text
-                                ellipsizeMode={'tail'}
-                                numberOfLines={1}
-                                style={{
-                                    fontFamily: 'inter',
-                                    fontSize: 15,
-                                    lineHeight: 20,
-                                    flex: 1,
-                                    marginTop: props.option === 'Messages' ? 6 : 10,
-                                    color: '#000000',
-                                }}
-                            >
-                                {props.title}
-                            </Text>
-                            {
-                                props.option === 'Content' || props.option === 'Messages' || props.option === 'Discussion' ?
-                                <Text
-                                    style={{
-                                        fontSize: 12,
-                                        padding: 5,
-                                        lineHeight: 13,
-                                        fontWeight: 'bold'
+                                        marginRight: 10,
                                     }}
-                                    ellipsizeMode="tail"
-                                >
-                                    {emailTimeDisplay(props.createdAt)}
-                                </Text>
-                                : null
-                            }
-                            {props.option === 'Courses' && !props.subscribed ? (
-                                <View style={{ paddingLeft: 10, paddingRight: 10 }}>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            Alert('Subscribe to ' + props.channelName + '?', '', [
-                                                {
-                                                    text: 'Cancel',
-                                                    style: 'cancel',
-                                                    onPress: () => {
-                                                        return;
-                                                    }
-                                                },
-                                                {
-                                                    text: 'Yes',
-                                                    onPress: () => props.handleSub()
-                                                }
-                                            ]);
-                                        }}
-                                        style={{ marginTop: 1 }}
-                                    >
-
-                                        <Text style={{}}>
-                                            <Ionicons name="enter-outline" size={24} color="#006AFF" />
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
+                                    // resizeMode="contain"
+                                />
                             ) : null}
+                            <Text style={styleObject.date}>{props.messageSenderName}</Text>
                         </View>
+                    ) : (
+                        <Text style={styleObject.date}> </Text>
+                    )}
+                </View>
+                <View
+                    style={{
+                        backgroundColor: '#fff',
+                        width: '100%',
+                        flexDirection: 'row',
+                        flex: 1,
+                        // height: '70%',
+                    }}
+                >
+                    <View style={{ flex: 1, flexDirection: 'row' }}>
+                        <Text
+                            ellipsizeMode={'tail'}
+                            numberOfLines={1}
+                            style={{
+                                fontFamily: 'inter',
+                                fontSize: 15,
+                                lineHeight: 20,
+                                flex: 1,
+                                marginTop: props.option === 'Messages' ? 6 : 10,
+                                color: '#000000',
+                            }}
+                        >
+                            {props.title}
+                        </Text>
+                        {props.option === 'Content' || props.option === 'Messages' || props.option === 'Discussion' ? (
+                            <Text
+                                style={{
+                                    fontSize: 12,
+                                    padding: 5,
+                                    lineHeight: 13,
+                                    fontWeight: 'bold',
+                                }}
+                                ellipsizeMode="tail"
+                            >
+                                {emailTimeDisplay(props.createdAt)}
+                            </Text>
+                        ) : null}
+                        {props.option === 'Courses' && !props.subscribed ? (
+                            <View style={{ paddingLeft: 10, paddingRight: 10 }}>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        Alert('Subscribe to ' + props.channelName + '?', '', [
+                                            {
+                                                text: 'Cancel',
+                                                style: 'cancel',
+                                                onPress: () => {
+                                                    return;
+                                                },
+                                            },
+                                            {
+                                                text: 'Yes',
+                                                onPress: () => props.handleSub(),
+                                            },
+                                        ]);
+                                    }}
+                                    style={{ marginTop: 1 }}
+                                >
+                                    <Text style={{}}>
+                                        <Ionicons name="enter-outline" size={24} color="#007AFF" />
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : null}
                     </View>
                 </View>
-            </TouchableOpacity>
+            </View>
+        </TouchableOpacity>
         // </View>
     );
 };
@@ -168,7 +163,7 @@ const styles: any = (colorScheme: any, col: any, option: any) =>
             borderBottomColor: '#efefef',
             borderBottomWidth: 1,
             paddingLeft: 7,
-            paddingVertical: option === 'Messages' ? 2 : 5
+            paddingVertical: option === 'Messages' ? 2 : 5,
         },
         // card: {
         //     height: '100%',
@@ -208,6 +203,6 @@ const styles: any = (colorScheme: any, col: any, option: any) =>
             lineHeight: 20,
             flex: 1,
             marginTop: 5,
-            color: '#000000'
-        }
+            color: '#000000',
+        },
     });

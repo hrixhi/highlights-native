@@ -8,7 +8,7 @@ import {
     Platform,
     Linking,
     Keyboard,
-    TextInput
+    TextInput,
 } from 'react-native';
 
 import { ScrollView } from 'react-native-gesture-handler';
@@ -23,7 +23,7 @@ import {
     deleteThread,
     getThreadWithReplies,
     markThreadsAsRead,
-    getThreadCategories
+    getThreadCategories,
 } from '../graphql/QueriesAndMutations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { Collapse } from 'react-collapse';
@@ -36,16 +36,18 @@ import moment from 'moment';
 //     MenuTrigger,
 // } from 'react-native-popup-menu';
 import { htmlStringParser } from '../helpers/HTMLParser';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import FileUpload from './UploadFiles';
 import { Video } from 'expo-av';
 import NewPostModal from './NewPostModal';
 import DropDownPicker from 'react-native-dropdown-picker';
 import BottomSheet from './BottomSheet';
 import { handleImageUpload } from '../helpers/ImageUpload';
-import { handleFile } from '../helpers/FileUpload'
+import { handleFile } from '../helpers/FileUpload';
 import Reanimated from 'react-native-reanimated';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
+import { useOrientation } from '../hooks/useOrientation';
+import { discussionThreadsHeight, selectedThreadHeight } from '../helpers/ComponentHeights';
 
 const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     // State
@@ -78,6 +80,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     const [importFileName, setImportFileName] = useState('');
     const [importUrl, setImportUrl] = useState('');
 
+    const orientation = useOrientation();
+
     const audioRef: any = useRef();
     const videoRef: any = useRef();
 
@@ -90,80 +94,79 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
     const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
         inputRange: [0, 1],
-        outputRange: [0.5, 0]
+        outputRange: [0.5, 0],
     });
-
 
     useEffect(() => {
         const channelCategories: any[] = [];
-        threads.map(item => {
+        threads.map((item) => {
             if (item.category !== '' && !categoryObject[item.category]) {
                 categoryObject[item.category] = 'category';
             }
         });
-        Object.keys(categoryObject).map(key => {
+        Object.keys(categoryObject).map((key) => {
             channelCategories.push(key);
         });
 
         const options = [
             {
                 value: 'None',
-                label: 'None'
-            }
+                label: 'None',
+            },
         ];
         channelCategories.map((category: any) => {
             options.push({
                 value: category,
-                label: category
+                label: category,
             });
         });
 
         props.setNewPostCategories(options);
     }, [threads]);
 
-    threads.map(item => {
+    threads.map((item) => {
         if (item.category !== '' && !categoryObject[item.category]) {
             categoryObject[item.category] = 'category';
         }
     });
-    Object.keys(categoryObject).map(key => {
+    Object.keys(categoryObject).map((key) => {
         categories.push(key);
     });
     if (filterChoice === 'All') {
         filteredThreads = threads;
     } else {
-        filteredThreads = threads.filter(item => {
+        filteredThreads = threads.filter((item) => {
             return item.category === filterChoice;
         });
     }
     let categoriesOptions = [
         {
             value: 'None',
-            label: 'None'
-        }
+            label: 'None',
+        },
     ];
     categories.map((category: any) => {
         categoriesOptions.push({
             value: category,
-            label: category
+            label: category,
         });
     });
     let categoryChoices = [
         {
             value: 'All',
-            label: 'All'
-        }
+            label: 'All',
+        },
     ];
     categories.map((cat: any) => {
         categoryChoices.push({
             value: cat,
-            label: cat
+            label: cat,
         });
     });
 
     // HOOKS
 
-    useEffect(() => { }, []);
+    useEffect(() => {}, []);
 
     /**
      * @description Load categories on init
@@ -209,31 +212,27 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         })();
     }, [threads]);
 
-
-
     /**
-     * 
+     *
      */
     const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
-
             const url = await handleImageUpload(takePhoto, userId);
 
             if (!url) {
-                setImportType('')
-                return
+                setImportType('');
+                return;
             }
 
-            setImportUrl(url)
-            setImportType('image')
-            setImportTitle('Image')
-
+            setImportUrl(url);
+            setImportType('image');
+            setImportTitle('Image');
         },
         [userId]
     );
 
     /**
-     * 
+     *
      */
     const uploadFileHandler = useCallback(
         async (audioVideo) => {
@@ -243,17 +242,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 return;
             }
 
-            setImportType(audioVideo ? 'mp4' : res.type)
-            setImportTitle(audioVideo ? 'Video' : res.name)
-            setImportFileName(res.name)
-            setImportUrl(res.url)
-
+            setImportType(audioVideo ? 'mp4' : res.type);
+            setImportTitle(audioVideo ? 'Video' : res.name);
+            setImportFileName(res.name);
+            setImportUrl(res.url);
         },
         [userId]
     );
 
     const sendImport = useCallback(() => {
-
         if (importType === 'image') {
             let img: any = importUrl;
             let text: any = '';
@@ -271,8 +268,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     audio,
                     video,
                     file,
-                    msgObject: JSON.stringify(obj)
-                }
+                    msgObject: JSON.stringify(obj),
+                },
             ]);
         } else if (importType === 'mp4') {
             let text: any = '';
@@ -293,10 +290,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     audio,
                     video,
                     file,
-                    msgObject: JSON.stringify(obj)
-                }
+                    msgObject: JSON.stringify(obj),
+                },
             ]);
-
         } else {
             let text: any = '';
             let img: any = '';
@@ -308,21 +304,17 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             text = (
                 <TouchableOpacity
                     onPress={() => {
-                        if (
-                            Platform.OS === 'web' ||
-                            Platform.OS === 'macos' ||
-                            Platform.OS === 'windows'
-                        ) {
+                        if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
                             window.open(importUrl, '_blank');
                         } else {
                             Linking.openURL(importUrl);
                         }
                     }}
                     style={{
-                        // backgroundColor: '#006AFF',
+                        // backgroundColor: '#007AFF',
                         borderRadius: 15,
                         marginLeft: 15,
-                        marginTop: 6
+                        marginTop: 6,
                     }}
                 >
                     <Text
@@ -332,12 +324,12 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             color: 'white',
                             fontSize: 12,
                             borderWidth: 1,
-                            // borderColor: '#006AFF',
+                            // borderColor: '#007AFF',
                             paddingHorizontal: 20,
                             fontFamily: 'inter',
                             height: 35,
                             borderRadius: 15,
-                            textTransform: 'uppercase'
+                            textTransform: 'uppercase',
                         }}
                     >
                         {importTitle}
@@ -356,17 +348,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     audio,
                     video,
                     file,
-                    msgObject: JSON.stringify(obj)
-                }
+                    msgObject: JSON.stringify(obj),
+                },
             ]);
-
         }
 
-        setImportType('')
-        setImportUrl('')
+        setImportType('');
+        setImportUrl('');
         setUploadFileVisible(false);
-
-    }, [importTitle, importUrl, importType])
+    }, [importTitle, importUrl, importType]);
 
     /**
      * @description Fetches all the categories for that Channel
@@ -380,15 +370,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             .query({
                 query: getThreadCategories,
                 variables: {
-                    channelId: props.channelId
-                }
+                    channelId: props.channelId,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 if (res.data.thread && res.data.thread.getChannelThreadCategories) {
                     setThreadCategories(res.data.thread.getChannelThreadCategories);
                 }
             })
-            .catch(err => { });
+            .catch((err) => {});
     }, [props.channelId]);
 
     /**
@@ -396,7 +386,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      */
     const createNewThread = useCallback(
         async (message: any, category: any, isPrivate: any) => {
-
             const server = fetchAPI('');
             server
                 .mutate({
@@ -409,10 +398,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         anonymous: false,
                         cueId: props.cueId === null ? 'NULL' : props.cueId,
                         parentId: 'INIT',
-                        category: category === 'None' ? '' : category
-                    }
+                        category: category === 'None' ? '' : category,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.thread.writeMessage) {
                         setShowPost(false);
                         props.reload();
@@ -420,7 +409,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         Alert(checkConnectionAlert);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.log('Error', err);
                     Alert(somethingWentWrongAlert, checkConnectionAlert);
                 });
@@ -449,8 +438,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             messages[0] = {
                 ...messages[0],
                 user: {
-                    _id: userId
-                }
+                    _id: userId,
+                },
             };
 
             const server = fetchAPI('');
@@ -465,18 +454,18 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         anonymous: false,
                         cueId: props.cueId === null ? 'NULL' : props.cueId,
                         parentId: threadId === '' ? 'INIT' : threadId,
-                        category: ''
-                    }
+                        category: '',
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.thread.writeMessage) {
-                        setThreadChat(threadChat => GiftedChat.append(threadChat, messages));
+                        setThreadChat((threadChat) => GiftedChat.append(threadChat, messages));
                         // props.reload()
                     } else {
                         Alert(checkConnectionAlert);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.log('Error', err);
                     Alert(somethingWentWrongAlert, checkConnectionAlert);
                 });
@@ -487,7 +476,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     /**
      * @description Load the entire the Thread using the thread ID
      */
-    const loadCueDiscussions = useCallback(async tId => {
+    const loadCueDiscussions = useCallback(async (tId) => {
         const u = await AsyncStorage.getItem('user');
         if (u) {
             const user = JSON.parse(u);
@@ -500,13 +489,13 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 .query({
                     query: getThreadWithReplies,
                     variables: {
-                        threadId: tId
-                    }
+                        threadId: tId,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     setThreadWithReplies(res.data.thread.getThreadWithReplies);
                     const tempChat: any[] = [];
-                    res.data.thread.getThreadWithReplies.map((msg: any) => {
+                    res.data.thread.getThreadWithReplies.map((msg: any, ind: number) => {
                         let text: any = '';
                         let img: any = '';
                         let audio: any = '';
@@ -522,12 +511,12 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 video = url;
                             } else {
                                 text = (
-                                    <TouchableOpacity style={{ backgroundColor: '#006AFF' }}>
+                                    <TouchableOpacity style={{ backgroundColor: '#007AFF' }} key={ind.toString()}>
                                         <Text
                                             style={{
                                                 textDecorationLine: 'underline',
-                                                backgroundColor: '#006AFF',
-                                                color: '#fff'
+                                                backgroundColor: '#007AFF',
+                                                color: '#fff',
                                             }}
                                             onPress={() => {
                                                 if (
@@ -562,15 +551,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 name: msg.fullName,
                                 avatar: msg.avatar
                                     ? msg.avatar
-                                    : 'https://cues-files.s3.amazonaws.com/images/default.png'
-                            }
+                                    : 'https://cues-files.s3.amazonaws.com/images/default.png',
+                            },
                         });
                     });
                     tempChat.reverse();
                     setThreadChat(tempChat);
                     setLoading(false);
                 })
-                .catch(err => {
+                .catch((err) => {
                     Alert(unableToLoadThreadAlert, checkConnectionAlert);
                     setLoading(false);
                 });
@@ -579,15 +568,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     mutation: markThreadsAsRead,
                     variables: {
                         userId: user._id,
-                        threadId: tId
-                    }
+                        threadId: tId,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (props.refreshUnreadDiscussionCount) {
                         props.refreshUnreadDiscussionCount();
                     }
                 })
-                .catch(e => console.log(e));
+                .catch((e) => console.log(e));
         }
     }, []);
 
@@ -619,8 +608,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 {...props}
                 wrapperStyle={{
                     right: {
-                        backgroundColor: '#006AFF'
-                    }
+                        backgroundColor: '#007AFF',
+                    },
                 }}
             />
         );
@@ -637,15 +626,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         ref={audioRef}
                         style={{
                             width: 250,
-                            height: 60
+                            height: 60,
                         }}
                         source={{
-                            uri: props.currentMessage.audio
+                            uri: props.currentMessage.audio,
                         }}
                         useNativeControls
                         resizeMode="contain"
                         isLooping
-                    // onPlaybackStatusUpdate={status => setStatus(() => status)}
+                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -665,15 +654,15 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         ref={videoRef}
                         style={{
                             width: 250,
-                            height: 250
+                            height: 250,
                         }}
                         source={{
-                            uri: props.currentMessage.video
+                            uri: props.currentMessage.video,
                         }}
                         useNativeControls
                         resizeMode="contain"
                         isLooping
-                    // onPlaybackStatusUpdate={status => setStatus(() => status)}
+                        // onPlaybackStatusUpdate={status => setStatus(() => status)}
                     />
                 </View>
             );
@@ -710,8 +699,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     paddingBottom: props.cueId === null && categoryChoices.length > 1 ? 20 : 0,
                     paddingHorizontal: 20,
                     width: '100%',
-                    // maxWidth: 900,
-                    borderRadius: 1
+                    // maxWidth: 1024,
+                    borderRadius: 1,
                 }}
             >
                 {props.cueId === null && categoryChoices.length > 1 ? (
@@ -724,7 +713,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         }}
                     >
                         <DropDownPicker
-                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
+                            listMode={Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'}
                             open={isFilterDropdownOpen}
                             value={filterChoice}
                             items={categoryChoices}
@@ -747,10 +736,14 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 1,
-                                    height: 3
+                                    height: 3,
                                 },
                                 shadowOpacity: !isFilterDropdownOpen ? 0 : 0.08,
                                 shadowRadius: 12,
+                            }}
+                            textStyle={{
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontFamily: 'overpass',
                             }}
                         />
                     </View>
@@ -773,7 +766,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 props.showNewPostModal();
                             }}
                             style={{
-                                backgroundColor: '#006AFF',
+                                backgroundColor: '#007AFF',
                                 overflow: 'hidden',
                                 height: 35,
                                 // marginTop: 15,
@@ -789,7 +782,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     lineHeight: 34,
                                     color: '#ffffff',
                                     fontSize: 12,
-                                    borderColor: '#006AFF',
+                                    borderColor: '#007AFF',
                                     paddingHorizontal: 20,
                                     borderWidth: 1,
                                     fontFamily: 'inter',
@@ -816,45 +809,70 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             <View
                 style={{
                     width: '100%',
-                    // maxWidth: 900,
+                    // maxWidth: 1024,
                     borderRadius: 1,
                     padding: 10,
-                    height: Dimensions.get('window').width < 800 ? Dimensions.get('window').height - 140 : Dimensions.get('window').height - 100,
+                    height: selectedThreadHeight(
+                        Dimensions.get('window').height,
+                        Dimensions.get('window').width,
+                        Platform.OS,
+                        orientation
+                    ),
                     // borderLeftWidth: 3,
                     // borderLeftColor: props.channelColor,
                 }}
             >
                 <GiftedChat
-                    bottomOffset={Platform.OS === "ios" ? 50 : 40}
+                    renderInputToolbar={(props) => {
+                        return (
+                            <InputToolbar
+                                {...props}
+                                containerStyle={{
+                                    // backgroundColor: '#f8f8f8',
+                                    paddingVertical: 5,
+                                }}
+                                placeholder="Message..."
+                                textInputStyle={{
+                                    // borderWidth: 1,
+                                    // borderColor: '#ccc',
+                                    padding: 10,
+                                    paddingBottom: 15,
+                                    borderRadius: 10,
+                                }}
+                            />
+                        );
+                    }}
+                    bottomOffset={Platform.OS === 'ios' ? 50 : 0}
                     renderMessageAudio={renderMessageAudio}
                     renderMessageVideo={renderMessageVideo}
                     renderUsernameOnMessage={true}
                     messages={threadChat}
-                    onSend={messages => onSend(messages)}
+                    onSend={(messages) => onSend(messages)}
                     user={{
                         _id: userId,
-                        avatar
+                        avatar,
                     }}
                     renderBubble={renderBubble}
                     renderActions={() => (
                         // <View>
                         <TouchableOpacity
                             style={{
-                                paddingBottom: 10
+                                paddingBottom: 12,
                             }}
                             onPress={() => {
-                                Keyboard.dismiss()
-                                setUploadFileVisible(true)
-                            }}>
+                                Keyboard.dismiss();
+                                setUploadFileVisible(true);
+                            }}
+                        >
                             <Text
                                 style={{
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     // lineHeight: 40,
                                     textAlign: 'right',
                                     fontSize: 12,
                                     fontFamily: 'overpass',
                                     textTransform: 'uppercase',
-                                    paddingLeft: 10
+                                    paddingLeft: 10,
                                 }}
                             >
                                 <Ionicons name="add-outline" size={27} />
@@ -876,20 +894,17 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 style={{
                     width: '100%',
                     backgroundColor: '#fff',
-                    // maxWidth: 900,
                     borderRadius: 1,
-                    // borderLeftWidth: threads.length === 0 ? 0 : 3,
-                    // borderLeftColor: props.channelColor,
-                    maxHeight: Dimensions.get('window').height - 300,
-                    // borderTopColor: '#f2f2f2',
-                    // borderBottomColor: '#f2f2f2',
-                    // borderTopWidth: 1,
-                    // borderBottomWidth: 1,
-
+                    maxHeight: discussionThreadsHeight(
+                        Dimensions.get('window').height,
+                        Dimensions.get('window').width,
+                        Platform.OS,
+                        orientation
+                    ),
                 }}
             >
                 {threads.length === 0 ? (
-                    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+                    <View style={{ backgroundColor: '#fff' }}>
                         <Text
                             style={{
                                 width: '100%',
@@ -897,7 +912,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 fontSize: 18,
                                 paddingVertical: 50,
                                 fontFamily: 'inter',
-                                flex: 1,
                                 backgroundColor: '#fff',
                                 paddingHorizontal: 20,
                             }}
@@ -909,13 +923,13 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     <ScrollView
                         showsVerticalScrollIndicator={true}
                         horizontal={false}
-                        // style={{ height: '100%' }}
                         contentContainerStyle={{
                             paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 10,
                             borderColor: '#f2f2f2',
                             borderRadius: 1,
-                            width: '100%'
+                            width: '100%',
                         }}
+                        indicatorStyle="black"
                     >
                         {filteredThreads.map((thread: any, ind) => {
                             let title = '';
@@ -940,7 +954,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         // borderRightWidth: 1,
                                         borderBottomWidth: ind === filteredThreads.length - 1 ? 0 : 1,
                                         // minWidth: 600, // flex: 1,
-                                        width: '100%'
+                                        width: '100%',
                                     }}
                                 >
                                     <View style={{ backgroundColor: '#fff', padding: 5 }}>
@@ -952,12 +966,12 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 marginLeft: 5,
                                                 marginBottom: 5,
                                                 borderRadius: 75,
-                                                alignSelf: 'center'
+                                                alignSelf: 'center',
                                             }}
                                             source={{
                                                 uri: thread.avatar
                                                     ? thread.avatar
-                                                    : 'https://cues-files.s3.amazonaws.com/images/default.png'
+                                                    : 'https://cues-files.s3.amazonaws.com/images/default.png',
                                             }}
                                         />
                                     </View>
@@ -976,7 +990,13 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             {thread.anonymous ? 'Anonymous' : thread.fullName}
                                         </Text>
                                     </View>
-                                    <View style={{ justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
+                                    <View
+                                        style={{
+                                            justifyContent: 'center',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                        }}
+                                    >
                                         <Text
                                             style={{
                                                 fontSize: 12,
@@ -984,7 +1004,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 lineHeight: 13,
                                                 fontWeight: 'bold',
                                                 paddingBottom: 10,
-                                                color: thread.unreadThreads > 0 ? '#006AFF' : '#000000'
+                                                color: thread.unreadThreads > 0 ? '#007AFF' : '#000000',
                                             }}
                                             ellipsizeMode="tail"
                                         >
@@ -995,8 +1015,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 style={{
                                                     fontSize: 13,
                                                     padding: 5,
-                                                    color: '#006AFF',
-                                                    textAlign: 'center'
+                                                    color: '#007AFF',
+                                                    textAlign: 'center',
                                                 }}
                                                 ellipsizeMode="tail"
                                             >
@@ -1010,10 +1030,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                     height: 16,
                                                     borderRadius: 8,
                                                     marginHorizontal: 5,
-                                                    backgroundColor: '#006AFF',
+                                                    backgroundColor: '#007AFF',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    marginBottom: 3
+                                                    marginBottom: 3,
                                                 }}
                                             >
                                                 <Text style={{ color: 'white', fontSize: 10 }}>
@@ -1045,27 +1065,28 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
     const renderImportModalContent = () => {
         if (importType && importUrl) {
-            return <View style={{ paddingHorizontal: 10, }}>
-                {importType === 'image' ?
-                    <Image
-                        style={{
-                            height: 200,
-                            width: 250,
-                            alignSelf: 'center'
-                        }}
-                        source={{ uri: importUrl }}
-                    /> : importType === 'mp4' ? (
-                        <View style={{ paddingVertical: 15, }}>
+            return (
+                <View style={{ paddingHorizontal: 10 }}>
+                    {importType === 'image' ? (
+                        <Image
+                            style={{
+                                height: 200,
+                                width: 250,
+                                alignSelf: 'center',
+                            }}
+                            source={{ uri: importUrl }}
+                        />
+                    ) : importType === 'mp4' ? (
+                        <View style={{ paddingVertical: 15 }}>
                             <Video
                                 ref={audioRef}
                                 style={{
-
                                     width: 250,
                                     height: 150,
-                                    alignSelf: 'center'
+                                    alignSelf: 'center',
                                 }}
                                 source={{
-                                    uri: importUrl
+                                    uri: importUrl,
                                 }}
                                 useNativeControls
                                 resizeMode="contain"
@@ -1073,12 +1094,21 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             />
                         </View>
                     ) : (
-                        <Text style={{ color: '#000', fontFamily: 'Inter', fontSize: 20, paddingTop: 30, paddingBottom: 30, paddingLeft: 20 }}>
+                        <Text
+                            style={{
+                                color: '#000',
+                                fontFamily: 'Inter',
+                                fontSize: 20,
+                                paddingTop: 30,
+                                paddingBottom: 30,
+                                paddingLeft: 20,
+                            }}
+                        >
                             {importFileName}
                         </Text>
                     )}
 
-                {/* <TextInput
+                    {/* <TextInput
                         value={importTitle}
                         placeholder={''}
                         onChangeText={val => setImportTitle(val)}
@@ -1086,192 +1116,195 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         required={true}
                     /> */}
 
-                <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
-                    <TouchableOpacity
-                        style={{
-                            marginTop: 20,
-                            backgroundColor: '#006AFF',
-                            borderRadius: 19,
-                            width: 150,
-                            alignSelf: 'center',
-                            marginRight: 20
-                        }}
-                        onPress={() => {
-                            setImportTitle('')
-                            setImportUrl('')
-                            setImportFileName('')
-                            setUploadFileVisible(false)
-                        }}
-                    >
-                        <Text
+                    <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                        <TouchableOpacity
                             style={{
-                                textAlign: 'center',
-                                paddingHorizontal: 25,
-                                fontFamily: 'inter',
-                                height: 35,
-                                lineHeight: 34,
-                                color: '#fff'
+                                marginTop: 20,
+                                backgroundColor: '#007AFF',
+                                borderRadius: 19,
+                                width: 150,
+                                alignSelf: 'center',
+                                marginRight: 20,
+                            }}
+                            onPress={() => {
+                                setImportTitle('');
+                                setImportUrl('');
+                                setImportFileName('');
+                                setUploadFileVisible(false);
                             }}
                         >
-                            Cancel
-                        </Text>
-                    </TouchableOpacity>
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    lineHeight: 34,
+                                    color: '#fff',
+                                }}
+                            >
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={{
-                            marginTop: 20,
-                            backgroundColor: '#006AFF',
-                            borderRadius: 19,
-                            width: 150,
-                            alignSelf: 'center'
-                        }}
-                        onPress={() => {
-                            sendImport()
-                        }}
-                    >
-                        <Text
+                        <TouchableOpacity
                             style={{
-                                textAlign: 'center',
-                                paddingHorizontal: 25,
-                                fontFamily: 'inter',
-                                height: 35,
-                                lineHeight: 34,
-                                color: '#fff'
+                                marginTop: 20,
+                                backgroundColor: '#007AFF',
+                                borderRadius: 19,
+                                width: 150,
+                                alignSelf: 'center',
+                            }}
+                            onPress={() => {
+                                sendImport();
                             }}
                         >
-                            Send
-                        </Text>
-                    </TouchableOpacity>
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+                                    lineHeight: 34,
+                                    color: '#fff',
+                                }}
+                            >
+                                Send
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            );
         }
 
-        return <View style={{ paddingHorizontal: '20%', paddingTop: 30 }}>
-            <TouchableOpacity
-                style={{
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadImageHandler(true);
-                }}
-            >
-                <Ionicons name='camera-outline' size={20} color={'#000'} />
-                <Text
+        return (
+            <View style={{ paddingHorizontal: '20%', paddingTop: 30 }}>
+                <TouchableOpacity
                     style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadImageHandler(true);
                     }}
                 >
-                    {' '}
-                    Camera{' '}
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    marginTop: 20,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadImageHandler(false);
-                }}
-            >
-                <Ionicons name='image-outline' size={20} color={'#000'} />
-                <Text
+                    <Ionicons name="camera-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        Camera{' '}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                     style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
+                        marginTop: 20,
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadImageHandler(false);
                     }}
                 >
-                    {' '}
-                    Gallery{' '}
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    marginTop: 20,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadFileHandler(false);
-                }}
-            >
-                <Ionicons name='document-outline' size={20} color={'#000'} />
-                <Text
+                    <Ionicons name="image-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        Gallery{' '}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                     style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
+                        marginTop: 20,
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadFileHandler(false);
                     }}
                 >
-                    {' '}
-                    File{' '}
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={{
-                    marginTop: 20,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    uploadFileHandler(true);
-                }}
-            >
-                <Ionicons name='videocam-outline' size={20} color={'#000'} />
-                <Text
+                    <Ionicons name="document-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        File{' '}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                     style={{
-                        textAlign: 'center',
-                        paddingLeft: 4,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
+                        marginTop: 20,
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        uploadFileHandler(true);
                     }}
                 >
-                    {' '}
-                    Video{' '}
-                </Text>
-            </TouchableOpacity>
-        </View>
-    }
+                    <Ionicons name="videocam-outline" size={20} color={'#000'} />
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            paddingLeft: 4,
+                            fontFamily: 'inter',
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
+                        }}
+                    >
+                        {' '}
+                        Video{' '}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
 
     // MAIN RETURN
 
@@ -1284,17 +1317,16 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 flexDirection: 'row',
                 flex: 1,
                 height: '100%',
-                // maxHeight: '100%'
             }}
         >
             <View
                 style={{
                     width: '100%',
-                    // maxWidth: 900,
+                    // maxWidth: 1024,
                     backgroundColor: '#fff',
                     borderRadius: 1,
                     flex: 1,
-                    height: '100%'
+                    height: '100%',
                 }}
             >
                 {!showThreadCues || showPost ? renderThreadHeader() : null}
@@ -1308,7 +1340,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 justifyContent: 'center',
                                 flex: 1,
                                 flexDirection: 'column',
-                                backgroundColor: '#fff'
+                                backgroundColor: '#fff',
                             }}
                         >
                             <ActivityIndicator color={'#1F1F1F'} />
@@ -1344,7 +1376,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         style={{
                                             paddingRight: 20,
                                             paddingLeft: 10,
-                                            alignSelf: 'flex-start'
+                                            alignSelf: 'flex-start',
                                         }}
                                     >
                                         <Text
@@ -1353,7 +1385,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 width: '100%',
                                                 textAlign: 'center',
                                                 paddingTop: 10,
-                                                paddingLeft: 10
+                                                paddingLeft: 10,
                                             }}
                                         >
                                             <Ionicons name="arrow-back-outline" size={35} color={'#1F1F1F'} />
@@ -1382,7 +1414,11 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         setUploadFileVisible(false);
                     }}
                     isOpen={uploadFileVisible}
-                    title={importType ? 'Send ' + (importType !== 'image' && importType !== 'video' ? 'File' : importType) : 'Import'}
+                    title={
+                        importType
+                            ? 'Send ' + (importType !== 'image' && importType !== 'video' ? 'File' : importType)
+                            : 'Import'
+                    }
                     renderContent={() => renderImportModalContent()}
                     header={false}
                 />
@@ -1397,17 +1433,17 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         top: 0,
                         left: 0,
                         width: '100%',
-                        position: 'absolute'
+                        position: 'absolute',
                     }}
                 >
-                    <TouchableOpacity style={{
-                        backgroundColor: 'transparent',
-                        width: '100%',
-                        height: '100%',
-                    }}
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
                         onPress={() => setUploadFileVisible(false)}
-                    >
-                    </TouchableOpacity>
+                    ></TouchableOpacity>
                 </Reanimated.View>
             ) : null}
         </View>
@@ -1423,40 +1459,40 @@ export default ThreadsList;
 const styleObject = () => {
     return StyleSheet.create({
         screen: {
-            flex: 1
+            flex: 1,
         },
         marginSmall: {
-            height: 10
+            height: 10,
         },
         row: {
             flexDirection: 'row',
             display: 'flex',
             width: '100%',
-            backgroundColor: 'white'
+            backgroundColor: 'white',
         },
         col: {
             width: '100%',
             height: 70,
             marginBottom: 15,
-            backgroundColor: 'white'
+            backgroundColor: 'white',
         },
         colorBar: {
             width: '100%',
             height: '10%',
-            flexDirection: 'row'
+            flexDirection: 'row',
         },
         channelOption: {
-            width: '33.333%'
+            width: '33.333%',
         },
         channelText: {
             textAlign: 'center',
-            overflow: 'hidden'
+            overflow: 'hidden',
         },
         cusCategory: {
             fontSize: 14,
             backgroundColor: 'white',
             paddingHorizontal: 10,
-            height: 22
+            height: 22,
         },
         cusCategoryOutline: {
             fontSize: 14,
@@ -1466,7 +1502,7 @@ const styleObject = () => {
             borderRadius: 1,
             borderWidth: 1,
             borderColor: '#1F1F1F',
-            color: 'white'
+            color: 'white',
         },
         allOutline: {
             fontSize: 12,
@@ -1476,7 +1512,7 @@ const styleObject = () => {
             backgroundColor: 'white',
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: '#1F1F1F'
-        }
+            borderColor: '#1F1F1F',
+        },
     });
 };
