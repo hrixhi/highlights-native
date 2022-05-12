@@ -88,3 +88,48 @@ export const filterLibraryModalHeight = (width: number, platform: string, orient
     return height
 
 }
+
+export const channelPasswordModalHeight = (width: number, platform: string, orientation: string) => {
+
+    let height = '';
+
+    if (width < 768 && platform === 'ios') {
+        height =  '70%'
+    // Android Phone
+    } else if (width < 768 && platform === 'android') {
+        height = '70%'
+    // Tablet potrait
+    } else if (orientation === 'PORTRAIT' && width > 768) {
+        height =  '80%'
+    // Tablet landscape 
+    } else if (orientation === 'LANDSCAPE' && width > 768) {
+        height =  '90%';
+    } else {
+        height = '30%';
+    }
+
+    return height
+
+}
+
+export const newCourseModalHeight = (windowHeight: number, width: number, platform: string, orientation: string) => {
+
+    let height = 0;
+
+    if (width < 768 && platform === 'ios') {
+        height = windowHeight;
+    // Android Phone
+    } else if (width < 768 && platform === 'android') {
+        height = windowHeight;
+    // Tablet potrait
+    } else if (orientation === 'PORTRAIT' && width > 768) {
+        height = windowHeight;
+    // Tablet landscape 
+    } else if (orientation === 'LANDSCAPE' && width > 768) {
+        height = windowHeight ;
+    } else {
+        height = windowHeight;
+    }
+
+    return height
+}

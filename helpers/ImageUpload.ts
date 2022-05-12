@@ -7,7 +7,7 @@ export const handleImageUpload = async (takePhoto: boolean, userId: string) => {
         const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
         if (permissionResult.granted === false) {
-            alert("You've refused to allow this appp to access your camera!");
+            alert("You've refused to allow this app to access your camera!");
             return null;
         }
 

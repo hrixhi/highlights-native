@@ -48,10 +48,10 @@ const FileUpload: React.FC<any> = (props: any) => {
             name: name,
             size: size,
             uri: uri,
-            type: 'application/' + type
+            type: 'application/' + type,
         };
 
-        fileUpload(file, type).then(response => {
+        fileUpload(file, type).then((response) => {
             const { data } = response;
             if (data && data.status === 'success') {
                 props.onUpload(data.url, type);
@@ -69,14 +69,19 @@ const FileUpload: React.FC<any> = (props: any) => {
         formData.append('typeOfUpload', type);
         const config = {
             headers: {
-                'content-type': 'multipart/form-data'
-            }
+                'content-type': 'multipart/form-data',
+            },
         };
         return axios.post(url, formData, config);
     }, []);
 
     return (
-        <View style={{ position: props.profile ? 'absolute' : 'relative', backgroundColor: props.profile ? 'none' : '#fff', }}>
+        <View
+            style={{
+                position: props.profile ? 'absolute' : 'relative',
+                backgroundColor: props.profile ? 'none' : '#fff',
+            }}
+        >
             {/* style={{
                 backgroundColor: '#fff',
                 paddingTop: 3.5,
@@ -88,11 +93,11 @@ const FileUpload: React.FC<any> = (props: any) => {
             ) : props.quiz ? (
                 <Text
                     style={{
-                        color: '#006AFF',
+                        color: '#007AFF',
                         // lineHeight: props.chat ? 40 : 35,
                         textAlign: 'right',
                         fontSize: 12,
-                        fontFamily: 'overpass'
+                        fontFamily: 'overpass',
                     }}
                     onPress={() => onClick()}
                 >
@@ -101,19 +106,23 @@ const FileUpload: React.FC<any> = (props: any) => {
             ) : (
                 <Text
                     style={{
-                        color: '#006AFF',
+                        color: '#007AFF',
                         backgroundColor: props.profile ? 'none' : '#fff',
                         lineHeight: props.chat ? 40 : 35,
                         textAlign: 'right',
                         fontSize: props.quiz ? 12 : 12,
                         fontFamily: 'overpass',
                         textTransform: 'uppercase',
-                        paddingLeft: props.profile ? 0 : 10
+                        paddingLeft: props.profile ? 0 : 10,
                     }}
                     onPress={() => onClick()}
                 >
                     {props.chat || props.profile ? (
-                        <Ionicons name={props.profile ? "attach-outline" : "document-attach-outline"} size={props.profile ? 25 : 18}  color={props.profile ? 'white' : '#006AFF' } />
+                        <Ionicons
+                            name={props.profile ? 'attach-outline' : 'document-attach-outline'}
+                            size={props.profile ? 25 : 18}
+                            color={props.profile ? 'white' : '#007AFF'}
+                        />
                     ) : (
                         PreferredLanguageText('import')
                     )}

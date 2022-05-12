@@ -37,13 +37,13 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                     elevation: 1,
                     shadowOffset: {
                         width: 7,
-                        height: -7
+                        height: -7,
                     },
                     zIndex: 1000,
                     // overflow: 'hidden',
                     shadowOpacity: 0.5,
                     shadowRadius: 8,
-                    backgroundColor: '#fff'
+                    backgroundColor: '#fff',
                     // borderWidth: 1,
                     // borderColor: '#f2f2f2',
                 }}
@@ -56,14 +56,12 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                                 height: 5,
                                 width: 100,
                                 borderRadius: 3,
-                                backgroundColor: '#f2f2f2',
-                                marginTop: 10
+                                backgroundColor: '#f8f8f8',
+                                marginTop: 10,
                             }}
                         />
                     </View>
                 ) : null}
-
-                
 
                 {props.header || props.tabs ? (
                     <View style={{ paddingTop: 20, paddingHorizontal: 20, backgroundColor: '#fff' }}>
@@ -72,7 +70,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                                 paddingBottom: 20,
                                 backgroundColor: '#fff',
                                 flexDirection: 'row',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
                             }}
                         >
                             <TouchableOpacity
@@ -84,7 +82,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                                     left: 0,
                                     borderRadius: 20,
                                     width: Dimensions.get('window').width < 768 ? 30 : 35,
-                                    height: Dimensions.get('window').width < 768 ? 30: 35,
+                                    height: Dimensions.get('window').width < 768 ? 30 : 35,
                                     backgroundColor: 'white',
                                     justifyContent: 'center',
                                     alignItems: 'center',
@@ -100,11 +98,22 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                             >
                                 <Ionicons size={Dimensions.get('window').width < 768 ? 26 : 30} name="close-outline" />
                             </TouchableOpacity>
-                            {props.title ? <Text style={{ fontFamily: 'Inter', fontSize: Dimensions.get('window').width < 768 ? 20 : 24, fontWeight: 'bold', paddingTop: 5 }}>
-                                {props.title}
-                            </Text> : props.tabs ? props.tabs : <View  style={{ height: 20 }} />}
-
-
+                            {props.title ? (
+                                <Text
+                                    style={{
+                                        fontFamily: 'Inter',
+                                        fontSize: Dimensions.get('window').width < 768 ? 20 : 24,
+                                        fontWeight: 'bold',
+                                        paddingTop: 5,
+                                    }}
+                                >
+                                    {props.title}
+                                </Text>
+                            ) : props.tabs ? (
+                                props.tabs
+                            ) : (
+                                <View style={{ height: 20 }} />
+                            )}
                         </View>
                     </View>
                 ) : null}
@@ -118,8 +127,8 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
                             textAlign: 'center',
                             marginTop: 10,
                             marginBottom: 10,
-                            paddingHorizontal: 20
-                            // color: '#006aff'
+                            paddingHorizontal: 20,
+                            // color: '#007AFF'
                         }}
                     >
                         {props.title}

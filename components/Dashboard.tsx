@@ -13,7 +13,7 @@ import {
     TextInput as DefaultInput,
     Keyboard,
     RefreshControl,
-    TouchableOpacity as RNTouchableOpacity
+    TouchableOpacity as RNTouchableOpacity,
 } from 'react-native';
 import { ScrollView, Switch, TouchableOpacity } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +34,7 @@ import {
     startInstantMeeting,
     getOngoingMeetings,
     createMessage,
-    addUsersByEmail
+    addUsersByEmail,
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -116,8 +116,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         Discuss: 'Discussion',
         Meet: 'Meetings',
         Scores: 'Scores',
-        Settings: 'Settings'
-    }
+        Settings: 'Settings',
+    };
     const width = Dimensions.get('window').width;
     const windowHeight = Dimensions.get('window').height;
     const sortbyOptions = [
@@ -146,7 +146,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [ongoingMeetings, setOngoingMeetings] = useState<any[]>([]);
     const [userZoomInfo, setUserZoomInfo] = useState<any>('');
     const [meetingProvider, setMeetingProvider] = useState('');
-    const [selectedWorkspace, setSelectedWorkspace] = useState<any>(props.selectedWorkspace ? props.selectedWorkspace : '');
+    const [selectedWorkspace, setSelectedWorkspace] = useState<any>(
+        props.selectedWorkspace ? props.selectedWorkspace : ''
+    );
     const [showSearchMobile, setShowSearchMobile] = useState<any>('');
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showNewContentModal, setShowNewContentModal] = useState(false);
@@ -161,10 +163,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [newPostCategories, setNewPostCategories] = useState<any[]>([]);
     const [discussionReloadKey, setDiscussionReloadKey] = useState(Math.random());
 
-    const [showWorkspaceOptionsModal, setShowWorkspaceOptionsModal] = useState(false)
-    const [searchResultTabs, setSearchResultTabs] = useState<string[]>([])
-    const [activeSearchResultsTab, setActiveSearchResultsTab] = useState('')
-
+    const [showWorkspaceOptionsModal, setShowWorkspaceOptionsModal] = useState(false);
+    const [searchResultTabs, setSearchResultTabs] = useState<string[]>([]);
+    const [activeSearchResultsTab, setActiveSearchResultsTab] = useState('');
 
     // const [meetingEndTime, setMeetingEndTime] = useState(new Date(currentTime.getTime() + 1000 * 40 * 60));
     const [showMeetingEndTimeAndroid, setShowMeetingEndTimeAndroid] = useState(false);
@@ -185,15 +186,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [exportScores, setExportScores] = useState(false);
 
     const [showChannelPasswordInput, setShowChannelPasswordInput] = useState(false);
-    const [channelPasswordId, setChannelPasswordId] = useState('')
-    const [channelPassword, setChannelPassword] = useState('')
+    const [channelPasswordId, setChannelPasswordId] = useState('');
+    const [channelPassword, setChannelPassword] = useState('');
     const [showInviteByEmailsModal, setShowInviteByEmailsModal] = useState(false);
     const [emails, setEmails] = useState('');
-    const [refreshChannelSettings, setRefreshChannelSettings] = useState(false)
+    const [refreshChannelSettings, setRefreshChannelSettings] = useState(false);
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [reversedSearches, setReversedSearches] = useState<string[]>([]);
-    const DashboardScrollViewRef: any = useRef()
-    const orientation = useOrientation()
+    const DashboardScrollViewRef: any = useRef();
+    const orientation = useOrientation();
 
     // ALERTS
     const incorrectPasswordAlert = PreferredLanguageText('incorrectPassword');
@@ -203,9 +204,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const doesNotExistAlert = PreferredLanguageText('doesNotExists');
     const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
 
-
     // const width = Dimensions.get('window').width
-    const height = Dimensions.get('window').height
+    const height = Dimensions.get('window').height;
 
     // const openThreadFromSearch = useCallback(
     //     (channelId: String) => {
@@ -258,12 +258,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     // HOOKS
 
     useEffect(() => {
-        loadRecentSearches()
-    }, [])
+        loadRecentSearches();
+    }, []);
 
     useEffect(() => {
-        props.setShowWorkspaceFilterModal(showFilterModal)
-    }, [showFilterModal])
+        props.setShowWorkspaceFilterModal(showFilterModal);
+    }, [showFilterModal]);
 
     useEffect(() => {
         if (selectedWorkspace === '' || selectedWorkspace === 'My Notes') return;
@@ -283,13 +283,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         }
 
         setIndexMap(temp);
-
-    }, [props.activeWorkspaceTab, selectedWorkspace])
+    }, [props.activeWorkspaceTab, selectedWorkspace]);
 
     useEffect(() => {
         if (props.showNewPost) {
             setShowNewPostModal(true);
-        } if (props.showNewMeeting) {
+        }
+        if (props.showNewMeeting) {
             // setShowInstantMeeting(true);
             if (userZoomInfo || (meetingProvider && meetingProvider !== '')) {
                 const current = new Date();
@@ -297,36 +297,45 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 setInstantMeetingEnd(new Date(current.getTime() + 1000 * 40 * 60));
                 setShowInstantMeeting(true);
             } else {
-                Alert('You must connect with Zoom to start a meeting.', '', [
-                    {
-                        text: 'Okay',
-                        onPress: () => {
-                            const url = 'https://app.learnwithcues.com/zoom_auth';
-        
-                            if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                                Linking.openURL(url);
-                            } else {
-                                window.open(url, '_blank');
-                            }
-                        }
-                    }
-                ]);
-    
+                Alert(
+                    'You must connect your account with Zoom to start a meeting.',
+                    'Would you like to proceed to setup?',
+                    [
+                        {
+                            text: 'Cancel',
+                            style: 'cancel',
+                            onPress: () => {
+                                return;
+                            },
+                        },
+                        {
+                            text: 'Yes',
+                            onPress: () => {
+                                const url = 'https://app.learnwithcues.com/zoom_auth';
+
+                                if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                                    Linking.openURL(url);
+                                } else {
+                                    window.open(url, '_blank');
+                                }
+                            },
+                        },
+                    ]
+                );
+                props.setShowNewMeeting(false);
                 // ZOOM OATH
-    
-                
             }
         }
-    }, [props.showNewPost, props.showNewMeeting, userZoomInfo, meetingProvider])
+    }, [props.showNewPost, props.showNewMeeting, userZoomInfo, meetingProvider]);
 
     useEffect(() => {
         if (props.option === 'Search') {
             setShowSearchMobile(true);
-            setSelectedWorkspace('')
+            setSelectedWorkspace('');
         } else {
             setShowSearchMobile(false);
         }
-    }, [props.option])
+    }, [props.option]);
 
     /**
      * @description Fetch meeting provider for org
@@ -350,7 +359,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     //     (async () => {
     //         const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
 
-
     //         if (activeWorkspace) {
     //             // const school = JSON.parse(org);
     //             setSelectedWorkspace(activeWorkspace)
@@ -365,8 +373,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     useEffect(() => {
         props.setSelectedWorkspace(selectedWorkspace);
-        setCategoryPositionList([])
-
+        setCategoryPositionList([]);
     }, [selectedWorkspace]);
 
     /**
@@ -387,17 +394,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Scrolls to specific channel in Channels ScrollView for openChannelId
      */
     useEffect(() => {
-        // if (Dimensions.get('window').width < 768) {
-            if (openChannelId !== '') {
-                Object.keys(cueMap).map((obj: any) => {
-                    if (obj.split('-SPLIT-')[1] === openChannelId) {
-                        setSelectedWorkspace(obj);
-                    }
-                });
-            }
-
-            // return;
-        // }
+        if (openChannelId !== '') {
+            Object.keys(cueMap).map((obj: any) => {
+                if (obj.split('-SPLIT-')[1] === openChannelId) {
+                    setSelectedWorkspace(obj);
+                }
+            });
+        }
 
         if (
             scrollViewRef &&
@@ -436,93 +439,35 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 animated: true,
             });
 
-            // setOpenChannelId('');
-            props.setOpenChannelId('')
+            props.setOpenChannelId('');
         }
-    }, [scrollViewRef.current, channelKeyList, channelHeightList, openChannelId, cueMap, Dimensions]);
-
-    console.log("openChannelId", openChannelId);
-    console.log("Props openChannelId", props.openChannelId)
+    }, [scrollViewRef.current, channelKeyList, channelHeightList, openChannelId, cueMap]);
 
     /**
      * @description Scrolls to specific channel in Channels ScrollView for loadDiscussionForChannelId
      */
     useEffect(() => {
-        // if (Dimensions.get('window').width < 768) {
-            let matchIndex = -1;
-            let indexMapKey = '';
+        let matchIndex = -1;
+        let indexMapKey = '';
 
-            if (loadDiscussionForChannelId !== '') {
-                Object.keys(cueMap).map((obj: any, index: number) => {
-                    if (obj.split('-SPLIT-')[1] === loadDiscussionForChannelId) {
-                        indexMapKey = obj;
-                        matchIndex = index;
-                    }
-                });
-            }
+        if (loadDiscussionForChannelId !== '') {
+            Object.keys(cueMap).map((obj: any, index: number) => {
+                if (obj.split('-SPLIT-')[1] === loadDiscussionForChannelId) {
+                    indexMapKey = obj;
+                    matchIndex = index;
+                }
+            });
+        }
 
-            if (matchIndex === -1 || indexMapKey === '' || !loadDiscussionForChannelId) return;
+        if (matchIndex === -1 || indexMapKey === '' || !loadDiscussionForChannelId) return;
 
-            const temp = JSON.parse(JSON.stringify(indexMap));
-            temp[indexMapKey] = 1;
-            setIndexMap(temp);
-            setSelectedWorkspace(indexMapKey);
+        const temp = JSON.parse(JSON.stringify(indexMap));
+        temp[indexMapKey] = 1;
+        setIndexMap(temp);
+        setSelectedWorkspace(indexMapKey);
 
-            props.setLoadDiscussionForChannelId('')
-            props.setWorkspaceActiveTab('Discuss')
-
-            return;
-        // // }
-
-        // if (
-        //     scrollViewRef &&
-        //     scrollViewRef.current !== null &&
-        //     channelKeyList &&
-        //     channelKeyList.length > 0 &&
-        //     channelHeightList &&
-        //     channelHeightList.length > 0 &&
-        //     loadDiscussionForChannelId !== ''
-        // ) {
-        //     let matchIndex = -1;
-
-        //     channelKeyList.map((key: any, index: number) => {
-        //         if (key === loadDiscussionForChannelId) {
-        //             matchIndex = index;
-        //         }
-        //     });
-
-        //     let indexMapKey = '';
-
-        //     Object.keys(indexMap).map((key: any) => {
-        //         if (key.split('-SPLIT-')[1] === loadDiscussionForChannelId) {
-        //             indexMapKey = key;
-        //         }
-        //     });
-
-        //     if (
-        //         matchIndex === -1 ||
-        //         !channelHeightList[matchIndex] ||
-        //         indexMapKey === '' ||
-        //         !loadDiscussionForChannelId
-        //     )
-        //         return;
-
-        //     const temp = JSON.parse(JSON.stringify(indexMap));
-        //     temp[indexMapKey] = 2;
-        //     setIndexMap(temp);
-
-        //     const tempCollapse = JSON.parse(JSON.stringify(collapseMap));
-        //     tempCollapse[indexMapKey] = !collapseMap[indexMapKey];
-        //     setCollapseMap(tempCollapse);
-
-        //     scrollViewRef.current.scrollTo({
-        //         x: 0,
-        //         y: channelHeightList[matchIndex],
-        //         animated: true,
-        //     });
-
-        //     setLoadDiscussionForChannelId('');
-        // }
+        props.setLoadDiscussionForChannelId('');
+        props.setWorkspaceActiveTab('Discuss');
     }, [scrollViewRef.current, channelKeyList, channelHeightList, loadDiscussionForChannelId, indexMap]);
 
     /**
@@ -544,7 +489,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
 
                 if (user.userCreatedOrg) {
-                    setUserCreatedOrg(user.userCreatedOrg)
+                    setUserCreatedOrg(user.userCreatedOrg);
                 }
 
                 if (user.allowQuizCreation) {
@@ -552,8 +497,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 }
             }
         })();
-    }, [])
-
+    }, []);
 
     /**
      * @description Prepares all the data to be displayed in workspace
@@ -578,7 +522,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             dateFilteredCues = props.cues;
         }
 
-        //  
+        //
         props.subscriptions.map((sub: any) => {
             // const tempCategories: any = {}
             const tempCues: any[] = [];
@@ -594,13 +538,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
             // Sort alphabetically
             tempCues.sort((a: any, b: any) => {
-                return a.title > b.title ? -1 : 1
-            })
+                return a.title > b.title ? -1 : 1;
+            });
 
             if (sortBy === 'Priority') {
                 // tempCues.reverse();
                 tempCues.sort((a: any, b: any) => {
-                    return a.colorCode < b.colorCode ? 1 : -1
+                    return a.colorCode < b.colorCode ? 1 : -1;
                 });
             } else if (sortBy === 'Date ↑') {
                 tempCues.sort((a: any, b: any) => {
@@ -628,8 +572,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 });
             }
 
-            console.log("Sort by", sortBy)
-            console.log("Sorted cues", tempCues);
+            console.log('Sort by', sortBy);
+            console.log('Sorted cues', tempCues);
 
             const key =
                 sub.channelName +
@@ -660,12 +604,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         // Sort alphabetically
         mycues.sort((a: any, b: any) => {
-            return a.title > b.title ? -1 : 1
-        })
+            return a.title > b.title ? -1 : 1;
+        });
 
         if (sortBy === 'Priority') {
             mycues.sort((a: any, b: any) => {
-                return a.colorCode < b.colorCode ? 1 : -1
+                return a.colorCode < b.colorCode ? 1 : -1;
             });
         } else if (sortBy === 'Date ↑') {
             mycues.sort((a: any, b: any) => {
@@ -693,8 +637,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             });
         }
 
-        console.log("Sort by", sortBy)
-        console.log("Sorted cues my notes", mycues);
+        console.log('Sort by', sortBy);
+        console.log('Sorted cues my notes', mycues);
 
         temp['My Notes'] = mycues;
         if (!cat['']) {
@@ -718,7 +662,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         const tempIndexes: any = {};
 
         props.subscriptions.map((sub: any) => {
-
             const key =
                 sub.channelName +
                 '-SPLIT-' +
@@ -729,13 +672,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 sub.colorCode;
 
             tempIndexes[key] = 0;
-
         });
 
         tempIndexes['My Notes'] = 0;
         setIndexMap(tempIndexes);
-
-    }, [props.subscriptions])
+    }, [props.subscriptions]);
 
     /**
      * @description Setup the data for carousel
@@ -774,7 +715,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             });
         });
 
-        // 
+        //
 
         setCuesCarouselData(carouselItemData);
     }, [selectedWorkspace, cueMap, categoryMap]);
@@ -784,9 +725,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     useEffect(() => {
         if (selectedWorkspace && selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes') {
-            getCurrentMeetings()
+            getCurrentMeetings();
         }
-       
     }, [userId, selectedWorkspace]);
 
     /**
@@ -804,7 +744,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             setSearchResultTabs([]);
             setActiveSearchResultsTab('');
             cancelTokenRef.current = axios.CancelToken.source();
-            setLoadingSearchResults(false)
+            setLoadingSearchResults(false);
             return;
         }
 
@@ -844,31 +784,31 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         Messages: res.data.messages,
                     };
 
-                    const tabsFound = []
-                    let activeTab = ''
+                    const tabsFound = [];
+                    let activeTab = '';
 
-                    if ((res.data.personalCues.length + res.data.channelCues.length) > 0) {
-                        tabsFound.push('Content')
-                        activeTab = 'Content'
+                    if (res.data.personalCues.length + res.data.channelCues.length > 0) {
+                        tabsFound.push('Content');
+                        activeTab = 'Content';
                     }
 
                     if (res.data.messages.length > 0) {
-                        tabsFound.push('Messages')
-                        activeTab = activeTab !== '' ? activeTab : 'Messages'
+                        tabsFound.push('Messages');
+                        activeTab = activeTab !== '' ? activeTab : 'Messages';
                     }
 
                     if (res.data.threads.length > 0) {
-                        tabsFound.push('Discussion')
-                        activeTab = activeTab !== '' ? activeTab : 'Discussion'
+                        tabsFound.push('Discussion');
+                        activeTab = activeTab !== '' ? activeTab : 'Discussion';
                     }
 
                     if (res.data.channels.length > 0) {
-                        tabsFound.push('Courses')
-                        activeTab = activeTab !== '' ? activeTab : 'Courses'
+                        tabsFound.push('Courses');
+                        activeTab = activeTab !== '' ? activeTab : 'Courses';
                     }
 
-                    setActiveSearchResultsTab(activeTab)
-                    setSearchResultTabs(tabsFound)
+                    setActiveSearchResultsTab(activeTab);
+                    setSearchResultTabs(tabsFound);
 
                     setResultCount(totalCount);
                     setResults(tempResults);
@@ -891,7 +831,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         const startDate = new Date();
 
-        console.log("Create instant meeting", {
+        console.log('Create instant meeting', {
             userId,
             channelId: selectedWorkspace.split('-SPLIT-')[1],
             title: instantMeetingTitle,
@@ -901,7 +841,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             notifyUsers: instantMeetingAlertUsers,
         });
 
-       
         const server = fetchAPI('');
         server
             .mutate({
@@ -917,8 +856,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 },
             })
             .then((res) => {
-
-                console.log("Meeting res", res)
+                console.log('Meeting res', res);
                 if (res.data && res.data.channel.startInstantMeeting !== 'error') {
                     if (meetingProvider !== '' && res.data.channel.startInstantMeeting === 'MEETING_LINK_NOT_SET') {
                         Alert(
@@ -955,15 +893,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         instantMeetingAlertUsers,
         meetingProvider,
         userId,
-        selectedWorkspace
+        selectedWorkspace,
     ]);
 
     /**
      * @description Handle create instant meeting for channel owners
      */
     const getCurrentMeetings = useCallback(async () => {
-
-        console.log("Get ongoing meetings channelId", selectedWorkspace)
+        console.log('Get ongoing meetings channelId', selectedWorkspace);
 
         if (userId !== '' && selectedWorkspace !== '') {
             const server = fetchAPI('');
@@ -981,59 +918,49 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 })
                 .catch((err) => {
-                    console.log("Error in getCurrentMeeting", err)
+                    console.log('Error in getCurrentMeeting', err);
                     Alert('Something went wrong.');
                 });
         }
     }, [userId, selectedWorkspace]);
 
-    /**
-     * @description Handle create instant meeting for channel owners
-     */
-    // const handleStartMeeting = async () => {
-        
-    // };
-
     const loadRecentSearches = useCallback(async () => {
         const recentSearches = await AsyncStorage.getItem('recentSearches');
 
         if (recentSearches) {
-            setRecentSearches(JSON.parse(recentSearches))
+            setRecentSearches(JSON.parse(recentSearches));
         }
-
-    }, [])
+    }, []);
 
     useEffect(() => {
-        setReversedSearches(recentSearches.reverse())
-    }, [recentSearches])
+        setReversedSearches(recentSearches.reverse());
+    }, [recentSearches]);
 
     const updateRecentSearches = useCallback(async () => {
-
         if (searchTerm.trim().length === 0) return;
 
-        let currentSearches = [...recentSearches]
-        currentSearches.push(searchTerm)
+        let currentSearches = [...recentSearches];
+        currentSearches.push(searchTerm);
 
         if (currentSearches.length > 10) {
-            currentSearches.shift()
+            currentSearches.shift();
         }
 
-        setRecentSearches(currentSearches)
+        setRecentSearches(currentSearches);
 
-        await AsyncStorage.setItem('recentSearches', JSON.stringify(currentSearches))
+        await AsyncStorage.setItem('recentSearches', JSON.stringify(currentSearches));
+    }, [recentSearches, searchTerm]);
 
-    }, [recentSearches, searchTerm])
+    const removeRecentSearch = useCallback(
+        async (searchTerm: string) => {
+            const removed = recentSearches.filter((term) => term !== searchTerm);
 
-    const removeRecentSearch = useCallback(async (searchTerm: string) => {
+            setRecentSearches(removed);
 
-
-        const removed = recentSearches.filter((term) => term !== searchTerm);
-
-        setRecentSearches(removed)
-
-        await AsyncStorage.setItem('recentSearches', JSON.stringify(removed))
-
-    }, [recentSearches])
+            await AsyncStorage.setItem('recentSearches', JSON.stringify(removed));
+        },
+        [recentSearches]
+    );
 
     /**
      * @description Call to enter classroom
@@ -1075,7 +1002,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }
                     })
                     .catch((err) => {
-                        console.log("Error", err)
+                        console.log('Error', err);
                         Alert('Something went wrong.');
                     });
             }
@@ -1102,8 +1029,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             handleSubscribe(channelId, '');
                             break;
                         case 'password-required':
-                            setChannelPasswordId(channelId)
-                            setShowChannelPasswordInput(true)
+                            setChannelPasswordId(channelId);
+                            setShowChannelPasswordInput(true);
                             break;
                         case 'non-existant':
                             Alert(doesNotExistAlert);
@@ -1125,7 +1052,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      */
     const createNewThread = useCallback(
         async (message: any, category: any, isPrivate: any) => {
-
             const server = fetchAPI('');
             server
                 .mutate({
@@ -1201,7 +1127,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 })
                 .catch((err) => {
-                    console.log("Error", err)
+                    console.log('Error', err);
                     Alert(somethingWrongAlert, checkConnectionAlert);
                 });
         },
@@ -1212,7 +1138,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const renderFilterStartDateTimePicker = () => {
         return (
-            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10 }}>
+            <View
+                style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10,
+                }}
+            >
                 {Platform.OS === 'ios' ? (
                     <DateTimePicker
                         themeVariant="light"
@@ -1225,7 +1157,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             const roundedValue = roundSeconds(currentDate);
 
                             if (roundedValue > filterEnd) {
-                                Alert("Start date cannot be after end date")
+                                Alert('Start date cannot be after end date');
                                 return;
                             }
 
@@ -1242,15 +1174,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowFilterStartDateAndroid(false)
-                                return
-                            };
+                                setShowFilterStartDateAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowFilterStartDateAndroid(false);
 
                             if (roundedValue > filterEnd) {
-                                Alert("Start date cannot be after end date")
+                                Alert('Start date cannot be after end date');
                                 return;
                             }
 
@@ -1276,7 +1208,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
+                                borderColor: '#007AFF',
                             }}
                             onPress={() => {
                                 setShowFilterStartDateAndroid(true);
@@ -1287,12 +1219,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1306,7 +1238,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const renderFilterEndDateTimePicker = () => {
         return (
-            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10 }}>
+            <View
+                style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10,
+                }}
+            >
                 {Platform.OS === 'ios' && (
                     <DateTimePicker
                         themeVariant="light"
@@ -1318,11 +1256,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             if (!selectedDate) return;
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
-                            console.log("End date", roundedValue)
-                            console.log("Start date", filterStart)
+                            console.log('End date', roundedValue);
+                            console.log('Start date', filterStart);
 
                             if (roundedValue < filterStart) {
-                                Alert("End date cannot be before start date")
+                                Alert('End date cannot be before start date');
                                 return;
                             }
 
@@ -1339,19 +1277,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowFilterEndDateAndroid(false)
-                                return
-                            };
+                                setShowFilterEndDateAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             setShowFilterEndDateAndroid(false);
 
                             const roundedValue = roundSeconds(currentDate);
 
                             if (roundedValue < filterStart) {
-                                Alert("End date cannot be before start date")
+                                Alert('End date cannot be before start date');
                                 return;
                             }
-
 
                             setFilterEnd(roundedValue);
                         }}
@@ -1375,7 +1312,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
+                                borderColor: '#007AFF',
                             }}
                             onPress={() => {
                                 setShowFilterStartDateAndroid(false);
@@ -1386,12 +1323,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1412,7 +1349,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     flexDirection: 'row',
                     marginBottom: 10,
                     // paddingTop: 10,
-                    backgroundColor: (height < width) || width > 768 ? '#f2f2f2' : '#fff',
+                    backgroundColor: height < width || width > 768 ? '#f2f2f2' : '#fff',
                     flex: 1,
                     justifyContent: 'center',
                     //paddingVertical: 20
@@ -1426,15 +1363,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         maxWidth: 350,
                         paddingTop: 20,
                         flex: 1,
-                        backgroundColor: (height < width) || width > 768 ? '#f2f2f2' : '#fff',
+                        backgroundColor: height < width || width > 768 ? '#f2f2f2' : '#fff',
                     }}
                 >
                     <TouchableOpacity
                         containerStyle={{
                             justifyContent: 'center',
                             flexDirection: 'column',
-                            backgroundColor: (height < width) || width > 768 ? '#f2f2f2' : '#fff',
-                            width: '18%'
+                            backgroundColor: height < width || width > 768 ? '#f2f2f2' : '#fff',
+                            width: '18%',
                         }}
                         onPress={() => {
                             const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1442,26 +1379,30 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setIndexMap(temp);
                         }}
                     >
-                        <Text style={{
-                            fontSize: 10,
-                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                            height: 20,
-                            paddingHorizontal: 7,
-                            lineHeight: 20,
-                            fontFamily: 'inter',
-                            textAlign: 'center'
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center',
+                            }}
+                        >
                             <Ionicons name="library-outline" size={18} style={{ marginBottom: 5 }} />
                         </Text>
-                        <Text style={{
-                            fontSize: 10,
-                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                            height: 20,
-                            paddingHorizontal: 7,
-                            lineHeight: 20,
-                            fontFamily: 'inter',
-                            textAlign: 'center'
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center',
+                            }}
+                        >
                             Library
                         </Text>
                     </TouchableOpacity>
@@ -1469,8 +1410,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         containerStyle={{
                             justifyContent: 'center',
                             flexDirection: 'column',
-                            backgroundColor: (height < width) || width > 768 ? '#f2f2f2' : '#fff',
-                            width: '18%'
+                            backgroundColor: height < width || width > 768 ? '#f2f2f2' : '#fff',
+                            width: '18%',
                         }}
                         onPress={() => {
                             const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1478,34 +1419,40 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setIndexMap(temp);
                         }}
                     >
-                        <Text style={{
-                            fontSize: 10,
-                            color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                            height: 20,
-                            paddingHorizontal: 7,
-                            lineHeight: 20,
-                            fontFamily: 'inter',
-                            textAlign: 'center'
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center',
+                            }}
+                        >
                             <Ionicons name="chatbubbles-outline" size={18} />
                         </Text>
-                        <Text style={{
-                            fontSize: 10,
-                            color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                            height: 20,
-                            paddingHorizontal: 7,
-                            lineHeight: 20,
-                            fontFamily: 'inter',
-                            textAlign: 'center'
-                        }}>Discussion</Text>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                height: 20,
+                                paddingHorizontal: 7,
+                                lineHeight: 20,
+                                fontFamily: 'inter',
+                                textAlign: 'center',
+                            }}
+                        >
+                            Discussion
+                        </Text>
                     </TouchableOpacity>
                     {props.version !== 'read' ? (
                         <TouchableOpacity
                             containerStyle={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: (height < width) || width > 768 ? '#f2f2f2' : '#fff',
-                                width: '18%'
+                                backgroundColor: height < width || width > 768 ? '#f2f2f2' : '#fff',
+                                width: '18%',
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1513,26 +1460,32 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 setIndexMap(temp);
                             }}
                         >
-                            <Text style={{
-                                fontSize: 10,
-                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                                height: 20,
-                                paddingHorizontal: 7,
-                                lineHeight: 20,
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                    height: 20,
+                                    paddingHorizontal: 7,
+                                    lineHeight: 20,
+                                    fontFamily: 'inter',
+                                    textAlign: 'center',
+                                }}
+                            >
                                 <Ionicons name="videocam-outline" size={18} />
                             </Text>
-                            <Text style={{
-                                fontSize: 10,
-                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                                height: 20,
-                                paddingHorizontal: 7,
-                                lineHeight: 20,
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}>Meetings</Text>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                    height: 20,
+                                    paddingHorizontal: 7,
+                                    lineHeight: 20,
+                                    fontFamily: 'inter',
+                                    textAlign: 'center',
+                                }}
+                            >
+                                Meetings
+                            </Text>
                         </TouchableOpacity>
                     ) : null}
                     {props.version !== 'read' ? (
@@ -1540,8 +1493,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             containerStyle={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: (height < width) || width > 768 ? '#f2f2f2' : '#fff',
-                                width: '18%'
+                                backgroundColor: height < width || width > 768 ? '#f2f2f2' : '#fff',
+                                width: '18%',
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1549,26 +1502,32 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 setIndexMap(temp);
                             }}
                         >
-                            <Text style={{
-                                fontSize: 10,
-                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                                height: 20,
-                                paddingHorizontal: 7,
-                                lineHeight: 20,
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                    height: 20,
+                                    paddingHorizontal: 7,
+                                    lineHeight: 20,
+                                    fontFamily: 'inter',
+                                    textAlign: 'center',
+                                }}
+                            >
                                 <Ionicons name="bar-chart-outline" size={18} />
                             </Text>
-                            <Text style={{
-                                fontSize: 10,
-                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                                height: 20,
-                                paddingHorizontal: 7,
-                                lineHeight: 20,
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}>Scores</Text>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                    height: 20,
+                                    paddingHorizontal: 7,
+                                    lineHeight: 20,
+                                    fontFamily: 'inter',
+                                    textAlign: 'center',
+                                }}
+                            >
+                                Scores
+                            </Text>
                         </TouchableOpacity>
                     ) : null}
                     {key.split('-SPLIT-')[2] === userId ? (
@@ -1576,8 +1535,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             containerStyle={{
                                 justifyContent: 'center',
                                 flexDirection: 'column',
-                                backgroundColor: (height < width) || width > 768 ? '#f2f2f2' : '#fff',
-                                width: '18%'
+                                backgroundColor: height < width || width > 768 ? '#f2f2f2' : '#fff',
+                                width: '18%',
                             }}
                             onPress={() => {
                                 const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1585,26 +1544,30 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 setIndexMap(temp);
                             }}
                         >
-                            <Text style={{
-                                fontSize: 10,
-                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                                height: 20,
-                                paddingHorizontal: 7,
-                                lineHeight: 20,
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                    height: 20,
+                                    paddingHorizontal: 7,
+                                    lineHeight: 20,
+                                    fontFamily: 'inter',
+                                    textAlign: 'center',
+                                }}
+                            >
                                 <Ionicons name="build-outline" size={18} />
                             </Text>
-                            <Text style={{
-                                fontSize: 10,
-                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
-                                height: 20,
-                                paddingHorizontal: 7,
-                                lineHeight: 20,
-                                fontFamily: 'inter',
-                                textAlign: 'center'
-                            }}>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#1F1F1F',
+                                    height: 20,
+                                    paddingHorizontal: 7,
+                                    lineHeight: 20,
+                                    fontFamily: 'inter',
+                                    textAlign: 'center',
+                                }}
+                            >
                                 Settings
                             </Text>
                         </TouchableOpacity>
@@ -1615,7 +1578,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const renderWorkspaceOptionsList = () => {
-
         const activeTab = tabs[indexMap[selectedWorkspace]];
 
         return (
@@ -1625,7 +1587,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0,
-                    paddingTop: 20
+                    paddingTop: 20,
                 }}
             >
                 <TouchableOpacity
@@ -1646,25 +1608,36 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         setShowWorkspaceOptionsModal(false);
                     }}
                 >
-                    <Text style={{
-                        color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                        fontFamily: 'overpass',
-                        textAlign: 'center',
-                    }}>
+                    <Text
+                        style={{
+                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center',
+                        }}
+                    >
                         <Ionicons name="library-outline" size={22} />
                     </Text>
-                    <Text style={{
-                        fontSize: 17,
-                        color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                        fontFamily: 'overpass',
-                        textAlign: 'center',
-                        paddingLeft: 14,
-                        paddingVertical: 3
-                    }}>
+                    <Text
+                        style={{
+                            fontSize: 17,
+                            color: activeTab === 'Content' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center',
+                            paddingLeft: 14,
+                            paddingVertical: 3,
+                        }}
+                    >
                         Library
                     </Text>
 
-                    {activeTab === 'Content' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
+                    {activeTab === 'Content' ? (
+                        <Ionicons
+                            name="checkmark"
+                            color={selectedWorkspace.split('-SPLIT-')[3]}
+                            size={22}
+                            style={{ marginLeft: 'auto', paddingRight: 30 }}
+                        />
+                    ) : null}
                 </TouchableOpacity>
                 <TouchableOpacity
                     containerStyle={{
@@ -1684,23 +1657,35 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         setShowWorkspaceOptionsModal(false);
                     }}
                 >
-                    <Text style={{
-                        color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                        fontFamily: 'overpass',
-                        textAlign: 'center'
-                    }}>
+                    <Text
+                        style={{
+                            color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center',
+                        }}
+                    >
                         <Ionicons name="chatbubbles-outline" size={22} />
                     </Text>
-                    <Text style={{
-                        fontSize: 17,
-                        color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                        fontFamily: 'overpass',
-                        textAlign: 'center',
-                        paddingLeft: 14,
-                        paddingVertical: 3
-                    }}>Discussion</Text>
-                    {activeTab === 'Discuss' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
-
+                    <Text
+                        style={{
+                            fontSize: 17,
+                            color: activeTab === 'Discuss' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                            fontFamily: 'overpass',
+                            textAlign: 'center',
+                            paddingLeft: 14,
+                            paddingVertical: 3,
+                        }}
+                    >
+                        Discussion
+                    </Text>
+                    {activeTab === 'Discuss' ? (
+                        <Ionicons
+                            name="checkmark"
+                            color={selectedWorkspace.split('-SPLIT-')[3]}
+                            size={22}
+                            style={{ marginLeft: 'auto', paddingRight: 30 }}
+                        />
+                    ) : null}
                 </TouchableOpacity>
                 {props.version !== 'read' ? (
                     <TouchableOpacity
@@ -1721,24 +1706,36 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setShowWorkspaceOptionsModal(false);
                         }}
                     >
-                        <Text style={{
-                            fontSize: 10,
-                            color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                            fontFamily: 'overpass',
-                            textAlign: 'center'
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                            }}
+                        >
                             <Ionicons name="videocam-outline" size={22} />
                         </Text>
-                        <Text style={{
-                            fontSize: 17,
-                            color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                            fontFamily: 'overpass',
-                            textAlign: 'center',
-                            paddingLeft: 14,
-                            paddingVertical: 3
-                        }}>Meetings</Text>
-                        {activeTab === 'Meet' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
-
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                color: activeTab === 'Meet' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingLeft: 14,
+                                paddingVertical: 3,
+                            }}
+                        >
+                            Meetings
+                        </Text>
+                        {activeTab === 'Meet' ? (
+                            <Ionicons
+                                name="checkmark"
+                                color={selectedWorkspace.split('-SPLIT-')[3]}
+                                size={22}
+                                style={{ marginLeft: 'auto', paddingRight: 30 }}
+                            />
+                        ) : null}
                     </TouchableOpacity>
                 ) : null}
                 {props.version !== 'read' ? (
@@ -1760,24 +1757,36 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setShowWorkspaceOptionsModal(false);
                         }}
                     >
-                        <Text style={{
-                            fontSize: 10,
-                            color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                            fontFamily: 'overpass',
-                            textAlign: 'center'
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                            }}
+                        >
                             <Ionicons name="bar-chart-outline" size={22} />
                         </Text>
-                        <Text style={{
-                            fontSize: 17,
-                            color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                            fontFamily: 'overpass',
-                            textAlign: 'center',
-                            paddingLeft: 14,
-                            paddingVertical: 3
-                        }}>Scores</Text>
-                        {activeTab === 'Scores' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
-
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                color: activeTab === 'Scores' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingLeft: 14,
+                                paddingVertical: 3,
+                            }}
+                        >
+                            Scores
+                        </Text>
+                        {activeTab === 'Scores' ? (
+                            <Ionicons
+                                name="checkmark"
+                                color={selectedWorkspace.split('-SPLIT-')[3]}
+                                size={22}
+                                style={{ marginLeft: 'auto', paddingRight: 30 }}
+                            />
+                        ) : null}
                     </TouchableOpacity>
                 ) : null}
                 {selectedWorkspace.split('-SPLIT-')[2] === userId ? (
@@ -1791,7 +1800,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             paddingLeft: 15,
                             borderLeftColor: selectedWorkspace.split('-SPLIT-')[3],
                             // borderLeftWidth: activeTab === 'Settings' ? 3 : 0,
-
                         }}
                         onPress={() => {
                             const temp = JSON.parse(JSON.stringify(indexMap));
@@ -1800,30 +1808,41 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             setShowWorkspaceOptionsModal(false);
                         }}
                     >
-                        <Text style={{
-                            fontSize: 10,
-                            color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                            fontFamily: 'overpass',
-                            textAlign: 'center',
-                            paddingVertical: 3
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 10,
+                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingVertical: 3,
+                            }}
+                        >
                             <Ionicons name="build-outline" size={22} />
                         </Text>
-                        <Text style={{
-                            fontSize: 17,
-                            color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
-                            fontFamily: 'overpass',
-                            textAlign: 'center',
-                            paddingLeft: 14
-                        }}>
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                color: activeTab === 'Settings' ? selectedWorkspace.split('-SPLIT-')[3] : '#000',
+                                fontFamily: 'overpass',
+                                textAlign: 'center',
+                                paddingLeft: 14,
+                            }}
+                        >
                             Settings
                         </Text>
-                        {activeTab === 'Settings' ? <Ionicons name='checkmark' color={selectedWorkspace.split('-SPLIT-')[3]} size={22} style={{ marginLeft: 'auto', paddingRight: 30 }} /> : null}
+                        {activeTab === 'Settings' ? (
+                            <Ionicons
+                                name="checkmark"
+                                color={selectedWorkspace.split('-SPLIT-')[3]}
+                                size={22}
+                                style={{ marginLeft: 'auto', paddingRight: 30 }}
+                            />
+                        ) : null}
                     </TouchableOpacity>
                 ) : null}
             </View>
         );
-    }
+    };
 
     const renderCategorySelectionContent = () => {
         return (
@@ -1851,7 +1870,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 nestedScrollEnabled={true}
             >
                 {cuesCarouselData.map((item: any) => {
-
                     let activeCategoryIndex = 0;
 
                     Object.keys(categoryPositionList).map((catIndex: any) => {
@@ -1914,280 +1932,308 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
-    const addViewersWithEmail = useCallback(async (emails: string[]) => {
-        const server = fetchAPI('')
+    const addViewersWithEmail = useCallback(
+        async (emails: string[]) => {
+            const server = fetchAPI('');
 
-        server.mutate({
-            mutation: addUsersByEmail,
-            variables: {
-                channelId: selectedWorkspace.split('-SPLIT-')[1],
-                userId,
-                emails
-            }
-        }).then((res) => {
-            if (res.data && res.data.channel.addUsersByEmail) {
-
-                const { success, failed, error } = res.data.channel.addUsersByEmail;
-                console.log("Response", res.data.channel.addUsersByEmail)
-
-                if (error) {
-                    alert(error);
-                    return;
-                } else {
-
-
-                    const successCount = success.length;
-                    const failedCount = failed.length
-
-                    let failedString = ''
-                    if (failedCount > 0) {
-                        failedString = 'Failed to add ' + failed.join(', ') + '. Cannot add users with emails that are part of another org.'
-                    }
-
-
-                    Alert((successCount > 0 ? 'Successfully added ' + successCount + ' viewers. ' : '') + (failedCount > 0 ? failedString : ''))
-
-                    if (successCount > 0) {
-                        setShowInviteByEmailsModal(false);
-                        setEmails("")
-                        // Refresh subscribers for the channel
-                        setRefreshChannelSettings(true)
-                    }
-                }
-
-            }
-        })
-            .catch((e) => {
-                alert("Something went wrong. Try again.")
-            })
-
-    }, [selectedWorkspace, userId])
-
-    const renderInviteEmailsModalContent = () => {
-        return <View
-            style={{
-                flexDirection: 'column',
-                paddingHorizontal: 20,
-                // marginVertical: 20,
-                marginTop: Dimensions.get('window').width < 768 && orientation === 'PORTRAIT' ? 50 : 30,
-                marginBottom: 20,
-                width: '100%',
-                alignItems: 'center',
-                // maxWidth: 600
-            }}>
-            <AutoGrowingTextInput
-                value={emails}
-                placeholder="E.g. student1@gmail.com, student2@gmail.com, ..."
-                style={{
-                    fontFamily: 'overpass',
-                    width: '100%',
-                    maxWidth: 600,
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#f2f2f2',
-                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                    paddingTop: 13,
-                    paddingBottom: 13,
-                    marginRight: 10,
-                    // marginTop: 12,
-                    borderRadius: 1
-                }}
-                onChange={(event: any) => setEmails(event.nativeEvent.text || '')}
-                minHeight={120}
-            />
-            <View
-                style={{
-                    marginTop: 30,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 10,
-                    paddingHorizontal: 15,
-                    backgroundColor: '#f2f2f2',
-                    borderRadius: 1,
-                    width: '100%',
-                    maxWidth: 600,
-                    borderRadius: 10
-                }}
-            >
-                <View style={{
-                    width: '10%',
-                    backgroundColor: '#f2f2f2'
-                }}>
-                    <Ionicons name="warning-outline" size={Dimensions.get('window').width < 768 ? 22 : 24} color={'#f3722c'} />
-                </View>     
-                <View style={{
-                    width: '90%',
-                    // paddingRight: 20,
-                    flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-                    alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
-                    backgroundColor: '#f2f2f2'
-                }}>
-                    <Text style={{ paddingLeft: 5, width: '100%', fontSize: Dimensions.get('window').width < 768 ? 14 : 16 }}>
-                        Email IDs already in use with another Cues organization/instructor may not get added. Reach out to Support for any queries.
-                    </Text>
-                </View>
-            </View>
-
-
-            <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
-                <RNTouchableOpacity
-                    style={{
-                        marginTop: 50,
-                        backgroundColor: '#006AFF',
-                        borderRadius: 19,
-                        width: 150,
-                        alignSelf: 'center'
-                    }}
-                    onPress={() => {
-                        const splitEmails = emails.split(',')
-
-                        let error = false;
-                        let invalidEmail = ""
-
-                        const santizedEmails: string[] = splitEmails.map((e: string) => {
-
-                            if (error) return;
-
-                            const santize = e.toLowerCase().trim()
-
-                            if (validateEmail(santize)) {
-                                return santize
-                            } else {
-                                error = true;
-                                invalidEmail = santize
-                                return '';
-                            }
-
-                        })
+            server
+                .mutate({
+                    mutation: addUsersByEmail,
+                    variables: {
+                        channelId: selectedWorkspace.split('-SPLIT-')[1],
+                        userId,
+                        emails,
+                    },
+                })
+                .then((res) => {
+                    if (res.data && res.data.channel.addUsersByEmail) {
+                        const { success, failed, error } = res.data.channel.addUsersByEmail;
+                        console.log('Response', res.data.channel.addUsersByEmail);
 
                         if (error) {
-                            alert("Invalid email " + invalidEmail)
+                            alert(error);
                             return;
+                        } else {
+                            const successCount = success.length;
+                            const failedCount = failed.length;
+
+                            let failedString = '';
+                            if (failedCount > 0) {
+                                failedString =
+                                    'Failed to add ' +
+                                    failed.join(', ') +
+                                    '. Cannot add users with emails that are part of another org.';
+                            }
+
+                            Alert(
+                                (successCount > 0 ? 'Successfully added ' + successCount + ' viewers. ' : '') +
+                                    (failedCount > 0 ? failedString : '')
+                            );
+
+                            if (successCount > 0) {
+                                setShowInviteByEmailsModal(false);
+                                setEmails('');
+                                // Refresh subscribers for the channel
+                                setRefreshChannelSettings(true);
+                            }
                         }
+                    }
+                })
+                .catch((e) => {
+                    alert('Something went wrong. Try again.');
+                });
+        },
+        [selectedWorkspace, userId]
+    );
 
-                        console.log("Add viewers with email", santizedEmails);
-
-                        addViewersWithEmail(santizedEmails);
+    const renderInviteEmailsModalContent = () => {
+        return (
+            <View
+                style={{
+                    flexDirection: 'column',
+                    paddingHorizontal: 20,
+                    // marginVertical: 20,
+                    marginTop: Dimensions.get('window').width < 768 && orientation === 'PORTRAIT' ? 50 : 30,
+                    marginBottom: 20,
+                    width: '100%',
+                    alignItems: 'center',
+                    // maxWidth: 600
+                }}
+            >
+                <AutoGrowingTextInput
+                    value={emails}
+                    placeholder="E.g. student1@gmail.com, student2@gmail.com, ..."
+                    style={{
+                        fontFamily: 'overpass',
+                        width: '100%',
+                        maxWidth: 600,
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#f2f2f2',
+                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                        paddingTop: 13,
+                        paddingBottom: 13,
+                        marginRight: 10,
+                        // marginTop: 12,
+                        borderRadius: 1,
+                    }}
+                    onChange={(event: any) => setEmails(event.nativeEvent.text || '')}
+                    minHeight={120}
+                />
+                <View
+                    style={{
+                        marginTop: 30,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: 10,
+                        paddingHorizontal: 15,
+                        backgroundColor: '#f8f8f8',
+                        borderRadius: 1,
+                        width: '100%',
+                        maxWidth: 600,
+                        borderRadius: 10,
                     }}
                 >
+                    <View
+                        style={{
+                            width: '10%',
+                            backgroundColor: '#f8f8f8',
+                        }}
+                    >
+                        <Ionicons
+                            name="warning-outline"
+                            size={Dimensions.get('window').width < 768 ? 22 : 24}
+                            color={'#f3722c'}
+                        />
+                    </View>
+                    <View
+                        style={{
+                            width: '90%',
+                            // paddingRight: 20,
+                            flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                            alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
+                            backgroundColor: '#f8f8f8',
+                        }}
+                    >
+                        <Text
+                            style={{
+                                paddingLeft: 5,
+                                width: '100%',
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            }}
+                        >
+                            Email IDs already in use with another Cues organization/instructor may not get added. Reach
+                            out to Support for any queries.
+                        </Text>
+                    </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                    <RNTouchableOpacity
+                        style={{
+                            marginTop: 50,
+                            backgroundColor: '#007AFF',
+                            borderRadius: 19,
+                            width: 150,
+                            alignSelf: 'center',
+                        }}
+                        onPress={() => {
+                            const splitEmails = emails.split(',');
+
+                            let error = false;
+                            let invalidEmail = '';
+
+                            const santizedEmails: string[] = splitEmails.map((e: string) => {
+                                if (error) return;
+
+                                const santize = e.toLowerCase().trim();
+
+                                if (validateEmail(santize)) {
+                                    return santize;
+                                } else {
+                                    error = true;
+                                    invalidEmail = santize;
+                                    return '';
+                                }
+                            });
+
+                            if (error) {
+                                alert('Invalid email ' + invalidEmail);
+                                return;
+                            }
+
+                            console.log('Add viewers with email', santizedEmails);
+
+                            addViewersWithEmail(santizedEmails);
+                        }}
+                    >
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                paddingHorizontal: 25,
+                                fontFamily: 'inter',
+                                height: 35,
+                                lineHeight: 34,
+                                color: '#fff',
+                            }}
+                        >
+                            Add
+                        </Text>
+                    </RNTouchableOpacity>
+                </View>
+            </View>
+        );
+    };
+
+    const renderNewContentModalOptions = () => {
+        return (
+            <View
+                style={{
+                    paddingHorizontal: '20%',
+                }}
+            >
+                <TouchableOpacity
+                    containerStyle={{
+                        // marginTop: 20,
+                        backgroundColor: '#eeeeee',
+                        borderRadius: 19,
+                        width: '100%',
+                        alignSelf: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    onPress={() => {
+                        setShowNewContentModal(false);
+                        props.openCreate();
+                    }}
+                >
+                    <Ionicons name="create-outline" size={20} color={'#000'} />
                     <Text
                         style={{
                             textAlign: 'center',
-                            paddingHorizontal: 25,
+                            // paddingHorizontal: 25,
+                            paddingLeft: 10,
                             fontFamily: 'inter',
-                            height: 35,
-                            lineHeight: 34,
-                            color: '#fff'
+                            height: 40,
+                            lineHeight: 40,
+                            color: '#000',
+                            fontSize: 16,
                         }}
                     >
-                        Add
+                        {role === 'instructor' ? 'New content' : 'New note'}
                     </Text>
-                </RNTouchableOpacity>
+                </TouchableOpacity>
+
+                {allowQuizCreation ? (
+                    <TouchableOpacity
+                        containerStyle={{
+                            marginTop: 25,
+                            backgroundColor: '#eeeeee',
+                            borderRadius: 19,
+                            width: '100%',
+                            alignSelf: 'center',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                        onPress={() => {
+                            setShowNewContentModal(false);
+                            props.openCreate();
+                        }}
+                    >
+                        <Ionicons name="checkbox-outline" size={20} color={'#000'} />
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                paddingLeft: 10,
+                                fontFamily: 'inter',
+                                height: 40,
+                                lineHeight: 40,
+                                color: '#000',
+                                fontSize: 16,
+                            }}
+                        >
+                            Create quiz
+                        </Text>
+                    </TouchableOpacity>
+                ) : null}
+
+                {allowQuizCreation ? (
+                    <TouchableOpacity
+                        containerStyle={{
+                            marginTop: 25,
+                            backgroundColor: '#eeeeee',
+                            borderRadius: 19,
+                            width: '100%',
+                            alignSelf: 'center',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                        onPress={() => {
+                            setShowNewContentModal(false);
+                            props.openCreate();
+                        }}
+                    >
+                        <Ionicons name="book-outline" size={20} color={'#000'} />
+                        <Text
+                            style={{
+                                textAlign: 'center',
+                                paddingLeft: 10,
+                                fontFamily: 'inter',
+                                height: 40,
+                                lineHeight: 40,
+                                color: '#000',
+                                fontSize: 16,
+                            }}
+                        >
+                            Browse books
+                        </Text>
+                    </TouchableOpacity>
+                ) : null}
             </View>
-        </View>
-    }
-
-    const renderNewContentModalOptions = () => {
-        return <View style={{
-            paddingHorizontal: '20%'
-        }}>
-            <TouchableOpacity
-                containerStyle={{
-                    // marginTop: 20,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    setShowNewContentModal(false)
-                    props.openCreate()
-                }}
-            >
-                <Ionicons name='create-outline' size={20} color={'#000'} />
-                <Text
-                    style={{
-                        textAlign: 'center',
-                        // paddingHorizontal: 25,
-                        paddingLeft: 10,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
-                    }}
-                >
-                    {role === 'instructor' ? 'New content' : 'New note'}
-                </Text>
-            </TouchableOpacity>
-
-            {allowQuizCreation ? <TouchableOpacity
-                containerStyle={{
-                    marginTop: 25,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    setShowNewContentModal(false)
-                    props.openCreate()
-                }}
-            >
-                <Ionicons name='checkbox-outline' size={20} color={'#000'} />
-                <Text
-                    style={{
-                        textAlign: 'center',
-                        paddingLeft: 10,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
-                    }}
-                >
-                    Create quiz
-                </Text>
-            </TouchableOpacity> : null}
-
-            {allowQuizCreation ? <TouchableOpacity
-                containerStyle={{
-                    marginTop: 25,
-                    backgroundColor: '#eeeeee',
-                    borderRadius: 19,
-                    width: '100%',
-                    alignSelf: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-                onPress={() => {
-                    setShowNewContentModal(false)
-                    props.openCreate()
-                }}
-            >
-                <Ionicons name='book-outline' size={20} color={'#000'} />
-                <Text
-                    style={{
-                        textAlign: 'center',
-                        paddingLeft: 10,
-                        fontFamily: 'inter',
-                        height: 40,
-                        lineHeight: 40,
-                        color: '#000',
-                        fontSize: 16
-                    }}
-                >
-                    Browse books
-                </Text>
-            </TouchableOpacity> : null}
-        </View>
-    }
+        );
+    };
 
     const renderFilterModalContent = () => {
         const filterChannelOptions = [
@@ -2210,11 +2256,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0,
-                    zIndex: 10000
+                    zIndex: 10000,
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 20,
-                    zIndex: 10000
+                    zIndex: 10000,
                 }}
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={true}
@@ -2224,7 +2270,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 nestedScrollEnabled={true}
             >
                 <View style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
-                    <Text style={{ fontSize: Dimensions.get('window').width < 768 ? 14 : 16, fontFamily: 'Inter', color: '#000000', fontWeight: 'bold' }}>
+                    <Text
+                        style={{
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'Inter',
+                            color: '#000000',
+                            fontWeight: 'bold',
+                        }}
+                    >
                         Sort By
                     </Text>
 
@@ -2238,7 +2291,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                     >
                         <DropDownPicker
-                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
+                            listMode={Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'}
                             open={showSortByFilterModal}
                             value={sortBy}
                             items={sortbyOptions}
@@ -2263,7 +2316,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             }}
                             textStyle={{
                                 fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
-                                fontFamily: 'overpass'
+                                fontFamily: 'overpass',
                             }}
                         />
                     </View>
@@ -2292,7 +2345,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             {Platform.OS === 'android'
                                 ? ': ' + moment(new Date(filterStart)).format('MMMM Do YYYY, h:mm a')
                                 : null}
-                        </Text> 
+                        </Text>
                         {renderFilterStartDateTimePicker()}
                     </View>
                     <View
@@ -2413,7 +2466,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const renderOngoingMeetings = (createdBy: string, colorCode: string) => {
-        console.log("Render ongoing meetings")
+        console.log('Render ongoing meetings');
         return (
             <View style={{ width: '100%', maxWidth: undefined, backgroundColor: '#fff', paddingBottom: 30 }}>
                 <Text
@@ -2451,9 +2504,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         indicatorStyle="black"
                     >
                         {ongoingMeetings.map((meeting: any, ind: number) => {
+                            console.log('Ongoing meeting', meeting);
 
-                            console.log("Ongoing meeting", meeting)
-                            
                             let startTime = emailTimeDisplay(meeting.start);
                             let endTime = emailTimeDisplay(meeting.end);
 
@@ -2462,7 +2514,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     style={{
                                         flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
                                         borderColor: '#f2f2f2',
-                                        paddingVertical:  Dimensions.get('window').width < 768 ? 8 : 16,
+                                        paddingVertical: Dimensions.get('window').width < 768 ? 8 : 16,
                                         borderBottomWidth: 1,
                                         width: '100%',
                                         alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
@@ -2516,7 +2568,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             <TouchableOpacity
                                                 onPress={() => {
                                                     if (meetingProvider !== '' && meeting.joinUrl) {
-                                                        if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
+                                                        if (
+                                                            Platform.OS === 'web' ||
+                                                            Platform.OS === 'macos' ||
+                                                            Platform.OS === 'windows'
+                                                        ) {
                                                             window.open(meeting.joinUrl, '_blank');
                                                         } else {
                                                             Linking.openURL(meeting.joinUrl);
@@ -2525,46 +2581,58 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         Alert('No meeting link found. Contact your instructor.');
                                                         return;
                                                     } else if (!userZoomInfo || userZoomInfo.accountId === '') {
-                                                        Alert(
-                                                            'Join Meeting?',
-                                                            'WARNING- To mark attendance as present, you must Connect to Zoom under Account.',
-                                                            [
-                                                                {
-                                                                    text: 'Cancel',
-                                                                    style: 'cancel',
-                                                                    onPress: () => {
-                                                                        return;
-                                                                    },
+                                                        Alert('Join Meeting?', '', [
+                                                            {
+                                                                text: 'Cancel',
+                                                                style: 'cancel',
+                                                                onPress: () => {
+                                                                    return;
                                                                 },
-                                                                {
-                                                                    text: 'Okay',
-                                                                    onPress: () => {
-                                                                        if (createdBy === userId) {
-                                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
-                                                                                window.open(meeting.startUrl, '_blank');
-                                                                            } else {
-                                                                                Linking.openURL(meeting.startUrl);
-                                                                            }
+                                                            },
+                                                            {
+                                                                text: 'Okay',
+                                                                onPress: () => {
+                                                                    if (createdBy === userId) {
+                                                                        if (
+                                                                            Platform.OS === 'web' ||
+                                                                            Platform.OS === 'macos' ||
+                                                                            Platform.OS === 'windows'
+                                                                        ) {
+                                                                            window.open(meeting.startUrl, '_blank');
                                                                         } else {
-                                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
-                                                                                window.open(meeting.joinUrl, '_blank');
-                                                                            } else {
-                                                                                Linking.openURL(meeting.joinUrl);
-                                                                            }
+                                                                            Linking.openURL(meeting.startUrl);
                                                                         }
-                                                                    },
+                                                                    } else {
+                                                                        if (
+                                                                            Platform.OS === 'web' ||
+                                                                            Platform.OS === 'macos' ||
+                                                                            Platform.OS === 'windows'
+                                                                        ) {
+                                                                            window.open(meeting.joinUrl, '_blank');
+                                                                        } else {
+                                                                            Linking.openURL(meeting.joinUrl);
+                                                                        }
+                                                                    }
                                                                 },
-                                                            ]
-                                                        );
+                                                            },
+                                                        ]);
                                                     } else {
                                                         if (createdBy === userId) {
-                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
+                                                            if (
+                                                                Platform.OS === 'web' ||
+                                                                Platform.OS === 'macos' ||
+                                                                Platform.OS === 'windows'
+                                                            ) {
                                                                 window.open(meeting.startUrl, '_blank');
                                                             } else {
                                                                 Linking.openURL(meeting.startUrl);
                                                             }
                                                         } else {
-                                                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
+                                                            if (
+                                                                Platform.OS === 'web' ||
+                                                                Platform.OS === 'macos' ||
+                                                                Platform.OS === 'windows'
+                                                            ) {
                                                                 window.open(meeting.joinUrl, '_blank');
                                                             } else {
                                                                 Linking.openURL(meeting.joinUrl);
@@ -2577,7 +2645,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     style={{
                                                         fontSize: 12,
                                                         fontFamily: 'inter',
-                                                        color: '#006AFF',
+                                                        color: '#007AFF',
                                                         marginRight: 20,
                                                     }}
                                                 >
@@ -2596,7 +2664,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         style={{
                                                             fontSize: 12,
                                                             fontFamily: 'inter',
-                                                            color: '#006AFF',
+                                                            color: '#007AFF',
                                                             marginRight: 20,
                                                         }}
                                                     >
@@ -2642,9 +2710,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowMeetingEndDateAndroid(false)
-                                return
-                            };
+                                setShowMeetingEndDateAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             setShowMeetingEndDateAndroid(false);
 
@@ -2661,7 +2729,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -2673,7 +2741,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
+                                borderColor: '#007AFF',
                             }}
                             onPress={() => {
                                 setShowMeetingEndDateAndroid(true);
@@ -2684,12 +2752,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -2704,8 +2772,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
-                                marginLeft: 50
+                                borderColor: '#007AFF',
+                                marginLeft: 50,
                             }}
                             onPress={() => {
                                 setShowMeetingEndDateAndroid(false);
@@ -2716,7 +2784,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -2754,9 +2822,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowMeetingEndTimeAndroid(false)
-                                return
-                            };
+                                setShowMeetingEndTimeAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             setShowMeetingEndTimeAndroid(false);
                             setInstantMeetingEnd(currentDate);
@@ -2768,185 +2836,193 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const renderInstantMeetingModalContent = () => {
-        return (<ScrollView
-                    showsVerticalScrollIndicator={true}
-                    horizontal={false}
-                    style={{
-                        width: '100%',
-                        height: '100%'
-                    }}
-                    contentContainerStyle={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        width: '100%',
-                        paddingHorizontal: 20,
-                        marginTop: orientation === 'PORTRAIT' && width > 768 ? 50 : 0
-                    }}
-                >
-                    <View style={{ width: '100%', maxWidth: 600, marginTop: 20, backgroundColor: '#ffffff' }}>
-                        <Text
-                            style={{
-                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                fontFamily: 'inter',
-                                color: '#000000',
-                                fontWeight: 'bold',
-                            }}
-                        >
-                            Topic
-                        </Text>
-                        <View style={{ marginTop: 10, marginBottom: 10, width: '100%' }}>
-                            <TextInput
-                                // style={{ padding: 10, fontSize: Dimensions.get('window').width < 768 ? 14 : 16 }}
-                                value={instantMeetingTitle}
-                                placeholder={''}
-                                onChangeText={(val) => setInstantMeetingTitle(val)}
-                                placeholderTextColor={'#1F1F1F'}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={{  width: '100%', maxWidth: 600, backgroundColor: '#ffffff' }}>
-                        <Text
-                            style={{
-                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                fontFamily: 'inter',
-                                color: '#000000',
-                                fontWeight: 'bold',
-                            }}
-                        >
-                            Description
-                        </Text>
-                        <View style={{ marginTop: 10, marginBottom: 10 }}>
-                            <TextInput
-                                value={instantMeetingDescription}
-                                placeholder={''}
-                                onChangeText={(val) => setInstantMeetingDescription(val)}
-                                placeholderTextColor={'#1F1F1F'}
-                                multiline={true}
-                            />
-                        </View>
-                    </View>
-                    <View
+        return (
+            <ScrollView
+                showsVerticalScrollIndicator={true}
+                horizontal={false}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                }}
+                contentContainerStyle={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    width: '100%',
+                    paddingHorizontal: 20,
+                    marginTop: orientation === 'PORTRAIT' && width > 768 ? 50 : 0,
+                }}
+            >
+                <View style={{ width: '100%', maxWidth: 600, marginTop: 20, backgroundColor: '#ffffff' }}>
+                    <Text
                         style={{
-                            width: '100%', maxWidth: 600,
-                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
-                            paddingTop: 12,
-                            backgroundColor: '#fff',
-                            // marginLeft: 'auto',
-                            alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start'
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'inter',
+                            color: '#000000',
+                            fontWeight: 'bold',
                         }}
                     >
+                        Topic
+                    </Text>
+                    <View style={{ marginTop: 10, marginBottom: 10, width: '100%' }}>
+                        <TextInput
+                            // style={{ padding: 10, fontSize: Dimensions.get('window').width < 768 ? 14 : 16 }}
+                            value={instantMeetingTitle}
+                            placeholder={''}
+                            onChangeText={(val) => setInstantMeetingTitle(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                        />
+                    </View>
+                </View>
+
+                <View style={{ width: '100%', maxWidth: 600, backgroundColor: '#ffffff' }}>
+                    <Text
+                        style={{
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'inter',
+                            color: '#000000',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        Description
+                    </Text>
+                    <View style={{ marginTop: 10, marginBottom: 10 }}>
+                        <TextInput
+                            value={instantMeetingDescription}
+                            placeholder={''}
+                            onChangeText={(val) => setInstantMeetingDescription(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                            multiline={true}
+                        />
+                    </View>
+                </View>
+                <View
+                    style={{
+                        width: '100%',
+                        maxWidth: 600,
+                        flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                        paddingTop: 12,
+                        backgroundColor: '#fff',
+                        // marginLeft: 'auto',
+                        alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start',
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'inter',
+                            color: '#000000',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        End{' '}
+                        {Platform.OS === 'android'
+                            ? ': ' + moment(new Date(instantMeetingEnd)).format('MMMM Do YYYY, h:mm a')
+                            : null}
+                    </Text>
+                    {renderMeetingEndDateTimePicker()}
+                </View>
+                <View
+                    style={{
+                        width: '100%',
+                        maxWidth: 600,
+                        paddingTop: 30,
+                        paddingBottom: 15,
+                        backgroundColor: '#ffffff',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'inter',
+                            color: '#000000',
+                            fontWeight: 'bold',
+                            marginBottom: 10,
+                        }}
+                    >
+                        Notify Users
+                    </Text>
+
+                    <Switch
+                        value={instantMeetingAlertUsers}
+                        onValueChange={() => {
+                            setInstantMeetingAlertUsers(!instantMeetingAlertUsers);
+                        }}
+                        thumbColor={'#f4f4f6'}
+                        trackColor={{
+                            false: '#f4f4f6',
+                            true: '#007AFF',
+                        }}
+                        style={{
+                            transform: [
+                                { scaleX: Platform.OS === 'ios' ? 1 : 1.2 },
+                                { scaleY: Platform.OS === 'ios' ? 1 : 1.2 },
+                            ],
+                        }}
+                    />
+                </View>
+
+                <View
+                    style={{
+                        width: '100%',
+                        maxWidth: 600,
+                        paddingVertical: 10,
+                    }}
+                >
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingBottom: 15,
+                            paddingTop: 10,
+                            width: '100%',
+                            paddingHorizontal: 20,
+                            backgroundColor: '#f8f8f8',
+                            borderRadius: 10,
+                        }}
+                    >
+                        <Text style={{}}>
+                            <Ionicons name="time-outline" size={26} color="#f3722c" />
+                        </Text>
                         <Text
                             style={{
+                                paddingLeft: 10,
                                 fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                fontFamily: 'inter',
                                 color: '#000000',
-                                fontWeight: 'bold',
+                                lineHeight: 20,
+                                fontFamily: 'Overpass',
                             }}
                         >
-                            End {Platform.OS === 'android'
-                                ? ': ' + moment(new Date(instantMeetingEnd)).format('MMMM Do YYYY, h:mm a')
-                                : null}
+                            You can schedule future meetings under Agenda
                         </Text>
-                        {renderMeetingEndDateTimePicker()}
-                        </View>
-                        <View
-                            style={{
-                                width: '100%', 
-                                maxWidth: 600,
-                                paddingTop: 30,
-                                paddingBottom: 15,
-                                backgroundColor: '#ffffff',
-                                flexDirection: 'column',
-                                alignItems: 'flex-start'
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                    fontFamily: 'inter',
-                                    color: '#000000',
-                                    fontWeight: 'bold',
-                                    marginBottom: 10
-                                }}
-                            >
-                                Notify Users
-                            </Text>
-
-                            <Switch
-                                value={instantMeetingAlertUsers}
-                                onValueChange={() => {
-                                    setInstantMeetingAlertUsers(!instantMeetingAlertUsers);
-                                }}
-                                thumbColor={'#f4f4f6'}
-                                trackColor={{
-                                    false: '#f4f4f6',
-                                    true: '#006AFF'
-                                }}
-                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
-                            />
-                        </View>
-
-                        <View
-                            style={{
-                                width: '100%', 
-                                maxWidth: 600,
-                                paddingVertical: 10
-                            }}
-                        >
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    paddingBottom: 15,
-                                    paddingTop: 10,
-                                    width: '100%',
-                                    paddingHorizontal: 20,
-                                    backgroundColor: '#f2f2f2',
-                                    borderRadius: 10,
-                                }}
-                            >
-                                <Text style={{
-                                }}>
-                                    <Ionicons name="time-outline" size={26}  color="#f3722c" />
-                                </Text>
-                                <Text style={{
-                                    paddingLeft: 10,
-                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                    color: '#000000',
-                                    lineHeight: 20,
-                                    fontFamily: 'Overpass',
-                                }}>
-                                    You can schedule future meetings under Agenda
-                                </Text>
-                                
-                            </View>
-                        </View>
-                        <RNTouchableOpacity
-                            style={{
-                                backgroundColor: '#006AFF',
-                                borderRadius: 19,
-                                width: 120,
-                                alignSelf: 'center',
-                                marginTop: 30
-                            }}
-                            onPress={() => {
-                                createInstantMeeting();
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    color: 'white',
-                                    padding: 10,
-                                    textAlign: 'center',
-                                    fontFamily: 'inter',
-                                }}
-                            >
-                                Create
-                            </Text>
-                        </RNTouchableOpacity>
-                    </ScrollView>
+                    </View>
+                </View>
+                <RNTouchableOpacity
+                    style={{
+                        backgroundColor: '#007AFF',
+                        borderRadius: 19,
+                        width: 120,
+                        alignSelf: 'center',
+                        marginTop: 30,
+                    }}
+                    onPress={() => {
+                        createInstantMeeting();
+                    }}
+                >
+                    <Text
+                        style={{
+                            color: 'white',
+                            padding: 10,
+                            textAlign: 'center',
+                            fontFamily: 'inter',
+                        }}
+                    >
+                        Create
+                    </Text>
+                </RNTouchableOpacity>
+            </ScrollView>
         );
     };
 
@@ -3024,7 +3100,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         return (
                             <TouchableOpacity
                                 containerStyle={{
-                                    backgroundColor: '#f2f2f2',
+                                    backgroundColor: '#f8f8f8',
                                     flexDirection: 'column',
                                     shadowColor: '#000000',
                                     shadowOffset: { width: 1, height: 1 },
@@ -3038,7 +3114,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     height: 60,
                                     borderColor: col,
                                     borderLeftWidth: 3,
-                                    elevation: 1
+                                    elevation: 1,
                                 }}
                                 onPress={() => {
                                     props.openUpdate(
@@ -3059,13 +3135,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         width: '100%',
                                         padding: 7,
                                         paddingHorizontal: 10,
-                                        backgroundColor: '#f2f2f2',
+                                        backgroundColor: '#f8f8f8',
                                     }}
                                 >
                                     <View
                                         style={{
                                             height: '30%',
-                                            backgroundColor: '#f2f2f2',
+                                            backgroundColor: '#f8f8f8',
                                             display: 'flex',
                                             flexDirection: 'row',
                                             alignItems: 'center',
@@ -3092,7 +3168,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             <Text
                                                 style={{
                                                     fontSize: 9,
-                                                    color: '#006AFF',
+                                                    color: '#007AFF',
                                                     marginLeft: 5,
                                                     textAlign: 'right',
                                                 }}
@@ -3104,7 +3180,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                                     <View
                                         style={{
-                                            backgroundColor: '#f2f2f2',
+                                            backgroundColor: '#f8f8f8',
                                             width: '100%',
                                             flexDirection: 'row',
                                             flex: 1,
@@ -3134,7 +3210,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </View>
         );
     };
-
 
     const renderMobileCuesCarousel = () => {
         return (
@@ -3174,84 +3249,69 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Renders View for search results
      */
     const searchResultsMobile = (
-        <View style={{
-            height: Dimensions.get('window').height,
-            backgroundColor: '#fff',
-        }}>
+        <View
+            style={{
+                height: Dimensions.get('window').height,
+                backgroundColor: '#fff',
+            }}
+        >
             <View
                 style={{
                     width: '100%',
-                    // paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
                     backgroundColor: '#fff',
                 }}
             >
-                {
-                    !loadingSearchResults &&
-                        searchTerm.trim().length !== 0 &&
-                        activeSearchResultsTab !== '' && searchResultTabs.length > 0 ?
-                        (
-                            <ScrollView
-                                horizontal={true}
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{
-                                    flexDirection: 'row',
-                                    // width: '100%'
-                                    paddingHorizontal: 12,
-                                }}
-                                style={{
-                                    paddingBottom: 10
-                                }}
-                            >
-                                {
-                                    searchResultTabs.map((tab: string, ind: number) => {
-                                        return <TouchableOpacity
-                                            style={{
-                                                backgroundColor: tab === activeSearchResultsTab ? '#000' : '#f2f2f2',
-                                                borderRadius: 20,
-                                                paddingHorizontal: 14,
-                                                marginRight: 10,
-                                                paddingVertical: 7
-                                            }}
-                                            onPress={() => {
-                                                setActiveSearchResultsTab(tab)
-                                            }}
-                                            key={ind.toString()}
-                                        >
-                                            <Text style={{
-                                                color: tab === activeSearchResultsTab ? '#fff' : '#000',
-                                                fontSize: 14
-                                            }}>
-                                                {tab}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    })
-                                }
-                            </ScrollView>
-                        ) : null
-                }
-                {/* {!loadingSearchResults && resultCount !== 0 ? (
-                    <Text
+                {!loadingSearchResults &&
+                searchTerm.trim().length !== 0 &&
+                activeSearchResultsTab !== '' &&
+                searchResultTabs.length > 0 ? (
+                    <ScrollView
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                            flexDirection: 'row',
+                            paddingHorizontal: 12,
+                        }}
                         style={{
-                            fontSize: 20,
-                            paddingVertical: 20,
-                            fontFamily: 'inter',
-                            paddingLeft: 5,
-                            // flex: 1,
-                            // lineHeight: 23,
-                            color: '#006AFF',
-                            backgroundColor: '#fff',
+                            paddingBottom: 10,
                         }}
                     >
-                        {resultCount} Results
-                    </Text>
-                ) : null} */}
+                        {searchResultTabs.map((tab: string, ind: number) => {
+                            return (
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: tab === activeSearchResultsTab ? '#000' : '#f2f2f2',
+                                        borderRadius: 20,
+                                        paddingHorizontal: 14,
+                                        marginRight: 10,
+                                        paddingVertical: 7,
+                                    }}
+                                    onPress={() => {
+                                        setActiveSearchResultsTab(tab);
+                                    }}
+                                    key={ind.toString()}
+                                >
+                                    <Text
+                                        style={{
+                                            color: tab === activeSearchResultsTab ? '#fff' : '#000',
+                                            fontSize: 14,
+                                        }}
+                                    >
+                                        {tab}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                ) : null}
                 <View>
-                    {!loadingSearchResults && searchTerm.trim().length !== 0 &&
-                        results &&
-                        results[searchOptions[0]].length === 0 &&
-                        results[searchOptions[1]].length === 0 &&
-                        results[searchOptions[2]].length === 0 &&
-                        results[searchOptions[3]].length === 0 ? (
+                    {!loadingSearchResults &&
+                    searchTerm.trim().length !== 0 &&
+                    results &&
+                    results[searchOptions[0]].length === 0 &&
+                    results[searchOptions[1]].length === 0 &&
+                    results[searchOptions[2]].length === 0 &&
+                    results[searchOptions[3]].length === 0 ? (
                         <Text
                             style={{
                                 width: '100%',
@@ -3264,88 +3324,85 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 backgroundColor: '#fff',
                             }}
                         >
-                            {searchTerm.trim().length !== 0 && (
-                                results[searchOptions[0]].length === 0 &&
-                                results[searchOptions[1]].length === 0 &&
-                                results[searchOptions[2]].length === 0 &&
-                                results[searchOptions[3]].length === 0
-                            )
-                                ? 'No search results found.' : ''}
+                            {searchTerm.trim().length !== 0 &&
+                            results[searchOptions[0]].length === 0 &&
+                            results[searchOptions[1]].length === 0 &&
+                            results[searchOptions[2]].length === 0 &&
+                            results[searchOptions[3]].length === 0
+                                ? 'No search results found.'
+                                : ''}
                         </Text>
                     ) : null}
 
-
-                    {
-                        !loadingSearchResults && searchTerm.trim().length === 0 ?
-                            <View
+                    {!loadingSearchResults && searchTerm.trim().length === 0 ? (
+                        <View
+                            style={{
+                                maxHeight: Dimensions.get('window').height - 250,
+                                backgroundColor: '#fff',
+                                paddingHorizontal: 20,
+                            }}
+                        >
+                            <Text
                                 style={{
-                                    maxHeight: Dimensions.get('window').height - 250,
+                                    fontSize: 20,
+                                    paddingVertical: 20,
+                                    fontFamily: 'inter',
+                                    paddingLeft: 5,
+                                    color: '#000',
                                     backgroundColor: '#fff',
-                                    paddingHorizontal: 20,
-                                    // paddingTop: 20
+                                    marginTop: recentSearches.length > 0 ? 0 : 50,
                                 }}
-
                             >
-                                <Text
-                                    style={{
-                                        fontSize: 20,
-                                        paddingVertical: 20,
-                                        fontFamily: 'inter',
-                                        paddingLeft: 5,
-                                        color: '#000',
-                                        backgroundColor: '#fff',
-                                        marginTop: recentSearches.length > 0 ? 0 : 50
-                                    }}
-                                >
-                                    {recentSearches.length > 0 ? "Recent" : ""}
-                                </Text>
+                                {recentSearches.length > 0 ? 'Recent' : ''}
+                            </Text>
 
-                                {reversedSearches.map(((search: string, ind: number) => {
-                                    return <View style={{
-                                        width: '100%',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        paddingVertical: 10,
-                                        justifyContent: 'space-between'
-                                    }}
-                                    key={ind.toString()}
-                                    >
-                                        <TouchableOpacity style={{
+                            {reversedSearches.map((search: string, ind: number) => {
+                                return (
+                                    <View
+                                        style={{
+                                            width: '100%',
                                             flexDirection: 'row',
                                             alignItems: 'center',
+                                            paddingVertical: 10,
+                                            justifyContent: 'space-between',
                                         }}
+                                        key={ind.toString()}
+                                    >
+                                        <TouchableOpacity
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                            }}
                                             onPress={() => setSearchTerm(search)}
                                         >
-                                            <Ionicons
-                                                name='time-outline'
-                                                color="#000"
-                                                size={22}
-                                            />
+                                            <Ionicons name="time-outline" color="#000" size={22} />
 
-                                            <Text style={{
-                                                paddingLeft: 12,
-                                                color: '#000',
-                                                // fontFamily: 'Inter',
-                                                fontSize: 16
-                                            }}>
+                                            <Text
+                                                style={{
+                                                    paddingLeft: 12,
+                                                    color: '#000',
+                                                    // fontFamily: 'Inter',
+                                                    fontSize: 16,
+                                                }}
+                                            >
                                                 {search}
                                             </Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{
-                                            marginLeft: 'auto',
-                                            paddingRight: 10,
-                                            paddingTop: 2
-                                        }}
+                                        <TouchableOpacity
+                                            style={{
+                                                marginLeft: 'auto',
+                                                paddingRight: 10,
+                                                paddingTop: 2,
+                                            }}
                                             onPress={() => removeRecentSearch(search)}
                                         >
                                             <Ionicons name="close-outline" size={20} color="" />
                                         </TouchableOpacity>
                                     </View>
-                                }))}
-                            </View> : null
-                    }
-
-
+                                );
+                            })}
+                        </View>
+                    ) : null}
 
                     {loadingSearchResults ? (
                         <View
@@ -3362,18 +3419,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             <ActivityIndicator color={'#1F1F1F'} />
                         </View>
                     ) : null}
-                    {!activeSearchResultsTab || loadingSearchResults || searchTerm.trim().length === 0 ? null : <ScrollView
-                        style={{
-                            maxHeight: Dimensions.get('window').height - 250,
-                            backgroundColor: '#fff',
-                            paddingTop: 20
-                        }}
-                        showsVerticalScrollIndicator={true}
-                        horizontal={false}
-                        indicatorStyle="black"
-                    >
-                        {
-                            results[activeSearchResultsTab].map((obj: any, ind: number) => {
+                    {!activeSearchResultsTab || loadingSearchResults || searchTerm.trim().length === 0 ? null : (
+                        <ScrollView
+                            style={{
+                                maxHeight: Dimensions.get('window').height - 250,
+                                backgroundColor: '#fff',
+                                paddingTop: 20,
+                            }}
+                            showsVerticalScrollIndicator={true}
+                            horizontal={false}
+                            indicatorStyle="black"
+                        >
+                            {results[activeSearchResultsTab].map((obj: any, ind: number) => {
                                 let t = '';
                                 let s = '';
                                 let channelName = '';
@@ -3381,7 +3438,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 let subscribed = false;
                                 let messageSenderName = '';
                                 let messageSenderAvatar = '';
-                                let createdAt = ''
+                                let createdAt = '';
 
                                 if (activeSearchResultsTab === 'Content') {
                                     const { title, subtitle } = htmlStringParser(obj.cue);
@@ -3396,27 +3453,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         colorCode = filterChannel[0].colorCode;
                                     }
 
-
-                                    createdAt = obj.date
+                                    createdAt = obj.date;
                                 } else if (activeSearchResultsTab === 'Courses') {
                                     t = obj.name;
 
                                     channelName = obj.name;
                                     // Determine if already subscribed or not
-                                    const existingSubscription = props.subscriptions.filter(
-                                        (channel: any) => {
-                                            return channel.channelId === obj._id;
-                                        }
-                                    );
+                                    const existingSubscription = props.subscriptions.filter((channel: any) => {
+                                        return channel.channelId === obj._id;
+                                    });
 
                                     if (existingSubscription && existingSubscription.length !== 0) {
                                         subscribed = true;
                                     }
                                 } else if (activeSearchResultsTab === 'Discussion') {
-                                    if (
-                                        obj.message[0] === '{' &&
-                                        obj.message[obj.message.length - 1] === '}'
-                                    ) {
+                                    if (obj.message[0] === '{' && obj.message[obj.message.length - 1] === '}') {
                                         const o = JSON.parse(obj.message);
                                         t = o.title;
                                         s = o.type;
@@ -3434,25 +3485,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         colorCode = filterChannel[0].colorCode;
                                     }
 
-                                    createdAt = obj.time
+                                    createdAt = obj.time;
                                 } else if (activeSearchResultsTab === 'Messages') {
-
                                     const users = obj.groupId.users;
 
-                                    const sender = users.filter((user: any) => user._id === obj.sentBy)[0]
+                                    const sender = users.filter((user: any) => user._id === obj.sentBy)[0];
 
                                     if (obj.groupId && obj.groupId.name) {
-                                        messageSenderName = obj.groupId.name + ' > ' + sender.fullName
-                                        messageSenderAvatar = obj.groupId.image ? obj.groupId.image : ''
-                                    } else {
-                                        messageSenderName = sender.fullName
-                                        messageSenderAvatar = sender.avatar ? sender.avatar : ''
+                                        messageSenderName = obj.groupId.name + ' > ' + sender.fullName;
+                                        messageSenderAvatar = obj.groupId.image ? obj.groupId.image : '';
+                                    } else if (sender) {
+                                        messageSenderName = sender.fullName;
+                                        messageSenderAvatar = sender.avatar ? sender.avatar : '';
                                     }
 
-                                    if (
-                                        obj.message[0] === '{' &&
-                                        obj.message[obj.message.length - 1] === '}'
-                                    ) {
+                                    if (obj.message[0] === '{' && obj.message[obj.message.length - 1] === '}') {
                                         const o = JSON.parse(obj.message);
                                         t = o.title;
                                         s = o.type;
@@ -3462,8 +3509,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         s = subtitle;
                                     }
 
-                                    createdAt = obj.sentAt
-
+                                    createdAt = obj.sentAt;
                                 }
 
                                 return (
@@ -3481,18 +3527,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         handleSub={() => handleSub(obj._id)}
                                         onPress={async () => {
                                             if (activeSearchResultsTab === 'Content') {
-                                                props.openCueFromCalendar(
-                                                    obj.channelId,
-                                                    obj._id,
-                                                    obj.createdBy
-                                                );
+                                                props.openCueFromCalendar(obj.channelId, obj._id, obj.createdBy);
                                                 setSearchTerm('');
                                             } else if (activeSearchResultsTab === 'Discussion') {
                                                 await AsyncStorage.setItem(
                                                     'openThread',
-                                                    obj.parentId && obj.parentId !== ''
-                                                        ? obj.parentId
-                                                        : obj._id
+                                                    obj.parentId && obj.parentId !== '' ? obj.parentId : obj._id
                                                 );
 
                                                 if (obj.cueId && obj.cueId !== '') {
@@ -3526,205 +3566,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             }
                                         }}
                                     />
-
                                 );
-                            })
-                        }
-                    </ScrollView>}
-                    {/* <ScrollView
-                        horizontal={true}
-                        key={JSON.stringify(results)}
-                        style={{
-                            maxHeight: Dimensions.get('window').height - 280,
-                            backgroundColor: '#fff',
-                        }}
-                        indicatorStyle="black"
-                        contentContainerStyle={{
-                            paddingBottom: 20,
-                            paddingTop: 15,
-                            backgroundColor: '#fff',
-                        }}
-                        showsHorizontalScrollIndicator={false}
-                    >
-                        {searchOptions.map((option: any, i: number) => {
-                            if (results[option].length === 0 || loadingSearchResults) {
-                                return null;
-                            }
-
-                            return (
-                                <View style={{
-                                    width: 200,
-                                    marginRight: 20,
-                                    // maxHeight: 450,
-                                    borderRadius: 4,
-                                    backgroundColor: '#fff',
-                                 }} key={i}>
-                                    <Text
-                                        style={{
-                                            fontFamily: 'Inter',
-                                            fontSize: 16,
-                                            paddingLeft: 10,
-                                            marginBottom: 15,
-                                            color: '#1a1a1a',
-                                        }}
-                                    >
-                                        {option === 'Classroom' ? 'Content' : option}
-                                    </Text>
-                                    <ScrollView 
-                                        horizontal={false}
-                                        // key={JSON.stringify(results)}
-                                        showsVerticalScrollIndicator={true}
-                                        contentContainerStyle={{
-                                            flexDirection: 'column',
-                                            width: '100%',
-                                            maxWidth: 190,
-                                            justifyContent: 'center',
-                                            backgroundColor: '#f2f2f2',
-                                            // paddingTop: ,
-                                            padding: 5,
-                                        }}
-                                        indicatorStyle="black"
-                                        persistentScrollbar={true}
-                                    >
-                                        {results[option].map((obj: any, index: any) => {
-                                            let t = '';
-                                            let s = '';
-                                            let channelName = '';
-                                            let colorCode = '';
-                                            let subscribed = false;
-                                            let messageSenderName = '';
-                                            let messageSenderAvatar = '';
-
-                                            if (option === 'Classroom') {
-                                                const { title, subtitle } = htmlStringParser(obj.cue);
-                                                t = title;
-                                                s = subtitle;
-                                                const filterChannel = props.subscriptions.filter((channel: any) => {
-                                                    return channel.channelId === obj.channelId;
-                                                });
-
-                                                if (filterChannel && filterChannel.length !== 0) {
-                                                    channelName = filterChannel[0].channelName;
-                                                    colorCode = filterChannel[0].colorCode;
-                                                }
-                                            } else if (option === 'Channels') {
-                                                t = obj.name;
-
-                                                channelName = obj.name;
-                                                // Determine if already subscribed or not
-                                                const existingSubscription = props.subscriptions.filter(
-                                                    (channel: any) => {
-                                                        return channel.channelId === obj._id;
-                                                    }
-                                                );
-
-                                                if (existingSubscription && existingSubscription.length !== 0) {
-                                                    subscribed = true;
-                                                }
-                                            } else if (option === 'Threads') {
-                                                if (
-                                                    obj.message[0] === '{' &&
-                                                    obj.message[obj.message.length - 1] === '}'
-                                                ) {
-                                                    const o = JSON.parse(obj.message);
-                                                    t = o.title;
-                                                    s = o.type;
-                                                } else {
-                                                    const { title, subtitle } = htmlStringParser(obj.message);
-                                                    t = title;
-                                                    s = subtitle;
-                                                }
-                                                const filterChannel = props.subscriptions.filter((channel: any) => {
-                                                    return channel.channelId === obj.channelId;
-                                                });
-
-                                                if (filterChannel && filterChannel.length !== 0) {
-                                                    channelName = filterChannel[0].channelName;
-                                                    colorCode = filterChannel[0].colorCode;
-                                                }
-                                            } else if (option === 'Messages') {
-                                                
-                                                const users = obj.groupId.users;
-
-                                                const sender = users.filter((user: any) => user._id === obj.sentBy)[0]
-
-                                                if (obj.groupId && obj.groupId.name) {
-                                                    messageSenderName = obj.groupId.name + ' > ' + sender.fullName
-                                                    messageSenderAvatar = obj.groupId.image ? obj.groupId.image : ''
-                                                } else {
-                                                    messageSenderName = sender.fullName
-                                                    messageSenderAvatar = sender.avatar ? sender.avatar : ''
-                                                }
-                                            }
-
-                                            console.log("Obj", obj)
-
-                                            return (
-                                                    <SearchResultCard
-                                                        title={t}
-                                                        subtitle={s}
-                                                        channelName={channelName}
-                                                        colorCode={colorCode}
-                                                        option={option}
-                                                        subscribed={subscribed}
-                                                        messageSenderName={messageSenderName}
-                                                        messageSenderAvatar={messageSenderAvatar}
-                                                        handleSub={() => handleSub(obj._id)}
-                                                        onPress={async () => {
-                                                            if (option === 'Classroom') {
-                                                                props.openCueFromCalendar(
-                                                                    obj.channelId,
-                                                                    obj._id,
-                                                                    obj.createdBy
-                                                                );
-                                                                setSearchTerm('');
-                                                            } else if (option === 'Threads') {
-                                                                await AsyncStorage.setItem(
-                                                                    'openThread',
-                                                                    obj.parentId && obj.parentId !== ''
-                                                                        ? obj.parentId
-                                                                        : obj._id
-                                                                );
-
-                                                                if (obj.cueId && obj.cueId !== '') {
-                                                                    props.openQAFromSearch(obj.channelId, obj.cueId);
-                                                                } else {
-                                                                    props.openDiscussionFromSearch(obj.channelId);
-
-                                                                    props.setLoadDiscussionForChannelId(obj.channelId);
-                                                                }
-
-                                                                setSearchTerm('');
-                                                            } else if (option === 'Messages') {
-                                                                // open chat and set Chat ID and users in Async storage to open that specific chat
-
-                                                                await AsyncStorage.setItem(
-                                                                    'openChat',
-                                                                    JSON.stringify({
-                                                                        _id: obj.groupId,
-                                                                        users: obj.users,
-                                                                    })
-                                                                );
-
-                                                                props.setOption('Inbox');
-
-                                                                setSearchTerm('');
-                                                            } else if (option === 'Channels') {
-                                                                if (subscribed) {
-                                                                    // Open the channel meeting
-                                                                    props.openChannelFromActivity(obj._id);
-                                                                }
-                                                            }
-                                                        }}
-                                                    />
-
-                                            );
-                                        })}
-                                    </ScrollView>
-                                </View>
-                            );
-                        })}
-                    </ScrollView> */}
+                            })}
+                        </ScrollView>
+                    )}
                 </View>
             </View>
         </View>
@@ -3746,17 +3591,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         switch (activeTab) {
             case 'Content':
-                return 'Library'
+                return 'Library';
             case 'Discuss':
-                return 'Discussion'
+                return 'Discussion';
             case 'Meet':
-                return 'Meetings'
+                return 'Meetings';
             case 'Scores':
-                return 'Scores'
+                return 'Scores';
             default:
-                return 'Settings'
+                return 'Settings';
         }
-    }
+    };
 
     const overviewMobile = (
         <View
@@ -3768,190 +3613,193 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }}
             key={selectedWorkspace}
         >
-            {props.hideNavbarDiscussions ? null : <View
-                style={{
-                    paddingHorizontal: 20,
-                    // height: 60,
-                    // paddingVertical: 10,
-                    paddingTop: 15,
-                    paddingBottom: 10
-                }}
-            >
-                {selectedWorkspace !== '' ? (
-                    <View
-                        style={{
-                            paddingVertical: 6,
-                            paddingTop: 0,
-                            // marginHorizontal: 12,
-                            backgroundColor: '#fff',
-                            flexDirection: 'row',
-                            // justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <TouchableOpacity
-                            onPress={() => {
-                                setSelectedWorkspace('');
-                                props.setOpenChannelId('');
-                                props.setWorkspaceActiveTab('Content');
-                                // props.setSelectedWorkspace('');
-                            }}
-                            containerStyle={{
-                                // position: 'absolute',
-                                left: 0,
-                                borderRadius: 20,
-                                width: 30,
-                                height: 35,
-                                backgroundColor: 'white',
-                                justifyContent: 'center',
+            {props.hideNavbarDiscussions ? null : (
+                <View
+                    style={{
+                        paddingHorizontal: 20,
+                        // height: 60,
+                        // paddingVertical: 10,
+                        paddingTop: 15,
+                        paddingBottom: 10,
+                    }}
+                >
+                    {selectedWorkspace !== '' ? (
+                        <View
+                            style={{
+                                paddingVertical: 6,
+                                paddingTop: 0,
+                                // marginHorizontal: 12,
+                                backgroundColor: '#fff',
+                                flexDirection: 'row',
+                                // justifyContent: 'center',
                                 alignItems: 'center',
-                                marginTop: -0.5, marginRight: 15
                             }}
                         >
-                            <Ionicons size={35} name="arrow-back-outline" color="#1f1f1f" />
-                        </TouchableOpacity>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text
-                                ellipsizeMode={'tail'}
-                                numberOfLines={1}
-                                style={{
-                                    marginLeft: 5,
-                                    fontFamily: 'Inter',
-                                    fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
-                                    lineHeight: 35,
-                                    width: 'auto',
-                                    fontWeight: 'bold',
-                                }}
-                            >
-                                {selectedWorkspace.split('-SPLIT-')[0]} {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? "/" : '' }
-                            </Text>
-                            {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? <Text
-                                ellipsizeMode={'tail'}
-                                numberOfLines={1}
-                                style={{
-                                    marginLeft: 5,
-                                    fontFamily: 'Inter',
-                                    fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
-                                    lineHeight: 35,
-                                    width: 'auto',
-                                    fontWeight: 'bold',
-                                    color: selectedWorkspace.split('-SPLIT-')[3]
-                                }}
-                            >
-                                {
-                                    tabNames[tabs[indexMap[selectedWorkspace]]]
-                                }
-                            </Text> : null}
-                        </View>
-
-                        {/* Filter icon */}
-                        {indexMap[selectedWorkspace] === 0 ? (
                             <TouchableOpacity
-                                containerStyle={{
-                                    position: 'absolute',
-                                    marginLeft: 0,
-                                    right: -1,
-                                    paddingBottom: 2
+                                onPress={() => {
+                                    setSelectedWorkspace('');
+                                    props.setOpenChannelId('');
+                                    props.setWorkspaceActiveTab('Content');
                                 }}
-                                onPress={() => setShowFilterModal(!showFilterModal)}
+                                containerStyle={{
+                                    // position: 'absolute',
+                                    left: 0,
+                                    borderRadius: 20,
+                                    width: 30,
+                                    height: 35,
+                                    backgroundColor: 'white',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginTop: -0.5,
+                                    marginRight: 15,
+                                }}
                             >
-                                <Ionicons
-                                    name={'filter-outline'}
-                                    size={23}
-                                    color="black"
-                                />
+                                <Ionicons size={35} name="arrow-back-outline" color="#1f1f1f" />
                             </TouchableOpacity>
-                        ) : null}
-                        {
-                            indexMap[selectedWorkspace] === 3 && selectedWorkspace.split('-SPLIT-')[2] === userId ?
-                                (<TouchableOpacity
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text
+                                    ellipsizeMode={'tail'}
+                                    numberOfLines={1}
+                                    style={{
+                                        marginLeft: 5,
+                                        fontFamily: 'Inter',
+                                        fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
+                                        lineHeight: 35,
+                                        width: 'auto',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {selectedWorkspace.split('-SPLIT-')[0]}{' '}
+                                    {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? '/' : ''}
+                                </Text>
+                                {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? (
+                                    <Text
+                                        ellipsizeMode={'tail'}
+                                        numberOfLines={1}
+                                        style={{
+                                            marginLeft: 5,
+                                            fontFamily: 'Inter',
+                                            fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
+                                            lineHeight: 35,
+                                            width: 'auto',
+                                            fontWeight: 'bold',
+                                            color: selectedWorkspace.split('-SPLIT-')[3],
+                                        }}
+                                    >
+                                        {tabNames[tabs[indexMap[selectedWorkspace]]]}
+                                    </Text>
+                                ) : null}
+                            </View>
+
+                            {/* Filter icon */}
+                            {indexMap[selectedWorkspace] === 0 ? (
+                                <TouchableOpacity
+                                    containerStyle={{
+                                        position: 'absolute',
+                                        marginLeft: 0,
+                                        right: -1,
+                                        paddingBottom: 2,
+                                    }}
+                                    onPress={() => setShowFilterModal(!showFilterModal)}
+                                >
+                                    <Ionicons name={'filter-outline'} size={23} color="black" />
+                                </TouchableOpacity>
+                            ) : null}
+                            {indexMap[selectedWorkspace] === 3 && selectedWorkspace.split('-SPLIT-')[2] === userId ? (
+                                <TouchableOpacity
                                     containerStyle={{
                                         position: 'absolute',
                                         marginLeft: 0,
                                         right: -1,
                                     }}
                                     onPress={() => {
-                                        setExportScores(true)
-                                    }}
-                                >
-                                    <Ionicons name='download-outline' size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
-                                </TouchableOpacity>)
-                                : null
-                        }
-                    </View>
-                ) : (
-                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingBottom: 10 }}>
-
-                        {!showSearchMobile ? <Text style={{
-                            fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
-                            color: '#000',
-                            fontFamily: 'Inter',
-                            fontWeight: 'bold'
-                        }}>
-                            Your Workspace
-                        </Text> : null
-                        }
-
-                        {
-                            showSearchMobile ? <View style={{
-                                width: '100%',
-                                backgroundColor: '#f2f2f2',
-                                borderRadius: 22,
-                                height: 45,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                paddingHorizontal: 14,
-                            }}>
-                                <Ionicons name='search-outline' size={24} color='#1f1f1f' />
-                                <DefaultInput
-                                    style={{
-                                        paddingHorizontal: 10,
-                                        width: 300,
-                                        color: '#000',
-                                        fontSize: 15,
-                                        flex: 1,
-                                        paddingVertical: 8,
-                                        // marginTop: 10,
-                                        marginRight: searchTerm === '' ? 10 : 15,
-                                        // backgroundColor: '#f2f2f2',
-                                        // borderRadius: 18,
-                                        // borderBottomColor: '#cfcfcf',
-
-                                        // borderBottomWidth: 1
-                                    }}
-                                    placeholder={'Search'}
-                                    placeholderTextColor="#656565"
-                                    value={searchTerm}
-                                    autoFocus={false}
-                                    onChangeText={(val) => setSearchTerm(val)}
-                                    onFocus={() => setShowSearchMobile(true)}
-                                    returnKeyType="search"
-                                    onSubmitEditing={() => {
-                                        updateRecentSearches()
-                                    }}
-                                    clearButtonMode="while-editing"
-                                />
-                                {searchTerm !== '' ? <TouchableOpacity
-                                    onPress={() => {
-                                        // setShowSearchMobile(!showSearchMobile);
-                                        Keyboard.dismiss()
-                                        setSearchTerm('');
-                                    }}
-                                    containerStyle={{
-                                        marginLeft: 'auto',
-
+                                        setExportScores(true);
                                     }}
                                 >
                                     <Ionicons
-                                        size={22}
-                                        name={'close-outline'}
+                                        name="download-outline"
+                                        size={Dimensions.get('window').width < 800 ? 23 : 26}
                                         color="black"
                                     />
-                                </TouchableOpacity> : null}
-                            </View> : null
-                        }
+                                </TouchableOpacity>
+                            ) : null}
+                        </View>
+                    ) : (
+                        <View
+                            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingBottom: 10 }}
+                        >
+                            {!showSearchMobile ? (
+                                <Text
+                                    style={{
+                                        fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
+                                        color: '#000',
+                                        fontFamily: 'Inter',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    Your Workspace
+                                </Text>
+                            ) : null}
 
-                        {/* {showSearchMobile ? <DefaultInput
+                            {showSearchMobile ? (
+                                <View
+                                    style={{
+                                        width: '100%',
+                                        backgroundColor: '#f8f8f8',
+                                        borderRadius: 22,
+                                        height: 45,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingHorizontal: 14,
+                                    }}
+                                >
+                                    <Ionicons name="search-outline" size={24} color="#1f1f1f" />
+                                    <DefaultInput
+                                        style={{
+                                            paddingHorizontal: 10,
+                                            width: 300,
+                                            color: '#000',
+                                            fontSize: 15,
+                                            flex: 1,
+                                            paddingVertical: 8,
+                                            // marginTop: 10,
+                                            marginRight: searchTerm === '' ? 10 : 15,
+                                            // backgroundColor: '#f8f8f8',
+                                            // borderRadius: 18,
+                                            // borderBottomColor: '#cfcfcf',
+
+                                            // borderBottomWidth: 1
+                                        }}
+                                        placeholder={'Search'}
+                                        placeholderTextColor="#656565"
+                                        value={searchTerm}
+                                        autoFocus={false}
+                                        onChangeText={(val) => setSearchTerm(val)}
+                                        onFocus={() => setShowSearchMobile(true)}
+                                        returnKeyType="search"
+                                        onSubmitEditing={() => {
+                                            updateRecentSearches();
+                                        }}
+                                        clearButtonMode="while-editing"
+                                    />
+                                    {searchTerm !== '' ? (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                // setShowSearchMobile(!showSearchMobile);
+                                                Keyboard.dismiss();
+                                                setSearchTerm('');
+                                            }}
+                                            containerStyle={{
+                                                marginLeft: 'auto',
+                                            }}
+                                        >
+                                            <Ionicons size={22} name={'close-outline'} color="black" />
+                                        </TouchableOpacity>
+                                    ) : null}
+                                </View>
+                            ) : null}
+
+                            {/* {showSearchMobile ? <DefaultInput
                                 style={{
                                     paddingHorizontal: 10,
                                     marginLeft: 10,
@@ -3962,7 +3810,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     paddingVertical: 8,
                                     // marginTop: 10,
                                     marginRight: searchTerm === '' ? 10 : 15,
-                                    // backgroundColor: '#f2f2f2',
+                                    // backgroundColor: '#f8f8f8',
                                     // borderRadius: 18,
                                     borderBottomColor: '#cfcfcf',
 
@@ -3977,7 +3825,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 returnKeyType="search"
                             /> : null} */}
 
-                        {/* {showSearchMobile ? null : <Image
+                            {/* {showSearchMobile ? null : <Image
                             source={logo}
                             style={{
                                 width: 60,
@@ -3998,7 +3846,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     paddingVertical: 8,
                                     marginTop: 10,
                                     marginRight: 15,
-                                    backgroundColor: '#f2f2f2',
+                                    backgroundColor: '#f8f8f8',
                                     borderRadius: 18
                                 }}
                                 placeholder="Search..."
@@ -4018,7 +3866,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     paddingVertical: 8,
                                     marginTop: 10,
                                     marginRight: 15,
-                                    backgroundColor: '#f2f2f2',
+                                    backgroundColor: '#f8f8f8',
                                     borderRadius: 18
                                 }}
                                 placeholder="Search..."
@@ -4029,7 +3877,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 onFocus={() => setShowSearchMobile(true)}
                             />
                         )} */}
-                        {/* {showSearchMobile ? null : <TouchableOpacity
+                            {/* {showSearchMobile ? null : <TouchableOpacity
                             onPress={() => {
                                 props.setShowSettings(true)
                             }}
@@ -4046,7 +3894,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 color="black"
                             />
                         </TouchableOpacity>} */}
-                        {/* {showSearchMobile && searchTerm !== '' ? <TouchableOpacity
+                            {/* {showSearchMobile && searchTerm !== '' ? <TouchableOpacity
                             onPress={() => {
                                 // setShowSearchMobile(!showSearchMobile);
                                 Keyboard.dismiss()
@@ -4063,9 +3911,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 color="black"
                             />
                         </TouchableOpacity> : null} */}
-                    </View>
-                )}
-            </View>}
+                        </View>
+                    )}
+                </View>
+            )}
 
             {/* Render all courses */}
             {selectedWorkspace === '' ? (
@@ -4076,14 +3925,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         horizontal={false}
                         indicatorStyle="black"
                         contentContainerStyle={{
-                            paddingBottom: 200
+                            paddingBottom: 200,
                         }}
                         refreshControl={
                             <RefreshControl
                                 refreshing={props.refreshingWorkspace}
                                 onRefresh={() => props.onRefreshWorkspace(true)}
-                                tintColor={"#1f1f1f"}
-                                progressBackgroundColor={Platform.OS === 'ios' ? "#1f1f1f" : "#f2f2f2"}
+                                tintColor={'#1f1f1f'}
+                                progressBackgroundColor={Platform.OS === 'ios' ? '#1f1f1f' : '#f2f2f2'}
                                 size={14}
                             />
                         }
@@ -4106,7 +3955,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         }}
                                         key={ind}
                                         containerStyle={{
-
                                             backgroundColor: '#fff',
                                             // borderRadius: 17,
                                             marginRight: ind % 2 === 0 ? 20 : 0,
@@ -4122,7 +3970,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             overflow: 'hidden',
                                             shadowOpacity: 0.12,
                                             shadowRadius: 7,
-                                            flexDirection: 'row'
+                                            flexDirection: 'row',
                                         }}
                                         style={{
                                             display: 'flex',
@@ -4135,7 +3983,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             paddingVertical: 10,
                                             paddingLeft: 10,
                                             height: 60,
-                                            flex: 1
+                                            flex: 1,
                                         }}
                                     >
                                         <View
@@ -4146,7 +3994,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 // marginTop: 2,
                                                 marginLeft: 10,
                                                 marginRight: 8,
-                                                backgroundColor: key.split('-SPLIT-')[3] || 'black'
+                                                backgroundColor: key.split('-SPLIT-')[3] || 'black',
                                             }}
                                         />
                                         <Text
@@ -4155,7 +4003,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             style={{
                                                 marginLeft: 2,
                                                 fontFamily: 'Inter',
-                                                fontSize: 17,
+                                                fontSize: Dimensions.get('window').width < 768 ? 17 : 19,
                                                 width: 'auto',
                                                 fontWeight: 'bold',
                                                 // color: key.split('-SPLIT-')[3]
@@ -4182,11 +4030,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     indicatorStyle="black"
                     ref={DashboardScrollViewRef}
                     bounces={!props.hideNavbarDiscussions}
-                // alwaysBounceVertical={false}
+                    // alwaysBounceVertical={false}
 
-                // bounces={false}
+                    // bounces={false}
                 >
-                    {/* {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? renderTabs(selectedWorkspace) : null} */}
+                    {/* {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? renderTabs(selected) : null} */}
                     <View
                         style={{
                             flexDirection: 'row',
@@ -4202,12 +4050,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 width: '100%',
                                 backgroundColor: tabs[indexMap[selectedWorkspace]] === 'Content' ? '#fff' : '#fff',
                                 // This changes the height for all
-                                height: tabs[indexMap[selectedWorkspace]] === 'Settings' || (tabs[indexMap[selectedWorkspace]] === 'Discuss' && props.hideNavbarDiscussions) ? 'auto' : windowHeight - (Platform.OS === 'android' ? 90 : 200)
+                                height:
+                                    tabs[indexMap[selectedWorkspace]] === 'Settings' ||
+                                    (tabs[indexMap[selectedWorkspace]] === 'Discuss' && props.hideNavbarDiscussions)
+                                        ? 'auto'
+                                        : windowHeight - (Platform.OS === 'android' ? 90 : 200),
                             }}
                         >
                             {[selectedWorkspace] ? (
                                 <View
-                                    style={{ width: '100%', backgroundColor: tabs[indexMap[selectedWorkspace]] === 'Content' ? '#fff' : '#fff', height: '100%' }}
+                                    style={{
+                                        width: '100%',
+                                        backgroundColor:
+                                            tabs[indexMap[selectedWorkspace]] === 'Content' ? '#fff' : '#fff',
+                                        height: '100%',
+                                    }}
                                     key={
                                         editFolderChannelId.toString() +
                                         cueIds.toString() +
@@ -4232,103 +4089,107 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 setHideNavbarDiscussions={props.setHideNavbarDiscussions}
                                             />
                                         ) : // Meet
-                                            indexMap[selectedWorkspace] === 2 ? (
-                                                <View
-                                                    style={{
-                                                        alignItems: 'center',
-                                                        backgroundColor: '#fff',
-                                                        paddingTop: 20
-                                                    }}
-                                                >
-                                                    {ongoingMeetings.length > 0
-                                                        ? renderOngoingMeetings(
-                                                            selectedWorkspace.split('-SPLIT-')[2],
-                                                            selectedWorkspace.split('-SPLIT-')[3]
-                                                        )
-                                                        : null}
+                                        indexMap[selectedWorkspace] === 2 ? (
+                                            <View
+                                                style={{
+                                                    alignItems: 'center',
+                                                    backgroundColor: '#fff',
+                                                    paddingTop: 20,
+                                                }}
+                                            >
+                                                {ongoingMeetings.length > 0
+                                                    ? renderOngoingMeetings(
+                                                          selectedWorkspace.split('-SPLIT-')[2],
+                                                          selectedWorkspace.split('-SPLIT-')[3]
+                                                      )
+                                                    : null}
 
-                                                    <Performance
-                                                        channelName={selectedWorkspace.split('-SPLIT-')[0]}
-                                                        onPress={(name: any, id: any, createdBy: any) => {
-                                                            props.setChannelFilterChoice('All');
-                                                            props.handleFilterChange(name);
-                                                            props.setChannelId(id);
-                                                            props.setChannelCreatedBy(createdBy);
-                                                            props.openGrades();
-                                                            props.hideHome();
-                                                        }}
-                                                        filterStart={filterStart}
-                                                        filterEnd={filterEnd}
-                                                        channelId={selectedWorkspace.split('-SPLIT-')[1]}
-                                                        channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
-                                                        subscriptions={props.subscriptions}
-                                                        openCueFromGrades={props.openCueFromCalendar}
-                                                        colorCode={selectedWorkspace.split('-SPLIT-')[3]}
-                                                        activeTab={'meetings'}
-                                                        exportScores={exportScores}
-                                                        setExportScores={(exp: boolean) => setExportScores(exp)}
-                                                    />
-                                                </View>
-                                            ) : // Scores
-                                                indexMap[selectedWorkspace] === 3 ? (
-                                                    <Performance
-                                                        channelName={selectedWorkspace.split('-SPLIT-')[0]}
-                                                        onPress={(name: any, id: any, createdBy: any) => {
-                                                            props.setChannelFilterChoice('All');
-                                                            props.handleFilterChange(name);
-                                                            props.setChannelId(id);
-                                                            props.setChannelCreatedBy(createdBy);
-                                                            props.openGrades();
-                                                            props.hideHome();
-                                                        }}
-                                                        filterStart={filterStart}
-                                                        channelId={selectedWorkspace.split('-SPLIT-')[1]}
-                                                        channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
-                                                        filterEnd={filterEnd}
-                                                        subscriptions={props.subscriptions}
-                                                        openCueFromGrades={props.openCueFromCalendar}
-                                                        colorCode={selectedWorkspace.split('-SPLIT-')[3]}
-                                                        activeTab={'scores'}
-                                                        isEditor={selectedWorkspace.split('-SPLIT-')[2] === userId}
-                                                        exportScores={exportScores}
-                                                        setExportScores={(exp: boolean) => setExportScores(exp)}
-                                                    />
-                                                ) : (
-                                                    <View
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            alignSelf: 'center',
-                                                            borderTopRightRadius: 10,
-                                                            borderBottomRightRadius: 10,
-                                                        }}
-                                                    >
-                                                        <ChannelSettings
-                                                            channelId={selectedWorkspace.split('-SPLIT-')[1]}
-                                                            refreshSubscriptions={() => {
-                                                                setSelectedWorkspace('')
-                                                                props.refreshSubscriptions()
-                                                            }}
-                                                            closeModal={() => {
-                                                                props.onRefreshWorkspace(false)
-                                                            }}
-                                                            channelColor={selectedWorkspace.split('-SPLIT-')[3]}
-                                                            userId={userId}
-                                                            scrollToTop={() => {
-                                                                if (DashboardScrollViewRef && DashboardScrollViewRef.current) {
-                                                                    DashboardScrollViewRef.current.scrollTo({
-                                                                        y: 0,
-                                                                        animated: false
-                                                                    })
-                                                                }
-                                                            }}
-                                                            refreshChannelSettings={refreshChannelSettings}
-                                                            setRefreshChannelSettings={(refresh: boolean) => setRefreshChannelSettings(refresh)}
-                                                            setShowInviteByEmailsModal={(show: boolean) => setShowInviteByEmailsModal(show)}
-                                                            userCreatedOrg={userCreatedOrg}
-                                                        />
-                                                    </View>
-                                                )
+                                                <Performance
+                                                    channelName={selectedWorkspace.split('-SPLIT-')[0]}
+                                                    onPress={(name: any, id: any, createdBy: any) => {
+                                                        props.setChannelFilterChoice('All');
+                                                        props.handleFilterChange(name);
+                                                        props.setChannelId(id);
+                                                        props.setChannelCreatedBy(createdBy);
+                                                        props.openGrades();
+                                                        props.hideHome();
+                                                    }}
+                                                    filterStart={filterStart}
+                                                    filterEnd={filterEnd}
+                                                    channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                    channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
+                                                    subscriptions={props.subscriptions}
+                                                    openCueFromGrades={props.openCueFromCalendar}
+                                                    colorCode={selectedWorkspace.split('-SPLIT-')[3]}
+                                                    activeTab={'meetings'}
+                                                    exportScores={exportScores}
+                                                    setExportScores={(exp: boolean) => setExportScores(exp)}
+                                                />
+                                            </View>
+                                        ) : // Scores
+                                        indexMap[selectedWorkspace] === 3 ? (
+                                            <Performance
+                                                channelName={selectedWorkspace.split('-SPLIT-')[0]}
+                                                onPress={(name: any, id: any, createdBy: any) => {
+                                                    props.setChannelFilterChoice('All');
+                                                    props.handleFilterChange(name);
+                                                    props.setChannelId(id);
+                                                    props.setChannelCreatedBy(createdBy);
+                                                    props.openGrades();
+                                                    props.hideHome();
+                                                }}
+                                                filterStart={filterStart}
+                                                channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
+                                                filterEnd={filterEnd}
+                                                subscriptions={props.subscriptions}
+                                                openCueFromGrades={props.openCueFromCalendar}
+                                                colorCode={selectedWorkspace.split('-SPLIT-')[3]}
+                                                activeTab={'scores'}
+                                                isEditor={selectedWorkspace.split('-SPLIT-')[2] === userId}
+                                                exportScores={exportScores}
+                                                setExportScores={(exp: boolean) => setExportScores(exp)}
+                                            />
+                                        ) : (
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    alignSelf: 'center',
+                                                    borderTopRightRadius: 10,
+                                                    borderBottomRightRadius: 10,
+                                                }}
+                                            >
+                                                <ChannelSettings
+                                                    channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                    refreshSubscriptions={() => {
+                                                        setSelectedWorkspace('');
+                                                        props.refreshSubscriptions();
+                                                    }}
+                                                    closeModal={() => {
+                                                        props.onRefreshWorkspace(false);
+                                                    }}
+                                                    channelColor={selectedWorkspace.split('-SPLIT-')[3]}
+                                                    userId={userId}
+                                                    scrollToTop={() => {
+                                                        if (DashboardScrollViewRef && DashboardScrollViewRef.current) {
+                                                            DashboardScrollViewRef.current.scrollTo({
+                                                                y: 0,
+                                                                animated: false,
+                                                            });
+                                                        }
+                                                    }}
+                                                    refreshChannelSettings={refreshChannelSettings}
+                                                    setRefreshChannelSettings={(refresh: boolean) =>
+                                                        setRefreshChannelSettings(refresh)
+                                                    }
+                                                    setShowInviteByEmailsModal={(show: boolean) =>
+                                                        setShowInviteByEmailsModal(show)
+                                                    }
+                                                    userCreatedOrg={userCreatedOrg}
+                                                />
+                                            </View>
+                                        )
                                     ) : cueMap[selectedWorkspace].length === 0 ? (
                                         <Text
                                             style={{
@@ -4342,7 +4203,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 flex: 1,
                                             }}
                                         >
-                                            {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? (selectedWorkspace.split('-SPLIT-')[2] === userId ? PreferredLanguageText('noCuesCreatedInstructor') : PreferredLanguageText('noCuesCreated')) : PreferredLanguageText('noNotesCreated')}
+                                            {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes'
+                                                ? selectedWorkspace.split('-SPLIT-')[2] === userId
+                                                    ? PreferredLanguageText('noCuesCreatedInstructor')
+                                                    : PreferredLanguageText('noCuesCreated')
+                                                : PreferredLanguageText('noNotesCreated')}
                                         </Text>
                                     ) : (
                                         renderMobileCuesCarousel()
@@ -4350,7 +4215,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         //     horizontal={false}
                                         //     contentContainerStyle={{
                                         //         // maxWidth: '100%',
-                                        //         backgroundColor: '#f2f2f2',
+                                        //         backgroundColor: '#f8f8f8',
                                         //         paddingHorizontal: 10
                                         //     }}
                                         //     showsVerticalScrollIndicator={true}
@@ -4373,7 +4238,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         //             <View
                                         //                 style={{
                                         //                     width: '100%',
-                                        //                     backgroundColor: '#f2f2f2',
+                                        //                     backgroundColor: '#f8f8f8',
                                         //                     marginRight: 15,
                                         //                     marginBottom: 20
                                         //                 }}
@@ -4381,7 +4246,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         //             >
                                         //                 <View
                                         //                     style={{
-                                        //                         backgroundColor: '#f2f2f2',
+                                        //                         backgroundColor: '#f8f8f8',
                                         //                         paddingLeft: 5
                                         //                     }}
                                         //                 >
@@ -4395,7 +4260,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         //                                 lineHeight: 25,
                                         //                                 marginBottom: category === '' ? 0 : 5,
                                         //                                 fontFamily: 'inter',
-                                        //                                 backgroundColor: '#f2f2f2'
+                                        //                                 backgroundColor: '#f8f8f8'
                                         //                             }}
                                         //                             ellipsizeMode="tail"
                                         //                         >
@@ -4407,7 +4272,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         //                     horizontal={true}
                                         //                     style={{
                                         //                         paddingLeft: 5,
-                                        //                         backgroundColor: '#f2f2f2',
+                                        //                         backgroundColor: '#f8f8f8',
                                         //                         width: '100%'
                                         //                     }}
                                         //                     key={i.toString() + selectedWorkspace.toString()}
@@ -4424,7 +4289,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         //                             <View
                                         //                                 style={{
                                         //                                     marginBottom: 15,
-                                        //                                     backgroundColor: '#f2f2f2',
+                                        //                                     backgroundColor: '#f8f8f8',
                                         //                                     width: '100%',
                                         //                                     maxWidth: 130,
                                         //                                     marginRight: 15
@@ -4557,7 +4422,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         >
                             <View
                                 style={{
-                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                    backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                     borderColor: '#f2f2f2',
                                     borderTopWidth: ind !== 0 && collapseMap[key] ? 1 : 0,
                                     // paddingBottom: 10,
@@ -4576,15 +4441,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 {ind !== 0 ? (
                                     <View
                                         style={{
-                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                            backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                             flexDirection: 'row',
                                             borderColor: '#f2f2f2',
                                             paddingTop: 10,
                                             paddingHorizontal: props.option === 'Classroom' ? 20 : 0,
                                             borderTopWidth:
                                                 ind === 0 ||
-                                                    collapseMap[key] ||
-                                                    collapseMap[Object.keys(cueMap)[ind - 1]]
+                                                collapseMap[key] ||
+                                                collapseMap[Object.keys(cueMap)[ind - 1]]
                                                     ? 0
                                                     : 1,
                                             paddingBottom: 0,
@@ -4597,13 +4462,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             containerStyle={{
                                                 flex: 1,
                                                 flexDirection: 'row',
-                                                backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                 alignItems: 'center',
                                                 paddingBottom: 20,
                                                 paddingTop: 9,
                                             }}
                                             style={{
-                                                flexDirection: 'row'
+                                                flexDirection: 'row',
                                             }}
                                             onPress={() => {
                                                 const tempCollapse = JSON.parse(JSON.stringify(collapseMap));
@@ -4633,7 +4498,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                                                     fontFamily: 'inter',
                                                     flex: 1,
-                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                    backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                     lineHeight: 18,
                                                     color: collapseMap[key] ? '#000000' : '#1a3026',
                                                 }}
@@ -4644,7 +4509,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         </TouchableOpacity>
                                         <View
                                             style={{
-                                                backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                 paddingTop: 5,
                                                 paddingLeft: 15,
                                             }}
@@ -4654,7 +4519,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     flexDirection: 'row',
                                                     justifyContent: 'center',
                                                     display: 'flex',
-                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                    backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                 }}
                                             >
                                                 <TouchableOpacity
@@ -4669,13 +4534,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         tempCollapse[key] = !collapseMap[key];
                                                         setCollapseMap(tempCollapse);
                                                     }}
-                                                    containerStyle={{ backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff' }}
+                                                    containerStyle={{
+                                                        backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
+                                                    }}
                                                 >
                                                     <Text
                                                         style={{
                                                             textAlign: 'center',
                                                             lineHeight: 30,
-                                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                            backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                         }}
                                                     >
                                                         <Ionicons
@@ -4685,7 +4552,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     : 'chevron-down-outline'
                                                             }
                                                             size={18}
-                                                            color={collapseMap[key] ? '#1F1F1F' : '#006AFF'}
+                                                            color={collapseMap[key] ? '#1F1F1F' : '#007AFF'}
                                                         />
                                                     </Text>
                                                 </TouchableOpacity>
@@ -4695,7 +4562,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 ) : (
                                     <View
                                         style={{
-                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                            backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                             flexDirection: 'row',
                                             paddingHorizontal: props.option === 'Classroom' ? 20 : 0,
                                             maxWidth: undefined,
@@ -4709,11 +4576,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             containerStyle={{
                                                 flex: 1,
                                                 flexDirection: 'row',
-                                                backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                 alignItems: 'center',
                                             }}
                                             style={{
-                                                flexDirection: 'row'
+                                                flexDirection: 'row',
                                             }}
                                             onPress={() => {
                                                 const tempCollapse = JSON.parse(JSON.stringify(collapseMap));
@@ -4741,7 +4608,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 style={{
                                                     fontSize: 18,
 
-                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                    backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                     fontFamily: 'inter',
                                                     flex: 1,
                                                     lineHeight: 18,
@@ -4755,7 +4622,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             style={{
                                                 flexDirection: 'row',
                                                 justifyContent: 'space-evenly',
-                                                backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                 paddingTop: 5,
                                             }}
                                         >
@@ -4765,7 +4632,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     paddingLeft: 7,
                                                     justifyContent: 'center',
                                                     display: 'flex',
-                                                    backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                    backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                 }}
                                             >
                                                 <TouchableOpacity
@@ -4780,13 +4647,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                                                         setCollapseMap(tempCollapse);
                                                     }}
-                                                    containerStyle={{ backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff' }}
+                                                    containerStyle={{
+                                                        backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
+                                                    }}
                                                 >
                                                     <Text
                                                         style={{
                                                             textAlign: 'center',
                                                             lineHeight: 30,
-                                                            backgroundColor: collapseMap[key] ? '#f2f2f2' : '#fff',
+                                                            backgroundColor: collapseMap[key] ? '#f8f8f8' : '#fff',
                                                         }}
                                                     >
                                                         <Ionicons
@@ -4796,7 +4665,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                                     : 'chevron-down-outline'
                                                             }
                                                             size={18}
-                                                            color={collapseMap[key] ? '#1F1F1F' : '#006AFF'}
+                                                            color={collapseMap[key] ? '#1F1F1F' : '#007AFF'}
                                                         />
                                                     </Text>
                                                 </TouchableOpacity>
@@ -4809,7 +4678,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     style={{
                                         flexDirection: 'row',
                                         justifyContent: 'center',
-                                        backgroundColor: '#f2f2f2',
+                                        backgroundColor: '#f8f8f8',
                                         borderColor: '#f2f2f2',
                                         borderBottomWidth:
                                             collapseMap[key] && ind !== Object.keys(cueMap).length - 1 ? 1 : 0,
@@ -4820,13 +4689,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         style={{
                                             width: '100%',
                                             maxWidth: undefined,
-                                            backgroundColor: '#f2f2f2',
+                                            backgroundColor: '#f8f8f8',
                                             paddingHorizontal: width < 768 ? 20 : 0,
                                         }}
                                     >
                                         {collapseMap[key] ? (
                                             <View
-                                                style={{ width: '100%', paddingBottom: 25, backgroundColor: '#f2f2f2', }}
+                                                style={{ width: '100%', paddingBottom: 25, backgroundColor: '#f8f8f8' }}
                                                 key={
                                                     editFolderChannelId.toString() +
                                                     cueIds.toString() +
@@ -4845,135 +4714,135 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             channelColor={key.split('-SPLIT-')[3]}
                                                         />
                                                     ) : // Meet
-                                                        indexMap[key] === 2 ? (
-                                                            <View
-                                                                style={{
-                                                                    alignItems: 'center',
-                                                                    backgroundColor: '#f2f2f2',
-                                                                }}
-                                                            >
-                                                                {key.split('-SPLIT-')[2] === userId ? (
-                                                                    <View
-                                                                        style={{
-                                                                            width: '100%',
-                                                                            marginBottom: 20,
-                                                                            backgroundColor: '#f2f2f2',
-                                                                        }}
-                                                                    >
-                                                                        <TouchableOpacity
-                                                                            // onPress={() =>
-                                                                            //     handleStartMeeting(
-                                                                            //         key.split('-SPLIT-')[1],
-                                                                            //         key.split('-SPLIT-')[2]
-                                                                            //     )
-                                                                            // }
-                                                                            containerStyle={{
-                                                                                backgroundColor: '#f2f2f2',
-                                                                                overflow: 'hidden',
-                                                                                height: 35,
-                                                                                marginTop: 20,
-                                                                                justifyContent: 'center',
-                                                                                flexDirection: 'row',
-                                                                                marginLeft: 'auto',
-                                                                            }}
-                                                                        >
-                                                                            <Text
-                                                                                style={{
-                                                                                    textAlign: 'center',
-                                                                                    lineHeight: 34,
-                                                                                    color: '#fff',
-                                                                                    borderRadius: 15,
-                                                                                    backgroundColor: '#006AFF',
-                                                                                    fontSize: 12,
-                                                                                    paddingHorizontal: 20,
-                                                                                    fontFamily: 'inter',
-                                                                                    height: 35,
-                                                                                    width: 175,
-                                                                                    textTransform: 'uppercase',
-                                                                                }}
-                                                                            >
-                                                                                Start Meeting
-                                                                            </Text>
-                                                                        </TouchableOpacity>
-                                                                    </View>
-                                                                ) : null}
-
-                                                                {ongoingMeetings.length > 0
-                                                                    ? renderOngoingMeetings(
-                                                                        key.split('-SPLIT-')[2],
-                                                                        key.split('-SPLIT-')[3]
-                                                                    )
-                                                                    : null}
-
-                                                                <Performance
-                                                                    channelName={key.split('-SPLIT-')[0]}
-                                                                    onPress={(name: any, id: any, createdBy: any) => {
-                                                                        props.setChannelFilterChoice('All');
-                                                                        props.handleFilterChange(name);
-                                                                        props.setChannelId(id);
-                                                                        props.setChannelCreatedBy(createdBy);
-                                                                        props.openGrades();
-                                                                        props.hideHome();
-                                                                    }}
-                                                                    filterStart={filterStart}
-                                                                    filterEnd={filterEnd}
-                                                                    channelId={key.split('-SPLIT-')[1]}
-                                                                    channelCreatedBy={key.split('-SPLIT-')[2]}
-                                                                    subscriptions={props.subscriptions}
-                                                                    openCueFromGrades={props.openCueFromCalendar}
-                                                                    colorCode={key.split('-SPLIT-')[3]}
-                                                                    activeTab={'meetings'}
-                                                                    exportScores={exportScores}
-                                                                    setExportScores={(exp: boolean) => setExportScores(exp)}
-                                                                />
-                                                            </View>
-                                                        ) : // Scores
-                                                            indexMap[key] === 3 ? (
-                                                                <Performance
-                                                                    channelName={key.split('-SPLIT-')[0]}
-                                                                    onPress={(name: any, id: any, createdBy: any) => {
-                                                                        props.setChannelFilterChoice('All');
-                                                                        props.handleFilterChange(name);
-                                                                        props.setChannelId(id);
-                                                                        props.setChannelCreatedBy(createdBy);
-                                                                        props.openGrades();
-                                                                        props.hideHome();
-                                                                    }}
-                                                                    filterStart={filterStart}
-                                                                    channelId={key.split('-SPLIT-')[1]}
-                                                                    channelCreatedBy={key.split('-SPLIT-')[2]}
-                                                                    filterEnd={filterEnd}
-                                                                    subscriptions={props.subscriptions}
-                                                                    openCueFromGrades={props.openCueFromCalendar}
-                                                                    colorCode={key.split('-SPLIT-')[3]}
-                                                                    activeTab={'scores'}
-                                                                    isEditor={key.split('-SPLIT-')[2] === userId}
-                                                                    exportScores={exportScores}
-                                                                    setExportScores={(exp: boolean) => setExportScores(exp)}
-                                                                />
-                                                            ) : (
+                                                    indexMap[key] === 2 ? (
+                                                        <View
+                                                            style={{
+                                                                alignItems: 'center',
+                                                                backgroundColor: '#f8f8f8',
+                                                            }}
+                                                        >
+                                                            {key.split('-SPLIT-')[2] === userId ? (
                                                                 <View
                                                                     style={{
                                                                         width: '100%',
-                                                                        maxWidth: 400,
-                                                                        alignSelf: 'center',
-                                                                        borderTopRightRadius: 10,
-                                                                        borderBottomRightRadius: 10,
+                                                                        marginBottom: 20,
+                                                                        backgroundColor: '#f8f8f8',
                                                                     }}
                                                                 >
-                                                                    <ChannelSettings
-                                                                        channelId={key.split('-SPLIT-')[1]}
-                                                                        refreshSubscriptions={props.refreshSubscriptions}
-                                                                        closeModal={() => {
-                                                                            // setShowHome(false)
-                                                                            // closeModal()
+                                                                    <TouchableOpacity
+                                                                        // onPress={() =>
+                                                                        //     handleStartMeeting(
+                                                                        //         key.split('-SPLIT-')[1],
+                                                                        //         key.split('-SPLIT-')[2]
+                                                                        //     )
+                                                                        // }
+                                                                        containerStyle={{
+                                                                            backgroundColor: '#f8f8f8',
+                                                                            overflow: 'hidden',
+                                                                            height: 35,
+                                                                            marginTop: 20,
+                                                                            justifyContent: 'center',
+                                                                            flexDirection: 'row',
+                                                                            marginLeft: 'auto',
                                                                         }}
-                                                                        channelColor={key.split('-SPLIT-')[3]}
-                                                                        userId={userId}
-                                                                        userCreatedOrg={userCreatedOrg}
-                                                                    />
+                                                                    >
+                                                                        <Text
+                                                                            style={{
+                                                                                textAlign: 'center',
+                                                                                lineHeight: 34,
+                                                                                color: '#fff',
+                                                                                borderRadius: 15,
+                                                                                backgroundColor: '#007AFF',
+                                                                                fontSize: 12,
+                                                                                paddingHorizontal: 20,
+                                                                                fontFamily: 'inter',
+                                                                                height: 35,
+                                                                                width: 175,
+                                                                                textTransform: 'uppercase',
+                                                                            }}
+                                                                        >
+                                                                            Start Meeting
+                                                                        </Text>
+                                                                    </TouchableOpacity>
                                                                 </View>
-                                                            )
+                                                            ) : null}
+
+                                                            {ongoingMeetings.length > 0
+                                                                ? renderOngoingMeetings(
+                                                                      key.split('-SPLIT-')[2],
+                                                                      key.split('-SPLIT-')[3]
+                                                                  )
+                                                                : null}
+
+                                                            <Performance
+                                                                channelName={key.split('-SPLIT-')[0]}
+                                                                onPress={(name: any, id: any, createdBy: any) => {
+                                                                    props.setChannelFilterChoice('All');
+                                                                    props.handleFilterChange(name);
+                                                                    props.setChannelId(id);
+                                                                    props.setChannelCreatedBy(createdBy);
+                                                                    props.openGrades();
+                                                                    props.hideHome();
+                                                                }}
+                                                                filterStart={filterStart}
+                                                                filterEnd={filterEnd}
+                                                                channelId={key.split('-SPLIT-')[1]}
+                                                                channelCreatedBy={key.split('-SPLIT-')[2]}
+                                                                subscriptions={props.subscriptions}
+                                                                openCueFromGrades={props.openCueFromCalendar}
+                                                                colorCode={key.split('-SPLIT-')[3]}
+                                                                activeTab={'meetings'}
+                                                                exportScores={exportScores}
+                                                                setExportScores={(exp: boolean) => setExportScores(exp)}
+                                                            />
+                                                        </View>
+                                                    ) : // Scores
+                                                    indexMap[key] === 3 ? (
+                                                        <Performance
+                                                            channelName={key.split('-SPLIT-')[0]}
+                                                            onPress={(name: any, id: any, createdBy: any) => {
+                                                                props.setChannelFilterChoice('All');
+                                                                props.handleFilterChange(name);
+                                                                props.setChannelId(id);
+                                                                props.setChannelCreatedBy(createdBy);
+                                                                props.openGrades();
+                                                                props.hideHome();
+                                                            }}
+                                                            filterStart={filterStart}
+                                                            channelId={key.split('-SPLIT-')[1]}
+                                                            channelCreatedBy={key.split('-SPLIT-')[2]}
+                                                            filterEnd={filterEnd}
+                                                            subscriptions={props.subscriptions}
+                                                            openCueFromGrades={props.openCueFromCalendar}
+                                                            colorCode={key.split('-SPLIT-')[3]}
+                                                            activeTab={'scores'}
+                                                            isEditor={key.split('-SPLIT-')[2] === userId}
+                                                            exportScores={exportScores}
+                                                            setExportScores={(exp: boolean) => setExportScores(exp)}
+                                                        />
+                                                    ) : (
+                                                        <View
+                                                            style={{
+                                                                width: '100%',
+                                                                maxWidth: 400,
+                                                                alignSelf: 'center',
+                                                                borderTopRightRadius: 10,
+                                                                borderBottomRightRadius: 10,
+                                                            }}
+                                                        >
+                                                            <ChannelSettings
+                                                                channelId={key.split('-SPLIT-')[1]}
+                                                                refreshSubscriptions={props.refreshSubscriptions}
+                                                                closeModal={() => {
+                                                                    // setShowHome(false)
+                                                                    // closeModal()
+                                                                }}
+                                                                channelColor={key.split('-SPLIT-')[3]}
+                                                                userId={userId}
+                                                                userCreatedOrg={userCreatedOrg}
+                                                            />
+                                                        </View>
+                                                    )
                                                 ) : cueMap[key].length === 0 ? (
                                                     <Text
                                                         style={{
@@ -5161,62 +5030,70 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     );
 
     const renderPasswordInputModal = () => {
-        return (<View style={{ paddingHorizontal: 40 }}>
-            <Text style={{
-                fontSize: 16,
-                fontFamily: 'Inter',
-                color: '#000000',
-                textAlign: 'center',
-                marginBottom: 10
-            }}>
-                Enter course password
-            </Text>
-            <TextInput
-                value={channelPassword}
-                placeholder={''}
-                textContentType={"none"}
-                autoCompleteType={'off'}
-                onChangeText={val => {
-                    setChannelPassword(val)
-                }}
-                autoFocus={true}
-                placeholderTextColor={'#7d7f7c'}
-            />
-            <RNTouchableOpacity
-                onPress={() => {
-                    setShowChannelPasswordInput(false)
-                    handleSubscribe(channelPasswordId, channelPassword)
-                }}
-                // disabled={channelPassword === ''}
-                style={{
-                    marginTop: 10,
-                    backgroundColor: '#006aff',
-                    width: 130,
-                    alignSelf: 'center',
-                    overflow: 'hidden',
-                    height: 35,
-                    justifyContent: 'center', flexDirection: 'row',
-                    borderRadius: 15,
-                }}>
-                <Text style={{
-                    textAlign: 'center',
-                    lineHeight: 34,
-                    color: 'white',
-                    fontSize: 12,
-                    backgroundColor: '#006aff',
-                    paddingHorizontal: 20,
-                    fontFamily: 'inter',
-                    height: 35,
-                    // width: 180,
-                    width: 130,
-                    borderRadius: 15,
-                    textTransform: 'uppercase'
-                }}>
-                    Subscribe
+        return (
+            <View style={{ paddingHorizontal: 40 }}>
+                <Text
+                    style={{
+                        fontSize: 16,
+                        fontFamily: 'Inter',
+                        color: '#000000',
+                        textAlign: 'center',
+                        marginBottom: 10,
+                    }}
+                >
+                    Enter course password
                 </Text>
-            </RNTouchableOpacity>
-        </View>)
-    }
+                <TextInput
+                    value={channelPassword}
+                    placeholder={''}
+                    textContentType={'none'}
+                    autoCompleteType={'off'}
+                    onChangeText={(val) => {
+                        setChannelPassword(val);
+                    }}
+                    autoFocus={true}
+                    placeholderTextColor={'#7d7f7c'}
+                />
+                <RNTouchableOpacity
+                    onPress={() => {
+                        setShowChannelPasswordInput(false);
+                        handleSubscribe(channelPasswordId, channelPassword);
+                    }}
+                    // disabled={channelPassword === ''}
+                    style={{
+                        marginTop: 10,
+                        backgroundColor: '#007AFF',
+                        width: 130,
+                        alignSelf: 'center',
+                        overflow: 'hidden',
+                        height: 35,
+                        justifyContent: 'center',
+                        flexDirection: 'row',
+                        borderRadius: 15,
+                    }}
+                >
+                    <Text
+                        style={{
+                            textAlign: 'center',
+                            lineHeight: 34,
+                            color: 'white',
+                            fontSize: 12,
+                            backgroundColor: '#007AFF',
+                            paddingHorizontal: 20,
+                            fontFamily: 'inter',
+                            height: 35,
+                            // width: 180,
+                            width: 130,
+                            borderRadius: 15,
+                            textTransform: 'uppercase',
+                        }}
+                    >
+                        Subscribe
+                    </Text>
+                </RNTouchableOpacity>
+            </View>
+        );
+    };
 
     // MAIN RETURN
     return (
@@ -5439,7 +5316,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         color={
                                             (props.option === 'Settings' && !props.showHelp) ||
                                             props.option === 'Channels'
-                                                ? '#006AFF'
+                                                ? '#007AFF'
                                                 : '#f2f2f2'
                                         }
                                     />
@@ -5493,7 +5370,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         key={JSON.stringify(props.customCategories)}
                         customCategories={props.customCategories}
                         closeModal={() => props.closeModal()}
-                        closeOnCreate={() => props.closeOnCreate()}
+                        closeAfterCreatingMyNotes={() => props.closeAfterCreatingMyNotes()}
                         option={props.option}
                         version={props.version}
                         createOption={props.createOption}
@@ -5514,7 +5391,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     >
                         {props.option === 'Account' ? (
                             <AccountPage
-                                closeModal={() => { }}
+                                closeModal={() => {}}
                                 saveDataInCloud={() => props.saveDataInCloud()}
                                 reOpenProfile={() => props.reOpenProfile()}
                                 reloadData={() => props.reloadData()}
@@ -5618,21 +5495,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     //     searchResults
                 )
             }
-            {
-                showNewContentModal && (
-                    <BottomSheet
-                        snapPoints={[0, 400]}
-                        close={() => {
-                            setShowNewContentModal(false);
-                        }}
-                        isOpen={showNewContentModal}
-                        title={''}
-                        renderContent={() => renderNewContentModalOptions()}
-                        header={false}
-                        callbackNode={fall}
-                    />
-                )
-            }
+            {showNewContentModal && (
+                <BottomSheet
+                    snapPoints={[0, 400]}
+                    close={() => {
+                        setShowNewContentModal(false);
+                    }}
+                    isOpen={showNewContentModal}
+                    title={''}
+                    renderContent={() => renderNewContentModalOptions()}
+                    header={false}
+                    callbackNode={fall}
+                />
+            )}
             {showFilterModal && (
                 <BottomSheet
                     snapPoints={[0, filterLibraryModalHeight(Dimensions.get('window').width, Platform.OS, orientation)]}
@@ -5659,40 +5534,41 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     callbackNode={fall}
                 />
             )}
-            {
-                showInviteByEmailsModal ?
-                    <BottomSheet
-                        snapPoints={[0, Dimensions.get('window').height]}
-                        close={() => {
-                            setShowInviteByEmailsModal(false)
-                        }}
-                        isOpen={showInviteByEmailsModal}
-                        title={'Add Students with emails'}
-                        renderContent={() => renderInviteEmailsModalContent()}
-                        header={true}
-                        callbackNode={fall}
-                    /> : null
-            }
+            {showInviteByEmailsModal ? (
+                <BottomSheet
+                    snapPoints={[0, Dimensions.get('window').height]}
+                    close={() => {
+                        setShowInviteByEmailsModal(false);
+                    }}
+                    isOpen={showInviteByEmailsModal}
+                    title={'Add Students with emails'}
+                    renderContent={() => renderInviteEmailsModalContent()}
+                    header={true}
+                    callbackNode={fall}
+                />
+            ) : null}
 
-            {
-                showChannelPasswordInput ?
-                    <BottomSheet
-                        snapPoints={[0, windowHeight - (Platform.OS === 'android' ? 100 : 100
-                        )]}
-                        close={() => {
-                            setChannelPassword('')
-                            setChannelPasswordId('')
-                            setShowChannelPasswordInput(false)
-                        }}
-                        isOpen={showChannelPasswordInput}
-                        // title={'Add a course'}
-                        renderContent={() => renderPasswordInputModal()}
-                        header={false}
-                        callbackNode={fall}
-                    /> : null
-            }
+            {showChannelPasswordInput ? (
+                <BottomSheet
+                    snapPoints={[0, windowHeight - (Platform.OS === 'android' ? 100 : 100)]}
+                    close={() => {
+                        setChannelPassword('');
+                        setChannelPasswordId('');
+                        setShowChannelPasswordInput(false);
+                    }}
+                    isOpen={showChannelPasswordInput}
+                    // title={'Add a course'}
+                    renderContent={() => renderPasswordInputModal()}
+                    header={false}
+                    callbackNode={fall}
+                />
+            ) : null}
 
-            {showNewPostModal || showInstantMeeting || showWorkspaceOptionsModal || showNewContentModal || showInviteByEmailsModal ? (
+            {showNewPostModal ||
+            showInstantMeeting ||
+            showWorkspaceOptionsModal ||
+            showNewContentModal ||
+            showInviteByEmailsModal ? (
                 <Reanimated.View
                     style={{
                         alignItems: 'center',
@@ -5705,21 +5581,21 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         position: 'absolute',
                     }}
                 >
-                    <TouchableOpacity containerStyle={{
-                        backgroundColor: 'transparent',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                        onPress={() => {
-                            setShowNewPostModal(false)
-                            props.setShowNewPost(false);
-                            setShowInstantMeeting(false)
-                            props.setShowNewMeeting(false);
-                            setShowWorkspaceOptionsModal(false)
-                            setShowNewContentModal(false)
+                    <TouchableOpacity
+                        containerStyle={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
                         }}
-                    >
-                    </TouchableOpacity>
+                        onPress={() => {
+                            setShowNewPostModal(false);
+                            props.setShowNewPost(false);
+                            setShowInstantMeeting(false);
+                            props.setShowNewMeeting(false);
+                            setShowWorkspaceOptionsModal(false);
+                            setShowNewContentModal(false);
+                        }}
+                    ></TouchableOpacity>
                 </Reanimated.View>
             ) : null}
             {showFilterModal || showCategoryList || showChannelPasswordInput ? (
@@ -5735,18 +5611,18 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         position: 'absolute',
                     }}
                 >
-                    <TouchableOpacity containerStyle={{
-                        backgroundColor: 'transparent',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                        onPress={() => {
-                            setShowCategoryList(false)
-                            setShowFilterModal(false)
-                            setShowChannelPasswordInput(false)
+                    <TouchableOpacity
+                        containerStyle={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
                         }}
-                    >
-                    </TouchableOpacity>
+                        onPress={() => {
+                            setShowCategoryList(false);
+                            setShowFilterModal(false);
+                            setShowChannelPasswordInput(false);
+                        }}
+                    ></TouchableOpacity>
                 </Reanimated.View>
             ) : null}
             {showNewPostModal && (
@@ -5755,7 +5631,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     // categories={categories}
                     categoriesOptions={newPostCategories}
                     onClose={() => {
-                        setShowNewPostModal(false)
+                        setShowNewPostModal(false);
                         props.setShowNewPost(false);
                     }}
                     onSend={createNewThread}
@@ -5806,7 +5682,7 @@ const styleObject: any = () =>
             color: '#fff',
             paddingHorizontal: 15,
             borderRadius: 12,
-            backgroundColor: '#006AFF',
+            backgroundColor: '#007AFF',
             lineHeight: 24,
             height: 24,
             fontFamily: 'inter',
@@ -5817,14 +5693,14 @@ const styleObject: any = () =>
             color: '#1F1F1F',
             height: 20,
             paddingHorizontal: 7,
-            backgroundColor: '#f2f2f2',
+            backgroundColor: '#f8f8f8',
             lineHeight: 20,
             fontFamily: 'inter',
             textAlign: 'center',
         },
         allGrayFill1: {
             fontSize: 10,
-            color: '#006AFF',
+            color: '#007AFF',
             height: 20,
             paddingHorizontal: 7,
             lineHeight: 20,

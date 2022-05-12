@@ -7,12 +7,13 @@ import {
     // ScrollView,
     Platform,
     // Switch,
-    Linking
+    TouchableOpacity as RNTouchableOpacity,
+    Linking,
 } from 'react-native';
 import { TextInput } from './CustomTextInput';
 import { ScrollView, Switch, TouchableOpacity } from 'react-native-gesture-handler';
 import Alert from './Alert';
-import { Text, View,  } from './Themed';
+import { Text, View } from './Themed';
 import { fetchAPI } from '../graphql/FetchAPI';
 import {
     getChannels,
@@ -24,7 +25,7 @@ import {
     markAttendance,
     getActivity,
     markActivityAsRead,
-    regenZoomMeeting
+    regenZoomMeeting,
 } from '../graphql/QueriesAndMutations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -92,7 +93,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     // Filter start & end
     const currentDate = new Date();
-    const [filterStart, setFilterStart] = useState<any>(new Date(currentDate.getTime() - 1000 * 60 * 60 * 24 * 30 * 5));
+    const startCurrentDate = new Date();
+    const [filterStart, setFilterStart] = useState<any>(
+        new Date(startCurrentDate.getTime() - 1000 * 60 * 60 * 24 * 30 * 10)
+    );
     const [filterEnd, setFilterEnd] = useState<any>(new Date(currentDate.getTime() + 1000 * 60 * 60 * 24 * 30 * 10));
 
     // FILTERS
@@ -119,21 +123,21 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [showFilterByChannelDropdown, setShowFilterByChannelDropdown] = useState(false);
     const [showFilterTypeDropdown, setShowFilterTypeDropdown] = useState(false);
 
-    console.log("Show Filter modal", showFilterModal);
+    console.log('Show Filter modal', showFilterModal);
 
-    const orientation = useOrientation()
+    const orientation = useOrientation();
 
     const channelOptions = [
         {
             value: '',
-            label: 'My Events'
-        }
+            label: 'My Events',
+        },
     ];
 
     channels.map((channel: any) => {
         channelOptions.push({
             value: channel._id,
-            label: channel.name
+            label: channel.name,
         });
     });
 
@@ -144,14 +148,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         '4': 'Wed',
         '5': 'Thu',
         '6': 'Fri',
-        '7': 'Sat'
+        '7': 'Sat',
     };
 
     const fall = new Reanimated.Value(1);
 
     const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
         inputRange: [0, 1],
-        outputRange: [0.5, 0]
+        outputRange: [0.5, 0],
     });
 
     const onUpdateSelectedDate = (date: any) => {
@@ -166,7 +170,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         setSelectedStartDay(startDay.toString());
         setSelectedDays([startDay.toString()]);
-
     }, [start]);
 
     /**
@@ -185,19 +188,16 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, []);
 
     const renderTimeMessage = () => {
-        const currentTime = new Date()
+        const currentTime = new Date();
 
         if (currentTime.getHours() < 12 && currentTime.getHours() > 0) {
-            return 'Good Morning'
+            return 'Good Morning';
         } else if (currentTime.getHours() >= 12 && currentTime.getHours() < 17) {
-            return 'Good Afternoon' 
+            return 'Good Afternoon';
         } else {
-            return 'Good Evening'
+            return 'Good Evening';
         }
-    }
-
-   
-
+    };
 
     const loadChannels = useCallback(async () => {
         const uString: any = await AsyncStorage.getItem('user');
@@ -208,30 +208,29 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 .query({
                     query: getChannels,
                     variables: {
-                        userId: user._id
-                    }
+                        userId: user._id,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.channel.findByUserId) {
                         setChannels(res.data.channel.findByUserId);
                     }
                 })
-                .catch(err => {});
+                .catch((err) => {});
         }
     }, []);
 
     useEffect(() => {
         let total = [...allItems];
 
-        setItems({})
-        setItemsMap({})
+        setItems({});
+        setItemsMap({});
 
         if (filterEventsType !== 'All') {
             if (filterEventsType === 'Meetings') {
                 total = total.filter((e: any) => e.meeting);
             } else if (filterEventsType === 'Submissions') {
                 total = total.filter((e: any) => e.cueId !== '' && !e.end);
-
             } else if (filterEventsType === 'Events') {
                 total = total.filter((e: any) => !e.cueId && !e.meeting && e.end !== null);
             }
@@ -239,11 +238,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         // Filter between start and end
         if (filterStart && filterEnd) {
-
             total = total.filter((e: any) => {
-                return (new Date(e.start) > filterStart && new Date(e.start) < filterEnd)
-            })
-
+                return new Date(e.start) > filterStart && new Date(e.start) < filterEnd;
+            });
         }
 
         let filterByChannels = [];
@@ -281,19 +278,18 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         }
 
         Object.keys(loadedItems).map((date: string) => {
-            const events = loadedItems[date]
+            const events = loadedItems[date];
 
             let sortedEvents = events.sort((a: any, b: any) => {
-                return new Date(a.start) > new Date(b.start)
-            })
+                return new Date(a.start) > new Date(b.start);
+            });
 
             sortedEvents = events.sort((a: any, b: any) => {
-                return a.title > b.title
-            })
+                return a.title > b.title;
+            });
 
-            loadedItems[date] = sortedEvents
-        })
-
+            loadedItems[date] = sortedEvents;
+        });
 
         for (let i = -120; i < 120; i++) {
             const time = Date.now() + i * 24 * 60 * 60 * 1000;
@@ -301,11 +297,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
             if (!loadedItems[strTime]) {
                 loadedItems[strTime] = [];
-            } 
+            }
         }
 
         setItems(loadedItems);
-        setItemsMap(loadedItems)
+        setItemsMap(loadedItems);
     }, [filterByChannel, filterEventsType, filterStart, filterEnd, allItems]);
 
     /**
@@ -326,10 +322,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     .query({
                         query: getActivity,
                         variables: {
-                            userId: user._id
-                        }
+                            userId: user._id,
+                        },
                     })
-                    .then(res => {
+                    .then((res) => {
                         if (res.data && res.data.activity.getActivity) {
                             const tempActivity = res.data.activity.getActivity;
                             let unread = 0;
@@ -397,7 +393,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             <View
                 style={{
                     width: '100%',
-                    backgroundColor: 'white'
+                    backgroundColor: 'white',
                 }}
             >
                 {/* <InsetShadow
@@ -411,9 +407,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }}
                 > */}
                 <View>
-                    <ScrollView style={{
-                        height: windowHeight - 90
-                    }} horizontal={false} showsVerticalScrollIndicator={true} indicatorStyle={'black'}>
+                    <ScrollView
+                        style={{
+                            height: windowHeight - 90,
+                        }}
+                        horizontal={false}
+                        showsVerticalScrollIndicator={true}
+                        indicatorStyle={'black'}
+                    >
                         {activity.map((act: any, index) => {
                             const { cueId, channelId, createdBy, target, threadId } = act;
 
@@ -422,7 +423,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     return;
                                 }
                             }
-
 
                             return (
                                 <TouchableOpacity
@@ -436,8 +436,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 variables: {
                                                     activityId: act._id,
                                                     userId: user._id,
-                                                    markAllRead: false
-                                                }
+                                                    markAllRead: false,
+                                                },
                                             });
                                         }
 
@@ -484,7 +484,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         paddingVertical: 5,
                                         backgroundColor: 'white',
                                         height: 90,
-                                        paddingLeft: 5
+                                        paddingLeft: 5,
                                         // borderLeftWidth: 3,
                                         // borderLeftColor: act.colorCode
                                     }}
@@ -494,7 +494,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         style={{
                                             flex: 1,
                                             backgroundColor: 'white',
-                                            paddingLeft: Dimensions.get('window').width < 768 ? 10 : 20
+                                            paddingLeft: Dimensions.get('window').width < 768 ? 10 : 20,
                                         }}
                                     >
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
@@ -505,14 +505,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     borderRadius: 6,
                                                     marginRight: 5,
                                                     backgroundColor: act.colorCode,
-                                                    marginLeft: 5
+                                                    marginLeft: 5,
                                                 }}
                                             />
                                             <Text
                                                 style={{
                                                     fontSize: 15,
                                                     padding: 5,
-                                                    fontFamily: 'inter'
+                                                    fontFamily: 'inter',
                                                 }}
                                                 ellipsizeMode="tail"
                                             >
@@ -524,7 +524,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 fontSize: 13,
                                                 padding: 5,
                                                 lineHeight: 18,
-                                                fontWeight: 'bold'
+                                                fontWeight: 'bold',
                                             }}
                                             numberOfLines={2}
                                             ellipsizeMode="tail"
@@ -539,14 +539,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             flexDirection: 'row',
                                             alignSelf: 'center',
                                             paddingRight: 10,
-                                            alignItems: 'center'
+                                            alignItems: 'center',
                                         }}
                                     >
                                         <Text
                                             style={{
                                                 fontSize: 13,
                                                 padding: 5,
-                                                lineHeight: 13
+                                                lineHeight: 13,
                                             }}
                                             ellipsizeMode="tail"
                                         >
@@ -559,7 +559,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 fontSize: 12,
                                                 padding: 5,
                                                 lineHeight: 13,
-                                                fontWeight: 'bold'
+                                                fontWeight: 'bold',
                                             }}
                                             ellipsizeMode="tail"
                                         >
@@ -573,14 +573,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             }}
                                             ellipsizeMode="tail"
                                         >
-                                            <Ionicons name="chevron-forward-outline" size={18} color="#006AFF" />
+                                            <Ionicons name="chevron-forward-outline" size={18} color="#007AFF" />
                                         </Text> */}
                                     </View>
                                 </TouchableOpacity>
                             );
                         })}
                     </ScrollView>
-                {/* </InsetShadow> */}
+                    {/* </InsetShadow> */}
                 </View>
             </View>
         );
@@ -665,10 +665,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         recordMeeting,
                         frequency: freq,
                         repeatTill: repeat,
-                        repeatDays
-                    }
+                        repeatDays,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data && res.data.date.createV1 === 'SUCCESS') {
                         loadEvents();
                         setTitle('');
@@ -702,7 +702,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         setIsCreatingEvents(false);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     setIsCreatingEvents(false);
                     console.log(err);
                 });
@@ -719,42 +719,67 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         recurring,
         isSubmitDisabled,
         isCreatingEvents,
-        selectedDays
+        selectedDays,
     ]);
 
     const handleEdit = useCallback(async () => {
-        setIsEditingEvents(true);
+        if (title === '') {
+            Alert('A title must be set for the event. ');
+            return;
+        } else if (end < new Date()) {
+            Alert('Event end time must be set in the future.');
+            return;
+        } else if (start > end) {
+            Alert('Event end time must be set after the start time.');
+            return;
+        }
 
-        const server = fetchAPI('');
-        server
-            .mutate({
-                mutation: editDateV1,
-                variables: {
-                    id: editEvent.eventId,
-                    title,
-                    start: start.toUTCString(),
-                    end: end.toUTCString(),
-                    description,
-                    recordMeeting
-                }
-            })
-            .then(res => {
-                loadEvents();
-                setTitle('');
-                setRepeatTill(new Date());
-                setIsMeeting(false);
-                setDescription('');
-                setFrequency('1-W');
-                setRecurring(false);
-                setRecordMeeting(false);
-                setIsEditingEvents(false);
-                setEditEvent(null);
-                setShowAddEvent(false);
-            })
-            .catch(err => {
-                setIsEditingEvents(false);
-                console.log(err);
-            });
+        Alert('Update event?', '', [
+            {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => {
+                    return;
+                },
+            },
+            {
+                text: 'Yes',
+                onPress: () => {
+                    setIsEditingEvents(true);
+
+                    const server = fetchAPI('');
+                    server
+                        .mutate({
+                            mutation: editDateV1,
+                            variables: {
+                                id: editEvent.eventId,
+                                title,
+                                start: start.toUTCString(),
+                                end: end.toUTCString(),
+                                description,
+                                recordMeeting,
+                            },
+                        })
+                        .then((res) => {
+                            loadEvents();
+                            setTitle('');
+                            setRepeatTill(new Date());
+                            setIsMeeting(false);
+                            setDescription('');
+                            setFrequency('1-W');
+                            setRecurring(false);
+                            setRecordMeeting(false);
+                            setIsEditingEvents(false);
+                            setEditEvent(null);
+                            setShowAddEvent(false);
+                        })
+                        .catch((err) => {
+                            setIsEditingEvents(false);
+                            console.log(err);
+                        });
+                },
+            },
+        ]);
     }, [editEvent, title, start, end, description, isMeeting, recordMeeting]);
 
     const handleDelete = useCallback(
@@ -769,10 +794,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     mutation: deleteDateV1,
                     variables: {
                         id: !deleteAll ? eventId : recurringId,
-                        deleteAll
-                    }
+                        deleteAll,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     const updated = new Date();
                     loadEvents();
                     setTitle('');
@@ -786,7 +811,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     setEditEvent(null);
                     setShowAddEvent(false);
                 })
-                .catch(err => {
+                .catch((err) => {
                     setIsDeletingEvents(false);
                     console.log(err);
                 });
@@ -810,12 +835,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             .query({
                 query: getEvents,
                 variables: {
-                    userId: parsedUser._id
-                }
+                    userId: parsedUser._id,
+                },
             })
-            .then(res => {
+            .then((res) => {
                 if (res.data.date && res.data.date.getCalendar) {
-
                     // console.log("Get calendar", res.data.date.getCalendar)
 
                     const loadedItems: { [key: string]: any } = {};
@@ -858,9 +882,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             zoomMeetingId: item.zoomMeetingId,
                             zoomStartUrl: item.zoomStartUrl,
                             zoomJoinUrl: item.zoomJoinUrl,
+                            zoomRegistrationJoinUrl: item.zoomRegistrationJoinUrl,
                             zoomMeetingScheduledBy: item.zoomMeetingScheduledBy,
                             zoomMeetingCreatorProfile: item.zoomMeetingCreatorProfile,
-                            meetingLink: item.meetingLink ? item.meetingLink : null
+                            meetingLink: item.meetingLink ? item.meetingLink : null,
                         };
 
                         allEvents.push(modifiedItem);
@@ -884,20 +909,18 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     // console.log("Before sort")
 
                     Object.keys(loadedItems).map((date: string) => {
-                        const events = loadedItems[date]
-                        
-            
+                        const events = loadedItems[date];
+
                         let sortedEvents = events.sort((a: any, b: any) => {
-                            return new Date(a.start) > new Date(b.start)
-                        })
+                            return new Date(a.start) > new Date(b.start);
+                        });
 
                         sortedEvents = events.sort((a: any, b: any) => {
-                            return a.title > b.title
-                        })
+                            return a.title > b.title;
+                        });
 
-                        loadedItems[date] = sortedEvents
-                    })
-
+                        loadedItems[date] = sortedEvents;
+                    });
 
                     for (let i = -120; i < 120; i++) {
                         const time = Date.now() + i * 24 * 60 * 60 * 1000;
@@ -905,19 +928,17 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                         if (!loadedItems[strTime]) {
                             loadedItems[strTime] = [];
-                        } 
+                        }
                     }
 
-
                     setItems(loadedItems);
-                    setItemsMap(loadedItems)
+                    setItemsMap(loadedItems);
                     setAllItems(allEvents);
                 }
 
                 setLoadingEvents(false);
-
             })
-            .catch(err => {
+            .catch((err) => {
                 console.log(err);
                 Alert('Unable to load calendar.', 'Check connection.');
 
@@ -927,7 +948,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 Animated.timing(modalAnimation, {
                     toValue: 1,
                     duration: 150,
-                    useNativeDriver: true
+                    useNativeDriver: true,
                 }).start();
             });
     }, [props.tab, modalAnimation, props.subscriptions]);
@@ -941,7 +962,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const renderStartDateTimePicker = () => {
         return (
-            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10 }}>
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
                 {Platform.OS === 'ios' ? (
                     <DateTimePicker
                         themeVariant="light"
@@ -968,7 +989,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             if (!selectedDate) {
                                 setShowStartDateAndroid(false);
                                 return;
-                            };
+                            }
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
                             setShowStartDateAndroid(false);
@@ -983,7 +1004,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -995,7 +1016,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
+                                borderColor: '#007AFF',
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(true);
@@ -1008,12 +1029,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1028,8 +1049,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
-                                marginLeft: 50
+                                borderColor: '#007AFF',
+                                marginLeft: 50,
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(false);
@@ -1042,7 +1063,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -1079,9 +1100,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowStartTimeAndroid(false)
-                                return
-                            };
+                                setShowStartTimeAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             setShowStartTimeAndroid(false);
                             setStart(currentDate);
@@ -1094,7 +1115,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const renderEndDateTimePicker = () => {
         return (
-            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10  }}>
+            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: 'auto' }}>
                 {Platform.OS === 'ios' && (
                     <DateTimePicker
                         themeVariant="light"
@@ -1119,9 +1140,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowEndDateAndroid(false)
-                                return
-                            };
+                                setShowEndDateAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             setShowEndDateAndroid(false);
 
@@ -1138,7 +1159,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -1150,7 +1171,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
+                                borderColor: '#007AFF',
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(false);
@@ -1163,12 +1184,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1183,8 +1204,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
-                                marginLeft: 50
+                                borderColor: '#007AFF',
+                                marginLeft: 50,
                             }}
                             onPress={() => {
                                 setShowStartDateAndroid(false);
@@ -1197,12 +1218,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Time
@@ -1235,9 +1256,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowEndTimeAndroid(false)
-                                return
-                            };
+                                setShowEndTimeAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             setShowEndTimeAndroid(false);
                             setEnd(currentDate);
@@ -1276,8 +1297,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
                                 setShowRepeatTillDateAndroid(false);
-                                return
-                            };
+                                return;
+                            }
                             const currentDate: any = selectedDate;
 
                             const roundedValue = roundSeconds(currentDate);
@@ -1293,7 +1314,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -1305,7 +1326,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#006AFF',
+                                borderColor: '#007AFF',
                             }}
                             onPress={() => {
                                 setShowRepeatTillDateAndroid(true);
@@ -1315,12 +1336,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1332,12 +1353,18 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         );
     };
 
-    console.log("Filter start", filterStart)
-    console.log("Filter end", filterEnd)
+    // console.log("Filter start", filterStart)
+    // console.log("Filter end", filterEnd)
 
     const renderFilterStartDateTimePicker = () => {
         return (
-            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 20 }}>
+            <View
+                style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 20,
+                }}
+            >
                 {Platform.OS === 'ios' ? (
                     <DateTimePicker
                         themeVariant="light"
@@ -1361,16 +1388,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         mode={'date'}
                         textColor={'#1f1f1f'}
                         onChange={(event, selectedDate) => {
-                            console.log("Selected date prior", selectedDate)
+                            console.log('Selected date prior', selectedDate);
 
                             if (!selectedDate) {
-                                setShowFilterStartDateAndroid(false)
-                                return
-                            };
-                            console.log("Selected date", selectedDate)
+                                setShowFilterStartDateAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
-                            console.log("Rounded value", roundedValue);
                             setShowFilterStartDateAndroid(false);
                             setFilterStart(roundedValue);
                         }}
@@ -1382,7 +1407,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -1393,25 +1418,25 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
                             }}
                             onPress={() => {
-                                setShowStartDateAndroid(true);
+                                setShowFilterStartDateAndroid(true);
+                                setShowFilterEndDateAndroid(false);
+                                setShowStartDateAndroid(false);
                                 setShowStartTimeAndroid(false);
-                                setShowEndDateAndroid(false);
-                                setShowEndTimeAndroid(false);
                             }}
                         >
                             <Text
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1425,7 +1450,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     const renderFilterEndDateTimePicker = () => {
         return (
-            <View style={{ backgroundColor: '#fff', flexDirection: 'row', marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 20 }}>
+            <View
+                style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 20,
+                }}
+            >
                 {Platform.OS === 'ios' && (
                     <DateTimePicker
                         themeVariant="light"
@@ -1450,9 +1481,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         textColor={'#2f2f3c'}
                         onChange={(event, selectedDate) => {
                             if (!selectedDate) {
-                                setShowFilterEndDateAndroid(false)
-                                return
-                            };
+                                setShowFilterEndDateAndroid(false);
+                                return;
+                            }
                             const currentDate: any = selectedDate;
                             setShowFilterEndDateAndroid(false);
 
@@ -1469,7 +1500,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
-                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     >
                         <TouchableOpacity
@@ -1480,7 +1511,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 borderRadius: 15,
                                 marginBottom: 10,
                                 justifyContent: 'center',
-                                flexDirection: 'row'
+                                flexDirection: 'row',
                             }}
                             onPress={() => {
                                 setShowFilterStartDateAndroid(false);
@@ -1491,12 +1522,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#006AFF',
+                                    color: '#007AFF',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
                                     height: 35,
-                                    borderRadius: 15
+                                    borderRadius: 15,
                                 }}
                             >
                                 Set Date
@@ -1525,7 +1556,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 lineHeight: 20,
                                 fontSize: 15,
-                                color: '#a2a2ac'
+                                color: '#a2a2ac',
                             }}
                         >
                             Shared with {editChannelName}
@@ -1547,7 +1578,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         width: '100%',
                         flexDirection: 'row',
                         alignItems: 'center',
-                        marginBottom: 20
+                        marginBottom: 20,
                     }}
                 >
                     <Text
@@ -1555,7 +1586,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             fontSize: 14,
                             // fontFamily: 'inter',
                             marginRight: 5,
-                            color: '#000000'
+                            color: '#000000',
                         }}
                     >
                         Zoom Meeting ID
@@ -1564,7 +1595,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             fontSize: 14,
                             fontFamily: 'inter',
-                            color: '#000000'
+                            color: '#000000',
                         }}
                         selectable={true}
                     >
@@ -1579,7 +1610,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             // fontFamily: 'inter',
                             marginRight: 10,
                             color: '#000000',
-                            marginBottom: 5
+                            marginBottom: 5,
                         }}
                     >
                         Invite Link
@@ -1588,7 +1619,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style={{
                             fontSize: 14,
                             fontFamily: 'inter',
-                            color: '#000000'
+                            color: '#000000',
                         }}
                         selectable={true}
                     >
@@ -1610,7 +1641,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 fontSize: 14,
                                 fontFamily: 'inter',
-                                color: '#006AFF'
+                                color: '#007AFF',
                             }}
                         >
                             Start meeting
@@ -1628,7 +1659,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             style={{
                                 fontSize: 14,
                                 fontFamily: 'inter',
-                                color: '#006AFF'
+                                color: '#007AFF',
                             }}
                         >
                             Copy Invite
@@ -1647,7 +1678,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </TouchableOpacity> */}
                 </View>
             </View>
-        ) : editEvent && userZoomInfo && userZoomInfo.accountId ? (
+        ) : editEvent && editEvent.meeting && userZoomInfo && userZoomInfo.accountId ? (
             <View
                 style={{
                     marginTop: 40,
@@ -1655,19 +1686,21 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     alignItems: 'center',
                     padding: 10,
                     paddingHorizontal: 15,
-                    backgroundColor: '#f2f2f2',
+                    backgroundColor: '#f8f8f8',
                     borderRadius: 1,
                     width: '100%',
                     maxWidth: 600,
-                    borderRadius: 10
+                    borderRadius: 10,
                 }}
             >
                 <Ionicons name="warning-outline" size={22} color={'#f3722c'} />
-                <View style={{
-                    flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-                    alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
-                    backgroundColor: '#f2f2f2'
-                }}>
+                <View
+                    style={{
+                        flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                        alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
+                        backgroundColor: '#f8f8f8',
+                    }}
+                >
                     <Text style={{ paddingHorizontal: 20, fontSize: Dimensions.get('window').width < 768 ? 14 : 16 }}>
                         Zoom meeting has been deleted or has expired
                     </Text>
@@ -1679,10 +1712,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     mutation: regenZoomMeeting,
                                     variables: {
                                         userId,
-                                        dateId: editEvent.eventId
-                                    }
+                                        dateId: editEvent.eventId,
+                                    },
                                 })
-                                .then(res => {
+                                .then((res) => {
                                     if (res.data && res.data.date.regenZoomMeeting) {
                                         const e = res.data.date.regenZoomMeeting;
                                         setEditEvent({
@@ -1704,29 +1737,30 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             zoomMeetingId: e.zoomMeetingId,
                                             zoomStartUrl: e.zoomStartUrl,
                                             zoomJoinUrl: e.zoomJoinUrl,
+                                            zoomRegistrationJoinUrl: e.zoomRegistrationJoinUrl,
                                             zoomMeetingScheduledBy: e.zoomMeetingScheduledBy,
-                                            zoomMeetingCreatorProfile: e.zoomMeetingCreatorProfile
+                                            zoomMeetingCreatorProfile: e.zoomMeetingCreatorProfile,
                                         });
                                     } else {
                                         Alert('Failed to create zoom meeting.');
                                     }
                                 })
-                                .catch(err => {
+                                .catch((err) => {
                                     Alert('Something went wrong.');
                                 });
                         }}
                         style={{
-                            backgroundColor: '#f2f2f2',
+                            backgroundColor: '#f8f8f8',
                             paddingLeft: Dimensions.get('window').width < 768 ? 20 : 10,
-                            paddingVertical: Dimensions.get('window').width < 768 ? 10 : 0
+                            paddingVertical: Dimensions.get('window').width < 768 ? 10 : 0,
                         }}
                     >
                         <Text
                             style={{
                                 fontSize: 14,
                                 fontFamily: 'inter',
-                                color: '#006AFF',
-                                backgroundColor: '#f3f3f3'
+                                color: '#007AFF',
+                                backgroundColor: '#f3f3f3',
                             }}
                         >
                             Create New
@@ -1750,7 +1784,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     flexDirection: 'column',
                     alignItems: 'center',
                     backgroundColor: 'white',
-                    marginTop: Dimensions.get('window').width < 768 ? 20 : 30 
+                    marginTop: Dimensions.get('window').width < 768 ? 20 : 30,
 
                     // paddingLeft: 7
                     // justifyContent: 'center'
@@ -1762,11 +1796,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         overflow: 'hidden',
                         height: 35,
                         // marginTop: 25,
-                        borderRadius: 15
+                        borderRadius: 15,
                         // marginBottom: 20
                     }}
                     onPress={() => handleEdit()}
-                    disabled={isSubmitDisabled || isEditingEvents || isDeletingEvents}
+                    disabled={isEditingEvents || isDeletingEvents}
                 >
                     <Text
                         style={{
@@ -1774,13 +1808,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             lineHeight: 35,
                             color: 'white',
                             fontSize: 11,
-                            backgroundColor: '#006AFF',
+                            backgroundColor: '#007AFF',
                             paddingHorizontal: 25,
                             fontFamily: 'inter',
                             height: 35,
                             width: 200,
                             borderRadius: 15,
-                            textTransform: 'uppercase'
+                            textTransform: 'uppercase',
                         }}
                     >
                         {isEditingEvents ? 'EDITING...' : 'EDIT'}
@@ -1792,9 +1826,25 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         overflow: 'hidden',
                         height: 35,
                         marginTop: 25,
-                        borderRadius: 15
+                        borderRadius: 15,
                     }}
-                    onPress={() => handleDelete(false)}
+                    onPress={() => {
+                        Alert('Delete event?', '', [
+                            {
+                                text: 'Cancel',
+                                style: 'cancel',
+                                onPress: () => {
+                                    return;
+                                },
+                            },
+                            {
+                                text: 'Yes',
+                                onPress: () => {
+                                    handleDelete(false);
+                                },
+                            },
+                        ]);
+                    }}
                     disabled={isDeletingEvents || isEditingEvents}
                 >
                     <Text
@@ -1802,15 +1852,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             textAlign: 'center',
                             lineHeight: 35,
                             fontSize: 11,
-                            borderColor: '#006AFF',
+                            borderColor: '#007AFF',
                             borderWidth: 1,
                             paddingHorizontal: 25,
-                            color: '#006AFF',
+                            color: '#007AFF',
                             fontFamily: 'inter',
                             height: 35,
                             width: 200,
                             borderRadius: 15,
-                            textTransform: 'uppercase'
+                            textTransform: 'uppercase',
                         }}
                     >
                         {isDeletingEvents ? 'DELETING...' : 'DELETE'}
@@ -1824,7 +1874,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             overflow: 'hidden',
                             height: 35,
                             marginTop: 25,
-                            borderRadius: 15
+                            borderRadius: 15,
                         }}
                         onPress={() => handleDelete(true)}
                         disabled={isDeletingEvents || isEditingEvents}
@@ -1834,15 +1884,15 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 textAlign: 'center',
                                 lineHeight: 35,
                                 fontSize: 11,
-                                borderColor: '#006AFF',
+                                borderColor: '#007AFF',
                                 borderWidth: 1,
                                 paddingHorizontal: 25,
-                                color: '#006AFF',
+                                color: '#007AFF',
                                 fontFamily: 'inter',
                                 height: 35,
                                 width: 200,
                                 borderRadius: 15,
-                                textTransform: 'uppercase'
+                                textTransform: 'uppercase',
                             }}
                         >
                             {isDeletingEvents ? 'DELETING...' : 'DELETE ALL'}
@@ -1858,67 +1908,67 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         loadChannels();
     }, [props.subscriptions]);
 
-    const loadItemsForMonth = useCallback((month: any) => {
-        const itemsWithEmptyDates: { [label: string]: any } = {};
+    const loadItemsForMonth = useCallback(
+        (month: any) => {
+            const itemsWithEmptyDates: { [label: string]: any } = {};
 
-        setTimeout(() => {
-            for (let i = -120; i < 120; i++) {
-                const time = month.timestamp + i * 24 * 60 * 60 * 1000;
-                const strTime = timeToString(new Date(time));
-    
-                if (!itemsMap[strTime]) {
-                    itemsWithEmptyDates[strTime] = [];
-                } else {
-                    itemsWithEmptyDates[strTime] = itemsMap[strTime]
+            setTimeout(() => {
+                for (let i = -120; i < 120; i++) {
+                    const time = month.timestamp + i * 24 * 60 * 60 * 1000;
+                    const strTime = timeToString(new Date(time));
+
+                    if (!itemsMap[strTime]) {
+                        itemsWithEmptyDates[strTime] = [];
+                    } else {
+                        itemsWithEmptyDates[strTime] = itemsMap[strTime];
+                    }
                 }
-            }
 
-            // let allEventsLoad: any[] = []
-            
-            // Object.keys(itemsWithEmptyDates).map((date: string) => {
-            //     allEventsLoad = [...allEventsLoad, itemsWithEmptyDates[date]]
-            // })
+                // let allEventsLoad: any[] = []
 
-            // console.log("alleventsload length", allEventsLoad.length)
-    
-            // Object.keys(items).forEach(key => {
-            //     itemsWithEmptyDates[key] = items[key];
-            // });
-    
-            // Selected date (current date) should never be empty, otherwise Calendar will keep loading
-            const todayStr = timeToString(new Date());
-    
-            if (!itemsWithEmptyDates[todayStr]) {
-                itemsWithEmptyDates[todayStr] = [];
-            }
+                // Object.keys(itemsWithEmptyDates).map((date: string) => {
+                //     allEventsLoad = [...allEventsLoad, itemsWithEmptyDates[date]]
+                // })
 
-            Object.keys(itemsWithEmptyDates).map((date: string) => {
-                const events = itemsWithEmptyDates[date]
-    
-                let sortedEvents = events.sort((a: any, b: any) => {
-                    return new Date(a.start) > new Date(b.start)
-                })
+                // console.log("alleventsload length", allEventsLoad.length)
 
-                sortedEvents = events.sort((a: any, b: any) => {
-                    return a.title > b.title
-                })
-    
-                itemsWithEmptyDates[date] = sortedEvents
-            })
-            
-            setItems(itemsWithEmptyDates);
-        }, 1000)
+                // Object.keys(items).forEach(key => {
+                //     itemsWithEmptyDates[key] = items[key];
+                // });
 
-        
-    }, [itemsMap, items]);
+                // Selected date (current date) should never be empty, otherwise Calendar will keep loading
+                const todayStr = timeToString(new Date());
+
+                if (!itemsWithEmptyDates[todayStr]) {
+                    itemsWithEmptyDates[todayStr] = [];
+                }
+
+                Object.keys(itemsWithEmptyDates).map((date: string) => {
+                    const events = itemsWithEmptyDates[date];
+
+                    let sortedEvents = events.sort((a: any, b: any) => {
+                        return new Date(a.start) > new Date(b.start);
+                    });
+
+                    sortedEvents = events.sort((a: any, b: any) => {
+                        return a.title > b.title;
+                    });
+
+                    itemsWithEmptyDates[date] = sortedEvents;
+                });
+
+                setItems(itemsWithEmptyDates);
+            }, 1000);
+        },
+        [itemsMap, items]
+    );
 
     const timeToString = (time: any) => {
         const date = new Date(time);
-        return moment(date).format('YYYY-MM-DD')
+        return moment(date).format('YYYY-MM-DD');
     };
 
     const renderItem = (item: any) => {
-
         const { title } = htmlStringParser(item.title);
 
         const assingmentDue = new Date() > new Date(item.start);
@@ -1946,26 +1996,32 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     borderRadius: 15,
                     shadowOffset: {
                         width: 0,
-                        height: -10
+                        height: -10,
                     },
                     flexDirection: 'column',
                     shadowOpacity: 0.03,
                     shadowRadius: 16,
                     zIndex: 50,
-                    maxWidth: 600
+                    maxWidth: 600,
                 }}
                 onPress={() => {
                     onSelectEvent(item);
                 }}
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: (Platform.OS === 'android' ? 7 : 10) }}>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingTop: Platform.OS === 'android' ? 7 : 10,
+                    }}
+                >
                     <View
                         style={{
                             width: 9,
                             height: 9,
                             borderRadius: 6,
                             marginRight: 7,
-                            backgroundColor: item.color
+                            backgroundColor: item.color,
                         }}
                     />
                     <Text
@@ -1973,7 +2029,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             fontFamily: 'inter',
                             fontSize: 15,
                             width: '100%',
-                            paddingRight: 10
+                            paddingRight: 10,
                         }}
                         numberOfLines={1}
                     >
@@ -1988,9 +2044,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             item.description !== '' ||
                             (item.submitted !== null && userId !== '' && userId !== item.createdBy) ||
                             (isMeeting && new Date() > startTime && new Date() < endTime)
-                                ? Platform.OS === 'android' ? 3 : 5
-                                : (Platform.OS === 'android' ? 7 : 10),
-                            paddingLeft: 17
+                                ? Platform.OS === 'android'
+                                    ? 3
+                                    : 5
+                                : Platform.OS === 'android'
+                                ? 7
+                                : 10,
+                        paddingLeft: 17,
                     }}
                 >
                     {displayDate}{' '}
@@ -2000,7 +2060,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <Text
                         style={{
                             paddingTop: Platform.OS === 'android' ? 3 : 5,
-                            color: '#006AFF',
+                            color: '#007AFF',
                             paddingRight: 10,
                             paddingLeft: 17,
                             fontSize: 13,
@@ -2014,11 +2074,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {item.submitted !== null && userId !== '' && userId !== item.createdBy ? (
                     <Text
                         style={{
-                            color: item.submitted ? '#35AC78' : !assingmentDue ? '#006AFF' : '#F94144',
+                            color: item.submitted ? '#35AC78' : !assingmentDue ? '#007AFF' : '#F94144',
                             paddingTop: 5,
                             fontSize: 13,
                             fontFamily: 'inter',
-                            paddingLeft: 17
+                            paddingLeft: 17,
                             // color: '#a2a2ac'
                         }}
                     >
@@ -2029,11 +2089,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 {isMeeting && new Date() > startTime && new Date() < endTime ? (
                     <Text
                         style={{
-                            color: '#006AFF',
+                            color: '#007AFF',
                             paddingTop: 5,
                             fontSize: 13,
                             fontFamily: 'inter',
-                            paddingLeft: 17
+                            paddingLeft: 17,
                         }}
                     >
                         {'IN PROGRESS'}
@@ -2086,7 +2146,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         style: 'cancel',
                         onPress: () => {
                             return;
-                        }
+                        },
                     },
                     {
                         text: 'Delete',
@@ -2097,54 +2157,52 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     mutation: deleteDateV1,
                                     variables: {
                                         id: event.eventId,
-                                        deleteAll: false
-                                    }
+                                        deleteAll: false,
+                                    },
                                 })
-                                .then(res => {
+                                .then((res) => {
                                     if (res.data && res.data.date.deleteV1) {
                                         Alert('Event Deleted!');
                                         loadEvents();
                                     }
                                 });
-                        }
-                    }
+                        },
+                    },
                 ]);
             } else {
                 const date = new Date();
 
                 if (date > new Date(event.start) && date < new Date(event.end) && event.meeting) {
-                    const meetingLink = !meetingProvider ? event.zoomJoinUrl : event.meetingLink;
+                    const meetingLink = !meetingProvider
+                        ? event.zoomRegistrationJoinUrl
+                            ? event.zoomRegistrationJoinUrl
+                            : event.zoomJoinUrl
+                        : event.meetingLink;
 
                     if (!meetingLink) {
                         Alert('No meeting link set. Contact your instructor.');
                         return;
                     }
 
-                    Alert(
-                        'Join meeting?',
-                        (!userZoomInfo || !userZoomInfo.accountId) && !meetingProvider
-                            ? 'WARNING- To mark attendance as Present, you must Connect to Zoom under Account.'
-                            : '',
-                        [
-                            {
-                                text: 'No',
-                                style: 'cancel',
-                                onPress: () => {
-                                    return;
+                    Alert('Join meeting?', '', [
+                        {
+                            text: 'No',
+                            style: 'cancel',
+                            onPress: () => {
+                                return;
+                            },
+                        },
+                        {
+                            text: 'Yes',
+                            onPress: async () => {
+                                if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
+                                    window.open(meetingLink, '_blank');
+                                } else {
+                                    Linking.openURL(meetingLink);
                                 }
                             },
-                            {
-                                text: 'Yes',
-                                onPress: async () => {
-                                    if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
-                                        window.open(meetingLink, '_blank');
-                                    } else {
-                                        Linking.openURL(meetingLink);
-                                    }
-                                }
-                            }
-                        ]
-                    );
+                        },
+                    ]);
                 } else if (event.cueId !== '') {
                     props.openCueFromCalendar(event.channelId, event.cueId, event.createdBy);
                 } else {
@@ -2168,14 +2226,16 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     style={{
                         width: '100%',
                         // paddingTop: width < 768 ? 0 : 40,
-                        backgroundColor: 'white'
+                        backgroundColor: 'white',
                     }}
                 >
                     <Text style={styles.text}>Recurring</Text>
                 </View>
                 <View
                     style={{
-                        backgroundColor: 'white', flexDirection: 'column', alignItems: 'flex-start'
+                        backgroundColor: 'white',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
                     }}
                 >
                     <Switch
@@ -2184,11 +2244,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         thumbColor={'#f4f4f6'}
                         trackColor={{
                             false: '#f4f4f6',
-                            true: '#006AFF'
+                            true: '#007AFF',
                         }}
-                        style={{ 
-                            transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }],
-                            marginTop: Dimensions.get('window').width < 768 ? 0 : 10
+                        style={{
+                            transform: [
+                                { scaleX: Platform.OS === 'ios' ? 1 : 1.2 },
+                                { scaleY: Platform.OS === 'ios' ? 1 : 1.2 },
+                            ],
+                            marginTop: Dimensions.get('window').width < 768 ? 0 : 10,
                         }}
                     />
                 </View>
@@ -2201,7 +2264,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             width: '100%',
                             paddingTop: 40,
                             paddingBottom: 15,
-                            backgroundColor: 'white'
+                            backgroundColor: 'white',
                         }}
                     >
                         <Text style={styles.text}>Interval</Text>
@@ -2211,19 +2274,18 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             backgroundColor: 'white',
                             display: 'flex',
                             height: showFrequencyDropdown ? getDropdownHeight(eventFrequencyOptions.length) : 50,
-                            zIndex: showFrequencyDropdown ? 1 : 0
+                            zIndex: showFrequencyDropdown ? 1 : 0,
                             // marginRight: 10
-                            
                         }}
                     >
                         <DropDownPicker
-                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
+                            listMode={Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'}
                             open={showFrequencyDropdown}
                             value={frequency}
                             items={eventFrequencyOptions.map((item: any) => {
                                 return {
                                     label: item.value === '' ? 'Once' : item.label,
-                                    value: item.value
+                                    value: item.value,
                                 };
                             })}
                             scrollViewProps={{
@@ -2245,14 +2307,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 1,
-                                    height: 3
+                                    height: 3,
                                 },
                                 shadowOpacity: !showFrequencyDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
                             }}
                             textStyle={{
                                 fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
-                                fontFamily: 'overpass'
+                                fontFamily: 'overpass',
                             }}
                         />
                     </View>
@@ -2264,7 +2326,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <View style={{ width: '100%', backgroundColor: 'white', paddingVertical: 15, marginTop: 20 }}>
                         <Text style={styles.text}>Occurs on</Text>
                         {
-                            <View style={{ flexDirection: 'row', width: '100%', flexWrap: 'wrap', paddingTop: Dimensions.get('window').width < 768 ? 10 : 20 }}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    width: '100%',
+                                    flexWrap: 'wrap',
+                                    paddingTop: Dimensions.get('window').width < 768 ? 10 : 20,
+                                }}
+                            >
                                 {Object.keys(weekDays).map((day: any, ind: number) => {
                                     const label = weekDays[day];
 
@@ -2275,7 +2344,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 alignItems: 'center',
                                                 marginRight: 10,
                                                 padding: 5,
-                                                marginBottom: 10
+                                                marginBottom: 10,
                                             }}
                                             key={ind}
                                         >
@@ -2322,9 +2391,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     <Text style={styles.text}>
                         End date
                         {/* {PreferredLanguageText("repeatTill")}{" "} */}
-                        {Platform.OS === 'android'
-                            ? ': ' + moment(new Date(repeatTill)).format('MMMM Do YYYY')
-                            : null}
+                        {Platform.OS === 'android' ? ': ' + moment(new Date(repeatTill)).format('MMMM Do YYYY') : null}
                     </Text>
                     <View
                         style={{
@@ -2332,7 +2399,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
                             backgroundColor: '#fff',
                             // marginTop: 12,
-                            marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10
+                            marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 10,
                         }}
                     >
                         {renderRepeatTillDateTimePicker()}
@@ -2343,13 +2410,29 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     );
 
     const renderMeetingOptions = () => {
+        let meetingSwitchMessage =
+            'Students will be able to join the meeting directly from the Agenda or Meetings tab in your Course.';
+
+        let meetingSwitchSubtitle = 'Note - you must have a meeting link specified in your Course settings.';
+
+        if ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') && !meetingProvider) {
+            meetingSwitchMessage =
+                'To generate Zoom meetings directly from Cues, connect to Zoom under Account > Profile.';
+            meetingSwitchSubtitle = '';
+        } else if (userZoomInfo && userZoomInfo.accountId && userZoomInfo.accountId !== '' && !meetingProvider) {
+            meetingSwitchMessage = 'Cues will automatically generate a Zoom meeting.';
+            meetingSwitchSubtitle =
+                'Students will be able to join the meeting directly from the Agenda or Meetings tab in your Course.';
+        }
+
         return channelId !== '' || editChannelName !== '' ? (
             <View
                 style={{
                     width: '100%',
+                    maxWidth: 600,
                     flexDirection: 'row',
                     marginTop: 40,
-                    backgroundColor: '#fff'
+                    backgroundColor: '#fff',
                 }}
             >
                 {!editEvent ? (
@@ -2358,39 +2441,69 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             display: 'flex',
                             flexDirection: 'column',
                             backgroundColor: 'white',
-                            width: '50%'
+                            width: '100%',
                         }}
                     >
                         <View style={{ width: '100%', backgroundColor: 'white' }}>
-                            <Text style={styles.text}>Meeting</Text>
+                            <View
+                                style={{
+                                    width: '100%',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Text style={styles.text}>Meeting</Text>
+                                {editEvent ? null : (
+                                    <RNTouchableOpacity
+                                        style={{
+                                            marginLeft: 10,
+                                        }}
+                                        onPress={() => {
+                                            Alert(meetingSwitchMessage, meetingSwitchSubtitle);
+                                        }}
+                                    >
+                                        <Text>
+                                            <Ionicons name="help-circle-outline" size={18} color="#939699" />
+                                        </Text>
+                                    </RNTouchableOpacity>
+                                )}
+                            </View>
                         </View>
 
                         {editEvent ||
-                                    ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') &&
-                                        !meetingProvider) ? null : 
-                        <View
-                            style={{
-                                backgroundColor: 'white', flexDirection: 'column', alignItems: 'flex-start', 
-                            }}
-                        >
-                            <Switch
-                                value={isMeeting}
-                                onValueChange={() => {
-                                    setIsMeeting(!isMeeting);
+                        ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') &&
+                            !meetingProvider) ? null : (
+                            <View
+                                style={{
+                                    backgroundColor: 'white',
+                                    flexDirection: 'column',
+                                    alignItems: 'flex-start',
                                 }}
-                                thumbColor={'#f4f4f6'}
-                                trackColor={{
-                                    false: '#f4f4f6',
-                                    true: '#006AFF'
-                                }}
-                                style={{ transform: [{ scaleX: Platform.OS === 'ios' ? 1 : 1.2 }, { scaleY: Platform.OS === 'ios' ? 1 : 1.2 }] }}
-                                disabled={
-                                    editEvent ||
-                                    ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') &&
-                                        !meetingProvider)
-                                }
-                            />
-                        </View>}
+                            >
+                                <Switch
+                                    value={isMeeting}
+                                    onValueChange={() => {
+                                        setIsMeeting(!isMeeting);
+                                    }}
+                                    thumbColor={'#f4f4f6'}
+                                    trackColor={{
+                                        false: '#f4f4f6',
+                                        true: '#007AFF',
+                                    }}
+                                    style={{
+                                        transform: [
+                                            { scaleX: Platform.OS === 'ios' ? 1 : 1.2 },
+                                            { scaleY: Platform.OS === 'ios' ? 1 : 1.2 },
+                                        ],
+                                    }}
+                                    disabled={
+                                        editEvent ||
+                                        ((!userZoomInfo || !userZoomInfo.accountId || userZoomInfo.accountId === '') &&
+                                            !meetingProvider)
+                                    }
+                                />
+                            </View>
+                        )}
                     </View>
                 ) : null}
             </View>
@@ -2413,7 +2526,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     flexDirection: 'column',
                     alignItems: 'center',
                     paddingBottom: 120,
-                    paddingTop: Dimensions.get('window').width > 768 && orientation === 'PORTRAIT' ? 50 : 0 
+                    paddingTop: Dimensions.get('window').width > 768 && orientation === 'PORTRAIT' ? 50 : 0,
                 }}
                 showsVerticalScrollIndicator={true}
                 // scrollEnabled={true}
@@ -2435,7 +2548,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         alignSelf: 'center'
                     }}
                 > */}
-                    {/* <View
+                {/* <View
                         style={{
                             flexDirection: 'column',
                             paddingTop: 20,
@@ -2443,321 +2556,323 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             backgroundColor: 'white'
                         }}
                     > */}
-                        <View
+                <View
+                    style={{
+                        width: '100%',
+                        maxWidth: 600,
+                        backgroundColor: '#fff',
+                    }}
+                >
+                    <View style={{ width: '100%', marginBottom: 10 }}>
+                        <Text
                             style={{
-                                width: '100%',
-                                maxWidth: 600,
-                                backgroundColor: '#fff'
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                fontFamily: 'Inter',
+                                color: '#000000',
+                                fontWeight: 'bold',
                             }}
                         >
-                            <View style={{ width: '100%', marginBottom: 10 }}>
+                            Topic
+                        </Text>
+                        <TextInput
+                            value={title}
+                            placeholder={''}
+                            onChangeText={(val) => setTitle(val)}
+                            placeholderTextColor={'#1F1F1F'}
+                            required={true}
+                        />
+                    </View>
+                </View>
+                <View
+                    style={{
+                        width: '100%',
+                        backgroundColor: '#fff',
+                        maxWidth: 600,
+                        // marginLeft: Dimensions.get('window').width < 768 ? 0 : 50
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'Inter',
+                            color: '#000000',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        Description
+                    </Text>
+                    <TextInput
+                        value={description}
+                        // placeholder="Description"
+                        onChangeText={(val) => setDescription(val)}
+                        placeholderTextColor={'#a2a2ac'}
+                        hasMultipleLines={true}
+                    />
+                </View>
+                {/* </View> */}
+                <View style={{ backgroundColor: '#fff', width: '100%', maxWidth: 600, flexDirection: 'column' }}>
+                    <View
+                        style={{
+                            width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
+                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            paddingTop: 12,
+                            backgroundColor: '#fff',
+                            marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 0,
+                            alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start',
+                        }}
+                    >
+                        <Text style={styles.text}>
+                            Start
+                            {Platform.OS === 'android'
+                                ? ': ' + moment(new Date(start)).format('MMMM Do YYYY, h:mm a')
+                                : null}
+                        </Text>
+                        {renderStartDateTimePicker()}
+                    </View>
+                    <View
+                        style={{
+                            width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
+                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            backgroundColor: '#fff',
+                            marginTop: 12,
+                            marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 0,
+                            alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start',
+                        }}
+                    >
+                        <Text style={styles.text}>
+                            End
+                            {Platform.OS === 'android'
+                                ? ': ' + moment(new Date(end)).format('MMMM Do YYYY, h:mm a')
+                                : null}
+                        </Text>
+                        {renderEndDateTimePicker()}
+                    </View>
+                </View>
+
+                <View style={{}}>
+                    {channels.length > 0 && !editEvent ? (
+                        <View>
+                            <View style={{ width: '100%', paddingBottom: 10, marginTop: 30 }}>
                                 <Text
                                     style={{
                                         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'inter',
                                         color: '#000000',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
                                     }}
                                 >
-                                    Topic
+                                    For
                                 </Text>
-                                <TextInput
-                                    value={title}
-                                    placeholder={''}
-                                    onChangeText={val => setTitle(val)}
-                                    placeholderTextColor={'#1F1F1F'}
-                                    required={true}
+                            </View>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    display: 'flex',
+                                    height: showChannelDropdown ? getDropdownHeight(channelOptions.length) : 50,
+                                    zIndex: showChannelDropdown ? 1 : 0,
+                                    maxWidth: 600,
+                                }}
+                            >
+                                <DropDownPicker
+                                    listMode={Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'}
+                                    open={showChannelDropdown}
+                                    value={selectedChannel}
+                                    items={channelOptions}
+                                    setOpen={setShowChannelDropdown}
+                                    scrollViewProps={{
+                                        nestedScrollEnabled: true,
+                                    }}
+                                    setValue={(val: any) => {
+                                        setSelectedChannel(val);
+
+                                        if (val === 'My Events') {
+                                            setChannelId('');
+                                        } else {
+                                            setChannelId(val);
+                                        }
+                                    }}
+                                    style={{
+                                        borderWidth: 0,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: '#f2f2f2',
+                                        // elevation: !showChannelDropdown ? 0 : 2
+                                    }}
+                                    dropDownContainerStyle={{
+                                        borderWidth: 0,
+                                        // elevation: !showChannelDropdown ? 0 : 2
+                                    }}
+                                    containerStyle={{
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 1,
+                                            height: 3,
+                                        },
+                                        shadowOpacity: !showChannelDropdown ? 0 : 0.08,
+                                        shadowRadius: 12,
+                                    }}
+                                    textStyle={{
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                        fontFamily: 'overpass',
+                                    }}
                                 />
                             </View>
                         </View>
+                    ) : null}
+                </View>
+
+                {/* {editEvent && renderEditChannelName()} */}
+                {renderEditMeetingInfo()}
+
+                {!editEvent && renderRecurringOptions()}
+                {renderMeetingOptions()}
+                {channelId !== '' && meetingProvider !== '' && isMeeting ? (
+                    <Text
+                        style={{
+                            fontSize: 11,
+                            color: '#000000',
+                            // textTransform: 'uppercase',
+                            lineHeight: 20,
+                            fontFamily: 'Inter',
+                            paddingBottom: 15,
+                        }}
+                    >
+                        The meeting link will be same as the one in the Course Settings. Ensure you have a working link
+                        set at all times.
+                    </Text>
+                ) : null}
+                {channelId !== '' && userZoomInfo && userZoomInfo.accountId && !meetingProvider && !editEvent ? (
+                    <Text
+                        style={{
+                            fontSize: 11,
+                            color: '#000000',
+                            // textTransform: 'uppercase',
+                            lineHeight: 20,
+                            fontFamily: 'Inter',
+                            paddingVertical: 15,
+                        }}
+                    >
+                        Note: You need to be a licensed Zoom user for student attendances to be automatically captured
+                        and visible under your Course past meetings.
+                    </Text>
+                ) : null}
+
+                {channelId !== '' && (!userZoomInfo || !userZoomInfo.accountId) && !meetingProvider ? (
+                    <View
+                        style={{
+                            marginVertical: 10,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            padding: 10,
+                            paddingHorizontal: 15,
+                            backgroundColor: '#f8f8f8',
+                            borderRadius: 1,
+                            width: '100%',
+                            maxWidth: 600,
+                            borderRadius: 10,
+                        }}
+                    >
+                        <Ionicons
+                            name="warning-outline"
+                            size={Dimensions.get('window').width < 768 ? 22 : 24}
+                            color={'#f3722c'}
+                        />
+
                         <View
                             style={{
-                                width: '100%',
-                                backgroundColor: '#fff',
-                                maxWidth: 600 
-                                // marginLeft: Dimensions.get('window').width < 768 ? 0 : 50
+                                flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
+                                alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
+                                backgroundColor: '#f8f8f8',
                             }}
                         >
                             <Text
                                 style={{
+                                    paddingHorizontal: 20,
                                     fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                    fontFamily: 'Inter',
-                                    color: '#000000',
-                                    fontWeight: 'bold'
                                 }}
                             >
-                                Description
+                                To schedule online meetings connect your account to Zoom
                             </Text>
-                            <TextInput
-                                value={description}
-                                // placeholder="Description"
-                                onChangeText={val => setDescription(val)}
-                                placeholderTextColor={'#a2a2ac'}
-                                hasMultipleLines={true}
-                            />
-                        </View>
-                    {/* </View> */}
-                    <View style={{ backgroundColor: '#fff', width: '100%', maxWidth: 600, flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row'  }}>
-                        <View
-                            style={{
-                                width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
-                                flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
-                                paddingTop: 12,
-                                backgroundColor: '#fff',
-                                marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 0,
-                                alignItems: Platform.OS === 'ios' ?  'center' : 'flex-start'
-                            }}
-                        >
-                            <Text style={styles.text}>
-                                Start
-                                {Platform.OS === 'android'
-                                    ? ': ' + moment(new Date(start)).format('MMMM Do YYYY, h:mm a')
-                                    : null}
-                            </Text>
-                            {renderStartDateTimePicker()}
-                        </View>
-                        <View
-                            style={{
-                                width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
-                                flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
-                                backgroundColor: '#fff',
-                                marginTop: 12,
-                                marginLeft: Dimensions.get('window').width < 768 ? 'auto' : 0,
-                                alignItems: Platform.OS === 'ios' ?  'center' : 'flex-start'
-                            }}
-                        >
-                            <Text style={styles.text}>
-                                End
-                                {Platform.OS === 'android'
-                                    ? ': ' + moment(new Date(end)).format('MMMM Do YYYY, h:mm a')
-                                    : null}
-                            </Text>
-                            {renderEndDateTimePicker()}
-                        </View>
-                    </View>
 
-                    <View style={{ 
-
-                    }}>
-                        {channels.length > 0 && !editEvent ? (
-                            <View>
-                                <View style={{ width: '100%', paddingBottom: 10, marginTop: 30 }}>
-                                    <Text
-                                        style={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                            fontFamily: 'inter',
-                                            color: '#000000',
-                                            fontWeight: 'bold'
-                                        }}
-                                    >
-                                        For
-                                    </Text>
-                                </View>
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        display: 'flex',
-                                        height: showChannelDropdown ? getDropdownHeight(channelOptions.length) : 50,
-                                        zIndex: showChannelDropdown ? 1 : 0,
-                                        maxWidth: 600
-                                    }}
-                                >
-                                    <DropDownPicker
-                                        listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
-                                        open={showChannelDropdown}
-                                        value={selectedChannel}
-                                        items={channelOptions}
-                                        setOpen={setShowChannelDropdown}
-                                        scrollViewProps={{
-                                            nestedScrollEnabled: true,
-                                        }}
-                                        setValue={(val: any) => {
-                                            setSelectedChannel(val);
-
-                                            if (val === 'My Events') {
-                                                setChannelId('');
-                                            } else {
-                                                setChannelId(val);
-                                            }
-                                        }}
-                                        style={{
-                                            borderWidth: 0,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: '#f2f2f2',
-                                            // elevation: !showChannelDropdown ? 0 : 2
-                                        }}
-                                        dropDownContainerStyle={{
-                                            borderWidth: 0,
-                                            // elevation: !showChannelDropdown ? 0 : 2
-                                        }}
-                                        containerStyle={{
-                                            shadowColor: '#000',
-                                            shadowOffset: {
-                                                width: 1,
-                                                height: 3
-                                            },
-                                            shadowOpacity: !showChannelDropdown ? 0 : 0.08,
-                                            shadowRadius: 12,
-                                        }}
-                                        textStyle={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
-                                            fontFamily: 'overpass'
-                                        }}
-                                    />
-                                </View>
-                            </View>
-                        ) : null}
-                    </View>
-
-                    {/* {editEvent && renderEditChannelName()} */}
-                    {renderEditMeetingInfo()}
-
-                    {!editEvent && renderRecurringOptions()}
-                    {renderMeetingOptions()}
-                    {channelId !== '' && meetingProvider !== '' && isMeeting ? (
-                        <Text
-                            style={{
-                                fontSize: 11,
-                                color: '#000000',
-                                // textTransform: 'uppercase',
-                                lineHeight: 20,
-                                fontFamily: 'Inter',
-                                paddingBottom: 15
-                            }}
-                        >
-                            The meeting link will be same as the one in the Course Settings. Ensure you have a working
-                            link set at all times.
-                        </Text>
-                    ) : null}
-                    {channelId !== '' && userZoomInfo && userZoomInfo.accountId && !meetingProvider && !editEvent ? (
-                        <Text
-                            style={{
-                                fontSize: 11,
-                                color: '#000000',
-                                // textTransform: 'uppercase',
-                                lineHeight: 20,
-                                fontFamily: 'Inter',
-                                paddingVertical: 15
-                            }}
-                        >
-                            Zoom meeting will be automatically created and attendances will be captured for online
-                            meetings.
-                        </Text>
-                    ) : null}
-
-                    {(channelId !== '' && (!userZoomInfo || !userZoomInfo.accountId) && !meetingProvider) ||
-                    (editEvent &&
-                        !meetingProvider &&
-                        !editEvent.zoomMeetingId &&
-                        (!userZoomInfo || !userZoomInfo.accountId)) ? (
-                        <View
-                            style={{
-                                marginVertical: 10,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                padding: 10,
-                                paddingHorizontal: 15,
-                                backgroundColor: '#f2f2f2',
-                                borderRadius: 1,
-                                width: '100%',
-                                maxWidth: 600,
-                                borderRadius: 10
-                            }}
-                        >
-
-                            <Ionicons name="warning-outline" size={Dimensions.get('window').width < 768 ? 22 : 24} color={'#f3722c'} />
-                            
-                            <View style={{
-                                flexDirection: Dimensions.get('window').width < 768 ? 'column' : 'row',
-                                alignItems: Dimensions.get('window').width < 768 ? 'flex-start' : 'center',
-                                backgroundColor: '#f2f2f2'
-                            }}>
-                                <Text style={{ paddingHorizontal: 20, fontSize: Dimensions.get('window').width < 768 ? 14 : 16 }}>
-                                    {editEvent
-                                        ? 'To schedule online meeting connect your Zoom account'
-                                        : 'To schedule online meetings connect your account to Zoom'}
-                                </Text>
-
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        // ZOOM OAUTH
-
-                                        const url = 'https://app.learnwithcues.com/zoom_auth';
-
-                                        if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                                            Linking.openURL(url);
-                                        } else {
-                                            window.open(url, '_blank');
-                                        }
-                                    }}
-                                    style={{
-                                        backgroundColor: '#f2f2f2',
-                                        paddingLeft: Dimensions.get('window').width < 768 ? 20 : 10,
-                                        paddingVertical: Dimensions.get('window').width < 768 ? 10 : 0
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            fontSize: 14,
-                                            fontFamily: 'inter',
-                                            color: '#006AFF',
-                                            backgroundColor: '#f2f2f2'
-                                        }}
-                                    >
-                                        Connect
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    ) : null}
-
-                    {!editEvent ? (
-                        <View
-                            style={{
-                                width: Dimensions.get('window').width < 768 ? '100%' : '30%',
-                                flexDirection: 'row',
-                                backgroundColor: '#fff',
-                                display: 'flex',
-                                justifyContent: 'center'
-                            }}
-                        >
                             <TouchableOpacity
-                                style={{
-                                    backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
-                                    marginTop: 15,
-                                    borderRadius: 15,
-                                    width: '100%',
-                                    justifyContent: 'center',
-                                    flexDirection: 'row',
-                                    marginTop: 40
+                                onPress={() => {
+                                    // ZOOM OAUTH
+
+                                    const url = 'https://app.learnwithcues.com/zoom_auth';
+
+                                    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                                        Linking.openURL(url);
+                                    } else {
+                                        window.open(url, '_blank');
+                                    }
                                 }}
-                                onPress={() => handleCreate()}
-                                disabled={isCreatingEvents}
+                                style={{
+                                    backgroundColor: '#f8f8f8',
+                                    paddingLeft: Dimensions.get('window').width < 768 ? 20 : 10,
+                                    paddingVertical: Dimensions.get('window').width < 768 ? 10 : 0,
+                                }}
                             >
                                 <Text
                                     style={{
-                                        textAlign: 'center',
-                                        lineHeight: 35,
-                                        color: 'white',
-                                        overflow: 'hidden',
-                                        fontSize: 11,
-                                        backgroundColor: '#006AFF',
-                                        paddingHorizontal: 25,
+                                        fontSize: 14,
                                         fontFamily: 'inter',
-                                        height: 35,
-
-                                        width: 150,
-                                        borderRadius: 15
+                                        color: '#007AFF',
+                                        backgroundColor: '#f8f8f8',
                                     }}
                                 >
-                                    {isCreatingEvents ? 'ADDING...' : 'ADD'}
+                                    Connect
                                 </Text>
                             </TouchableOpacity>
                         </View>
-                    ) : null}
-                    {editEvent ? renderEditEventOptions() : null}
+                    </View>
+                ) : null}
+
+                {!editEvent ? (
+                    <View
+                        style={{
+                            width: Dimensions.get('window').width < 768 ? '100%' : '30%',
+                            flexDirection: 'row',
+                            backgroundColor: '#fff',
+                            display: 'flex',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: 'white',
+                                overflow: 'hidden',
+                                height: 35,
+                                marginTop: 15,
+                                borderRadius: 15,
+                                width: '100%',
+                                justifyContent: 'center',
+                                flexDirection: 'row',
+                                marginTop: 40,
+                            }}
+                            onPress={() => handleCreate()}
+                            disabled={isCreatingEvents}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    lineHeight: 35,
+                                    color: 'white',
+                                    overflow: 'hidden',
+                                    fontSize: 11,
+                                    backgroundColor: '#007AFF',
+                                    paddingHorizontal: 25,
+                                    fontFamily: 'inter',
+                                    height: 35,
+
+                                    width: 150,
+                                    borderRadius: 15,
+                                }}
+                            >
+                                {isCreatingEvents ? 'ADDING...' : 'ADD'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
+                {editEvent ? renderEditEventOptions() : null}
                 {/* </View> */}
             </ScrollView>
         );
@@ -2769,13 +2884,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const renderFilterModalContent = () => {
         const filterChannelOptions = [
             { value: 'All', label: 'All' },
-            { value: '', label: 'My Events' }
+            { value: '', label: 'My Events' },
         ];
 
         props.subscriptions.map((sub: any) => {
             filterChannelOptions.push({
                 value: sub.channelId,
-                label: sub.channelName
+                label: sub.channelName,
             });
         });
 
@@ -2783,7 +2898,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             { value: 'All', label: 'All' },
             { value: 'Meetings', label: 'Meetings' },
             { value: 'Submissions', label: 'Submissions' },
-            { value: 'Events', label: 'Events' }
+            { value: 'Events', label: 'Events' },
         ];
 
         return (
@@ -2793,10 +2908,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0,
-                    zIndex: 10000
                 }}
                 contentContainerStyle={{
-                    paddingHorizontal: 20
+                    paddingHorizontal: 20,
                 }}
                 showsVerticalScrollIndicator={false}
                 nestedScrollEnabled={true}
@@ -2807,7 +2921,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             fontFamily: 'Inter',
                             color: '#000000',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
                         }}
                     >
                         Workspace
@@ -2821,7 +2935,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                     >
                         <DropDownPicker
-                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
+                            listMode={Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'}
                             open={showFilterByChannelDropdown}
                             value={filterByChannel}
                             items={filterChannelOptions}
@@ -2844,75 +2958,77 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 1,
-                                    height: 3
+                                    height: 3,
                                 },
                                 shadowOpacity: !showFilterByChannelDropdown ? 0 : 0.08,
                                 shadowRadius: 12,
                             }}
                             textStyle={{
                                 fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
-                                fontFamily: 'overpass'
+                                fontFamily: 'overpass',
                             }}
                         />
                     </View>
                 </View>
-                {activeTab === 'agenda' ? <View style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
-                    <Text
-                        style={{
-                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                            fontFamily: 'Inter',
-                            color: '#000000',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Type
-                    </Text>
-
-                    <View
-                        style={{
-                            backgroundColor: 'white',
-                            display: 'flex',
-                            height: showFilterTypeDropdown ? getDropdownHeight(typeOptions.length) : 50,
-                            marginTop: 10,
-                            // zIndex: showFilterTypeDropdown ? 1 : 0,
-                        }}
-                    >
-                        <DropDownPicker
-                            listMode={Platform.OS === "android" ? "MODAL" : "SCROLLVIEW"}
-                            open={showFilterTypeDropdown}
-                            value={filterEventsType}
-                            items={typeOptions}
-                            setOpen={setShowFilterTypeDropdown}
-                            setValue={setFilterEventsType}
-                            scrollViewProps={{
-                                nestedScrollEnabled: true,
-                            }}
+                {activeTab === 'agenda' ? (
+                    <View style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 30 }}>
+                        <Text
                             style={{
-                                borderWidth: 0,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2',
-                                // elevation: !showFilterTypeDropdown ? 0 : 2
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                fontFamily: 'Inter',
+                                color: '#000000',
+                                fontWeight: 'bold',
                             }}
-                            dropDownContainerStyle={{
-                                borderWidth: 0,
-                                // elevation: !showFilterTypeDropdown ? 0 : 2
+                        >
+                            Type
+                        </Text>
+
+                        <View
+                            style={{
+                                backgroundColor: 'white',
+                                display: 'flex',
+                                height: showFilterTypeDropdown ? getDropdownHeight(typeOptions.length) : 50,
+                                marginTop: 10,
+                                // zIndex: showFilterTypeDropdown ? 1 : 0,
                             }}
-                            containerStyle={{
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 1,
-                                    height: 3
-                                },
-                                shadowOpacity: !showFilterTypeDropdown ? 0 : 0.08,
-                                shadowRadius: 12,
-                            }}
-                            textStyle={{
-                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
-                                fontFamily: 'overpass'
-                            }}
-                        />
+                        >
+                            <DropDownPicker
+                                listMode={Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW'}
+                                open={showFilterTypeDropdown}
+                                value={filterEventsType}
+                                items={typeOptions}
+                                setOpen={setShowFilterTypeDropdown}
+                                setValue={setFilterEventsType}
+                                scrollViewProps={{
+                                    nestedScrollEnabled: true,
+                                }}
+                                style={{
+                                    borderWidth: 0,
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: '#f2f2f2',
+                                    // elevation: !showFilterTypeDropdown ? 0 : 2
+                                }}
+                                dropDownContainerStyle={{
+                                    borderWidth: 0,
+                                    // elevation: !showFilterTypeDropdown ? 0 : 2
+                                }}
+                                containerStyle={{
+                                    shadowColor: '#000',
+                                    shadowOffset: {
+                                        width: 1,
+                                        height: 3,
+                                    },
+                                    shadowOpacity: !showFilterTypeDropdown ? 0 : 0.08,
+                                    shadowRadius: 12,
+                                }}
+                                textStyle={{
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                    fontFamily: 'overpass',
+                                }}
+                            />
+                        </View>
                     </View>
-                </View> : null}
+                ) : null}
                 <View style={{ backgroundColor: '#fff', width: '100%', display: 'flex', flexDirection: 'column' }}>
                     <View
                         style={{
@@ -2920,7 +3036,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             flexDirection: 'row',
                             // paddingTop: 12,
                             backgroundColor: '#fff',
-                            alignItems: 'center'
+                            alignItems: 'center',
                         }}
                     >
                         <Text style={styles.text}>
@@ -2957,18 +3073,18 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
     // iPhone
     if (Dimensions.get('window').width < 768 && Platform.OS === 'ios') {
-        windowHeight = Dimensions.get('window').height - 115
-    // Android Phone
+        windowHeight = Dimensions.get('window').height - 115;
+        // Android Phone
     } else if (Dimensions.get('window').width < 768 && Platform.OS === 'android') {
-        windowHeight = Dimensions.get('window').height - 30
-    // Tablet potrait
+        windowHeight = Dimensions.get('window').height - 30;
+        // Tablet potrait
     } else if (orientation === 'PORTRAIT' && Dimensions.get('window').width > 768) {
-        windowHeight = Dimensions.get('window').height - 30
-    // Tablet landscape 
+        windowHeight = Dimensions.get('window').height - 30;
+        // Tablet landscape
     } else if (orientation === 'LANDSCAPE' && Dimensions.get('window').width > 768) {
-        windowHeight = Dimensions.get('window').height - 60
+        windowHeight = Dimensions.get('window').height - 60;
     } else {
-        windowHeight = Dimensions.get('window').height - 30
+        windowHeight = Dimensions.get('window').height - 30;
     }
 
     // Height needs to offset the App bar height (Different for iPhone, Android, iPad, Android tablet)
@@ -2979,10 +3095,13 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 opacity: modalAnimation,
                 width: '100%',
                 // height: windowHeight,
-                height: Dimensions.get('window').width < 768 ? windowHeight - (Platform.OS === 'ios' ? 0 : 18) : windowHeight - (Platform.OS === 'ios' ? 50 : 30),
+                height:
+                    Dimensions.get('window').width < 768
+                        ? windowHeight - (Platform.OS === 'ios' ? 0 : 18)
+                        : windowHeight - (Platform.OS === 'ios' ? 50 : 30),
                 backgroundColor: 'white',
                 borderTopRightRadius: 0,
-                borderTopLeftRadius: 0
+                borderTopLeftRadius: 0,
             }}
         >
             <View
@@ -2992,7 +3111,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     alignItems: 'center',
                     // paddingHorizontal: 20,
                     paddingTop: 15,
-                    paddingBottom: 10
+                    paddingBottom: 10,
                 }}
             >
                 {/* <TouchableOpacity
@@ -3000,14 +3119,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         // backgroundColor: activeTab === 'agenda' ? '#000' : '#fff',
                         paddingVertical: 6,
                         marginHorizontal: 12,
-                        borderBottomColor: '#006aff',
+                        borderBottomColor: '#007AFF',
                         borderBottomWidth: activeTab === 'agenda' ? 3 : 0
                     }}
                     onPress={() => setActiveTab('agenda')}
                 >
                     <Text
                         style={{
-                            color: activeTab === 'agenda' ? '#006aff' : '#656565',
+                            color: activeTab === 'agenda' ? '#007AFF' : '#656565',
                             fontFamily: 'Inter',
                             fontWeight: 'bold',
                             fontSize: Dimensions.get('window').width < 768 ? 20 : 30
@@ -3021,14 +3140,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         // backgroundColor: activeTab === 'activity' ? '#000' : '#fff',
                         paddingVertical: 6,
                         marginHorizontal: 12,
-                        borderBottomColor: '#006aff',
+                        borderBottomColor: '#007AFF',
                         borderBottomWidth: activeTab === 'activity' ? 3 : 0
                     }}
                     onPress={() => setActiveTab('activity')}
                 >
                     <Text
                         style={{
-                            color: activeTab === 'activity' ? '#006aff' : '#656565',
+                            color: activeTab === 'activity' ? '#007AFF' : '#656565',
                             fontFamily: 'Inter',
                             fontWeight: 'bold',
                             fontSize: Dimensions.get('window').width < 768 ? 20 : 30
@@ -3037,72 +3156,89 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         Activity
                     </Text>
                 </TouchableOpacity> */}
-                {activeTab === 'activity' ? 
+                {activeTab === 'activity' ? (
                     <TouchableOpacity
                         style={{
                             marginRight: 15,
                             marginLeft: 10,
-                            paddingLeft: 10
+                            paddingLeft: 10,
                         }}
                         onPress={() => setActiveTab('agenda')}
                     >
                         <Ionicons name={'arrow-back-outline'} size={35} color="#1f1f1f" />
                     </TouchableOpacity>
-                    :
-                    <Text style={{
-                       fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
-                        color: '#000',
-                        fontFamily: 'Inter',
-                        marginLeft: 20
-                    }}>
+                ) : (
+                    <Text
+                        style={{
+                            fontSize: Dimensions.get('window').width < 800 ? 22 : 26,
+                            color: '#000',
+                            fontFamily: 'Inter',
+                            marginLeft: 20,
+                        }}
+                    >
                         {renderTimeMessage()}
                     </Text>
-                }
+                )}
 
-                {
-                    activeTab === 'activity' ?
+                {activeTab === 'activity' ? (
                     <Text
                         style={{
                             color: '#1f1f1f',
                             fontFamily: 'Inter',
                             fontWeight: 'bold',
                             paddingLeft: 10,
-                            fontSize: Dimensions.get('window').width < 768 ? 22 : 30
+                            fontSize: Dimensions.get('window').width < 768 ? 22 : 30,
                         }}
                     >
                         Activity
                     </Text>
-                    : null
-                }
+                ) : null}
 
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', marginRight: 20 }}>
-
-                    {activeTab === 'activity' ? null : <View style={{
-                        marginRight: 20
-                    }}>
-                        <TouchableOpacity
-                            containerStyle={{
-                                position: 'relative'
-                            }}
-                            onPress={() => setActiveTab('activity')}
-                        >
-                            <Ionicons name={'notifications-outline'} style={{
-                                color: activeTab === 'activity' ? '#006AFF' : 'black'
-                            }} size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
-                        </TouchableOpacity>
-                        {unreadCount && unreadCount > 0 ? <View
+                <View
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginLeft: 'auto',
+                        marginRight: 20,
+                    }}
+                >
+                    {activeTab === 'activity' ? null : (
+                        <View
                             style={{
-                                width: 7,
-                                height: 7,
-                                borderRadius: 7,
-                                backgroundColor: '#f94144',
-                                position: 'absolute',
-                                top: -1,
-                                right: -2,
+                                marginRight: 20,
                             }}
-                        /> : null}
-                    </View>}
-
+                        >
+                            <TouchableOpacity
+                                containerStyle={{
+                                    position: 'relative',
+                                }}
+                                onPress={() => setActiveTab('activity')}
+                            >
+                                <Ionicons
+                                    name={'notifications-outline'}
+                                    style={{
+                                        color: activeTab === 'activity' ? '#007AFF' : 'black',
+                                    }}
+                                    size={Dimensions.get('window').width < 800 ? 23 : 26}
+                                    color="black"
+                                />
+                            </TouchableOpacity>
+                            {unreadCount && unreadCount > 0 ? (
+                                <View
+                                    style={{
+                                        width: 7,
+                                        height: 7,
+                                        borderRadius: 7,
+                                        backgroundColor: '#f94144',
+                                        position: 'absolute',
+                                        top: -1,
+                                        right: -2,
+                                    }}
+                                />
+                            ) : null}
+                        </View>
+                    )}
 
                     {/* {!props.showSearchMobile && activeTab !== 'activity' ? (
                         <TouchableOpacity
@@ -3115,71 +3251,82 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         </TouchableOpacity>
                     ) : null} */}
 
-                    {activeTab === 'activity' && unreadCount && unreadCount > 0 ? <TouchableOpacity style={{
-                        marginRight: 15
-                    }} onPress={ async () => {
-
-                        Alert('Mark as Read?', '', [
-                            {
-                                text: 'Cancel',
-                                style: 'cancel',
-                                onPress: () => {
-                                    return;
-                                }
-                            },
-                            {
-                                text: 'Yes',
-                                onPress: async () => {
-                                    const uString: any = await AsyncStorage.getItem('user');
-                                    if (uString) {
-                                        const user = JSON.parse(uString);
-                                        const server = fetchAPI(user._id);
-                                        server
-                                            .mutate({
-                                                mutation: markActivityAsRead,
-                                                variables: {
-                                                    userId: user._id,
-                                                    markAllRead: true
-                                                }
-                                            })
-                                            .then(res => {
-                                                if (res.data.activity.markActivityAsRead) {
-                                                    server
-                                                        .query({
-                                                            query: getActivity,
-                                                            variables: {
-                                                                userId: user._id
-                                                            }
-                                                        })
-                                                        .then(res => {
-                                                            if (res.data && res.data.activity.getActivity) {
-                                                                const tempActivity = res.data.activity.getActivity;
-                                                                let unread = 0;
-                                                                tempActivity.map((act: any) => {
-                                                                    if (act.status === 'unread') {
-                                                                        unread++;
+                    {activeTab === 'activity' && unreadCount && unreadCount > 0 ? (
+                        <TouchableOpacity
+                            style={{
+                                marginRight: 15,
+                            }}
+                            onPress={async () => {
+                                Alert('Mark as Read?', '', [
+                                    {
+                                        text: 'Cancel',
+                                        style: 'cancel',
+                                        onPress: () => {
+                                            return;
+                                        },
+                                    },
+                                    {
+                                        text: 'Yes',
+                                        onPress: async () => {
+                                            const uString: any = await AsyncStorage.getItem('user');
+                                            if (uString) {
+                                                const user = JSON.parse(uString);
+                                                const server = fetchAPI(user._id);
+                                                server
+                                                    .mutate({
+                                                        mutation: markActivityAsRead,
+                                                        variables: {
+                                                            userId: user._id,
+                                                            markAllRead: true,
+                                                        },
+                                                    })
+                                                    .then((res) => {
+                                                        if (res.data.activity.markActivityAsRead) {
+                                                            server
+                                                                .query({
+                                                                    query: getActivity,
+                                                                    variables: {
+                                                                        userId: user._id,
+                                                                    },
+                                                                })
+                                                                .then((res) => {
+                                                                    if (res.data && res.data.activity.getActivity) {
+                                                                        const tempActivity =
+                                                                            res.data.activity.getActivity;
+                                                                        let unread = 0;
+                                                                        tempActivity.map((act: any) => {
+                                                                            if (act.status === 'unread') {
+                                                                                unread++;
+                                                                            }
+                                                                        });
+                                                                        setUnreadCount(unread);
+                                                                        setActivity(tempActivity);
                                                                     }
                                                                 });
-                                                                setUnreadCount(unread);
-                                                                setActivity(tempActivity);
-                                                            }
-                                                        });
-                                                }
-                                            })
-                                            .catch(err => {});
-                                    }
-                                }
-                            }
-                        ])
-                        
-                    }}>
-                        <Ionicons name={'checkmark-done-outline'} size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
-                    </TouchableOpacity> : null}
+                                                        }
+                                                    })
+                                                    .catch((err) => {});
+                                            }
+                                        },
+                                    },
+                                ]);
+                            }}
+                        >
+                            <Ionicons
+                                name={'checkmark-done-outline'}
+                                size={Dimensions.get('window').width < 800 ? 23 : 26}
+                                color="black"
+                            />
+                        </TouchableOpacity>
+                    ) : null}
 
                     <TouchableOpacity onPress={() => setShowFilterModal(!showFilterModal)}>
-                        <Ionicons name={'filter-outline'} size={Dimensions.get('window').width < 800 ? 23 : 26} color="black" />
+                        <Ionicons
+                            name={'filter-outline'}
+                            size={Dimensions.get('window').width < 800 ? 23 : 26}
+                            color="black"
+                        />
                     </TouchableOpacity>
-
                 </View>
             </View>
             <View
@@ -3206,20 +3353,23 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             futureScrollRange={3}
                             theme={{
                                 agendaKnobColor: '#e0e0e0', // knob color
-                                agendaTodayColor: '#006AFF', // today in list
-                                todayTextColor: '#006AFF',
-                                selectedDayBackgroundColor: '#006AFF', // calendar sel date
-                                dotColor: '#006AFF' // dots
+                                agendaTodayColor: '#007AFF', // today in list
+                                todayTextColor: '#007AFF',
+                                selectedDayBackgroundColor: '#007AFF', // calendar sel date
+                                dotColor: '#007AFF', // dots
                             }}
                             onDayPress={onUpdateSelectedDate}
                             onDayLongPress={onUpdateSelectedDate}
                             renderEmptyDate={() => <View />}
                             reservationsKeyExtractor={(item: any, index: number) => {
-                               
                                 const { reservation } = item;
 
-                                return reservation ? ((reservation.channelId ? reservation.channelId : '') + (reservation.channelName ? reservation.channelName : '') + (reservation.createdBy ? reservation.createdBy : '') + (reservation.start)) : (index.toString())
-
+                                return reservation
+                                    ? (reservation.channelId ? reservation.channelId : '') +
+                                          (reservation.channelName ? reservation.channelName : '') +
+                                          (reservation.createdBy ? reservation.createdBy : '') +
+                                          reservation.start
+                                    : index.toString();
                             }}
                         />
                     )
@@ -3228,22 +3378,27 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 )}
             </View>
 
-            {showAddEvent ? <BottomSheet
-                snapPoints={[0, newEventModalHeight(windowHeight, Dimensions.get('window').width, Platform.OS, orientation)]}
-                close={() => {
-                    setEditEvent(null);
-                    setShowAddEvent(false);
-                }}
-                isOpen={showAddEvent}
-                title={
-                    editEvent && editChannelName
-                        ? `${editEvent && editEvent.meeting ? 'Meeting' : 'Event'} for ${editChannelName}`
-                        : 'New event'
-                }
-                renderContent={() => renderEventModalContent()}
-                header={true}
-                callbackNode={fall}
-            /> : null}
+            {showAddEvent ? (
+                <BottomSheet
+                    snapPoints={[
+                        0,
+                        newEventModalHeight(windowHeight, Dimensions.get('window').width, Platform.OS, orientation),
+                    ]}
+                    close={() => {
+                        setEditEvent(null);
+                        setShowAddEvent(false);
+                    }}
+                    isOpen={showAddEvent}
+                    title={
+                        editEvent && editChannelName
+                            ? `${editEvent && editEvent.meeting ? 'Meeting' : 'Event'} for ${editChannelName}`
+                            : 'New event'
+                    }
+                    renderContent={() => renderEventModalContent()}
+                    header={true}
+                    callbackNode={fall}
+                />
+            ) : null}
 
             {showAddEvent ? (
                 <Reanimated.View
@@ -3255,17 +3410,17 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         top: 0,
                         left: 0,
                         width: '100%',
-                        position: 'absolute'
+                        position: 'absolute',
                     }}
                 >
-                    <TouchableOpacity style={{
-                        backgroundColor: 'transparent',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                    onPress={() => setShowAddEvent(false)}
-                    >
-                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
+                        onPress={() => setShowAddEvent(false)}
+                    ></TouchableOpacity>
                 </Reanimated.View>
             ) : null}
 
@@ -3279,38 +3434,41 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         top: 0,
                         left: 0,
                         width: '100%',
-                        position: 'absolute'
+                        position: 'absolute',
                     }}
                 >
-                    <TouchableOpacity style={{
-                        backgroundColor: 'transparent',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                    onPress={() => setShowFilterModal(false)}
-                    >
-                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
+                        onPress={() => setShowFilterModal(false)}
+                    ></TouchableOpacity>
                 </Reanimated.View>
             ) : null}
 
-            {activeTab === 'agenda' && showFilterModal ? 
+            {activeTab === 'agenda' && showFilterModal ? (
                 <BottomSheet
-                snapPoints={[0, filterEventModalHeight(Dimensions.get('window').width, Platform.OS, orientation)]}
-                close={() => {
-                    console.log("Close bottom sheet")
-                    setShowFilterModal(false);
-                }}
-                isOpen={showFilterModal}
-                title={'Filter'}
-                renderContent={() => renderFilterModalContent()}
-                header={false}
-                callbackNode={fall}
-            /> : null}
-            
-            {
-                activeTab !== 'agenda' && showFilterModal ? 
+                    snapPoints={[0, filterEventModalHeight(Dimensions.get('window').width, Platform.OS, orientation)]}
+                    close={() => {
+                        console.log('Close bottom sheet');
+                        setShowFilterModal(false);
+                    }}
+                    isOpen={showFilterModal}
+                    title={'Filter'}
+                    renderContent={() => renderFilterModalContent()}
+                    header={false}
+                    callbackNode={fall}
+                />
+            ) : null}
+
+            {activeTab !== 'agenda' && showFilterModal ? (
                 <BottomSheet
-                    snapPoints={[0, filterActivityModalHeight(Dimensions.get('window').width, Platform.OS, orientation)]}
+                    snapPoints={[
+                        0,
+                        filterActivityModalHeight(Dimensions.get('window').width, Platform.OS, orientation),
+                    ]}
                     close={() => {
                         setShowFilterModal(false);
                     }}
@@ -3319,8 +3477,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     renderContent={() => renderFilterModalContent()}
                     header={false}
                     callbackNode={fall}
-                /> : null
-            }
+                />
+            ) : null}
 
             {activeTab === 'agenda' ? (
                 <TouchableOpacity
@@ -3334,20 +3492,20 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         right: 0,
                         justifyContent: 'center',
                         bottom: 0,
-                        width: Dimensions.get('window').width > 350 ? 62 :  58,
-                        height: Dimensions.get('window').width > 350 ? 62 :  58,
+                        width: Dimensions.get('window').width > 350 ? 62 : 58,
+                        height: Dimensions.get('window').width > 350 ? 62 : 58,
                         borderRadius: Dimensions.get('window').width > 350 ? 31 : 29,
-                        backgroundColor: '#006aff',
+                        backgroundColor: '#007AFF',
                         borderColor: '#f2f2f2',
                         borderWidth: 0,
                         shadowColor: '#000',
                         shadowOffset: {
                             width: 4,
-                            height: 4
+                            height: 4,
                         },
                         shadowOpacity: 0.12,
                         shadowRadius: 10,
-                        zIndex: 50
+                        zIndex: 50,
                     }}
                 >
                     <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
@@ -3415,7 +3573,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         paddingVertical: 15,
                         paddingHorizontal: 20,
                         borderRadius: 29,
-                        backgroundColor: '#006aff',
+                        backgroundColor: '#007AFF',
                         borderColor: '#f2f2f2',
                         borderWidth: 0,
                         shadowColor: '#000',
@@ -3462,7 +3620,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 //     );
 // });
 
-export default React.memo(CalendarX)
+export default React.memo(CalendarX);
 
 const styles: any = StyleSheet.create({
     eventTitle: {
@@ -3472,7 +3630,7 @@ const styles: any = StyleSheet.create({
         height: '44%',
         width: '100%',
         paddingTop: 5,
-        color: '#2f2f3c'
+        color: '#2f2f3c',
     },
     input: {
         width: '100%',
@@ -3481,14 +3639,14 @@ const styles: any = StyleSheet.create({
         fontSize: 15,
         paddingTop: 12,
         paddingBottom: 12,
-        marginBottom: 20
+        marginBottom: 20,
     },
     text: {
         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         color: '#000000',
         marginBottom: Dimensions.get('window').width < 768 ? 10 : 0,
         fontFamily: 'Inter',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
     },
     timePicker: {
         width: 125,
@@ -3496,14 +3654,14 @@ const styles: any = StyleSheet.create({
         height: 45,
         color: 'black',
         borderRadius: 10,
-        marginLeft: 10
+        marginLeft: 10,
     },
     allBlack: {
         fontSize: 11,
         color: '#2f2f3c',
         height: 22,
         paddingHorizontal: 10,
-        backgroundColor: 'white'
+        backgroundColor: 'white',
     },
     allOutline: {
         fontSize: 11,
@@ -3511,6 +3669,6 @@ const styles: any = StyleSheet.create({
         height: 22,
         paddingHorizontal: 10,
         borderRadius: 10,
-        backgroundColor: '#2f2f3c'
-    }
+        backgroundColor: '#2f2f3c',
+    },
 });
