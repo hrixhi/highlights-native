@@ -26,7 +26,7 @@ import BottomSheet from './BottomSheet';
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 // import { LanguageSelect } from '../helpers/LanguageContext';
-import { zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
+import { disableEmailId, zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { handleImageUpload } from '../helpers/ImageUpload';
@@ -520,7 +520,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         </Text> */}
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter',
                             }}
@@ -538,7 +538,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         />
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter',
                             }}
@@ -558,7 +558,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         />
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter',
                             }}
@@ -682,7 +682,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         <Text
                             style={{
                                 marginTop: 20,
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter',
                             }}
@@ -701,11 +701,12 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 paddingLeft: 5,
                                 borderBottomWidth: 0,
                                 paddingVertical: 10,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                             }}
                         />
                         <Text
                             style={{
-                                fontSize: 14,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 color: '#000000',
                                 fontFamily: 'Inter',
                             }}
@@ -721,12 +722,6 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             onChangeText={(val) => setFullName(val)}
                             placeholderTextColor={'#1F1F1F'}
                             required={true}
-                            style={{
-                                paddingLeft: 5,
-                                paddingVertical: 10,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2',
-                            }}
                         />
                     </View>
                 )}
@@ -742,31 +737,28 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     <TouchableOpacity
                         onPress={() => handleSubmit()}
                         style={{
-                            backgroundColor: '#007AFF',
-                            width: 175,
-                            borderRadius: 15,
-                            overflow: 'hidden',
-                            height: 35,
                             // marginTop: 15,
                             justifyContent: 'center',
                             flexDirection: 'row',
                             alignSelf: 'center',
                         }}
-                        disabled={isSubmitDisabled}
+                        disabled={isSubmitDisabled || props.user.email === disableEmailId}
                     >
                         <Text
                             style={{
+                                fontWeight: 'bold',
                                 textAlign: 'center',
-                                lineHeight: 34,
-                                color: 'white',
-                                fontSize: 12,
-                                backgroundColor: '#007AFF',
-                                paddingHorizontal: 20,
+                                borderColor: '#000',
+                                borderWidth: 1,
+                                color: '#fff',
+                                backgroundColor: '#000',
+                                fontSize: 11,
+                                paddingHorizontal: 24,
                                 fontFamily: 'inter',
-                                height: 35,
-                                borderRadius: 15,
-                                width: 175,
+                                overflow: 'hidden',
+                                paddingVertical: 14,
                                 textTransform: 'uppercase',
+                                width: 150,
                             }}
                         >
                             {props.showSavePassword ? PreferredLanguageText('update') : PreferredLanguageText('save')}
@@ -778,29 +770,28 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             onPress={() => setShowSavePassword(!showSavePassword)}
                             style={{
                                 backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
                                 marginTop: 20,
                                 // width: "100%",
                                 justifyContent: 'center',
                                 flexDirection: 'row',
                             }}
+                            disabled={props.user.email === disableEmailId}
                         >
                             <Text
                                 style={{
+                                    fontWeight: 'bold',
                                     textAlign: 'center',
-                                    lineHeight: 34,
-                                    paddingHorizontal: 20,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    color: '#007AFF',
+                                    borderColor: '#000',
                                     borderWidth: 1,
-                                    borderRadius: 15,
-                                    borderColor: '#007AFF',
+                                    color: '#000',
                                     backgroundColor: '#fff',
-                                    fontSize: 12,
-                                    width: 175,
+                                    fontSize: 11,
+                                    paddingHorizontal: 24,
+                                    fontFamily: 'inter',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
                                     textTransform: 'uppercase',
+                                    width: 150,
                                 }}
                             >
                                 Reset password
@@ -813,29 +804,28 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             onPress={() => handleZoomAuth()}
                             style={{
                                 backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
                                 marginTop: 20,
                                 // width: "100%",
                                 justifyContent: 'center',
                                 flexDirection: 'row',
                             }}
+                            disabled={props.user.email === disableEmailId}
                         >
                             <Text
                                 style={{
+                                    fontWeight: 'bold',
                                     textAlign: 'center',
-                                    lineHeight: 34,
-                                    paddingHorizontal: 20,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    color: '#007AFF',
+                                    borderColor: '#000',
                                     borderWidth: 1,
-                                    borderRadius: 15,
-                                    borderColor: '#007AFF',
+                                    color: '#000',
                                     backgroundColor: '#fff',
-                                    fontSize: 12,
-                                    width: 175,
+                                    fontSize: 11,
+                                    paddingHorizontal: 24,
+                                    fontFamily: 'inter',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
                                     textTransform: 'uppercase',
+                                    width: 150,
                                 }}
                             >
                                 Connect Zoom
@@ -860,29 +850,28 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }}
                             style={{
                                 backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
                                 marginTop: 20,
                                 // width: "100%",
                                 justifyContent: 'center',
                                 flexDirection: 'row',
                             }}
+                            disabled={props.user.email === disableEmailId}
                         >
                             <Text
                                 style={{
+                                    fontWeight: 'bold',
                                     textAlign: 'center',
-                                    lineHeight: 34,
-                                    paddingHorizontal: 20,
-                                    fontFamily: 'inter',
-                                    height: 35,
-                                    color: '#007AFF',
+                                    borderColor: '#000',
                                     borderWidth: 1,
-                                    borderRadius: 15,
-                                    borderColor: '#007AFF',
+                                    color: '#000',
                                     backgroundColor: '#fff',
-                                    fontSize: 12,
-                                    width: 175,
+                                    fontSize: 11,
+                                    paddingHorizontal: 24,
+                                    fontFamily: 'inter',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
                                     textTransform: 'uppercase',
+                                    width: 150,
                                 }}
                             >
                                 Disconnect Zoom
@@ -931,9 +920,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             onPress={() => logout()}
                             style={{
                                 backgroundColor: 'white',
-                                overflow: 'hidden',
-                                height: 35,
-                                marginTop: 20,
+                                marginTop: 30,
                                 marginBottom: 10,
                                 // width: '100%',
                                 justifyContent: 'center',
@@ -946,8 +933,9 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             <Text
                                 style={{
                                     fontSize: 14,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     textAlign: 'center',
+                                    fontFamily: 'Inter',
                                 }}
                             >
                                 Sign Out
@@ -999,34 +987,43 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
             </ScrollView>
             {uploadProfilePicVisible && (
                 <BottomSheet
-                    snapPoints={[0, 250]}
+                    snapPoints={[0, 280]}
                     close={() => {
                         setUploadProfilePicVisible(false);
                     }}
                     isOpen={uploadProfilePicVisible}
-                    title={'Insert image'}
+                    title={'Import profile picture'}
                     renderContent={() => (
                         <View style={{ paddingHorizontal: 10 }}>
                             <TouchableOpacity
                                 style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 19,
-                                    width: 150,
+                                    marginTop: Dimensions.get('window').width < 768 ? 10 : 20,
                                     alignSelf: 'center',
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: '#000',
+                                    paddingHorizontal: 24,
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    width: 150,
                                 }}
                                 onPress={() => {
                                     uploadImageHandler(true);
                                 }}
                             >
+                                <Ionicons name="camera-outline" size={16} color={'#fff'} />
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
                                         color: '#fff',
+                                        fontSize: 11,
+                                        fontFamily: 'inter',
+                                        textTransform: 'uppercase',
+                                        paddingLeft: 4,
                                     }}
                                 >
                                     {' '}
@@ -1035,24 +1032,33 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 19,
-                                    width: 150,
+                                    marginTop: 15,
                                     alignSelf: 'center',
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: '#000',
+                                    paddingHorizontal: 24,
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    width: 150,
                                 }}
                                 onPress={() => {
                                     uploadImageHandler(false);
                                 }}
                             >
+                                <Ionicons name="image-outline" size={16} color={'#fff'} />
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
                                         color: '#fff',
+                                        fontSize: 11,
+                                        fontFamily: 'inter',
+                                        textTransform: 'uppercase',
+                                        paddingLeft: 4,
                                     }}
                                 >
                                     {' '}
@@ -1097,8 +1103,10 @@ const styles = StyleSheet.create({
     screen: {
         width: '100%',
         backgroundColor: 'white',
-        justifyContent: 'center',
-        flexDirection: 'row',
+        paddingTop: 20,
+        // justifyContent: 'center',
+        // flexDirection: 'row',
+        height: Dimensions.get('window').height - 60 - 60,
         // flex: 1
     },
     outline: {
@@ -1107,14 +1115,14 @@ const styles = StyleSheet.create({
         borderColor: '#1F1F1F',
     },
     all: {
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         color: '#1F1F1F',
         height: 22,
         paddingHorizontal: 10,
         backgroundColor: 'white',
     },
     allOutline: {
-        fontSize: 14,
+        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         color: '#1F1F1F',
         height: 22,
         paddingHorizontal: 10,

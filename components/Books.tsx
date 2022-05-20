@@ -1,6 +1,6 @@
 // REACT
 import React, { useCallback, useState } from 'react';
-import { Image, ActivityIndicator, Dimensions, ScrollView } from 'react-native';
+import { Image, ActivityIndicator, Dimensions, ScrollView, TextInput as DefaultInput } from 'react-native';
 import _ from 'lodash';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
@@ -182,62 +182,110 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                 contentContainerStyle={{
                     // flex: 1,
                     // height: '100%'
-                    paddingTop: 50,
+                    // paddingTop: 50,
                     paddingBottom: 150,
                 }}
                 // style={{ marginBottom: 150 }}
                 indicatorStyle="black"
             >
-                <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center' }}>
-                    <TextInput
-                        value={searchTerm}
-                        style={{
-                            width: 300,
-                            backgroundColor: '#f8f8f8',
-                            fontSize: 20,
-                            padding: 15,
-                            borderRadius: 25,
-                            paddingVertical: 12,
-                            marginTop: 0,
-                        }}
-                        placeholder={'🔍'}
-                        onChangeText={(val) => setSearchTerm(val)}
-                        placeholderTextColor={'#1F1F1F'}
-                    />
-                </View>
                 <View
                     style={{
-                        width: '100%',
                         flexDirection: 'row',
                         justifyContent: 'center',
-                        paddingVertical: 20,
-                        marginBottom: 50,
+                        alignSelf: 'center',
+                        alignItems: 'center',
+                        maxWidth: 500,
+                        marginBottom: 30,
+                        backgroundColor: '#fff',
+                        paddingHorizontal: 10,
                     }}
                 >
-                    <TouchableOpacity
-                        onPress={() => {
-                            handleSearch();
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#f8f8f8',
+                            paddingVertical: 12,
+                            paddingHorizontal: 15,
+                            borderRadius: 24,
+                            width: Dimensions.get('window').width < 768 ? 'auto' : 300,
+                            flex: 1,
                         }}
-                        style={{ backgroundColor: 'white', borderRadius: 15 }}
                     >
-                        <Text
+                        <Ionicons size={20} name="search-outline" color={'#000'} style={{}} />
+                        <DefaultInput
+                            value={searchTerm}
                             style={{
-                                textAlign: 'center',
-                                lineHeight: 34,
-                                color: 'white',
-                                fontSize: 12,
-                                backgroundColor: '#007AFF',
+                                color: '#727272',
+                                backgroundColor: '#f8f8f8',
+                                fontSize: 15,
+                                flex: 1,
+                                fontFamily: 'Inter',
+                                paddingLeft: 10,
+                                paddingVertical: 5,
+                            }}
+                            placeholder={'Search title, author, etc.'}
+                            onChangeText={(val) => setSearchTerm(val)}
+                            placeholderTextColor={'#727272'}
+                        />
+                        {searchTerm !== '' ? (
+                            <TouchableOpacity
+                                style={{
+                                    marginLeft: 'auto',
+                                    backgroundColor: '#f8f8f8',
+                                    width: 15,
+                                }}
+                                onPress={() => {
+                                    setSearchTerm('');
+                                }}
+                            >
+                                <Ionicons name="close-outline" size={20} color="#000" />
+                            </TouchableOpacity>
+                        ) : (
+                            <View
+                                style={{
+                                    marginLeft: 'auto',
+                                    width: 15,
+                                }}
+                            />
+                        )}
+                    </View>
+                    <View
+                        style={{
+                            backgroundColor: '#fff',
+                        }}
+                    >
+                        <TouchableOpacity
+                            onPress={() => {
+                                handleSearch();
+                            }}
+                            style={{
+                                backgroundColor: 'white',
                                 borderRadius: 15,
-                                paddingHorizontal: 20,
-                                fontFamily: 'inter',
-                                overflow: 'hidden',
-                                height: 35,
-                                textTransform: 'uppercase',
+                                marginLeft: Dimensions.get('window').width < 768 ? 10 : 30,
                             }}
                         >
-                            SEARCH
-                        </Text>
-                    </TouchableOpacity>
+                            <Text
+                                style={{
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    color: '#fff',
+                                    backgroundColor: '#000',
+                                    fontSize: 11,
+                                    paddingHorizontal: 24,
+                                    fontFamily: 'inter',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    textTransform: 'uppercase',
+                                    width: 120,
+                                }}
+                            >
+                                SEARCH
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
                 {loading ? (
                     <View
@@ -443,7 +491,14 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                     renderContent={() => (
                         <View>
                             {selectedBook ? (
-                                <View style={{ flexDirection: 'column', padding: 25, backgroundColor: 'none' }}>
+                                <View
+                                    style={{
+                                        flexDirection: 'column',
+                                        padding: 25,
+                                        backgroundColor: 'none',
+                                        alignItems: 'center',
+                                    }}
+                                >
                                     <View
                                         style={{
                                             height: 200,
@@ -507,9 +562,9 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             <TouchableOpacity
                                 style={{
                                     marginTop: 20,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 19,
-                                    width: 150,
+                                    // backgroundColor: '#007AFF',
+                                    // borderRadius: 19,
+                                    // width: 150,
                                     alignSelf: 'center',
                                 }}
                                 onPress={() => {
@@ -521,12 +576,19 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                             >
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
+                                        borderColor: '#000',
+                                        borderWidth: 1,
                                         color: '#fff',
+                                        backgroundColor: '#000',
+                                        fontSize: 11,
+                                        paddingHorizontal: 24,
+                                        fontFamily: 'inter',
+                                        overflow: 'hidden',
+                                        paddingVertical: 14,
+                                        textTransform: 'uppercase',
+                                        width: 150,
                                     }}
                                 >
                                     {' '}
@@ -550,7 +612,19 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
                         width: '100%',
                         position: 'absolute',
                     }}
-                ></Reanimated.View>
+                >
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
+                        onPress={() => {
+                            setSelectedBook(null);
+                            props.hideBars(false);
+                        }}
+                    ></TouchableOpacity>
+                </Reanimated.View>
             ) : null}
         </View>
     );

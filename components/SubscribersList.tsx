@@ -34,6 +34,7 @@ import { WebView } from 'react-native-webview';
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { downloadFileToDevice } from '../helpers/DownloadFile';
+import { disableEmailId } from '../constants/zoomCredentials';
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [filterChoice, setFilterChoice] = useState('All');
@@ -775,7 +776,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                     >
                         {downloadFeedbackInProgress ? (
                             <ActivityIndicator
-                                color={'#007AFF'}
+                                color={'#000'}
                                 style={{ alignSelf: 'center', paddingLeft: 20, marginTop: 5 }}
                             />
                         ) : (
@@ -796,7 +797,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     paddingLeft: 20,
                                 }}
                             >
-                                <Ionicons size={22} name={'cloud-download-outline'} color="#007AFF" />
+                                <Ionicons size={22} name={'cloud-download-outline'} color="#000" />
                             </TouchableOpacity>
                         )}
 
@@ -819,7 +820,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     paddingLeft: 20,
                                 }}
                             >
-                                <Ionicons size={22} name={'expand-outline'} color="#007AFF" />
+                                <Ionicons size={22} name={'expand-outline'} color="#000" />
                             </TouchableOpacity>
                         ) : null}
                     </View>
@@ -1083,7 +1084,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         <View style={{ backgroundColor: '#fff', paddingLeft: 10, flex: 1 }}>
                                             <Text
                                                 style={{
-                                                    fontSize: 15,
+                                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                     padding: 5,
                                                     fontFamily: 'inter',
                                                     marginTop: 5,
@@ -1114,7 +1115,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     style={{
                                                         fontSize: 11,
                                                         padding: 5,
-                                                        color: '#007AFF',
+                                                        color: '#000',
                                                         textAlign: 'center',
                                                     }}
                                                     ellipsizeMode="tail"
@@ -1200,14 +1201,14 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     >
                                         <Ionicons
                                             name="chevron-back-outline"
-                                            color="#007AFF"
+                                            color="#000"
                                             size={Dimensions.get('window').width < 800 ? 23 : 26}
                                         />
                                         <Text
                                             style={{
                                                 textAlign: 'center',
                                                 lineHeight: 34,
-                                                color: '#007AFF',
+                                                color: '#000',
                                                 fontSize: 14,
                                                 paddingHorizontal: 4,
                                                 fontFamily: 'inter',
@@ -1246,6 +1247,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         }
                                     });
                                 }}
+                                user={props.user}
                             />
                         </ScrollView>
                     ) : (
@@ -1360,24 +1362,25 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             onPress={() => handleGradeSubmit()}
                                             style={{
                                                 backgroundColor: 'white',
-                                                overflow: 'hidden',
-                                                height: 35,
                                                 marginLeft: Dimensions.get('window').width < 768 ? 20 : 0,
                                             }}
+                                            disabled={props.user.email === disableEmailId}
                                         >
                                             <Text
                                                 style={{
+                                                    fontWeight: 'bold',
                                                     textAlign: 'center',
-                                                    lineHeight: 34,
-                                                    borderColor: '#007AFF',
-                                                    fontSize: 12,
-                                                    color: '#007AFF',
+                                                    borderColor: '#000',
                                                     borderWidth: 1,
-                                                    paddingHorizontal: 20,
+                                                    color: '#fff',
+                                                    backgroundColor: '#000',
+                                                    fontSize: 11,
+                                                    paddingHorizontal: 24,
                                                     fontFamily: 'inter',
-                                                    height: 35,
-                                                    borderRadius: 15,
+                                                    overflow: 'hidden',
+                                                    paddingVertical: 14,
                                                     textTransform: 'uppercase',
+                                                    width: 150,
                                                 }}
                                             >
                                                 UPDATE

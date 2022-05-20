@@ -48,6 +48,7 @@ import * as Clipboard from 'expo-clipboard';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import BottomSheet from './BottomSheet';
 import Reanimated from 'react-native-reanimated';
+import { disableEmailId } from '../constants/zoomCredentials';
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [loadingOrg, setLoadingOrg] = useState(true);
@@ -744,7 +745,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
 
                     // need to refresh channel subscriptions since name will be updated
 
-                    props.closeModal();
+                    // props.closeModal();
+                    props.handleUpdateChannel(name.trim(), colorCode);
                 } else {
                     setIsUpdatingChannel(false);
                     alert('Something went wrong. Try again.');
@@ -816,9 +818,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             setOpen={setIsRoleDropdownOpen}
                             setValue={setActiveRole}
                             style={{
-                                borderWidth: 0,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2',
+                                borderWidth: 1,
+                                borderColor: '#ccc',
+                                borderRadius: 0,
+                                height: 45,
                                 // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
@@ -835,7 +838,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 shadowRadius: 12,
                             }}
                             textStyle={{
-                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 fontFamily: 'overpass',
                             }}
                         />
@@ -859,9 +862,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 setOpen={setIsGradeDropdownOpen}
                                 setValue={setActiveGrade}
                                 style={{
-                                    borderWidth: 0,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#f2f2f2',
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 0,
+                                    height: 45,
                                     // elevation: !showFrequencyDropdown ? 0 : 2
                                 }}
                                 dropDownContainerStyle={{
@@ -878,7 +882,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     shadowRadius: 12,
                                 }}
                                 textStyle={{
-                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     fontFamily: 'overpass',
                                 }}
                             />
@@ -900,9 +904,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 setOpen={setIsSectionDropdownOpen}
                                 setValue={setActiveSection}
                                 style={{
-                                    borderWidth: 0,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#f2f2f2',
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 0,
+                                    height: 45,
                                     // elevation: !showFrequencyDropdown ? 0 : 2
                                 }}
                                 dropDownContainerStyle={{
@@ -919,7 +924,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     shadowRadius: 12,
                                 }}
                                 textStyle={{
-                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     fontFamily: 'overpass',
                                 }}
                             />
@@ -1175,7 +1180,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             style={{ height: 20 }}
                                             trackColor={{
                                                 false: '#f2f2f2',
-                                                true: '#007AFF',
+                                                true: '#000',
                                             }}
                                             activeThumbColor="white"
                                         />
@@ -1262,7 +1267,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 thumbColor={'#f4f4f6'}
                                                 trackColor={{
                                                     false: '#f4f4f6',
-                                                    true: '#007AFF',
+                                                    true: '#000',
                                                 }}
                                                 style={{
                                                     transform: [
@@ -1313,7 +1318,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 thumbColor={'#f4f4f6'}
                                                 trackColor={{
                                                     false: '#f4f4f6',
-                                                    true: '#007AFF',
+                                                    true: '#000',
                                                 }}
                                                 style={{
                                                     transform: [
@@ -1340,20 +1345,24 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     style={{
                                         backgroundColor: 'white',
                                         borderRadius: 15,
-                                        overflow: 'hidden',
-                                        height: 35,
+                                        // overflow: 'hidden',
+                                        // height: 35,
                                     }}
+                                    disabled={props.user.email === disableEmailId}
                                 >
                                     <Text
                                         style={{
+                                            fontWeight: 'bold',
                                             textAlign: 'center',
-                                            lineHeight: 34,
-                                            color: 'white',
-                                            fontSize: 12,
-                                            backgroundColor: '#007AFF',
-                                            paddingHorizontal: 20,
+                                            borderColor: '#000',
+                                            borderWidth: 1,
+                                            color: '#fff',
+                                            backgroundColor: '#000',
+                                            fontSize: 11,
+                                            paddingHorizontal: 24,
                                             fontFamily: 'inter',
-                                            height: 35,
+                                            overflow: 'hidden',
+                                            paddingVertical: 14,
                                             textTransform: 'uppercase',
                                             width: 150,
                                         }}
@@ -1458,11 +1467,11 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         <Ionicons
                                             name={copied ? 'checkmark-circle-outline' : 'clipboard-outline'}
                                             size={18}
-                                            color={copied ? '#35AC78' : '#007AFF'}
+                                            color={copied ? '#35AC78' : '#000'}
                                         />
                                         <Text
                                             style={{
-                                                color: copied ? '#35AC78' : '#007AFF',
+                                                color: copied ? '#35AC78' : '#000',
                                                 fontSize: 10,
                                                 paddingTop: 3,
                                             }}
@@ -1479,8 +1488,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         }}
                                         onPress={() => handleResetCode()}
                                     >
-                                        <Ionicons name="refresh-outline" size={18} color={'#007AFF'} />
-                                        <Text style={{ color: '#007AFF', fontSize: 10, paddingTop: 3 }}> Reset </Text>
+                                        <Ionicons name="refresh-outline" size={18} color={'#000'} />
+                                        <Text style={{ color: '#000', fontSize: 10, paddingTop: 3 }}> Reset </Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -1631,7 +1640,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         style={{ height: 20 }}
                                         trackColor={{
                                             false: '#f2f2f2',
-                                            true: '#007AFF',
+                                            true: '#000',
                                         }}
                                         activeThumbColor="white"
                                     />
@@ -1734,14 +1743,15 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 >
                                     <Ionicons
                                         name="mail-outline"
-                                        color="#007AFF"
+                                        color="#000"
                                         style={{ marginRight: 7, paddingTop: 2 }}
                                         size={18}
                                     />
                                     <Text
                                         style={{
-                                            fontSize: 13,
-                                            color: '#007AFF',
+                                            fontSize: 14,
+                                            color: '#000',
+                                            fontFamily: 'Inter',
                                         }}
                                     >
                                         Add Users
@@ -1776,9 +1786,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         setSelectedValues(val);
                                     }}
                                     style={{
-                                        borderWidth: 0,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: '#f2f2f2',
+                                        borderWidth: 1,
+                                        borderColor: '#ccc',
+                                        borderRadius: 0,
+                                        height: 45,
                                         // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     dropDownContainerStyle={{
@@ -1795,7 +1806,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         shadowRadius: 12,
                                     }}
                                     textStyle={{
-                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         fontFamily: 'overpass',
                                     }}
                                 />
@@ -1846,9 +1857,10 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     setOpen={setIsEditorsDropdownOpen}
                                     setValue={setSelectedModerators}
                                     style={{
-                                        borderWidth: 0,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: '#f2f2f2',
+                                        borderWidth: 1,
+                                        borderColor: '#ccc',
+                                        borderRadius: 0,
+                                        height: 45,
                                         // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     dropDownContainerStyle={{
@@ -1865,7 +1877,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         shadowRadius: 12,
                                     }}
                                     textStyle={{
-                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         fontFamily: 'overpass',
                                     }}
                                 />
@@ -1920,21 +1932,24 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 style={{
                                     backgroundColor: 'white',
                                     borderRadius: 15,
-                                    overflow: 'hidden',
-                                    height: 35,
+                                    // overflow: 'hidden',
+                                    // height: 35,
                                 }}
-                                disabled={isUpdatingChannel}
+                                disabled={isUpdatingChannel || props.user.email === disableEmailId}
                             >
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        lineHeight: 34,
-                                        color: 'white',
-                                        fontSize: 12,
-                                        backgroundColor: '#007AFF',
-                                        paddingHorizontal: 20,
+                                        borderColor: '#000',
+                                        borderWidth: 1,
+                                        color: '#fff',
+                                        backgroundColor: '#000',
+                                        fontSize: 11,
+                                        paddingHorizontal: 24,
                                         fontFamily: 'inter',
-                                        height: 35,
+                                        overflow: 'hidden',
+                                        paddingVertical: 14,
                                         textTransform: 'uppercase',
                                         width: 150,
                                     }}
@@ -1952,24 +1967,24 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     style={{
                                         backgroundColor: 'white',
                                         borderRadius: 15,
-                                        overflow: 'hidden',
-                                        height: 35,
+                                        // overflow: 'hidden',
+                                        // height: 35,
                                         marginTop: 15,
                                     }}
                                 >
                                     <Text
                                         style={{
+                                            fontWeight: 'bold',
                                             textAlign: 'center',
-                                            lineHeight: 34,
-                                            color: '#007AFF',
+                                            borderColor: '#000',
                                             borderWidth: 1,
-                                            borderRadius: 15,
-                                            borderColor: '#007AFF',
+                                            color: '#000',
                                             backgroundColor: '#fff',
-                                            fontSize: 12,
-                                            paddingHorizontal: 20,
+                                            fontSize: 11,
+                                            paddingHorizontal: 24,
                                             fontFamily: 'inter',
-                                            height: 35,
+                                            overflow: 'hidden',
+                                            paddingVertical: 14,
                                             textTransform: 'uppercase',
                                             width: 150,
                                         }}
@@ -1999,25 +2014,26 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     }}
                                     style={{
                                         backgroundColor: 'white',
-                                        borderRadius: 15,
-                                        overflow: 'hidden',
-                                        height: 35,
+                                        // borderRadius: 15,
+                                        // overflow: 'hidden',
+                                        // height: 35,
                                         marginTop: 15,
                                     }}
+                                    disabled={props.user.email === disableEmailId}
                                 >
                                     <Text
                                         style={{
+                                            fontWeight: 'bold',
                                             textAlign: 'center',
-                                            lineHeight: 34,
-                                            color: '#007AFF',
+                                            borderColor: '#000',
                                             borderWidth: 1,
-                                            borderRadius: 15,
-                                            borderColor: '#007AFF',
+                                            color: '#000',
                                             backgroundColor: '#fff',
-                                            fontSize: 12,
-                                            paddingHorizontal: 20,
+                                            fontSize: 11,
+                                            paddingHorizontal: 24,
                                             fontFamily: 'inter',
-                                            height: 35,
+                                            overflow: 'hidden',
+                                            paddingVertical: 14,
                                             textTransform: 'uppercase',
                                             width: 150,
                                         }}
@@ -2044,7 +2060,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderTopRightRadius: 10,
         borderBottomRightRadius: 10,
-        maxWidth: Dimensions.get('window').width < 768 ? 320 : 600,
+        maxWidth: Dimensions.get('window').width < 768 ? '100%' : 600,
     },
     outline: {
         borderRadius: 1,

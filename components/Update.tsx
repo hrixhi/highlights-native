@@ -47,6 +47,8 @@ import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { TextInput } from './CustomTextInput';
 import BottomSheet from './BottomSheet';
+import { paddingResponsive } from '../helpers/paddingHelper';
+import { disableEmailId } from '../constants/zoomCredentials';
 
 const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [modalAnimation] = useState(new Animated.Value(1));
@@ -115,6 +117,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [showExistingFolder, setShowExistingFolder] = useState(false);
     const windowHeight = Dimensions.get('window').height;
     const [editorFocus, setEditorFocus] = useState(false);
+    const [insertFormulaVisible, setInsertFormulaVisible] = useState(false);
     const [submissionAttempts, setSubmissionAttempts] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState('Content');
     // Fullscreen
@@ -145,8 +148,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }
     }, [props.cue]);
 
-    console.log('Props Update', props);
-
     /**
      * @description Every time a cue is opened we need to check if the releaseSubmission property was modified so that a student is not allowed to do submissions
      */
@@ -175,6 +176,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
         setChannelCues(filterExisting);
     }, [props.channelCues, folderId, props.cue]);
+
+    console.log('Channel cues', props.channelCues);
 
     /**
      * @description Fetch all Channel Folders
@@ -256,6 +259,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 }
             })
             .catch((e) => {
+                console.log('Error');
                 // Do nothing
             });
     };
@@ -317,6 +321,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 })
                 .then((res) => {
                     if (res.data.folder.getCuesById) {
+                        console.log('Folder cues fetched', res.data.folder.getCuesById);
                         setFolderCues(res.data.folder.getCuesById);
                         setLoadingFolderCues(false);
                     }
@@ -647,17 +652,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * @description Tabs (Content, Options, Submission, etc)
      */
     const options = (
-        <View
-            style={{
-                paddingLeft: Dimensions.get('window').width < 1024 ? 0 : 20,
-                flexDirection: 'row',
-                flex: 1,
-                // backgroundColor: '#000',
-                paddingTop: Dimensions.get('window').width < 1024 ? 9 : 12,
-                height: 48,
-                justifyContent: 'center',
-            }}
-        >
+        <React.Fragment>
             <TouchableOpacity
                 // style={showOriginal ? styles.allBlueTabButton : styles.tabButton}
                 style={{
@@ -823,7 +818,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     </Text>
                 </TouchableOpacity>
             )}
-        </View>
+        </React.Fragment>
     );
 
     /**
@@ -1231,6 +1226,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * Two Sections (First section shows all options and the second one shows the selected cues)
      */
     const renderNewFolderOptions = () => {
+        console.log('New folder options', channelCues);
         return (
             <InsetShadow
                 shadowColor={'#000'}
@@ -1277,7 +1273,9 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 indicatorStyle="black"
                             >
                                 {channelCues.map((cue: any, ind: number) => {
-                                    if (cue.folderId !== '') return;
+                                    console.log('Channel cue', cue);
+
+                                    if (cue.folderId && cue.folderId !== '') return;
 
                                     const { title } = htmlStringParser(
                                         cue.channelId && cue.channelId !== '' ? cue.original : cue.cue
@@ -1320,7 +1318,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 key={'textPage'}
                                                 style={{
                                                     maxWidth: 210,
-                                                    height: '100%',
+                                                    height: 60,
                                                     // borderTop
                                                     width: '100%',
                                                     padding: 7,
@@ -1747,6 +1745,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             setFullScreenPdfViewerKey(Math.random().toString());
                         }}
                         reloadViewerKey={reloadViewerKey}
+                        setInsertFormulaVisible={(val: boolean) => setInsertFormulaVisible(val)}
+                        user={props.user}
                     />
                     {!Number.isNaN(Number(cueId)) || !props.channelId ? (
                         <View style={{ flex: 1, backgroundColor: 'white' }} />
@@ -1836,6 +1836,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         }}
                                         reloadViewerKey={reloadViewerKey}
                                         isQuiz={isQuiz}
+                                        user={props.user}
                                     />
                                 </View>
                             </ScrollView>
@@ -1862,6 +1863,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             backgroundColor: '#fff',
                             paddingLeft: 0,
                         }}
+                        disabled={props.user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -1869,7 +1871,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 marginLeft: 20,
                                 textTransform: 'uppercase',
                                 fontSize: 12,
-                                fontFamily: 'overpass',
+                                fontFamily: 'Inter',
                                 color: '#000',
                                 fontWeight: 'bold',
                             }}
@@ -1898,6 +1900,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             backgroundColor: '#ffffff',
                             paddingLeft: 0,
                         }}
+                        // disabled={props.user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -1905,7 +1908,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 marginLeft: 20,
                                 textTransform: 'uppercase',
                                 fontSize: 12,
-                                fontFamily: 'overpass',
+                                fontFamily: 'Inter',
                                 color: '#000',
                                 fontWeight: 'bold',
                             }}
@@ -1952,7 +1955,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 });
                         }}
                     >
-                        <MenuTrigger>
+                        <MenuTrigger disabled={props.user.email === disableEmailId}>
                             <View
                                 style={{
                                     backgroundColor: '#fff',
@@ -1965,7 +1968,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         marginLeft: 20,
                                         textTransform: 'uppercase',
                                         fontSize: 12,
-                                        fontFamily: 'overpass',
+                                        fontFamily: 'Inter',
                                         color: '#000',
                                         fontWeight: 'bold',
                                     }}
@@ -2060,7 +2063,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         setCreatingFolder(false);
                                     });
                             }}
-                            disabled={creatingFolder}
+                            disabled={creatingFolder || props.user.email === disableEmailId}
                             style={{
                                 backgroundColor: '#fff',
                                 paddingLeft: 0,
@@ -2072,7 +2075,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     marginLeft: 20,
                                     textTransform: 'uppercase',
                                     fontSize: 12,
-                                    fontFamily: 'overpass',
+                                    fontFamily: 'Inter',
                                     color: '#000',
                                 }}
                             >
@@ -2096,7 +2099,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     marginLeft: 20,
                                     textTransform: 'uppercase',
                                     fontSize: 12,
-                                    fontFamily: 'overpass',
+                                    fontFamily: 'Inter',
                                     color: '#000',
                                     fontWeight: 'bold',
                                 }}
@@ -2182,7 +2185,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     },
                                 ]);
                             }}
-                            disabled={updatingFolder}
+                            disabled={updatingFolder || props.user.email === disableEmailId}
                             style={{
                                 backgroundColor: '#fff',
                                 paddingLeft: 0,
@@ -2194,7 +2197,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     marginLeft: 20,
                                     textTransform: 'uppercase',
                                     fontSize: 12,
-                                    fontFamily: 'overpass',
+                                    fontFamily: 'Inter',
                                     color: '#000',
                                     fontWeight: 'bold',
                                 }}
@@ -2254,6 +2257,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 backgroundColor: '#fff',
                                 paddingLeft: 0,
                             }}
+                            disabled={props.user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -2261,7 +2265,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     marginLeft: 20,
                                     textTransform: 'uppercase',
                                     fontSize: 12,
-                                    fontFamily: 'overpass',
+                                    fontFamily: 'Inter',
                                     color: '#000',
                                     fontWeight: 'bold',
                                 }}
@@ -2291,7 +2295,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     marginLeft: 20,
                                     textTransform: 'uppercase',
                                     fontSize: 12,
-                                    fontFamily: 'overpass',
+                                    fontFamily: 'Inter',
                                     color: '#000',
                                     fontWeight: 'bold',
                                 }}
@@ -2320,7 +2324,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         justifyContent: 'center',
                         height: 52,
                         backgroundColor: '#ffffff',
-                        paddingHorizontal: 10,
+                        paddingHorizontal: paddingResponsive(),
                         // shadowColor: '#000',
                         // shadowOffset: {
                         //     width: 1,
@@ -2383,7 +2387,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 flexDirection: 'row',
                                 paddingTop: Dimensions.get('window').width > 768 ? 9 : 9,
                                 backgroundColor: '#ffffff',
-                                paddingLeft: 5,
                             }}
                             onPress={() => {
                                 props.closeModal();
@@ -2496,6 +2499,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             backgroundColor: '#ffffff',
                                             marginLeft: 20,
                                         }}
+                                        disabled={props.user.email === disableEmailId}
                                     >
                                         <Text
                                             style={{
@@ -2504,7 +2508,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
                                                 fontSize: 12,
-                                                fontFamily: 'overpass',
+                                                fontFamily: 'Inter',
                                                 color: '#000',
                                             }}
                                         >
@@ -2524,6 +2528,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             marginLeft: 20,
                                             marginRight: 10,
                                         }}
+                                        disabled={props.user.email === disableEmailId}
                                     >
                                         <Text
                                             style={{
@@ -2532,7 +2537,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
                                                 fontSize: 12,
-                                                fontFamily: 'overpass',
+                                                fontFamily: 'Inter',
                                                 color: '#000',
                                             }}
                                         >
@@ -2596,7 +2601,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
                                                 fontSize: 12,
-                                                fontFamily: 'overpass',
+                                                fontFamily: 'Inter',
                                                 color: '#000',
                                             }}
                                         >
@@ -2634,7 +2639,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
                                                 fontSize: 12,
-                                                fontFamily: 'overpass',
+                                                fontFamily: 'Inter',
                                                 color: '#000',
                                             }}
                                         >
@@ -2656,6 +2661,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             marginLeft: 20,
                                             backgroundColor: '#ffffff',
                                         }}
+                                        disabled={props.user.email === disableEmailId}
                                     >
                                         <Text
                                             style={{
@@ -2664,7 +2670,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
                                                 fontSize: 12,
-                                                fontFamily: 'overpass',
+                                                fontFamily: 'Inter',
                                                 color: '#000',
                                             }}
                                         >
@@ -2751,7 +2757,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     ) : (
                         <View style={{ width: '100%', position: 'relative', height: '100%' }}>
                             {/* Header */}
-                            {!editorFocus ? renderHeader() : null}
+                            {!editorFocus && !insertFormulaVisible ? renderHeader() : null}
                             {/* Main Content */}
                             <View
                                 style={{
@@ -2770,15 +2776,15 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 </View>
             </KeyboardAvoidingView>
             {/* Mobile tabs */}
-            {!editorFocus && !loading ? (
+            {!editorFocus && !insertFormulaVisible && !loading ? (
                 <View
                     style={{
                         position: 'absolute',
                         backgroundColor: '#fff',
                         alignSelf: 'flex-end',
                         width: '100%',
-                        paddingTop: Platform.OS === 'ios' ? 12 : 4,
-                        paddingBottom: Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 20) : 20,
+                        paddingTop: Platform.OS === 'ios' ? 12 : 8,
+                        paddingBottom: Dimensions.get('window').width < 1024 ? (Platform.OS === 'ios' ? 10 : 15) : 20,
                         paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 40,
                         flexDirection: 'row',
                         justifyContent: 'center',
@@ -2792,8 +2798,8 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         right: 0,
                         shadowOpacity: 0.03,
                         shadowRadius: 12,
-                        zIndex: 40,
-                        elevation: 40,
+                        zIndex: 100,
+                        elevation: 120,
                         borderTopColor: '#e8e8e8',
                         borderTopWidth: 1,
                     }}
@@ -2833,7 +2839,7 @@ const styles: any = StyleSheet.create({
         height: 25,
         // backgroundColor: '#000',
         lineHeight: 25,
-        fontFamily: 'overpass',
+        fontFamily: 'Inter',
         textTransform: 'uppercase',
         fontWeight: 'bold',
     },

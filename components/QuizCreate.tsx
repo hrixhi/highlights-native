@@ -1,9 +1,17 @@
 // REACT
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Dimensions, TextInput as DefaultTextInput, Keyboard, StyleSheet, useWindowDimensions } from 'react-native';
+import {
+    Dimensions,
+    TextInput as DefaultTextInput,
+    Keyboard,
+    StyleSheet,
+    useWindowDimensions,
+    Image,
+} from 'react-native';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import lodash from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
+import { Buffer } from 'buffer';
 
 // COMPONENTS
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
@@ -15,15 +23,24 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-m
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
-import { Video } from 'expo-av';
+const formulaIcon = require('../assets/images/formulaIcon3.png');
+
+import MathJax from 'react-native-mathjax';
+
 import RenderHtml from 'react-native-render-html';
 
-// import Board, { Repository } from "react-native-dnd-board";
+import { Video } from 'expo-av';
 
 // HELPER
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { handleFile } from '../helpers/FileUpload';
+import HTMLView from 'react-native-htmlview';
+
+const customFontFamily = `@font-face {
+    font-family: 'Overpass';
+    src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf'); 
+}`;
 
 // CONSTANTS
 const questionTypeOptions = [
@@ -210,6 +227,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             actions.insertImage,
                             actions.insertVideo,
                             actions.insertLink,
+                            'insertFormula',
                             actions.insertBulletsList,
                             actions.insertOrderedList,
                             actions.heading1,
@@ -227,6 +245,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             ),
                             // [actions.insertVideo]: importIcon,
                             insertEmoji: emojiIcon,
+                            insertFormula: formulaIcon,
                             [actions.heading1]: ({ tintColor }) => (
                                 <Text
                                     style={{
@@ -292,6 +311,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         insertVideo={() => {
                             handleUploadVideoQuestion(index);
                         }}
+                        insertFormula={() => props.handleInsertFormula(RichText)}
                     />
                     <ScrollView
                         horizontal={false}
@@ -329,7 +349,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 backgroundColor: '#fff',
                                 placeholderColor: '#a2a2ac',
                                 color: '#2f2f3c',
-                                contentCSSText: 'font-size: 16px; min-height: 150px;',
+                                cssText: customFontFamily,
+                                initialCSSText: customFontFamily,
+                                contentCSSText: 'font-size: 16px; min-height: 150px;font-family:Overpass;',
                             }}
                             initialContentHTML={editQuestion && editQuestion.question ? editQuestion.question : ''}
                             initialHeight={150}
@@ -449,6 +471,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     // borderBottom: '1px solid #f2f2f2'
                                     borderBottomWidth: 1,
                                     borderBottomColor: '#f2f2f2',
+                                    padding: 10,
                                 }}
                                 placeholder={'Header'}
                                 placeholderTextColor="#66737C"
@@ -460,9 +483,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         <View style={{ paddingTop: 35, paddingLeft: 20 }}>
                             <Text
                                 style={{
-                                    color: '#007AFF',
-                                    fontFamily: 'Overpass',
-                                    fontSize: 10,
+                                    color: '#000',
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
                                 }}
                                 onPress={() => {
                                     removeHeader(index);
@@ -476,31 +499,28 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     <TouchableOpacity
                         onPress={() => addHeader(index)}
                         style={{
-                            backgroundColor: 'white',
-                            overflow: 'hidden',
-                            height: 35,
+                            backgroundColor: '#f8f8f8',
                             marginTop: 15,
                             marginBottom: 15,
-                            // width: "100%",
                             justifyContent: 'center',
                             flexDirection: 'row',
                         }}
                     >
                         <Text
                             style={{
-                                color: '#007AFF',
-                                borderWidth: 1,
-                                borderRadius: 15,
-                                borderColor: '#007AFF',
-                                backgroundColor: '#fff',
-                                fontSize: 12,
+                                fontWeight: 'bold',
                                 textAlign: 'center',
-                                lineHeight: 34,
-                                paddingHorizontal: 20,
+                                borderColor: '#000',
+                                borderWidth: 1,
+                                color: '#000',
+                                backgroundColor: '#fff',
+                                fontSize: 11,
+                                paddingHorizontal: 24,
                                 fontFamily: 'inter',
-                                height: 35,
+                                overflow: 'hidden',
+                                paddingVertical: 14,
                                 textTransform: 'uppercase',
-                                width: 175,
+                                width: 150,
                             }}
                         >
                             Add Header
@@ -775,9 +795,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         >
                                                             <Text
                                                                 style={{
-                                                                    color: '#007AFF',
-                                                                    fontFamily: 'Overpass',
-                                                                    fontSize: 10,
+                                                                    color: '#000',
+                                                                    fontFamily: 'Inter',
+                                                                    fontSize: 12,
                                                                 }}
                                                             >
                                                                 {' '}
@@ -800,7 +820,92 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             html: content,
                                                         }}
                                                         defaultTextProps={{
-                                                            selectable: true,
+                                                            selectable: false,
+                                                        }}
+                                                        // renderers={renderers}
+                                                        renderers={{
+                                                            img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                                                const node = rendererProps.tnode.domNode;
+
+                                                                const attribs = node.attribs;
+
+                                                                if (attribs && attribs['data-eq']) {
+                                                                    const formula =
+                                                                        '$' +
+                                                                        decodeURIComponent(attribs['data-eq'] + '$');
+                                                                    console.log('Formula', formula);
+
+                                                                    return (
+                                                                        <View
+                                                                            style={{
+                                                                                minWidth: 100,
+                                                                            }}
+                                                                        >
+                                                                            <MathJax
+                                                                                html={formula}
+                                                                                mathJaxOptions={{
+                                                                                    messageStyle: 'none',
+                                                                                    extensions: [
+                                                                                        'tex2jax.js',
+                                                                                        'MathMenu.js',
+                                                                                        'MathZoom.js',
+                                                                                    ],
+                                                                                    jax: [
+                                                                                        'input/TeX',
+                                                                                        'output/HTML-CSS',
+                                                                                    ],
+                                                                                    tex2jax: {
+                                                                                        inlineMath: [
+                                                                                            ['$', '$'],
+                                                                                            ['\\(', '\\)'],
+                                                                                        ],
+                                                                                        displayMath: [
+                                                                                            ['$$', '$$'],
+                                                                                            ['\\[', '\\]'],
+                                                                                        ],
+                                                                                        processEscapes: false,
+                                                                                    },
+                                                                                    SVG: {
+                                                                                        useGlobalCache: false,
+                                                                                    },
+                                                                                    TeX: {
+                                                                                        extensions: [
+                                                                                            'AMSmath.js',
+                                                                                            'AMSsymbols.js',
+                                                                                            'noErrors.js',
+                                                                                            'noUndefined.js',
+                                                                                            'AMSmath.js',
+                                                                                            'AMSsymbols.js',
+                                                                                            'autoload-all.js',
+                                                                                        ],
+                                                                                    },
+                                                                                }}
+                                                                            />
+                                                                        </View>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <Image
+                                                                        source={{
+                                                                            uri: attribs.src,
+                                                                        }}
+                                                                        style={{
+                                                                            maxWidth: Dimensions.get('window').width,
+                                                                            width: 300,
+                                                                            height: 300,
+                                                                            flex: 1,
+                                                                        }}
+                                                                        resizeMode={'contain'}
+                                                                    />
+                                                                );
+                                                            },
+                                                        }}
+                                                        tagsStyles={{
+                                                            p: {
+                                                                lineHeight: 50,
+                                                                fontSize: 16,
+                                                            },
                                                         }}
                                                     />
                                                 </View>
@@ -811,7 +916,88 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                         html: problem.question,
                                                     }}
                                                     defaultTextProps={{
-                                                        selectable: true,
+                                                        selectable: false,
+                                                    }}
+                                                    // renderers={renderers}
+                                                    renderers={{
+                                                        img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                                            const node = rendererProps.tnode.domNode;
+
+                                                            const attribs = node.attribs;
+
+                                                            if (attribs && attribs['data-eq']) {
+                                                                const formula =
+                                                                    '$' + decodeURIComponent(attribs['data-eq'] + '$');
+                                                                console.log('Formula', formula);
+
+                                                                return (
+                                                                    <View
+                                                                        style={{
+                                                                            minWidth: 100,
+                                                                        }}
+                                                                    >
+                                                                        <MathJax
+                                                                            html={formula}
+                                                                            mathJaxOptions={{
+                                                                                messageStyle: 'none',
+                                                                                extensions: [
+                                                                                    'tex2jax.js',
+                                                                                    'MathMenu.js',
+                                                                                    'MathZoom.js',
+                                                                                ],
+                                                                                jax: ['input/TeX', 'output/HTML-CSS'],
+                                                                                tex2jax: {
+                                                                                    inlineMath: [
+                                                                                        ['$', '$'],
+                                                                                        ['\\(', '\\)'],
+                                                                                    ],
+                                                                                    displayMath: [
+                                                                                        ['$$', '$$'],
+                                                                                        ['\\[', '\\]'],
+                                                                                    ],
+                                                                                    processEscapes: false,
+                                                                                },
+                                                                                SVG: {
+                                                                                    useGlobalCache: false,
+                                                                                },
+                                                                                TeX: {
+                                                                                    extensions: [
+                                                                                        'AMSmath.js',
+                                                                                        'AMSsymbols.js',
+                                                                                        'noErrors.js',
+                                                                                        'noUndefined.js',
+                                                                                        'AMSmath.js',
+                                                                                        'AMSsymbols.js',
+                                                                                        'autoload-all.js',
+                                                                                    ],
+                                                                                },
+                                                                            }}
+                                                                        />
+                                                                    </View>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <Image
+                                                                    source={{
+                                                                        uri: attribs.src,
+                                                                    }}
+                                                                    style={{
+                                                                        maxWidth: Dimensions.get('window').width,
+                                                                        width: 300,
+                                                                        height: 300,
+                                                                        flex: 1,
+                                                                    }}
+                                                                    resizeMode={'contain'}
+                                                                />
+                                                            );
+                                                        },
+                                                    }}
+                                                    tagsStyles={{
+                                                        p: {
+                                                            lineHeight: 50,
+                                                            fontSize: 16,
+                                                        },
                                                     }}
                                                 />
                                             )}
@@ -856,76 +1042,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     option: 'False',
                                                                     isCorrect: false,
                                                                 });
-                                                            }
-
-                                                            // hotspots
-                                                            updatedProblems[index].hotspots = [];
-                                                            updatedProblems[index].imgUrl = '';
-
-                                                            if (questionType === 'dragdrop') {
-                                                                updatedProblems[index].questionType = 'dragdrop';
-                                                                updatedProblems[index].options = [];
-                                                                updatedProblems[index].dragDropData = [
-                                                                    [
-                                                                        {
-                                                                            id: '1',
-                                                                            content: 'Item 1',
-                                                                        },
-                                                                        {
-                                                                            id: '2',
-                                                                            content: 'Item 2',
-                                                                        },
-                                                                    ],
-                                                                    [
-                                                                        {
-                                                                            id: '3',
-                                                                            content: 'Item 3',
-                                                                        },
-                                                                        {
-                                                                            id: '4',
-                                                                            content: 'Item 4',
-                                                                        },
-                                                                    ],
-                                                                ];
-
-                                                                updatedProblems[index].dragDropHeaders = [
-                                                                    'Group 1',
-                                                                    'Group 2',
-                                                                ];
-
-                                                                const dragdropData: any[] = [];
-
-                                                                updatedProblems[index].dragDropData.map(
-                                                                    (groups: any[], groupIndex: number) => {
-                                                                        const rows: any[] = [];
-
-                                                                        groups.map((label: any) => {
-                                                                            rows.push({
-                                                                                id: label.id,
-                                                                                name: label.content,
-                                                                                description: label.content,
-                                                                            });
-                                                                        });
-
-                                                                        dragdropData.push({
-                                                                            id: groupIndex + 1,
-                                                                            name: updatedProblems[index]
-                                                                                .dragDropHeaders[groupIndex],
-                                                                            rows,
-                                                                        });
-                                                                    }
-                                                                );
-
-                                                                // setRepository(new Repository(dragdropData))
-                                                            } else {
-                                                                // clear data if not drag and drop
-                                                                updatedProblems[index].dragDropData = [];
-                                                                updatedProblems[index].dragDropHeaders = [];
-                                                                updatedProblems[index].options = [];
-                                                            }
-
-                                                            if (questionType === 'hotspot') {
-                                                                updatedProblems[index].options = [];
                                                             }
 
                                                             setProblems(updatedProblems);
@@ -1109,6 +1225,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 }
                                                 editable={editQuestionNumber === index + 1}
                                                 style={{
+                                                    fontFamily: 'Overpass',
                                                     fontSize: 14,
                                                     padding: 15,
                                                     paddingTop: 12,
@@ -1152,7 +1269,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                     <View style={{ flexDirection: 'row', paddingLeft: 20 }}>
                                                         <Ionicons
                                                             name="trash-outline"
-                                                            color={'#007AFF'}
+                                                            color={'#000'}
                                                             onPress={() => {
                                                                 Alert(`Delete Question ${editQuestionNumber} ?`, '', [
                                                                     {
@@ -1179,7 +1296,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 ) : (
                                                     <Ionicons
                                                         name="cog-outline"
-                                                        color={'#007AFF'}
+                                                        color={'#000'}
                                                         style={{
                                                             paddingTop: 4,
                                                         }}
@@ -1354,7 +1471,92 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             html: option.option,
                                                         }}
                                                         defaultTextProps={{
-                                                            selectable: true,
+                                                            selectable: false,
+                                                        }}
+                                                        // renderers={renderers}
+                                                        renderers={{
+                                                            img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                                                const node = rendererProps.tnode.domNode;
+
+                                                                const attribs = node.attribs;
+
+                                                                if (attribs && attribs['data-eq']) {
+                                                                    const formula =
+                                                                        '$' +
+                                                                        decodeURIComponent(attribs['data-eq'] + '$');
+                                                                    console.log('Formula', formula);
+
+                                                                    return (
+                                                                        <View
+                                                                            style={{
+                                                                                minWidth: 100,
+                                                                            }}
+                                                                        >
+                                                                            <MathJax
+                                                                                html={formula}
+                                                                                mathJaxOptions={{
+                                                                                    messageStyle: 'none',
+                                                                                    extensions: [
+                                                                                        'tex2jax.js',
+                                                                                        'MathMenu.js',
+                                                                                        'MathZoom.js',
+                                                                                    ],
+                                                                                    jax: [
+                                                                                        'input/TeX',
+                                                                                        'output/HTML-CSS',
+                                                                                    ],
+                                                                                    tex2jax: {
+                                                                                        inlineMath: [
+                                                                                            ['$', '$'],
+                                                                                            ['\\(', '\\)'],
+                                                                                        ],
+                                                                                        displayMath: [
+                                                                                            ['$$', '$$'],
+                                                                                            ['\\[', '\\]'],
+                                                                                        ],
+                                                                                        processEscapes: false,
+                                                                                    },
+                                                                                    SVG: {
+                                                                                        useGlobalCache: false,
+                                                                                    },
+                                                                                    TeX: {
+                                                                                        extensions: [
+                                                                                            'AMSmath.js',
+                                                                                            'AMSsymbols.js',
+                                                                                            'noErrors.js',
+                                                                                            'noUndefined.js',
+                                                                                            'AMSmath.js',
+                                                                                            'AMSsymbols.js',
+                                                                                            'autoload-all.js',
+                                                                                        ],
+                                                                                    },
+                                                                                }}
+                                                                            />
+                                                                        </View>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <Image
+                                                                        source={{
+                                                                            uri: attribs.src,
+                                                                        }}
+                                                                        style={{
+                                                                            maxWidth: Dimensions.get('window').width,
+                                                                            width: 300,
+                                                                            height: 300,
+                                                                            flex: 1,
+                                                                        }}
+                                                                        resizeMode={'contain'}
+                                                                    />
+                                                                );
+                                                            },
+                                                        }}
+                                                        tagsStyles={{
+                                                            p: {
+                                                                lineHeight: 50,
+                                                                fontSize: 16,
+                                                            },
                                                         }}
                                                     />
                                                 ) : (
@@ -1383,6 +1585,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 actions.setItalic,
                                                                 actions.setUnderline,
                                                                 actions.insertImage,
+                                                                'insertFormula',
                                                                 actions.insertBulletsList,
                                                                 actions.insertOrderedList,
                                                                 actions.heading1,
@@ -1402,6 +1605,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                 ),
                                                                 [actions.insertVideo]: importIcon,
                                                                 insertEmoji: emojiIcon,
+                                                                insertFormula: formulaIcon,
                                                                 [actions.heading1]: ({ tintColor }) => (
                                                                     <Text
                                                                         style={{
@@ -1467,6 +1671,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             onPressAddImage={() =>
                                                                 props.handleAddImageQuizOptions(i.toString())
                                                             }
+                                                            insertFormula={() =>
+                                                                props.handleInsertFormulaOptions(i.toString())
+                                                            }
                                                         />
                                                         <ScrollView
                                                             horizontal={false}
@@ -1504,8 +1711,10 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     backgroundColor: '#fff',
                                                                     placeholderColor: '#a2a2ac',
                                                                     color: '#2f2f3c',
+                                                                    cssText: customFontFamily,
+                                                                    initialCSSText: customFontFamily,
                                                                     contentCSSText:
-                                                                        'font-size: 16px; min-height: 100px;',
+                                                                        'font-size: 16px; min-height: 100px;font-family:Overpass;',
                                                                 }}
                                                                 initialContentHTML={
                                                                     editQuestion &&
@@ -1540,7 +1749,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     ];
                                                                     updateOptionEditorRefs[i] = false;
                                                                     setOptionEditorRefs(updateOptionEditorRefs);
-                                                                    props.resetEditorOptionIndex();
+                                                                    // props.resetEditorOptionIndex();
                                                                 }}
                                                                 allowFileAccess={true}
                                                                 allowFileAccessFromFileURLs={true}
@@ -1590,9 +1799,9 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     <Text
                                                                         style={{
                                                                             paddingTop: showOptionFormulas[i] ? 10 : 0,
-                                                                            color: '#007AFF',
-                                                                            fontFamily: 'Overpass',
-                                                                            fontSize: 10,
+                                                                            color: '#000',
+                                                                            fontFamily: 'Inter',
+                                                                            fontSize: 12,
                                                                             paddingRight: 10,
                                                                         }}
                                                                     >
@@ -1637,27 +1846,27 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 }}
                                 style={{
                                     backgroundColor: 'white',
-                                    overflow: 'hidden',
-                                    height: 35,
+                                    // overflow: 'hidden',
+                                    // height: 35,
                                     marginTop: 15,
                                     alignSelf: 'center',
                                 }}
                             >
                                 <Text
                                     style={{
-                                        color: '#007AFF',
-                                        borderWidth: 1,
-                                        borderRadius: 15,
-                                        borderColor: '#007AFF',
-                                        backgroundColor: '#fff',
-                                        fontSize: 12,
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        lineHeight: 34,
-                                        paddingHorizontal: 20,
+                                        borderColor: '#000',
+                                        borderWidth: 1,
+                                        color: '#000',
+                                        backgroundColor: '#fff',
+                                        fontSize: 11,
+                                        paddingHorizontal: 24,
                                         fontFamily: 'inter',
-                                        height: 35,
+                                        overflow: 'hidden',
+                                        paddingVertical: 14,
                                         textTransform: 'uppercase',
-                                        width: 175,
+                                        width: 150,
                                     }}
                                 >
                                     Add Choice
@@ -1698,18 +1907,19 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 >
                     <Text
                         style={{
+                            fontWeight: 'bold',
                             textAlign: 'center',
-                            lineHeight: 34,
-                            color: 'white',
-                            fontSize: 12,
-                            backgroundColor: '#007AFF',
-                            borderRadius: 15,
-                            paddingHorizontal: 20,
+                            borderColor: '#000',
+                            borderWidth: 1,
+                            color: '#fff',
+                            backgroundColor: '#000',
+                            fontSize: 11,
+                            paddingHorizontal: 24,
                             fontFamily: 'inter',
                             overflow: 'hidden',
-                            height: 35,
-                            width: 175,
+                            paddingVertical: 14,
                             textTransform: 'uppercase',
+                            width: 150,
                         }}
                     >
                         Add Question

@@ -47,10 +47,10 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 .query({
                     query: getChannelThreads,
                     variables: {
-                        channelId: props.channelId
-                    }
+                        channelId: props.channelId,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.thread && res.data.thread.findByChannelId) {
                         let filteredThreads: any[] = [];
                         if (parsedUser._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
@@ -67,17 +67,17 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     Animated.timing(modalAnimation, {
                         toValue: 1,
                         duration: 150,
-                        useNativeDriver: true
+                        useNativeDriver: true,
                     }).start();
                 })
-                .catch(err => {
+                .catch((err) => {
                     Alert(unableToLoadDiscussionAlert, checkConnectionAlert);
                     setLoading(false);
                     modalAnimation.setValue(0);
                     Animated.timing(modalAnimation, {
                         toValue: 1,
                         duration: 150,
-                        useNativeDriver: true
+                        useNativeDriver: true,
                     }).start();
                 });
         } else {
@@ -86,7 +86,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
             Animated.timing(modalAnimation, {
                 toValue: 1,
                 duration: 150,
-                useNativeDriver: true
+                useNativeDriver: true,
             }).start();
         }
     }, [props.channelId, modalAnimation, props.channelCreatedBy]);
@@ -108,17 +108,17 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
      * @description Fetches total unread discussion threads
      */
     const updateDiscussionNotidCounts = useCallback(
-        userId => {
+        (userId) => {
             const server = fetchAPI('');
             server
                 .query({
                     query: totalUnreadDiscussionThreads,
                     variables: {
                         userId,
-                        channelId: props.channelId
-                    }
+                        channelId: props.channelId,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (
                         res.data.threadStatus.totalUnreadDiscussionThreads !== undefined &&
                         res.data.threadStatus.totalUnreadDiscussionThreads !== null
@@ -126,7 +126,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         // setUnreadDiscussionThreads(res.data.threadStatus.totalUnreadDiscussionThreads)
                     }
                 })
-                .catch(err => console.log(err));
+                .catch((err) => console.log(err));
         },
         [props.channelId]
     );
@@ -148,7 +148,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     height: '100%',
                     backgroundColor: '#fff',
                     borderTopRightRadius: 0,
-                    borderTopLeftRadius: 0
+                    borderTopLeftRadius: 0,
                 }}
             >
                 {loading ? (
@@ -159,7 +159,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             justifyContent: 'center',
                             flex: 1,
                             flexDirection: 'column',
-                            backgroundColor: '#fff'
+                            backgroundColor: '#fff',
                         }}
                     >
                         <ActivityIndicator color={'#1F1F1F'} />
@@ -175,7 +175,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             Animated.timing(modalAnimation, {
                                 toValue: 0,
                                 duration: 150,
-                                useNativeDriver: true
+                                useNativeDriver: true,
                             }).start(() => props.closeModal());
                         }}
                         channelCreatedBy={props.channelCreatedBy}
@@ -184,8 +184,11 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         type={'Discussion'}
                         channelColor={props.channelColor}
                         setNewPostCategories={(categories: any[]) => props.setNewPostCategories(categories)}
-                        showNewPostModal={() => props.showNewPostModal()}
+                        showNewDiscussionPost={props.showNewDiscussionPost}
+                        setShowNewDiscussionPost={props.setShowNewDiscussionPost}
+                        hideNavbarDiscussions={props.hideNavbarDiscussions}
                         setHideNavbarDiscussions={props.setHideNavbarDiscussions}
+                        user={props.user}
                     />
                 )}
             </Animated.View>

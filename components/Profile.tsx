@@ -14,7 +14,7 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 width: '100%',
                 backgroundColor: 'white',
                 borderTopRightRadius: 0,
-                borderTopLeftRadius: 0
+                borderTopLeftRadius: 0,
             }}
             onTouchMove={() => Keyboard.dismiss()}
         >
@@ -22,7 +22,7 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 style={{
                     // flex: 1,
                     paddingHorizontal: 0,
-                    backgroundColor: 'white'
+                    backgroundColor: 'white',
                 }}
             >
                 <ProfileControls
@@ -32,6 +32,7 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                     reloadData={() => props.reloadData()}
                     setShowSavePassword={(val: any) => props.setShowSavePassword(val)}
                     showSavePassword={props.showSavePassword}
+                    user={props.user}
                 />
             </View>
         </View>

@@ -376,6 +376,7 @@ const Walkthrough: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 reloadData={() => props.reloadData()}
                                 setShowSavePassword={(val: any) => setShowSavePassword(val)}
                                 showSavePassword={showSavePassword}
+                                user={props.user}
                             />
                         </View>
                     ) : (

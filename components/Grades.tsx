@@ -56,69 +56,27 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 .query({
                     query: getGrades,
                     variables: {
-                        channelId: props.channelId
-                    }
+                        channelId: props.channelId,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.channel && res.data.channel.getSubmissionCues) {
                         setCues(res.data.channel.getSubmissionCues);
                         server
                             .query({
                                 query: getGradesList,
                                 variables: {
-                                    channelId: props.channelId
-                                }
+                                    channelId: props.channelId,
+                                    userId: props.userId,
+                                },
                             })
-                            .then(async res2 => {
+                            .then(async (res2) => {
                                 if (res2.data.channel.getGrades) {
-                                    const u = await AsyncStorage.getItem('user');
-                                    if (u) {
-                                        const user = JSON.parse(u);
-                                        if (
-                                            user._id.toString().trim() === props.channelCreatedBy.toString().trim() ||
-                                            res2.data.channel.getGrades.length === 0
-                                        ) {
-                                            // all scores
-                                            setScores(res2.data.channel.getGrades);
-                                        } else {
-                                            // only user's score
-                                            const score = res2.data.channel.getGrades.find((u: any) => {
-                                                return u.userId.toString().trim() === user._id.toString().trim();
-                                            });
-
-                                            const { scores } = score;
-
-                                            const updateScores = scores.map((x: any) => {
-                                                const { cueId, gradeWeight, graded, submittedAt } = x;
-                                                const findCue = res.data.channel.getSubmissionCues.find((u: any) => {
-                                                    return u._id.toString() === cueId.toString();
-                                                });
-
-                                                const { releaseSubmission } = findCue;
-
-                                                if (!releaseSubmission) {
-                                                    return {
-                                                        cueId,
-                                                        gradeWeight,
-                                                        graded: false,
-                                                        score: '',
-                                                        submittedAt
-                                                    };
-                                                } else {
-                                                    return x;
-                                                }
-                                            });
-
-                                            score.scores = updateScores;
-
-                                            const singleScoreArray = [{ ...score }];
-                                            setScores(singleScoreArray);
-                                        }
-                                    }
+                                    setScores(res2.data.channel.getGrades);
                                     setLoading(false);
                                 }
                             })
-                            .catch(err => {
+                            .catch((err) => {
                                 console.log('Error', err);
                                 Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
                                 setLoading(false);
@@ -127,7 +85,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         setLoading(false);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.log('Error', err);
                     Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
                     setLoading(false);
@@ -135,21 +93,21 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         } else {
             setLoading(false);
         }
-    }, [props.channelId, props.channelCreatedBy]);
+    }, [props.channelId, props.channelCreatedBy, props.userId]);
 
     /**
      * @description Used to modify an assignment score directly
      */
-     const modifyGrade = (cueId: string, userId: string, score: string) => {
+    const modifyGrade = (cueId: string, userId: string, score: string) => {
         if (Number.isNaN(Number(score))) {
             Alert('Score should be a valid number');
             return;
         }
 
-        let warning = ''
+        let warning = '';
 
         if (Number(score) > 100) {
-            warning = 'Warning- Assigned score is greater than 100'
+            warning = 'Warning- Assigned score is greater than 100';
         }
 
         Alert('Save grade?', warning, [
@@ -158,14 +116,14 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 style: 'cancel',
                 onPress: () => {
                     return;
-                }
+                },
             },
             {
                 text: 'Yes',
                 onPress: async () => {
-                    handleSubmit()
-                }
-            }
+                    handleSubmit();
+                },
+            },
         ]);
 
         function handleSubmit() {
@@ -176,19 +134,19 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     variables: {
                         cueId,
                         userId,
-                        score
-                    }
+                        score,
+                    },
                 })
-                .then(res => {
+                .then((res) => {
                     if (res.data.cue.submitGrade) {
                         server
                             .query({
                                 query: getGradesList,
                                 variables: {
-                                    channelId: props.channelId
-                                }
+                                    channelId: props.channelId,
+                                },
                             })
-                            .then(async res2 => {
+                            .then(async (res2) => {
                                 if (res2.data.channel.getGrades) {
                                     const u = await AsyncStorage.getItem('user');
                                     if (u) {
@@ -218,7 +176,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         cueId,
                                                         gradeWeight,
                                                         graded: false,
-                                                        score: ''
+                                                        score: '',
                                                     };
                                                 } else {
                                                     return x;
@@ -234,14 +192,14 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     setLoading(false);
                                 }
                             })
-                            .catch(err => {
+                            .catch((err) => {
                                 console.log('Error', err);
                                 Alert(couldNotLoadSubscribersAlert, checkConnectionAlert);
                                 setLoading(false);
                             });
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     alert('Something went wrong. Try Again.');
                 });
         }
@@ -261,8 +219,9 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         backgroundColor: '#fff',
                         borderTopRightRadius: 0,
                         borderTopLeftRadius: 0,
-                        paddingVertical: 100
-                    }}>
+                        paddingVertical: 100,
+                    }}
+                >
                     {/* <ActivityIndicator color={'#1F1F1F'} /> */}
                 </View>
             ) : (
@@ -285,6 +244,7 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     date={props.date}
                     exportScores={props.exportScores}
                     setExportScores={props.setExportScores}
+                    user={props.user}
                 />
             )}
         </View>

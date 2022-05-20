@@ -161,16 +161,20 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         reloadData={() => props.reloadData()}
                         setShowHelp={(val: any) => props.setShowHelp(val)}
                         showHelp={false}
+                        user={props.user}
                     />
                 ) : (
                     <Channels
                         setShowCreate={(val: any) => props.setShowCreate(val)}
                         showCreate={props.showCreate}
-                        closeModal={() => {}}
+                        closeModal={() => {
+                            setShowAddCourseModal(false);
+                        }}
                         subscriptions={props.subscriptions}
                         refreshSubscriptions={props.refreshSubscriptions}
                         showAddCourseModal={showAddCourseModal}
                         closeAddCourseModal={() => setShowAddCourseModal(false)}
+                        user={props.user}
                     />
                 )}
             </View>
@@ -194,7 +198,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         width: Dimensions.get('window').width > 350 ? 62 : 58,
                         height: Dimensions.get('window').width > 350 ? 62 : 58,
                         borderRadius: Dimensions.get('window').width > 350 ? 31 : 29,
-                        backgroundColor: '#007AFF',
+                        backgroundColor: '#000',
                         borderColor: '#f2f2f2',
                         borderWidth: 0,
                         shadowColor: '#000',

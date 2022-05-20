@@ -8,21 +8,20 @@ export default function useCachedResources() {
     // Load any resources or data that we need prior to rendering the app
     React.useEffect(() => {
         async function loadResourcesAndDataAsync() {
-
             try {
                 SplashScreen.preventAutoHideAsync();
                 // Load fonts
                 await Font.loadAsync({
-                    inter: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Medium.woff',
-                    overpass: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Regular.woff',
-                    Inter: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Medium.woff',
-                    Overpass: 'https://cues-files.s3.amazonaws.com/fonts/BeausiteClassicWeb-Regular.woff',
+                    inter: 'https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Medium.otf',
+                    overpass: 'https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf',
+                    Inter: 'https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Medium.otf',
+                    Overpass: 'https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf',
                     Ionicons: {
-                        uri: 'https://cues-files.s3.amazonaws.com/fonts/Ionicons.ttf'
+                        uri: 'https://cues-files.s3.amazonaws.com/fonts/Ionicons.ttf',
                     },
                     ionicons: {
-                        uri: 'https://cues-files.s3.amazonaws.com/fonts/Ionicons.ttf'
-                    }
+                        uri: 'https://cues-files.s3.amazonaws.com/fonts/Ionicons.ttf',
+                    },
                 });
             } catch (e) {
                 // We might want to provide this error information to an error reporting service

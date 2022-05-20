@@ -286,9 +286,6 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
             <TouchableOpacity
                 style={{
                     marginTop: 20,
-                    backgroundColor: '#007AFF',
-                    borderRadius: 19,
-                    width: 120,
                     alignSelf: 'center',
                 }}
                 onPress={async () => {
@@ -303,12 +300,19 @@ export const InsertLink: React.FunctionComponent<{ [label: string]: any }> = (pr
             >
                 <Text
                     style={{
+                        fontWeight: 'bold',
                         textAlign: 'center',
-                        paddingHorizontal: 25,
-                        fontFamily: 'inter',
-                        height: 35,
-                        lineHeight: 34,
+                        borderColor: '#000',
+                        borderWidth: 1,
                         color: '#fff',
+                        backgroundColor: '#000',
+                        fontSize: 11,
+                        paddingHorizontal: 24,
+                        fontFamily: 'inter',
+                        overflow: 'hidden',
+                        paddingVertical: 14,
+                        textTransform: 'uppercase',
+                        width: 150,
                     }}
                 >
                     {' '}

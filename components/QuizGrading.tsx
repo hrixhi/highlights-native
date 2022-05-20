@@ -15,6 +15,9 @@ import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import RenderHtml from 'react-native-render-html';
+import MathJax from 'react-native-mathjax';
+import HTMLView from 'react-native-htmlview';
+import { disableEmailId } from '../constants/zoomCredentials';
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [problems] = useState<any[]>(props.problems);
@@ -261,7 +264,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         <Text
                                             style={{
                                                 fontSize: Dimensions.get('window').width < 768 ? 13 : 14,
-                                                color: '#3B64F8',
+                                                color: '#007AFF',
                                             }}
                                         >
                                             Attempt {index + 1}
@@ -389,10 +392,12 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             marginBottom: Dimensions.get('window').width < 1024 ? 20 : 0,
                         }}
                     >
-                        <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 14 }}>
+                        <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 14, fontFamily: 'Inter' }}>
                             {props.problems.length} {props.problems.length === 1 ? 'Question' : 'Questions'}
                         </Text>
-                        <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 14 }}>{totalPossible} Points</Text>
+                        <Text style={{ marginRight: 10, fontWeight: '700', fontSize: 14, fontFamily: 'Inter' }}>
+                            {totalPossible} Points
+                        </Text>
                     </View>
 
                     <View style={{}}>
@@ -404,7 +409,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     fontFamily: 'Inter',
                                     paddingHorizontal: 10,
                                     borderRadius: 1,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     lineHeight: 20,
                                     paddingTop: 1,
                                 }}
@@ -420,7 +425,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     paddingHorizontal: 10,
                                     marginLeft: 10,
                                     borderRadius: 1,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     lineHeight: 20,
                                     paddingTop: 1,
                                 }}
@@ -436,6 +441,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         paddingLeft: 20,
                                         lineHeight: 22,
                                         textTransform: 'uppercase',
+                                        fontFamily: 'Inter',
                                     }}
                                 >
                                     {props.partiallyGraded ? 'In progress' : 'Graded'}
@@ -625,22 +631,93 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         flex: 1,
                                     }}
                                 >
-                                    {/* <RichEditor
-                                                        initialContentHTML={content}
-                                                        disabled={true}
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            flex: 1
-                                                        }}
-                                                    /> */}
                                     <RenderHtml
                                         contentWidth={contentWidth}
                                         source={{
                                             html: content,
                                         }}
                                         defaultTextProps={{
-                                            selectable: true,
+                                            selectable: false,
+                                        }}
+                                        // renderers={renderers}
+                                        renderers={{
+                                            img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                                const node = rendererProps.tnode.domNode;
+
+                                                const attribs = node.attribs;
+
+                                                if (attribs && attribs['data-eq']) {
+                                                    const formula = '$' + decodeURIComponent(attribs['data-eq'] + '$');
+                                                    console.log('Formula', formula);
+
+                                                    return (
+                                                        <View
+                                                            style={{
+                                                                minWidth: 100,
+                                                            }}
+                                                        >
+                                                            <MathJax
+                                                                html={formula}
+                                                                mathJaxOptions={{
+                                                                    messageStyle: 'none',
+                                                                    extensions: [
+                                                                        'tex2jax.js',
+                                                                        'MathMenu.js',
+                                                                        'MathZoom.js',
+                                                                    ],
+                                                                    jax: ['input/TeX', 'output/HTML-CSS'],
+                                                                    tex2jax: {
+                                                                        inlineMath: [
+                                                                            ['$', '$'],
+                                                                            ['\\(', '\\)'],
+                                                                        ],
+                                                                        displayMath: [
+                                                                            ['$$', '$$'],
+                                                                            ['\\[', '\\]'],
+                                                                        ],
+                                                                        processEscapes: false,
+                                                                    },
+                                                                    SVG: {
+                                                                        useGlobalCache: false,
+                                                                    },
+                                                                    TeX: {
+                                                                        extensions: [
+                                                                            'AMSmath.js',
+                                                                            'AMSsymbols.js',
+                                                                            'noErrors.js',
+                                                                            'noUndefined.js',
+                                                                            'AMSmath.js',
+                                                                            'AMSsymbols.js',
+                                                                            'autoload-all.js',
+                                                                        ],
+                                                                    },
+                                                                }}
+                                                            />
+                                                        </View>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <Image
+                                                        source={{
+                                                            uri: attribs.src,
+                                                        }}
+                                                        style={{
+                                                            maxWidth: Dimensions.get('window').width,
+                                                            width: 300,
+                                                            height: 300,
+                                                            flex: 1,
+                                                        }}
+                                                        resizeMode={'contain'}
+                                                    />
+                                                );
+                                            },
+                                        }}
+                                        tagsStyles={{
+                                            p: {
+                                                lineHeight: 50,
+                                                fontSize: 16,
+                                            },
                                         }}
                                     />
                                 </View>
@@ -654,22 +731,93 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     flex: 1,
                                 }}
                             >
-                                {/* <RichEditor
-                                                        initialContentHTML={problem.question}
-                                                        disabled={true}
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            flex: 1
-                                                        }}
-                                                    /> */}
                                 <RenderHtml
                                     contentWidth={contentWidth}
                                     source={{
                                         html: problem.question,
                                     }}
                                     defaultTextProps={{
-                                        selectable: true,
+                                        selectable: false,
+                                    }}
+                                    // renderers={renderers}
+                                    renderers={{
+                                        img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                            const node = rendererProps.tnode.domNode;
+
+                                            const attribs = node.attribs;
+
+                                            if (attribs && attribs['data-eq']) {
+                                                const formula = '$' + decodeURIComponent(attribs['data-eq'] + '$');
+                                                console.log('Formula', formula);
+
+                                                return (
+                                                    <View
+                                                        style={{
+                                                            minWidth: 100,
+                                                        }}
+                                                    >
+                                                        <MathJax
+                                                            html={formula}
+                                                            mathJaxOptions={{
+                                                                messageStyle: 'none',
+                                                                extensions: [
+                                                                    'tex2jax.js',
+                                                                    'MathMenu.js',
+                                                                    'MathZoom.js',
+                                                                ],
+                                                                jax: ['input/TeX', 'output/HTML-CSS'],
+                                                                tex2jax: {
+                                                                    inlineMath: [
+                                                                        ['$', '$'],
+                                                                        ['\\(', '\\)'],
+                                                                    ],
+                                                                    displayMath: [
+                                                                        ['$$', '$$'],
+                                                                        ['\\[', '\\]'],
+                                                                    ],
+                                                                    processEscapes: false,
+                                                                },
+                                                                SVG: {
+                                                                    useGlobalCache: false,
+                                                                },
+                                                                TeX: {
+                                                                    extensions: [
+                                                                        'AMSmath.js',
+                                                                        'AMSsymbols.js',
+                                                                        'noErrors.js',
+                                                                        'noUndefined.js',
+                                                                        'AMSmath.js',
+                                                                        'AMSsymbols.js',
+                                                                        'autoload-all.js',
+                                                                    ],
+                                                                },
+                                                            }}
+                                                        />
+                                                    </View>
+                                                );
+                                            }
+
+                                            return (
+                                                <Image
+                                                    source={{
+                                                        uri: attribs.src,
+                                                    }}
+                                                    style={{
+                                                        maxWidth: Dimensions.get('window').width,
+                                                        width: 300,
+                                                        height: 300,
+                                                        flex: 1,
+                                                    }}
+                                                    resizeMode={'contain'}
+                                                />
+                                            );
+                                        },
+                                    }}
+                                    tagsStyles={{
+                                        p: {
+                                            lineHeight: 50,
+                                            fontSize: 16,
+                                        },
                                     }}
                                 />
                             </View>
@@ -740,7 +888,88 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         html: option.option,
                                                     }}
                                                     defaultTextProps={{
-                                                        selectable: true,
+                                                        selectable: false,
+                                                    }}
+                                                    // renderers={renderers}
+                                                    renderers={{
+                                                        img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                                            const node = rendererProps.tnode.domNode;
+
+                                                            const attribs = node.attribs;
+
+                                                            if (attribs && attribs['data-eq']) {
+                                                                const formula =
+                                                                    '$' + decodeURIComponent(attribs['data-eq'] + '$');
+                                                                console.log('Formula', formula);
+
+                                                                return (
+                                                                    <View
+                                                                        style={{
+                                                                            minWidth: 100,
+                                                                        }}
+                                                                    >
+                                                                        <MathJax
+                                                                            html={formula}
+                                                                            mathJaxOptions={{
+                                                                                messageStyle: 'none',
+                                                                                extensions: [
+                                                                                    'tex2jax.js',
+                                                                                    'MathMenu.js',
+                                                                                    'MathZoom.js',
+                                                                                ],
+                                                                                jax: ['input/TeX', 'output/HTML-CSS'],
+                                                                                tex2jax: {
+                                                                                    inlineMath: [
+                                                                                        ['$', '$'],
+                                                                                        ['\\(', '\\)'],
+                                                                                    ],
+                                                                                    displayMath: [
+                                                                                        ['$$', '$$'],
+                                                                                        ['\\[', '\\]'],
+                                                                                    ],
+                                                                                    processEscapes: false,
+                                                                                },
+                                                                                SVG: {
+                                                                                    useGlobalCache: false,
+                                                                                },
+                                                                                TeX: {
+                                                                                    extensions: [
+                                                                                        'AMSmath.js',
+                                                                                        'AMSsymbols.js',
+                                                                                        'noErrors.js',
+                                                                                        'noUndefined.js',
+                                                                                        'AMSmath.js',
+                                                                                        'AMSsymbols.js',
+                                                                                        'autoload-all.js',
+                                                                                    ],
+                                                                                },
+                                                                            }}
+                                                                        />
+                                                                    </View>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <Image
+                                                                    source={{
+                                                                        uri: attribs.src,
+                                                                    }}
+                                                                    style={{
+                                                                        maxWidth: Dimensions.get('window').width,
+                                                                        width: 300,
+                                                                        height: 300,
+                                                                        flex: 1,
+                                                                    }}
+                                                                    resizeMode={'contain'}
+                                                                />
+                                                            );
+                                                        },
+                                                    }}
+                                                    tagsStyles={{
+                                                        p: {
+                                                            lineHeight: 50,
+                                                            fontSize: 16,
+                                                        },
                                                     }}
                                                 />
                                             </View>
@@ -1050,7 +1279,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 {
                                     <RenderHtml
                                         contentWidth={contentWidth}
-                                        contentWidth={contentWidth}
                                         source={{
                                             html: problem.highlightTextHtml,
                                         }}
@@ -1149,7 +1377,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 {
                                     <RenderHtml
                                         contentWidth={contentWidth}
-                                        contentWidth={contentWidth}
                                         source={{
                                             html: problem.inlineChoiceHtml,
                                         }}
@@ -1175,7 +1402,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     (option: any, optionIndex: number) => {
                                                         if (
                                                             option.option ===
-                                                                solutions[index].inlineChoiceSelection[optionIndex] &&
+                                                                inlineChoiceSelection[Number(node.attribs.id)] &&
                                                             option.isCorrect
                                                         ) {
                                                             isCorrect = true;
@@ -1246,7 +1473,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             <View style={{ paddingTop: 20, paddingBottom: 30 }}>
                                 {
                                     <RenderHtml
-                                        contentWidth={contentWidth}
                                         contentWidth={contentWidth}
                                         source={{
                                             html: problem.textEntryHtml,
@@ -1397,16 +1623,90 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                                             <RenderHtml
                                                 contentWidth={contentWidth}
-                                                contentWidth={contentWidth}
                                                 source={{
                                                     html: problem.multipartQuestions[partIndex],
                                                 }}
                                                 defaultTextProps={{
-                                                    selectable: true,
+                                                    selectable: false,
+                                                }}
+                                                // renderers={renderers}
+                                                renderers={{
+                                                    img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                                        const node = rendererProps.tnode.domNode;
+
+                                                        const attribs = node.attribs;
+
+                                                        if (attribs && attribs['data-eq']) {
+                                                            const formula =
+                                                                '$' + decodeURIComponent(attribs['data-eq'] + '$');
+                                                            console.log('Formula', formula);
+
+                                                            return (
+                                                                <View
+                                                                    style={{
+                                                                        minWidth: 100,
+                                                                    }}
+                                                                >
+                                                                    <MathJax
+                                                                        html={formula}
+                                                                        mathJaxOptions={{
+                                                                            messageStyle: 'none',
+                                                                            extensions: [
+                                                                                'tex2jax.js',
+                                                                                'MathMenu.js',
+                                                                                'MathZoom.js',
+                                                                            ],
+                                                                            jax: ['input/TeX', 'output/HTML-CSS'],
+                                                                            tex2jax: {
+                                                                                inlineMath: [
+                                                                                    ['$', '$'],
+                                                                                    ['\\(', '\\)'],
+                                                                                ],
+                                                                                displayMath: [
+                                                                                    ['$$', '$$'],
+                                                                                    ['\\[', '\\]'],
+                                                                                ],
+                                                                                processEscapes: false,
+                                                                            },
+                                                                            SVG: {
+                                                                                useGlobalCache: false,
+                                                                            },
+                                                                            TeX: {
+                                                                                extensions: [
+                                                                                    'AMSmath.js',
+                                                                                    'AMSsymbols.js',
+                                                                                    'noErrors.js',
+                                                                                    'noUndefined.js',
+                                                                                    'AMSmath.js',
+                                                                                    'AMSsymbols.js',
+                                                                                    'autoload-all.js',
+                                                                                ],
+                                                                            },
+                                                                        }}
+                                                                    />
+                                                                </View>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <Image
+                                                                source={{
+                                                                    uri: attribs.src,
+                                                                }}
+                                                                style={{
+                                                                    maxWidth: Dimensions.get('window').width,
+                                                                    width: 300,
+                                                                    height: 300,
+                                                                    flex: 1,
+                                                                }}
+                                                                resizeMode={'contain'}
+                                                            />
+                                                        );
+                                                    },
                                                 }}
                                                 tagsStyles={{
                                                     p: {
-                                                        lineHeight: 30,
+                                                        lineHeight: 50,
                                                         fontSize: 16,
                                                     },
                                                 }}
@@ -1488,16 +1788,103 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                             >
                                                                 <RenderHtml
                                                                     contentWidth={contentWidth}
-                                                                    contentWidth={contentWidth}
                                                                     source={{
                                                                         html: option.option,
                                                                     }}
                                                                     defaultTextProps={{
-                                                                        selectable: true,
+                                                                        selectable: false,
+                                                                    }}
+                                                                    // renderers={renderers}
+                                                                    renderers={{
+                                                                        img: ({
+                                                                            TDefaultRenderer,
+                                                                            ...rendererProps
+                                                                        }) => {
+                                                                            const node = rendererProps.tnode.domNode;
+
+                                                                            const attribs = node.attribs;
+
+                                                                            if (attribs && attribs['data-eq']) {
+                                                                                const formula =
+                                                                                    '$' +
+                                                                                    decodeURIComponent(
+                                                                                        attribs['data-eq'] + '$'
+                                                                                    );
+                                                                                console.log('Formula', formula);
+
+                                                                                return (
+                                                                                    <View
+                                                                                        style={{
+                                                                                            minWidth: 100,
+                                                                                        }}
+                                                                                    >
+                                                                                        <MathJax
+                                                                                            html={formula}
+                                                                                            mathJaxOptions={{
+                                                                                                messageStyle: 'none',
+                                                                                                extensions: [
+                                                                                                    'tex2jax.js',
+                                                                                                    'MathMenu.js',
+                                                                                                    'MathZoom.js',
+                                                                                                ],
+                                                                                                jax: [
+                                                                                                    'input/TeX',
+                                                                                                    'output/HTML-CSS',
+                                                                                                ],
+                                                                                                tex2jax: {
+                                                                                                    inlineMath: [
+                                                                                                        ['$', '$'],
+                                                                                                        ['\\(', '\\)'],
+                                                                                                    ],
+                                                                                                    displayMath: [
+                                                                                                        ['$$', '$$'],
+                                                                                                        ['\\[', '\\]'],
+                                                                                                    ],
+                                                                                                    processEscapes:
+                                                                                                        false,
+                                                                                                },
+                                                                                                SVG: {
+                                                                                                    useGlobalCache:
+                                                                                                        false,
+                                                                                                },
+                                                                                                TeX: {
+                                                                                                    extensions: [
+                                                                                                        'AMSmath.js',
+                                                                                                        'AMSsymbols.js',
+                                                                                                        'noErrors.js',
+                                                                                                        'noUndefined.js',
+                                                                                                        'AMSmath.js',
+                                                                                                        'AMSsymbols.js',
+                                                                                                        'autoload-all.js',
+                                                                                                    ],
+                                                                                                },
+                                                                                            }}
+                                                                                        />
+                                                                                    </View>
+                                                                                );
+                                                                            }
+
+                                                                            return (
+                                                                                <Image
+                                                                                    source={{
+                                                                                        uri: attribs.src,
+                                                                                    }}
+                                                                                    style={{
+                                                                                        maxWidth:
+                                                                                            Dimensions.get('window')
+                                                                                                .width,
+                                                                                        width: 300,
+                                                                                        height: 300,
+                                                                                        flex: 1,
+                                                                                    }}
+                                                                                    resizeMode={'contain'}
+                                                                                />
+                                                                            );
+                                                                        },
                                                                     }}
                                                                     tagsStyles={{
                                                                         p: {
-                                                                            lineHeight: 30,
+                                                                            lineHeight: 50,
                                                                             fontSize: 16,
                                                                         },
                                                                     }}
@@ -1696,22 +2083,94 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 flex: 1,
                                             }}
                                         >
-                                            {/* <RichEditor
-                                                initialContentHTML={solutions[index].response}
-                                                disabled={true}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    flex: 1
-                                                }}
-                                            /> */}
                                             <RenderHtml
                                                 contentWidth={contentWidth}
                                                 source={{
                                                     html: solutions[index].response,
                                                 }}
                                                 defaultTextProps={{
-                                                    selectable: true,
+                                                    selectable: false,
+                                                }}
+                                                // renderers={renderers}
+                                                renderers={{
+                                                    img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                                        const node = rendererProps.tnode.domNode;
+
+                                                        const attribs = node.attribs;
+
+                                                        if (attribs && attribs['data-eq']) {
+                                                            const formula =
+                                                                '$' + decodeURIComponent(attribs['data-eq'] + '$');
+                                                            console.log('Formula', formula);
+
+                                                            return (
+                                                                <View
+                                                                    style={{
+                                                                        minWidth: 100,
+                                                                    }}
+                                                                >
+                                                                    <MathJax
+                                                                        html={formula}
+                                                                        mathJaxOptions={{
+                                                                            messageStyle: 'none',
+                                                                            extensions: [
+                                                                                'tex2jax.js',
+                                                                                'MathMenu.js',
+                                                                                'MathZoom.js',
+                                                                            ],
+                                                                            jax: ['input/TeX', 'output/HTML-CSS'],
+                                                                            tex2jax: {
+                                                                                inlineMath: [
+                                                                                    ['$', '$'],
+                                                                                    ['\\(', '\\)'],
+                                                                                ],
+                                                                                displayMath: [
+                                                                                    ['$$', '$$'],
+                                                                                    ['\\[', '\\]'],
+                                                                                ],
+                                                                                processEscapes: false,
+                                                                            },
+                                                                            SVG: {
+                                                                                useGlobalCache: false,
+                                                                            },
+                                                                            TeX: {
+                                                                                extensions: [
+                                                                                    'AMSmath.js',
+                                                                                    'AMSsymbols.js',
+                                                                                    'noErrors.js',
+                                                                                    'noUndefined.js',
+                                                                                    'AMSmath.js',
+                                                                                    'AMSsymbols.js',
+                                                                                    'autoload-all.js',
+                                                                                ],
+                                                                            },
+                                                                        }}
+                                                                    />
+                                                                </View>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <Image
+                                                                source={{
+                                                                    uri: attribs.src,
+                                                                }}
+                                                                style={{
+                                                                    maxWidth: Dimensions.get('window').width,
+                                                                    width: 300,
+                                                                    height: 300,
+                                                                    flex: 1,
+                                                                }}
+                                                                resizeMode={'contain'}
+                                                            />
+                                                        );
+                                                    },
+                                                }}
+                                                tagsStyles={{
+                                                    p: {
+                                                        lineHeight: 50,
+                                                        fontSize: 16,
+                                                    },
                                                 }}
                                             />
                                         </View>
@@ -1866,24 +2325,24 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             style={{
                                 backgroundColor: 'white',
                                 borderRadius: 15,
-                                overflow: 'hidden',
-                                height: 35,
                                 marginBottom: 20,
                             }}
+                            disabled={props.user.email === disableEmailId}
                         >
                             <Text
                                 style={{
+                                    fontWeight: 'bold',
                                     textAlign: 'center',
-                                    lineHeight: 34,
-                                    color: '#007AFF',
-                                    fontSize: 12,
-                                    borderColor: '#007AFF',
+                                    borderColor: '#000',
                                     borderWidth: 1,
+                                    color: '#000',
                                     backgroundColor: '#fff',
-                                    borderRadius: 15,
-                                    paddingHorizontal: 20,
+                                    fontSize: 11,
+                                    paddingHorizontal: 24,
                                     fontFamily: 'inter',
-                                    height: 35,
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    textTransform: 'uppercase',
                                     width: 150,
                                 }}
                             >
@@ -1896,20 +2355,23 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         style={{
                             backgroundColor: 'white',
                             borderRadius: 15,
-                            overflow: 'hidden',
-                            height: 35,
                         }}
+                        disabled={props.user.email === disableEmailId}
                     >
                         <Text
                             style={{
+                                fontWeight: 'bold',
                                 textAlign: 'center',
-                                lineHeight: 34,
-                                color: 'white',
-                                fontSize: 12,
-                                backgroundColor: '#007AFF',
-                                paddingHorizontal: 20,
+                                borderColor: '#000',
+                                borderWidth: 1,
+                                color: '#fff',
+                                backgroundColor: '#000',
+                                fontSize: 11,
+                                paddingHorizontal: 24,
                                 fontFamily: 'inter',
-                                height: 35,
+                                overflow: 'hidden',
+                                paddingVertical: 14,
+                                textTransform: 'uppercase',
                                 width: 150,
                             }}
                         >

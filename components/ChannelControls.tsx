@@ -38,6 +38,7 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import { useOrientation } from '../hooks/useOrientation';
 import { channelPasswordModalHeight, newCourseModalHeight } from '../helpers/ModalHeights';
+import { disableEmailId } from '../constants/zoomCredentials';
 
 const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     // const windowHeight =
@@ -294,10 +295,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
     }, [joinWithCode]);
 
-    /**
-     * @description Fetches channels for users
-     */
-    useEffect(() => {
+    const loadChannels = useCallback(() => {
         if (school) {
             const server = fetchAPI('');
             server
@@ -318,11 +316,6 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             }
                             return 0;
                         });
-                        // const sortedChannels = res.data.channel.findBySchoolId.map((item: any, index: any) => {
-                        //     const x = { ...item, selected: false, index }
-                        //     delete x.__typename
-                        //     return x
-                        // })
 
                         setChannels(sortedChannels);
                         setLoading(false);
@@ -332,10 +325,13 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     setLoading(false);
                 });
         }
-        // else {
-        //     // Fetch all public channels here
-        //     loadOutsideChannels()
-        // }
+    }, [role, school]);
+
+    /**
+     * @description Fetches channels for users
+     */
+    useEffect(() => {
+        loadChannels();
     }, [role, school]);
 
     /**
@@ -417,6 +413,8 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 setShowChannelPasswordInput(false);
                                 props.closeAddCourseModal();
                                 props.refreshSubscriptions();
+
+                                setChannelPasswordId('');
                                 break;
                             case 'incorrect-password':
                                 Alert(incorrectPasswordAlert);
@@ -562,6 +560,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         case 'created':
                             Alert('Course created successfully');
                             props.closeModal();
+                            loadChannels();
                             // Refresh subs
                             props.refreshSubscriptions();
                             break;
@@ -717,9 +716,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             setOpen={setIsRoleDropdownOpen}
                             setValue={setActiveRole}
                             style={{
-                                borderWidth: 0,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2',
+                                borderWidth: 1,
+                                borderColor: '#ccc',
+                                borderRadius: 0,
+                                height: 45,
                                 // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
@@ -736,7 +736,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 shadowRadius: 12,
                             }}
                             textStyle={{
-                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 fontFamily: 'overpass',
                             }}
                         />
@@ -760,9 +760,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 setOpen={setIsGradeDropdownOpen}
                                 setValue={setActiveGrade}
                                 style={{
-                                    borderWidth: 0,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#f2f2f2',
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 0,
+                                    height: 45,
                                     // elevation: !showFrequencyDropdown ? 0 : 2
                                 }}
                                 dropDownContainerStyle={{
@@ -779,7 +780,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     shadowRadius: 12,
                                 }}
                                 textStyle={{
-                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     fontFamily: 'overpass',
                                 }}
                             />
@@ -801,9 +802,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 setOpen={setIsSectionDropdownOpen}
                                 setValue={setActiveSection}
                                 style={{
-                                    borderWidth: 0,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#f2f2f2',
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 0,
+                                    height: 45,
                                     // elevation: !showFrequencyDropdown ? 0 : 2
                                 }}
                                 dropDownContainerStyle={{
@@ -820,7 +822,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     shadowRadius: 12,
                                 }}
                                 textStyle={{
-                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                     fontFamily: 'overpass',
                                 }}
                             />
@@ -893,7 +895,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         {role === 'instructor' ? null : (
                             <Text
                                 style={{
-                                    fontSize: 16,
+                                    fontSize: Dimensions.get('window').width < 768 ? 16 : 18,
                                     fontFamily: 'Inter',
                                     color: '#000000',
                                     textAlign: 'center',
@@ -936,33 +938,29 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     handleSubmitCode();
                                 }
                             }}
-                            disabled={joinWithCodeDisabled}
+                            disabled={joinWithCodeDisabled || props.user.email === disableEmailId}
                             style={{
                                 marginTop: 10,
-                                backgroundColor: '#007AFF',
-                                width: 130,
                                 alignSelf: 'center',
-                                overflow: 'hidden',
-                                height: 35,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderRadius: 15,
                             }}
                         >
                             <Text
                                 style={{
+                                    fontWeight: 'bold',
                                     textAlign: 'center',
-                                    lineHeight: 34,
-                                    color: 'white',
-                                    fontSize: 12,
-                                    backgroundColor: '#007AFF',
-                                    paddingHorizontal: 20,
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    color: '#fff',
+                                    backgroundColor: '#000',
+                                    fontSize: 11,
+                                    paddingHorizontal: 24,
                                     fontFamily: 'inter',
-                                    height: 35,
-                                    // width: 180,
-                                    width: 130,
-                                    borderRadius: 15,
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
                                     textTransform: 'uppercase',
+                                    width: 120,
                                 }}
                             >
                                 Join
@@ -988,6 +986,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             <Text
                                 style={{
                                     fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                    fontFamily: 'Inter',
                                     color: '#000000',
                                 }}
                             >
@@ -1011,6 +1010,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         {/* {!school ? <View style={{ backgroundColor: 'white' }}>
                     <Text style={{
                         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                        fontFamily: 'Inter',
                         color: '#000000'
                     }}>
                         Description
@@ -1024,6 +1024,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             maxWidth: 500,
                             borderBottom: '1px solid #f2f2f2',
                             fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                            fontFamily: 'Inter',
                             paddingTop: 13,
                             paddingBottom: 13,
                             marginTop: 12,
@@ -1043,6 +1044,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             <Text
                                 style={{
                                     fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                    fontFamily: 'Inter',
                                     color: '#000000',
                                 }}
                             >
@@ -1079,6 +1081,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 }}>
                                 <Text style={{
                                     fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                    fontFamily: 'Inter',
                                     color: '#000000'
                                 }}>Temporary</Text>
                             </View> */}
@@ -1093,6 +1096,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     <Text
                                         style={{
                                             fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                            fontFamily: 'Inter',
                                             marginRight: 8,
                                             color: '#000000',
                                         }}
@@ -1116,7 +1120,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     thumbColor={'#f4f4f6'}
                                     trackColor={{
                                         false: '#f4f4f6',
-                                        true: '#007AFF',
+                                        true: '#000',
                                     }}
                                     style={{
                                         transform: [
@@ -1147,6 +1151,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     <Text
                                         style={{
                                             fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                            fontFamily: 'Inter',
                                             color: '#000000',
                                         }}
                                     >
@@ -1166,7 +1171,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         style={{ height: 20 }}
                                         trackColor={{
                                             false: '#f2f2f2',
-                                            true: '#007AFF',
+                                            true: '#000',
                                         }}
                                         activeThumbColor="white"
                                     />
@@ -1193,6 +1198,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     <Text
                                         style={{
                                             fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                            fontFamily: 'Inter',
                                             color: '#000000',
                                         }}
                                     >
@@ -1226,6 +1232,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Text
                                     style={{
                                         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                        fontFamily: 'Inter',
                                         color: '#000000',
                                     }}
                                 >
@@ -1247,6 +1254,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                             <Text
                                 style={{
                                     fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                    fontFamily: 'Inter',
                                     marginRight: 8,
                                     color: '#000000',
                                 }}
@@ -1300,9 +1308,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             setSelectedModerators(filterRemovedModerators);
                                         }}
                                         style={{
-                                            borderWidth: 0,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: '#f2f2f2',
+                                            borderWidth: 1,
+                                            borderColor: '#ccc',
+                                            borderRadius: 0,
+                                            height: 45,
                                             // elevation: !showFrequencyDropdown ? 0 : 2
                                         }}
                                         dropDownContainerStyle={{
@@ -1319,7 +1328,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             shadowRadius: 12,
                                         }}
                                         textStyle={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             fontFamily: 'overpass',
                                         }}
                                     />
@@ -1338,6 +1347,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <Text
                                     style={{
                                         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                        fontFamily: 'Inter',
                                         marginRight: 8,
                                         color: '#000000',
                                     }}
@@ -1370,9 +1380,10 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     setOpen={setIsEditorsDropdownOpen}
                                     setValue={setSelectedModerators}
                                     style={{
-                                        borderWidth: 0,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: '#f2f2f2',
+                                        borderWidth: 1,
+                                        borderColor: '#ccc',
+                                        borderRadius: 0,
+                                        height: 45,
                                         // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     dropDownContainerStyle={{
@@ -1389,7 +1400,7 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         shadowRadius: 12,
                                     }}
                                     textStyle={{
-                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         fontFamily: 'overpass',
                                     }}
                                 />
@@ -1403,7 +1414,6 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 justifyContent: 'center',
                                 display: 'flex',
                                 flexDirection: 'row',
-                                height: 50,
                                 paddingTop: 25,
                             }}
                         >
@@ -1411,27 +1421,26 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 onPress={() => handleSubmit()}
                                 style={{
                                     backgroundColor: 'white',
-                                    borderRadius: 15,
-                                    overflow: 'hidden',
-                                    height: 35,
                                     marginTop: 15,
                                     marginBottom: 50,
                                 }}
-                                disabled={isSubmitDisabled || isSubmitting}
+                                disabled={isSubmitDisabled || isSubmitting || props.user.email === disableEmailId}
                             >
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        lineHeight: 34,
-                                        color: 'white',
-                                        fontSize: 12,
-                                        backgroundColor: '#007AFF',
-                                        paddingHorizontal: 20,
+                                        borderColor: '#000',
+                                        borderWidth: 1,
+                                        color: '#fff',
+                                        backgroundColor: '#000',
+                                        fontSize: 11,
+                                        paddingHorizontal: 24,
                                         fontFamily: 'inter',
-                                        height: 35,
-                                        borderRadius: 15,
-                                        width: 120,
+                                        overflow: 'hidden',
+                                        paddingVertical: 14,
                                         textTransform: 'uppercase',
+                                        width: 150,
                                     }}
                                 >
                                     {isSubmitting ? 'Creating' : 'Create'}
@@ -1490,30 +1499,26 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         disabled={channelPassword === ''}
                         style={{
                             marginTop: 10,
-                            backgroundColor: '#007AFF',
-                            width: 130,
                             alignSelf: 'center',
-                            overflow: 'hidden',
-                            height: 35,
                             justifyContent: 'center',
                             flexDirection: 'row',
-                            borderRadius: 15,
                         }}
                     >
                         <Text
                             style={{
+                                fontWeight: 'bold',
                                 textAlign: 'center',
-                                lineHeight: 34,
-                                color: 'white',
-                                fontSize: 12,
-                                backgroundColor: '#007AFF',
-                                paddingHorizontal: 20,
+                                borderColor: '#000',
+                                borderWidth: 1,
+                                color: '#fff',
+                                backgroundColor: '#000',
+                                fontSize: 11,
+                                paddingHorizontal: 24,
                                 fontFamily: 'inter',
-                                height: 35,
-                                // width: 180,
-                                width: 130,
-                                borderRadius: 15,
+                                overflow: 'hidden',
+                                paddingVertical: 14,
                                 textTransform: 'uppercase',
+                                width: 150,
                             }}
                         >
                             Subscribe
@@ -1683,19 +1688,27 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                         key={sortChannels.length + subIds.length}
                     >
                         {/* */}
-                        {channels.length === 0 ? (
+                        {sortChannels.length === 0 ? (
                             <View
                                 style={{
                                     width: '100%',
-                                    flex: 1,
                                     justifyContent: 'center',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    backgroundColor: '#f8f8f8',
+                                    backgroundColor: '#fff',
                                     paddingVertical: 100,
+                                    paddingHorizontal: 10,
                                 }}
                             >
-                                <ActivityIndicator color={'#1F1F1F'} />
+                                <Text
+                                    style={{
+                                        fontSize: 16,
+                                        fontFamily: 'Inter',
+                                    }}
+                                >
+                                    No courses found. Click on + to {role === 'instructor' ? 'create ' : 'join '} a
+                                    course.
+                                </Text>
                             </View>
                         ) : (
                             <View
@@ -1716,13 +1729,13 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 <ScrollView
                                     contentContainerStyle={{
                                         width: '100%',
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 4,
-                                            height: 4,
-                                        },
-                                        shadowOpacity: 0.12,
-                                        shadowRadius: 10,
+                                        // shadowColor: '#000',
+                                        // shadowOffset: {
+                                        //     width: 4,
+                                        //     height: 4,
+                                        // },
+                                        // shadowOpacity: 0.12,
+                                        // shadowRadius: 10,
                                         paddingBottom: 200,
                                         backgroundColor: 'white',
                                     }}
@@ -1732,16 +1745,16 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     {sortChannels.map((channel: any, ind: any) => {
                                         const subscribed = subIds.includes(channel._id);
 
-                                        let role = 'Viewer';
+                                        let role = 'Student';
 
                                         // Check if user is a moderator or the owner
                                         if (subscribed && userId !== '') {
                                             const isModerator = channel.owners.includes(userId);
 
                                             if (channel.channelCreator === userId) {
-                                                role = 'Owner';
+                                                role = 'Instructor';
                                             } else if (isModerator) {
-                                                role = 'Editor';
+                                                role = 'Instructor';
                                             }
                                         }
 
@@ -1780,13 +1793,13 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 </View>
                                                 <View style={{ flex: 1, backgroundColor: '#fff', paddingLeft: 5 }}>
                                                     <Text
-                                                        style={{ fontSize: 15, padding: 5, fontFamily: 'inter' }}
+                                                        style={{ fontSize: 16, padding: 5, fontFamily: 'inter' }}
                                                         ellipsizeMode="tail"
                                                     >
                                                         {channel.name}
                                                     </Text>
                                                     <Text
-                                                        style={{ fontSize: 13, padding: 5, fontWeight: 'bold' }}
+                                                        style={{ fontSize: 14, padding: 5, fontWeight: 'bold' }}
                                                         ellipsizeMode="tail"
                                                     >
                                                         {channel.createdByUsername}
@@ -1818,17 +1831,18 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                                         },
                                                                     ]);
                                                                 }}
+                                                                disabled={props.user.email === disableEmailId}
                                                             >
                                                                 <Text
                                                                     style={{
                                                                         textAlign: 'center',
-                                                                        fontSize: 13,
-                                                                        color: '#007AFF',
+                                                                        // fontSize: 13,
+                                                                        color: '#000',
                                                                         marginRight: 10,
                                                                     }}
                                                                     ellipsizeMode="tail"
                                                                 >
-                                                                    <Ionicons name="enter-outline" size={18} />
+                                                                    <Ionicons name="enter-outline" size={24} />
                                                                 </Text>
                                                             </TouchableOpacity>
                                                         </View>
@@ -1844,13 +1858,9 @@ const ChannelControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                             <Text
                                                                 style={{
                                                                     textAlign: 'center',
-                                                                    fontSize: 13,
+                                                                    fontSize: 14,
                                                                     fontFamily: 'inter',
-                                                                    color:
-                                                                        channel.channelCreator === userId ||
-                                                                        channel.owners.includes(userId)
-                                                                            ? '#007AFF'
-                                                                            : '#1F1F1F',
+                                                                    color: '#000',
                                                                 }}
                                                             >
                                                                 {role}

@@ -31,7 +31,7 @@ import {
     shareCueWithMoreIds,
     unshareCueWithIds,
     shareWithAll,
-    start,
+    startQuiz,
     submit,
     modifyQuiz,
     // findBySchoolId,
@@ -64,6 +64,7 @@ import ColorPicker from './ColorPicker';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
+const formulaIcon = require('../assets/images/formulaIcon3.png');
 import MultiSelectComponent from './MultiSelect';
 import DropDownPicker from 'react-native-dropdown-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -82,6 +83,13 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import { downloadFileToDevice } from '../helpers/DownloadFile';
+import { paddingResponsive } from '../helpers/paddingHelper';
+import { disableEmailId } from '../constants/zoomCredentials';
+
+const customFontFamily = `@font-face {
+    font-family: 'Overpass';
+    src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf'); 
+}`;
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
@@ -184,6 +192,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [unmodifiedProblems, setUnmodifiedProblems] = useState<any[]>([]);
     const [totalQuizPoints, setTotalQuizPoints] = useState(0);
     const [solutions, setSolutions] = useState<any[]>([]);
+    const [shuffleQuizAttemptOrder, setShuffleQuizAttemptOrder] = useState<any[]>([]);
     const [quizId, setQuizId] = useState('');
     const [loading, setLoading] = useState(true);
     const [fetchingQuiz, setFetchingQuiz] = useState(false);
@@ -204,6 +213,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [submissionSavedAt, setSubmissionSavedAt] = useState(new Date());
     const [failedToSaveSubmission, setFailedToSaveSubmission] = useState(false);
     const [userId, setUserId] = useState('');
+    const [userFullName, setUserFullName] = useState('');
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const [isShareWithDropdownOpen, setIsShareWithDropdownOpen] = useState(false);
     const [isFrequencyDropdownOpen, setIsFrequencyDropdownOpen] = useState(false);
@@ -222,6 +232,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [foreColor, setForeColor] = useState('#000000');
     const [insertLinkVisible, setInsertLinkVisible] = useState(false);
     const [insertImageVisible, setInsertImageVisible] = useState(false);
+    const [insertFormulaVisible, setInsertFormulaVisible] = useState(false);
 
     const [showDeadlineTimeAndroid, setShowDeadlineTimeAndroid] = useState(false);
     const [showDeadlineDateAndroid, setShowDeadlineDateAndroid] = useState(false);
@@ -248,6 +259,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [showTextEntryInput, setShowTextEntryInput] = useState(false);
     const [textEntryValue, setTextEntryValue] = useState('');
     const [textEntryInputType, setTextEntryInputType] = useState('default');
+
+    const [showEquationEditorInput, setShowEquationEditorInput] = useState(false);
+    const [equationEditorValue, setEquationEditorValue] = useState('');
+    const [resetEditEquationQuestionNumber, setResetEditEquationQuestionNumber] = useState(false);
+
+    const formulaWebviewRef: any = useRef(null);
 
     // ALERTS
     const unableToStartQuizAlert = PreferredLanguageText('unableToStartQuiz');
@@ -378,24 +395,25 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Load PDFTron Webviewer for submission
      */
     useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
+        if (!userId || !userFullName) return;
 
-            if (u) {
-                const parsedUser = JSON.parse(u);
-                if (submissionAttempts && submissionAttempts.length > 0) {
-                    const attempt = submissionAttempts[submissionAttempts.length - 1];
-                    let url = attempt.html !== undefined ? attempt.annotationPDF : attempt.url;
-                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(
-                        url
-                    )}&cueId=${props.cue._id}&userId=${parsedUser._id}&source=VIEW_SUBMISSION&name=${encodeURIComponent(
-                        parsedUser.fullName
-                    )}`;
-                    setSubmissionPdfviewerURL(pdfViewerURL);
-                }
-            }
-        })();
-    }, [viewSubmission, viewSubmissionTab, submissionAttempts, props.showOriginal, props.cue]);
+        if (submissionAttempts && submissionAttempts.length > 0) {
+            const attempt = submissionAttempts[submissionAttempts.length - 1];
+            let url = attempt.html !== undefined ? attempt.annotationPDF : attempt.url;
+            const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&cueId=${
+                props.cue._id
+            }&userId=${userId}&source=VIEW_SUBMISSION&name=${encodeURIComponent(userFullName)}`;
+            setSubmissionPdfviewerURL(pdfViewerURL);
+        }
+    }, [
+        viewSubmission,
+        viewSubmissionTab,
+        submissionAttempts,
+        props.showOriginal,
+        props.showOptions,
+        userId,
+        userFullName,
+    ]);
 
     /**
      * @description Used to detect ongoing quiz and
@@ -500,6 +518,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     const parseQuizResponses = JSON.parse(solutionsObject.quizResponses);
 
                                     setSolutions(parseQuizResponses.solutions);
+
+                                    setShuffleQuizAttemptOrder(
+                                        parseQuizResponses.shuffleQuizAttemptOrder !== undefined &&
+                                            res.data.quiz.getQuiz.shuffleQuiz
+                                            ? parseQuizResponses.shuffleQuizAttemptOrder
+                                            : []
+                                    );
 
                                     if (
                                         parseQuizResponses.initiatedAt !== undefined &&
@@ -666,6 +691,39 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     useEffect(() => {
         if (props.save) {
+            if (imported || isQuiz) {
+                if (title === '') {
+                    Alert('Title cannot be empty');
+                    props.setSave(false);
+                    return;
+                }
+            }
+
+            if (!imported && !isQuiz) {
+                const parse = htmlStringParser(original);
+
+                if (parse.title === 'NO_CONTENT' && !parse.subtitle) {
+                    Alert('Content cannot be empty.');
+                    props.setSave(false);
+                    return;
+                }
+            }
+
+            // Basic Validation For save details
+            if (submission && isOwner) {
+                if (initiateAt > deadline) {
+                    Alert('Deadline must be after available date');
+                    props.setSave(false);
+                    return;
+                }
+
+                if (allowLateSubmission && availableUntil < deadline) {
+                    Alert('Late Submission date must be after deadline');
+                    props.setSave(false);
+                    return;
+                }
+            }
+
             Alert('Save changes?', '', [
                 {
                     text: 'Cancel',
@@ -707,72 +765,62 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
     }, [props.del]);
 
-    /**
-     * @description Setup PDFTron Webviewer for Cue content
-     */
     useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
+        if (!userId || !userFullName) return;
 
-            if (u) {
-                const parsedUser = JSON.parse(u);
-
-                if (props.showOriginal) {
-                    if (url === '' || !url) {
-                        return;
-                    }
-
-                    if (
-                        type === 'mp4' ||
-                        type === 'oga' ||
-                        type === 'mov' ||
-                        type === 'wmv' ||
-                        type === 'mp3' ||
-                        type === 'mov' ||
-                        type === 'mpeg' ||
-                        type === 'mp2' ||
-                        type === 'wav'
-                    ) {
-                        return;
-                    }
-
-                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(
-                        url
-                    )}&cueId=${props.cue._id}&userId=${parsedUser._id}&source=${
-                        !props.channelId ? 'MY_NOTES' : 'UPDATE'
-                    }&name=${encodeURIComponent(parsedUser.fullName)}`;
-                    setOriginalPdfviewerURL(pdfViewerURL);
-                } else {
-                    if (submissionUrl === '' || !submissionUrl) {
-                        return;
-                    }
-
-                    if (
-                        submissionType === 'mp4' ||
-                        submissionType === 'oga' ||
-                        submissionType === 'mov' ||
-                        submissionType === 'wmv' ||
-                        submissionType === 'mp3' ||
-                        submissionType === 'mov' ||
-                        submissionType === 'mpeg' ||
-                        submissionType === 'mp2' ||
-                        submissionType === 'wav'
-                    ) {
-                        return;
-                    }
-
-                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${submissionUrl}&cueId=${
-                        props.cue._id
-                    }&userId=${parsedUser._id}&source=CREATE_SUBMISSION&name=${encodeURIComponent(
-                        parsedUser.fullName
-                    )}`;
-                    setOriginalPdfviewerURL(pdfViewerURL);
-                }
+        if (props.showOriginal) {
+            if (url === '' || !url) {
+                return;
             }
-        })();
+
+            if (
+                type === 'mp4' ||
+                type === 'oga' ||
+                type === 'mov' ||
+                type === 'wmv' ||
+                type === 'mp3' ||
+                type === 'mov' ||
+                type === 'mpeg' ||
+                type === 'mp2' ||
+                type === 'wav'
+            ) {
+                return;
+            }
+
+            const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&cueId=${
+                props.cue._id
+            }&userId=${userId}&source=${!props.channelId ? 'MY_NOTES' : 'UPDATE'}&name=${encodeURIComponent(
+                userFullName
+            )}`;
+            setOriginalPdfviewerURL(pdfViewerURL);
+        } else {
+            if (submissionUrl === '' || !submissionUrl) {
+                return;
+            }
+
+            if (viewSubmission) return;
+
+            if (
+                submissionType === 'mp4' ||
+                submissionType === 'oga' ||
+                submissionType === 'mov' ||
+                submissionType === 'wmv' ||
+                submissionType === 'mp3' ||
+                submissionType === 'mov' ||
+                submissionType === 'mpeg' ||
+                submissionType === 'mp2' ||
+                submissionType === 'wav'
+            ) {
+                return;
+            }
+
+            const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${submissionUrl}&cueId=${
+                props.cue._id
+            }&userId=${userId}&source=CREATE_SUBMISSION&name=${encodeURIComponent(userFullName)}`;
+            setOriginalPdfviewerURL(pdfViewerURL);
+        }
     }, [
         url,
-        RichText,
         imported,
         submissionImported,
         props.showOriginal,
@@ -780,8 +828,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         submissionUrl,
         type,
         submissionType,
-        props.cue,
-        props.channelId,
+        userId,
+        userFullName,
+        viewSubmission,
     ]);
 
     /**
@@ -818,6 +867,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         submissionImported,
         isQuiz,
         submissionDraft,
+        shuffleQuizAttemptOrder,
     ]);
 
     /**
@@ -1242,12 +1292,211 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 editorRef.current?.insertImage(url, 'width:300px');
 
                 editorRef.current?.insertHTML('<div><br/></div>');
+
+                setQuizOptionEditorIndex('');
             }
 
             setInsertImageVisible(false);
         },
         [RichText, RichText.current, quizEditorRef, userId, quizOptionEditorIndex]
     );
+
+    useEffect(() => {
+        props.setInsertFormulaVisible(showEquationEditorInput);
+    }, [showEquationEditorInput]);
+
+    const handleInsertFormula = useCallback(
+        (editorRef: any) => {
+            setEditorFocus(false);
+
+            if (editorRef) {
+                editorRef.current?.blurContentEditor();
+            } else {
+                RichText.current?.blurContentEditor();
+            }
+            props.setInsertFormulaVisible(true);
+            setInsertFormulaVisible(true);
+            setEmojiVisible(false);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, emojiVisible, Keyboard]
+    );
+
+    const handleInsertFormulaOptions = useCallback(
+        (optionIndex: any) => {
+            setEditorFocus(false);
+
+            const currRef: any = getRef(optionIndex);
+
+            if (currRef && currRef.current) {
+                currRef.current?.blurContentEditor();
+            }
+            props.setInsertFormulaVisible(true);
+            setInsertFormulaVisible(true);
+            setEmojiVisible(false);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            console.log('Option index', optionIndex);
+
+            setQuizOptionEditorIndex(optionIndex);
+        },
+        [RichText, RichText.current, emojiVisible, Keyboard]
+    );
+
+    const insertFormula = useCallback(
+        (state: any) => {
+            const url = state.url;
+
+            const splitURL = url.split('?');
+
+            if (splitURL.length > 0) {
+                const query = splitURL[1];
+
+                const params = query.split('&');
+
+                params.map((param: any) => {
+                    if (param.includes('equationImageURL')) {
+                        const parts = param.split('=');
+
+                        const imageURL = decodeURIComponent(parts[1]);
+
+                        setInsertFormulaVisible(false);
+                        props.setInsertFormulaVisible(false);
+
+                        let editorRef: any = {};
+
+                        console.log('Insert formula quizOptionEditorIndex', quizOptionEditorIndex);
+
+                        if (quizOptionEditorIndex) {
+                            editorRef = getRef(quizOptionEditorIndex);
+                        } else if (quizEditorRef && quizEditorRef.current) {
+                            editorRef = quizEditorRef;
+                        } else {
+                            editorRef = RichText;
+                        }
+
+                        editorRef.current?.focusContentEditor();
+
+                        editorRef.current?.insertHTML('<div><br/></div>');
+
+                        editorRef.current?.insertHTML(imageURL);
+
+                        editorRef.current?.insertHTML('<div><br/></div>');
+
+                        setQuizOptionEditorIndex('');
+                    }
+                });
+            }
+        },
+        [RichText, quizEditorRef, quizOptionEditorIndex]
+    );
+
+    const modifyEquation = useCallback((state: any) => {
+        const url = state.url;
+
+        const splitURL = url.split('?');
+
+        if (splitURL.length > 0) {
+            const query = splitURL[1];
+
+            const params = query.split('&');
+
+            params.map((param: any) => {
+                if (param.includes('equation')) {
+                    const parts = param.split('=');
+
+                    const equation = decodeURIComponent(parts[1]);
+
+                    setEquationEditorValue(equation);
+                }
+            });
+        }
+    }, []);
+
+    const renderFormulaEditor = () => {
+        return (
+            <View
+                style={{
+                    zIndex: 50000000,
+                    paddingTop: 15,
+                    width: '100%',
+                    height: '100%',
+                }}
+            >
+                <WebView
+                    source={{ uri: 'https://app.learnwithcues.com/equationEditor?showInsertButton=true' }}
+                    // onLoadEnd={() => this.hideSpinner()}
+                    // onMessage={onMessage.bind(this)}
+                    ref={formulaWebviewRef}
+                    startInLoadingState={true}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    onLoadProgress={({ nativeEvent }) => {
+                        console.log('nativeEvent', nativeEvent);
+                        //your code goes here
+                        insertFormula(nativeEvent);
+                    }}
+                    onNavigationStateChange={(state) => {
+                        console.log('State', state);
+
+                        insertFormula(state);
+
+                        //your code goes here
+                    }}
+                />
+            </View>
+        );
+    };
+
+    const renderEquationEditorInput = () => {
+        return (
+            <View
+                style={{
+                    zIndex: 50000000,
+                    paddingTop: 15,
+                    width: '100%',
+                    height: '100%',
+                }}
+            >
+                <WebView
+                    source={{
+                        uri:
+                            'https://app.learnwithcues.com/equationEditor?equation=' +
+                            (equationEditorValue !== '' ? encodeURIComponent(equationEditorValue) : ''),
+                    }}
+                    // onLoadEnd={() => this.hideSpinner()}
+                    // onMessage={onMessage.bind(this)}
+                    ref={formulaWebviewRef}
+                    startInLoadingState={true}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    onLoadProgress={({ nativeEvent }) => {
+                        console.log('nativeEvent', nativeEvent);
+                        //your code goes here
+                        modifyEquation(nativeEvent);
+                    }}
+                    onNavigationStateChange={(state) => {
+                        console.log('State', state);
+
+                        modifyEquation(state);
+
+                        //your code goes here
+                    }}
+                />
+            </View>
+            // null
+        );
+    };
 
     const handleInsertLink = useCallback(
         (editorRef: any) => {
@@ -1317,9 +1566,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 />
                 <TouchableOpacity
                     style={{
-                        width: 120,
-                        borderRadius: 15,
-                        backgroundColor: '#007AFF',
                         marginTop: 20,
                     }}
                     onPress={() => {
@@ -1329,17 +1575,19 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 >
                     <Text
                         style={{
+                            fontWeight: 'bold',
                             textAlign: 'center',
-                            lineHeight: 34,
-                            paddingHorizontal: 20,
+                            borderColor: '#000',
+                            borderWidth: 1,
+                            color: '#fff',
+                            backgroundColor: '#000',
+                            fontSize: 11,
+                            paddingHorizontal: 24,
                             fontFamily: 'inter',
-                            height: 35,
-                            color: 'white',
-                            // borderRadius: 15,
-                            // backgroundColor: '#007AFF',
-                            fontSize: 12,
-                            // width: 120,
+                            overflow: 'hidden',
+                            paddingVertical: 14,
                             textTransform: 'uppercase',
+                            width: 150,
                         }}
                     >
                         Done
@@ -1371,6 +1619,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         if (u) {
             const parsedUser = JSON.parse(u);
             setUserId(parsedUser._id);
+            setUserFullName(parsedUser.fullName);
         }
     }, []);
 
@@ -1392,35 +1641,30 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             return;
         }
 
-        const u = await AsyncStorage.getItem('user');
-        if (u) {
-            const user = JSON.parse(u);
-            const now = new Date();
-            const server = fetchAPI('');
-            const saveCue = JSON.stringify({
-                solutions,
-                initiatedAt: now,
-            });
-            server
-                .mutate({
-                    mutation: start,
-                    variables: {
-                        cueId: props.cue._id,
-                        userId: user._id,
-                        cue: saveCue,
-                    },
-                })
-                .then((res) => {
-                    if (res.data.quiz.start) {
-                        setInitiatedAt(now);
-                    }
-                })
-                .catch((err) => console.log(err));
-            // save time to cloud first
-            // after saving time in cloud, save it locally, set initiatedAt
-            // quiz gets triggered
-        }
-    }, [props.cue._id, solutions, deadline, availableUntil, allowLateSubmission]);
+        // const now = new Date();
+        const server = fetchAPI('');
+        // const saveCue = JSON.stringify({
+        //     solutions,
+        //     initiatedAt: now,
+        // });
+        server
+            .mutate({
+                mutation: startQuiz,
+                variables: {
+                    cueId: props.cue._id,
+                    userId,
+                },
+            })
+            .then((res) => {
+                if (res.data && res.data.quiz.start !== '') {
+                    setInitiatedAt(new Date(res.data.quiz.start));
+                }
+            })
+            .catch((err) => console.log(err));
+        // save time to cloud first
+        // after saving time in cloud, save it locally, set initiatedAt
+        // quiz gets triggered
+    }, [props.cue._id, deadline, availableUntil, allowLateSubmission, userId]);
 
     /**
      * @description Handle cue content for Submissions and Quiz responses
@@ -1464,6 +1708,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             quizObj.quizResponses = JSON.stringify({
                 solutions,
                 initiatedAt,
+                shuffleQuizAttemptOrder,
             });
 
             updatedCue = JSON.stringify(quizObj);
@@ -1532,6 +1777,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         isSubmitting,
         props.cue,
         userId,
+        shuffleQuizAttemptOrder,
     ]);
 
     /**
@@ -2056,6 +2302,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             const problem = problems[i];
             const solution = solutions[i];
 
+            let currentAttemptIndex = i;
+
+            if (shuffleQuiz) {
+                currentAttemptIndex = shuffleQuizAttemptOrder.findIndex((val: number) => {
+                    return val === i;
+                });
+            }
+
             if (
                 (!problem.questionType || problem.questionType === '' || problem.questionType === 'trueFalse') &&
                 problem.required
@@ -2072,7 +2326,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (!selectionMade) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'freeResponse' && problem.required) {
                 // Check completeness for free response
@@ -2080,7 +2334,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (response === '') {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'dragdrop' && problem.required) {
                 // Drag & Drop
@@ -2096,7 +2350,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (!atleaseOneResponse) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'hotspot' && problem.required) {
                 // Hotspot
@@ -2112,7 +2366,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (!atleaseOneResponse) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'highlightText' && problem.required) {
                 // Hot text
@@ -2128,7 +2382,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (!atleaseOneResponse) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'inlineChoice' && problem.required) {
                 // Inline choice
@@ -2144,7 +2398,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (missing) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'textEntry' && problem.required) {
                 // Text Entry
@@ -2160,7 +2414,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (missing) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'equationEditor' && problem.required) {
                 // Equation Editor
@@ -2168,7 +2422,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (equationResponse === '') {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'multipart' && problem.required) {
                 // Multipart
@@ -2194,7 +2448,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (missingResponse) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else if (problem.questionType === 'matchTableGrid' && problem.required) {
                 // Match Table grid
@@ -2220,12 +2474,16 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                 if (missingResponse) {
                     requiredMissing = true;
-                    requiredMissingQuestions.push(i + 1);
+                    requiredMissingQuestions.push(currentAttemptIndex + 1);
                 }
             } else {
                 // Optional
             }
         }
+
+        requiredMissingQuestions.sort((a: any, b: any) => {
+            return a > b ? 1 : -1;
+        });
 
         let missingString = '';
 
@@ -2267,6 +2525,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         solutions,
         deadline,
         submissionDraft,
+        shuffleQuiz,
+        shuffleQuizAttemptOrder,
     ]);
 
     /**
@@ -2536,6 +2796,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 onPress: async () => {
                     setLoadingAfterModifyingQuiz(true);
                     const server = fetchAPI('');
+
+                    console.log('Timer', timer);
 
                     // Update title as well
                     handleUpdateContent();
@@ -2956,10 +3218,13 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             ...prob,
                             points: prob.points.toString(),
                             options: sanitizeOptions,
+                            maxCharCount: prob.questionType === 'freeResponse' ? Number(prob.maxCharCount) : null,
                         };
                     });
 
                     const durationMinutes = duration.hours * 60 + duration.minutes + duration.seconds / 60;
+
+                    console.log('duration minutes', durationMinutes);
 
                     let variables = {
                         cueId: props.cue._id,
@@ -2976,27 +3241,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
                     const sanitizeWithoutTypename = omitDeep(variables, '__typename');
 
-                    console.log('SanitizeWithoutTypename', sanitizeWithoutTypename);
-
                     server
                         .mutate({
                             mutation: modifyQuiz,
-                            variables: {
-                                cueId: props.cue._id,
-                                quiz: {
-                                    instructions,
-                                    problems: sanitizeProblems,
-                                    headers: JSON.stringify(headers),
-                                    duration: timer ? durationMinutes.toString() : null,
-                                    shuffleQuiz,
-                                },
-                                modifiedCorrectAnswers: modifiedCorrectAnswerProblems.map((o: any) =>
-                                    o ? 'yes' : 'no'
-                                ),
-                                regradeChoices: regradeChoices.map((choice: string) =>
-                                    choice === '' ? 'none' : choice
-                                ),
-                            },
+                            variables: sanitizeWithoutTypename,
                         })
                         .then((res: any) => {
                             if (res.data && res.data.quiz.modifyQuiz) {
@@ -3112,7 +3360,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             marginTop: 5,
                                         }}
                                     >
-                                        <Ionicons size={22} name={'trash-outline'} color="#007AFF" />
+                                        <Ionicons size={22} name={'trash-outline'} color="#000" />
                                     </TouchableOpacity>
                                 ) : null}
 
@@ -3138,7 +3386,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         }}
                                         disabled={downloadOriginalInProgress}
                                     >
-                                        <Ionicons size={22} name={'cloud-download-outline'} color="#007AFF" />
+                                        <Ionicons size={22} name={'cloud-download-outline'} color="#000" />
                                     </TouchableOpacity>
                                 }
 
@@ -3164,7 +3412,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             paddingLeft: 20,
                                         }}
                                     >
-                                        <Ionicons size={22} name={'expand-outline'} color="#007AFF" />
+                                        <Ionicons size={22} name={'expand-outline'} color="#000" />
                                     </TouchableOpacity>
                                 ) : null}
                             </View>
@@ -3290,7 +3538,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#007AFF',
+                                borderColor: '#000',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(true);
@@ -3303,7 +3551,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -3335,7 +3583,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -3443,7 +3691,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#007AFF',
+                                borderColor: '#000',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(false);
@@ -3456,7 +3704,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -3488,7 +3736,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -3601,7 +3849,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#007AFF',
+                                borderColor: '#000',
                             }}
                             onPress={() => {
                                 setShowAvailableUntilDateAndroid(true);
@@ -3614,7 +3862,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -3646,7 +3894,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -3967,12 +4215,24 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     handleForeColorOptions={handleForeColorOptions}
                     handleEmojiOptions={handleEmojiOptions}
                     resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
+                    handleInsertFormula={handleInsertFormula}
+                    handleInsertFormulaOptions={handleInsertFormulaOptions}
                     // Handle Text entry inputs
                     showTextEntryInput={showTextEntryInput}
                     setShowTextEntryInput={() => setShowTextEntryInput(true)}
                     setTextEntryInputType={(inputType: string) => setTextEntryInputType(inputType)}
                     textEntryValue={textEntryValue}
                     setTextEntryValue={(value: string) => setTextEntryValue(value)}
+                    shuffleQuizAttemptOrder={shuffleQuizAttemptOrder}
+                    setShuffleQuizAttemptOrder={(order: any[]) => setShuffleQuizAttemptOrder(order)}
+                    //
+                    showEquationEditorInput={showEquationEditorInput}
+                    setShowEquationEditorInput={setShowEquationEditorInput}
+                    equationEditorValue={equationEditorValue}
+                    setEquationEditorValue={(value: string) => setEquationEditorValue(value)}
+                    resetEditEquationQuestionNumber={resetEditEquationQuestionNumber}
+                    setResetEditEquationQuestionNumber={setResetEditEquationQuestionNumber}
+                    user={props.user}
                 />
                 {renderSubmissionDraftStatus()}
                 {renderFooter()}
@@ -3985,28 +4245,27 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         onPress={() => initQuiz()}
                         style={{
                             backgroundColor: 'white',
-                            overflow: 'hidden',
-                            height: 35,
                             justifyContent: 'center',
                             flexDirection: 'row',
                             marginVertical: 50,
                         }}
+                        disabled={props.user.email === disableEmailId}
                     >
                         <Text
                             style={{
+                                fontWeight: 'bold',
                                 textAlign: 'center',
-                                lineHeight: 34,
-                                color: '#007AFF',
-                                borderColor: '#007AFF',
+                                borderColor: '#000',
                                 borderWidth: 1,
-                                fontSize: 12,
-                                backgroundColor: '#fff',
-                                paddingHorizontal: 20,
+                                color: '#fff',
+                                backgroundColor: '#000',
+                                fontSize: 11,
+                                paddingHorizontal: 24,
                                 fontFamily: 'inter',
-                                height: 35,
-                                width: 200,
-                                borderRadius: 15,
+                                overflow: 'hidden',
+                                paddingVertical: 14,
                                 textTransform: 'uppercase',
+                                width: 150,
                             }}
                         >
                             {PreferredLanguageText('startQuiz')}
@@ -4062,12 +4321,22 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         handleForeColorOptions={handleForeColorOptions}
                         handleEmojiOptions={handleEmojiOptions}
                         resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
+                        handleInsertFormula={handleInsertFormula}
+                        handleInsertFormulaOptions={handleInsertFormulaOptions}
                         // Handle Text entry
                         showTextEntryInput={showTextEntryInput}
                         setShowTextEntryInput={() => setShowTextEntryInput(true)}
                         setTextEntryInputType={(inputType: string) => setTextEntryInputType(inputType)}
                         textEntryValue={textEntryValue}
                         setTextEntryValue={(value: string) => setTextEntryValue(value)}
+                        shuffleQuizAttemptOrder={shuffleQuizAttemptOrder}
+                        setShuffleQuizAttemptOrder={(order: any[]) => setShuffleQuizAttemptOrder(order)}
+                        //
+                        showEquationEditorInput={showEquationEditorInput}
+                        setShowEquationEditorInput={setShowEquationEditorInput}
+                        equationEditorValue={equationEditorValue}
+                        setEquationEditorValue={(value: string) => setEquationEditorValue(value)}
+                        user={props.user}
                     />
                     {renderSubmissionDraftStatus()}
                     {renderFooter()}
@@ -4103,7 +4372,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     />
                 </View>
             ) : (
-                <View key={url + props.showOriginal.toString() + props.reloadViewerKey} style={{ minHeight: 550 }}>
+                <View
+                    key={url + props.showOriginal.toString() + props.reloadViewerKey}
+                    style={{ minHeight: Dimensions.get('window').width < 768 ? 500 : 800 }}
+                >
                     <WebView source={{ uri: originalPdfviewerURL }} />
                 </View>
             )
@@ -4145,18 +4417,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     marginTop: 5,
                                 }}
                             >
-                                {/* <Text
-                                    style={{
-                                        lineHeight: 34,
-                                        textTransform: 'uppercase',
-                                        fontSize: 12,
-                                        fontFamily: 'overpass',
-                                        color: '#007AFF'
-                                    }}
-                                >
-                                    Erase
-                                </Text> */}
-                                <Ionicons size={22} name={'trash-outline'} color="#007AFF" />
+                                <Ionicons size={22} name={'trash-outline'} color="#000" />
                             </TouchableOpacity>
                         )}
                         {submissionType !== 'mp4' &&
@@ -4178,7 +4439,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     paddingLeft: 20,
                                 }}
                             >
-                                <Ionicons size={22} name={'expand-outline'} color="#007AFF" />
+                                <Ionicons size={22} name={'expand-outline'} color="#000" />
                             </TouchableOpacity>
                         ) : null}
                     </View>
@@ -4199,18 +4460,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 marginTop: 5,
                             }}
                         >
-                            {/* <Text
-                                style={{
-                                    lineHeight: 34,
-                                    textTransform: 'uppercase',
-                                    fontSize: 12,
-                                    fontFamily: 'overpass',
-                                    color: '#007AFF'
-                                }}
-                            >
-                                Erase
-                            </Text> */}
-                            <Ionicons size={22} name={'trash-outline'} color="#007AFF" />
+                            <Ionicons size={22} name={'trash-outline'} color="#000" />
                         </TouchableOpacity>
                         {submissionType !== 'mp4' &&
                         submissionType !== 'oga' &&
@@ -4231,7 +4481,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     paddingLeft: 20,
                                 }}
                             >
-                                <Ionicons size={22} name={'expand-outline'} color="#007AFF" />
+                                <Ionicons size={22} name={'expand-outline'} color="#000" />
                             </TouchableOpacity>
                         ) : null}
                     </View>
@@ -4348,7 +4598,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 <ScrollView
                     contentContainerStyle={{
                         paddingBottom: 100,
-                        paddingHorizontal: 10,
+                        // paddingHorizontal: 10,
+                        height: Dimensions.get('window').height - (52 + 60),
                     }}
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={true}
@@ -4357,13 +4608,53 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     overScrollMode={'always'}
                     nestedScrollEnabled={true}
                 >
-                    <RenderHtml
+                    {/* <RenderHtml
                         source={{
                             html: initialOriginal,
                         }}
                         defaultTextProps={{
                             selectable: true,
                         }}
+                    /> */}
+                    <WebView
+                        style={{
+                            width: '100%',
+                            backgroundColor: '#fff',
+                            display: 'flex',
+                            flex: 1,
+                            height: '100%',
+                            minHeight: Dimensions.get('window').height - (52 + 60),
+                            borderColor: '#f2f2f2',
+                            borderBottomWidth: 1,
+                            fontFamily: 'overpass',
+                        }}
+                        // scalesPageToFit={false}
+                        source={{
+                            html: `<head>
+                                <meta content="width=width, initial-scale=1, maximum-scale=1" name="viewport"></meta>
+                                </head>
+                                <style>
+                                    @font-face {
+                                        font-family: 'Overpass';
+                                        src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf'); 
+                                    }
+                                    @font-face {
+                                        font-family: 'Inter';
+                                        src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Medium.otf'); 
+                                    }
+                                    html, body { font-family: Overpass; }
+                                </style>
+                                <body>${initialOriginal}</body>`,
+                        }}
+                        useWebKit={true}
+                        scrollEnabled={true}
+                        hideKeyboardAccessoryView={true}
+                        keyboardDisplayRequiresUserAction={false}
+                        nestedScrollEnabled={true}
+                        javaScriptEnabled={false}
+                        domStorageEnabled={false}
+                        startInLoadingState={false}
+                        // showsVerticalScrollIndicator={true}
                     />
                 </ScrollView>
             );
@@ -4401,6 +4692,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 actions.insertImage,
                                 actions.insertVideo,
                                 actions.insertLink,
+                                'insertFormula',
                                 actions.insertBulletsList,
                                 actions.insertOrderedList,
                                 actions.checkboxList,
@@ -4418,12 +4710,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 ),
                                 insertFile: importIcon,
                                 insertEmoji: emojiIcon,
+                                insertFormula: formulaIcon,
                             }}
                             insertEmoji={handleEmoji}
                             insertFile={handleUploadFile}
                             insertVideo={handleUploadAudioVideo}
                             onPressAddImage={handleAddImage}
                             onInsertLink={handleInsertLink}
+                            insertFormula={handleInsertFormula}
                         />
                         <ScrollView
                             horizontal={false}
@@ -4451,6 +4745,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 //     // borderRadius: 15,
                                 //     display: isQuiz || imported ? 'none' : 'flex'
                                 // }}
+                                initialFocus={false}
                                 ref={RichText}
                                 useContainer={true}
                                 style={{
@@ -4470,7 +4765,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     backgroundColor: '#fff',
                                     placeholderColor: '#a2a2ac',
                                     color: '#2f2f3c',
-                                    contentCSSText: 'font-size: 16px; min-height: 400px;',
+                                    cssText: customFontFamily,
+                                    initialCSSText: customFontFamily,
+                                    contentCSSText: 'font-size: 16px; min-height: 400px;font-family:Overpass;',
                                 }}
                                 initialContentHTML={original}
                                 initialHeight={400}
@@ -4742,7 +5039,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             }}
                                             disabled={downloadSubmissionInProgress}
                                         >
-                                            <Ionicons size={22} name={'cloud-download-outline'} color="#007AFF" />
+                                            <Ionicons size={22} name={'cloud-download-outline'} color="#000" />
                                         </TouchableOpacity>
                                     }
                                 </View>
@@ -4823,7 +5120,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             }}
                                             disabled={downloadSubmissionInProgress}
                                         >
-                                            <Ionicons size={22} name={'cloud-download-outline'} color="#007AFF" />
+                                            <Ionicons size={22} name={'cloud-download-outline'} color="#000" />
                                         </TouchableOpacity>
                                     }
 
@@ -4846,7 +5143,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                                 paddingLeft: 20,
                                             }}
                                         >
-                                            <Ionicons size={22} name={'expand-outline'} color="#007AFF" />
+                                            <Ionicons size={22} name={'expand-outline'} color="#000" />
                                         </TouchableOpacity>
                                     ) : null}
                                 </View>
@@ -4929,7 +5226,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         }}
                                         disabled={downloadSubmissionInProgress}
                                     >
-                                        <Ionicons size={22} name={'cloud-download-outline'} color="#007AFF" />
+                                        <Ionicons size={22} name={'cloud-download-outline'} color="#000" />
                                     </TouchableOpacity>
                                 }
 
@@ -4952,7 +5249,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             paddingLeft: 20,
                                         }}
                                     >
-                                        <Ionicons size={22} name={'expand-outline'} color="#007AFF" />
+                                        <Ionicons size={22} name={'expand-outline'} color="#000" />
                                     </TouchableOpacity>
                                 ) : null}
                             </View>
@@ -5016,6 +5313,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 actions.insertImage,
                                 actions.insertVideo,
                                 actions.insertLink,
+                                'insertFormula',
                                 actions.insertBulletsList,
                                 actions.insertOrderedList,
                                 actions.checkboxList,
@@ -5033,6 +5331,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 ),
                                 insertFile: importIcon,
                                 insertEmoji: emojiIcon,
+                                insertFormula: formulaIcon,
                             }}
                             insertEmoji={handleEmoji}
                             insertVideo={handleUploadFile}
@@ -5040,6 +5339,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             onPressAddImage={handleAddImage}
                             onInsertLink={handleInsertLink}
                             insertVideo={handleUploadAudioVideo}
+                            insertFormula={handleInsertFormula}
                         />
                         <ScrollView
                             horizontal={false}
@@ -5067,6 +5367,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 //     // borderRadius: 15,
                                 //     display: isQuiz || imported ? 'none' : 'flex'
                                 // }}
+                                initialFocus={false}
                                 ref={RichText}
                                 useContainer={true}
                                 style={{
@@ -5086,7 +5387,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     backgroundColor: '#fff',
                                     placeholderColor: '#a2a2ac',
                                     color: '#2f2f3c',
-                                    contentCSSText: 'font-size: 16px; min-height: 400px;',
+                                    cssText: customFontFamily,
+                                    initialCSSText: customFontFamily,
+                                    contentCSSText: 'font-size: 16px; min-height: 400px;font-family:Overpass;',
                                 }}
                                 initialContentHTML={initialSubmissionDraft}
                                 initialHeight={400}
@@ -5359,7 +5662,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         thumbColor={'#f4f4f6'}
                                         trackColor={{
                                             false: '#f4f4f6',
-                                            true: '#007AFF',
+                                            true: '#000',
                                         }}
                                         style={{
                                             transform: [
@@ -5383,6 +5686,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     width: '100%',
                                     height: isRestrictAccessDropdownOpen ? getDropdownHeight(subscribers.length) : 50,
+                                    paddingRight: 10,
                                 }}
                             >
                                 <DropDownPicker
@@ -5396,9 +5700,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         setSelected(val);
                                     }}
                                     style={{
-                                        borderWidth: 0,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: '#f2f2f2',
+                                        borderWidth: 1,
+                                        borderColor: '#ccc',
+                                        borderRadius: 0,
+                                        height: 45,
                                         // elevation: !showFrequencyDropdown ? 0 : 2
                                     }}
                                     dropDownContainerStyle={{
@@ -5415,7 +5720,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         shadowRadius: 12,
                                     }}
                                     textStyle={{
-                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                        fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         fontFamily: 'overpass',
                                     }}
                                 />
@@ -5482,7 +5787,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 thumbColor={'#f4f4f6'}
                                 trackColor={{
                                     false: '#f4f4f6',
-                                    true: '#007AFF',
+                                    true: '#000',
                                 }}
                                 style={{
                                     transform: [
@@ -5666,7 +5971,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     thumbColor={'#f4f4f6'}
                                     trackColor={{
                                         false: '#f4f4f6',
-                                        true: '#007AFF',
+                                        true: '#000',
                                     }}
                                     style={{
                                         transform: [
@@ -5784,7 +6089,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     thumbColor={'#f4f4f6'}
                                     trackColor={{
                                         false: '#f4f4f6',
-                                        true: '#007AFF',
+                                        true: '#000',
                                     }}
                                     style={{
                                         transform: [
@@ -5948,7 +6253,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 thumbColor={'#f4f4f6'}
                                 trackColor={{
                                     false: '#f4f4f6',
-                                    true: '#007AFF',
+                                    true: '#000',
                                 }}
                                 style={{
                                     transform: [
@@ -6073,6 +6378,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 width: '100%',
                                 // alignItems: 'center',
                                 backgroundColor: 'white',
+                                alignItems: 'center',
                             }}
                         >
                             <View
@@ -6080,6 +6386,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     backgroundColor: 'white',
                                     width: '90%',
                                     height: isCategoryDropdownOpen ? getDropdownHeight(categoryOptions.length) : 50,
+                                    paddingRight: 10,
                                 }}
                             >
                                 {addCustomCategory ? (
@@ -6088,8 +6395,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             value={customCategory}
                                             style={{
                                                 borderRadius: 0,
-                                                borderColor: '#f2f2f2',
-                                                borderBottomWidth: 1,
+                                                borderColor: '#ccc',
+                                                borderWidth: 1,
                                                 fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                 padding: 10,
                                                 paddingVertical: 15,
@@ -6111,9 +6418,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         setOpen={setIsCategoryDropdownOpen}
                                         setValue={setCustomCategory}
                                         style={{
-                                            borderWidth: 0,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: '#f2f2f2',
+                                            borderWidth: 1,
+                                            borderColor: '#ccc',
+                                            borderRadius: 0,
+                                            height: 45,
                                             // elevation: !showFrequencyDropdown ? 0 : 2
                                         }}
                                         dropDownContainerStyle={{
@@ -6130,7 +6438,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             shadowRadius: 12,
                                         }}
                                         textStyle={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             fontFamily: 'overpass',
                                         }}
                                     />
@@ -6140,7 +6448,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 style={{
                                     backgroundColor: 'white',
                                     marginLeft: 'auto',
-                                    paddingTop: 20,
                                     paddingRight: Dimensions.get('window').width < 768 ? 10 : 0,
                                 }}
                             >
@@ -6294,13 +6601,14 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     style={{
                         flexDirection: 'row',
                         width: '100%',
+                        alignItems: 'center',
                     }}
                 >
                     <View
                         style={{
                             height: isShareWithDropdownOpen ? getDropdownHeight(channelOptions.length) : 50,
                             width: '90%',
-                            marginBottom: 20,
+                            paddingRight: 10,
                         }}
                     >
                         <DropDownPicker
@@ -6316,9 +6624,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             setOpen={setIsShareWithDropdownOpen}
                             setValue={setShareWithChannelId}
                             style={{
-                                borderWidth: 0,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#f2f2f2',
+                                borderWidth: 1,
+                                borderColor: '#ccc',
+                                borderRadius: 0,
+                                height: 45,
                                 // elevation: !showFrequencyDropdown ? 0 : 2
                             }}
                             dropDownContainerStyle={{
@@ -6335,7 +6644,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 shadowRadius: 12,
                             }}
                             textStyle={{
-                                fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                 fontFamily: 'overpass',
                             }}
                         />
@@ -6343,8 +6652,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     <View
                         style={{
                             marginLeft: 'auto',
-                            paddingTop: 20,
-                            paddingRight: Dimensions.get('window').width < 768 ? 10 : 0,
+                            paddingRight: 10,
                         }}
                     >
                         <TouchableOpacity
@@ -6382,7 +6690,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 <Ionicons
                                     name={'share-outline'}
                                     size={18}
-                                    color={shareWithChannelId === 'None' ? '#000000' : '#007AFF'}
+                                    color={shareWithChannelId === 'None' ? '#797979' : '#000'}
                                 />
                             </Text>
                         </TouchableOpacity>
@@ -6444,7 +6752,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             thumbColor={'#f4f4f6'}
                             trackColor={{
                                 false: '#f4f4f6',
-                                true: '#007AFF',
+                                true: '#000',
                             }}
                             style={{
                                 transform: [
@@ -6490,7 +6798,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     thumbColor={'#f4f4f6'}
                                     trackColor={{
                                         false: '#f4f4f6',
-                                        true: '#007AFF',
+                                        true: '#000',
                                     }}
                                     style={{
                                         transform: [
@@ -6558,9 +6866,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         setOpen={setIsFrequencyDropdownOpen}
                                         setValue={setFrequency}
                                         style={{
-                                            borderWidth: 0,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: '#f2f2f2',
+                                            borderWidth: 1,
+                                            borderColor: '#ccc',
+                                            borderRadius: 0,
+                                            height: 45,
                                             // elevation: !showFrequencyDropdown ? 0 : 2
                                         }}
                                         dropDownContainerStyle={{
@@ -6577,7 +6886,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                             shadowRadius: 12,
                                         }}
                                         textStyle={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                             fontFamily: 'overpass',
                                         }}
                                     />
@@ -6719,7 +7028,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     thumbColor={'#f4f4f6'}
                                     trackColor={{
                                         false: '#f4f4f6',
-                                        true: '#007AFF',
+                                        true: '#000',
                                     }}
                                     style={{
                                         transform: [
@@ -6871,25 +7180,27 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 (isQuiz && isQuizTimed && !initiatedAt) ||
                                 // If no more remaining attempts for quiz
                                 (isQuiz && remainingAttempts === 0) ||
-                                isSubmitting
+                                isSubmitting ||
+                                props.user.email === disableEmailId
                             }
                             onPress={() => handleSubmit()}
                             style={{ borderRadius: 15, backfaceVisibility: 'hidden' }}
                         >
                             <Text
                                 style={{
+                                    fontWeight: 'bold',
                                     textAlign: 'center',
-                                    lineHeight: 34,
-                                    color: 'white',
-                                    fontSize: 12,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 15,
-                                    paddingHorizontal: 20,
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    color: '#fff',
+                                    backgroundColor: '#000',
+                                    fontSize: 11,
+                                    paddingHorizontal: 24,
                                     fontFamily: 'inter',
                                     overflow: 'hidden',
-                                    height: 35,
+                                    paddingVertical: 14,
                                     textTransform: 'uppercase',
-                                    backfaceVisibility: 'hidden',
+                                    width: 150,
                                 }}
                             >
                                 {(!allowLateSubmission && new Date() > deadline) ||
@@ -6939,7 +7250,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             <ScrollView
                 contentContainerStyle={{
                     paddingBottom: 100,
-                    paddingHorizontal: 10,
+                    paddingHorizontal: paddingResponsive(),
                 }}
                 showsVerticalScrollIndicator={true}
                 indicatorStyle="black"
@@ -7012,7 +7323,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         height: 22,
                                         paddingHorizontal: 10,
                                         borderRadius: 15,
-                                        backgroundColor: '#007AFF',
+                                        backgroundColor: '#000',
                                         lineHeight: 20,
                                         paddingTop: 1,
                                         marginBottom: 5,
@@ -7092,6 +7403,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         handleHiliteColor={handleHiliteColor}
                                         handleForeColor={handleForeColor}
                                         handleEmoji={handleEmoji}
+                                        user={props.user}
                                     />
                                 ) : (remainingAttempts === 0 ||
                                       props.cue.releaseSubmission ||
@@ -7200,6 +7512,71 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     header={false}
                 />
             )}
+            {insertFormulaVisible && (
+                <BottomSheet
+                    snapPoints={[
+                        0,
+                        Dimensions.get('window').height -
+                            (Dimensions.get('window').width < 768 ? (Platform.OS === 'ios' ? 70 : 30) : 40),
+                    ]}
+                    close={() => {
+                        setInsertFormulaVisible(false);
+                        props.setInsertFormulaVisible(false);
+                    }}
+                    isOpen={insertFormulaVisible}
+                    title={'Insert Formula'}
+                    renderContent={() => renderFormulaEditor()}
+                    header={true}
+                    callbackNode={fall}
+                />
+            )}
+            {showEquationEditorInput && (
+                <BottomSheet
+                    snapPoints={[
+                        0,
+                        Dimensions.get('window').height -
+                            (Dimensions.get('window').width < 768 ? (Platform.OS === 'ios' ? 70 : 0) : 40),
+                    ]}
+                    close={() => {
+                        setResetEditEquationQuestionNumber(true);
+                        setShowEquationEditorInput(false);
+                        props.setInsertFormulaVisible(false);
+                    }}
+                    isOpen={showEquationEditorInput}
+                    title={'Equation Editor'}
+                    renderContent={() => renderEquationEditorInput()}
+                    header={true}
+                    callbackNode={fall}
+                />
+            )}
+            {insertFormulaVisible || showEquationEditorInput ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: animatedShadowOpacity,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute',
+                    }}
+                >
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
+                        onPress={() => {
+                            setResetEditEquationQuestionNumber(true);
+                            setInsertFormulaVisible(false);
+                            setShowEquationEditorInput(false);
+                            props.setInsertFormulaVisible(false);
+                        }}
+                    ></TouchableOpacity>
+                </Reanimated.View>
+            ) : null}
             {insertImageVisible && (
                 <BottomSheet
                     snapPoints={[0, isQuiz ? 250 : 200]}
@@ -7212,24 +7589,33 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         <View style={{ paddingHorizontal: 10, zIndex: 10000 }}>
                             <TouchableOpacity
                                 style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 19,
-                                    width: 150,
+                                    marginTop: 10,
                                     alignSelf: 'center',
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: '#000',
+                                    paddingHorizontal: 24,
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    width: 150,
                                 }}
                                 onPress={() => {
                                     uploadImageHandler(true);
                                 }}
                             >
+                                <Ionicons name="camera-outline" size={16} color={'#fff'} />
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
                                         color: '#fff',
+                                        fontSize: 11,
+                                        fontFamily: 'inter',
+                                        textTransform: 'uppercase',
+                                        paddingLeft: 4,
                                     }}
                                 >
                                     {' '}
@@ -7238,24 +7624,33 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 19,
-                                    width: 150,
+                                    marginTop: 15,
                                     alignSelf: 'center',
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: '#000',
+                                    paddingHorizontal: 24,
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    width: 150,
                                 }}
                                 onPress={() => {
                                     uploadImageHandler(false);
                                 }}
                             >
+                                <Ionicons name="image-outline" size={16} color={'#fff'} />
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
                                         color: '#fff',
+                                        fontSize: 11,
+                                        fontFamily: 'inter',
+                                        textTransform: 'uppercase',
+                                        paddingLeft: 4,
                                     }}
                                 >
                                     {' '}
@@ -7315,7 +7710,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         fontFamily: 'inter',
                                         height: 35,
                                         lineHeight: 34,
-                                        color: '#007AFF',
+                                        color: '#000',
                                     }}
                                 >
                                     {' '}
@@ -7363,7 +7758,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         fontFamily: 'inter',
                                         height: 35,
                                         lineHeight: 34,
-                                        color: '#007AFF',
+                                        color: '#000',
                                     }}
                                 >
                                     {' '}

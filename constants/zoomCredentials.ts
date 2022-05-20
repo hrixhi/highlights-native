@@ -7,3 +7,5 @@ export const origin = 'https://app.learnwithcues.com';
 // export const zoomClientId = 'PAfnxrFcSd2HkGnn9Yq96A';
 // export const zoomRedirectUri = 'http://localhost:19006/zoom_auth';
 // export const origin = 'http://localhost:19006';
+
+export const disableEmailId = 'instructor@learnwithcues.com';

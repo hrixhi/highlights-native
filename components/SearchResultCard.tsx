@@ -8,6 +8,7 @@ import Alert from './Alert';
 
 // COMPONENTS
 import { Text, View, TouchableOpacity } from '../components/Themed';
+import { disableEmailId } from '../constants/zoomCredentials';
 
 const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const colorScheme = 'dark';
@@ -126,9 +127,10 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                                         ]);
                                     }}
                                     style={{ marginTop: 1 }}
+                                    disabled={props.user.email === disableEmailId}
                                 >
                                     <Text style={{}}>
-                                        <Ionicons name="enter-outline" size={24} color="#007AFF" />
+                                        <Ionicons name="enter-outline" size={24} color="#000" />
                                     </Text>
                                 </TouchableOpacity>
                             </View>

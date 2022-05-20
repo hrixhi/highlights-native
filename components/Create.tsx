@@ -55,11 +55,22 @@ import ColorPicker from './ColorPicker';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
+const formulaIcon = require('../assets/images/formulaIcon3.png');
+
+// const formulaIcon =
+//     'M12.4817 3.82717C11.3693 3.00322 9.78596 3.7358 9.69388 5.11699L9.53501 7.50001H12.25C12.6642 7.50001 13 7.8358 13 8.25001C13 8.66423 12.6642 9.00001 12.25 9.00001H9.43501L8.83462 18.0059C8.6556 20.6912 5.47707 22.0078 3.45168 20.2355L3.25613 20.0644C2.9444 19.7917 2.91282 19.3179 3.18558 19.0061C3.45834 18.6944 3.93216 18.6628 4.24389 18.9356L4.43943 19.1067C5.53003 20.061 7.24154 19.352 7.33794 17.9061L7.93168 9.00001H5.75001C5.3358 9.00001 5.00001 8.66423 5.00001 8.25001C5.00001 7.8358 5.3358 7.50001 5.75001 7.50001H8.03168L8.1972 5.01721C8.3682 2.45214 11.3087 1.09164 13.3745 2.62184L13.7464 2.89734C14.0793 3.1439 14.1492 3.61359 13.9027 3.94643C13.6561 4.27928 13.1864 4.34923 12.8536 4.10268L12.4817 3.82717Z"/><path d="M13.7121 12.7634C13.4879 12.3373 12.9259 12.2299 12.5604 12.5432L12.2381 12.8194C11.9236 13.089 11.4501 13.0526 11.1806 12.7381C10.911 12.4236 10.9474 11.9501 11.2619 11.6806L11.5842 11.4043C12.6809 10.4643 14.3668 10.7865 15.0395 12.0647L16.0171 13.9222L18.7197 11.2197C19.0126 10.9268 19.4874 10.9268 19.7803 11.2197C20.0732 11.5126 20.0732 11.9874 19.7803 12.2803L16.7486 15.312L18.2879 18.2366C18.5121 18.6627 19.0741 18.7701 19.4397 18.4568L19.7619 18.1806C20.0764 17.911 20.5499 17.9474 20.8195 18.2619C21.089 18.5764 21.0526 19.0499 20.7381 19.3194L20.4159 19.5957C19.3191 20.5357 17.6333 20.2135 16.9605 18.9353L15.6381 16.4226L12.2803 19.7803C11.9875 20.0732 11.5126 20.0732 11.2197 19.7803C10.9268 19.4874 10.9268 19.0126 11.2197 18.7197L14.9066 15.0328L13.7121 12.7634Z';
 
 import Reanimated from 'react-native-reanimated';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import useDynamicRefs from 'use-dynamic-refs';
 import { useOrientation } from '../hooks/useOrientation';
+import { paddingResponsive } from '../helpers/paddingHelper';
+import { disableEmailId } from '../constants/zoomCredentials';
+
+const customFontFamily = `@font-face {
+    font-family: 'Overpass';
+    src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf'); 
+}`;
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const current = new Date();
@@ -77,8 +88,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [channels, setChannels] = useState<any[]>([]);
     const [channelOptions, setChannelOptions] = useState<any[]>([]);
     const [showOptions, setShowOptions] = useState(false);
-    const [channelId, setChannelId] = useState<any>('');
-    const [selectedChannel, setSelectedChannel] = useState<any>('My Notes');
+    const [channelId, setChannelId] = useState<any>(props.channelId);
+    const [selectedChannel, setSelectedChannel] = useState<any>(
+        props.channelId && props.channelId !== '' ? props.channelId : 'My Notes'
+    );
     const [endPlayAt, setEndPlayAt] = useState(new Date(current.getTime() + 1000 * 60 * 60));
     const [playChannelCueIndef, setPlayChannelCueIndef] = useState(true);
     const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#35AC78'].reverse();
@@ -171,6 +184,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [foreColor, setForeColor] = useState('#000000');
     const [insertLinkVisible, setInsertLinkVisible] = useState(false);
     const [insertImageVisible, setInsertImageVisible] = useState(false);
+    const [insertFormulaVisible, setInsertFormulaVisible] = useState(false);
     const [quizEditorRef, setQuizEditorRef] = useState<any>(null);
     const videoRef: any = useRef();
     const scrollViewRef: any = useRef();
@@ -178,6 +192,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [quizOptionEditorIndex, setQuizOptionEditorIndex] = useState('');
 
     const orientation = useOrientation();
+
+    const formulaWebviewRef: any = useRef(null);
 
     let testEditorRef: any = {};
 
@@ -222,6 +238,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     useEffect(() => {
         if (props.showImportCreate) {
             handleUploadFile();
+            setInsertFormulaVisible(false);
             props.setShowImportCreate(false);
         }
     }, [props.showImportCreate]);
@@ -235,10 +252,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         setShowBooks(false);
 
         if (props.createActiveTab === 'Quiz') {
+            setInsertFormulaVisible(false);
             setIsQuiz(true);
             setSubmission(true);
         } else if (props.createActiveTab === 'Library') {
             setShowBooks(true);
+            setInsertFormulaVisible(false);
         } else if (props.createActiveTab === 'Content') {
         }
     }, [props.createActiveTab]);
@@ -281,9 +300,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * @description Loads webviewer for Imports
      */
     useEffect(() => {
-        if (url === '' || !url) {
-            return;
-        }
+        if (showBooks || showOptions || !url || isQuiz) return;
 
         if (
             type === 'mp4' ||
@@ -299,22 +316,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             return;
         }
 
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
+        const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&source=CREATE`;
 
-            if (u) {
-                const parsedUser = JSON.parse(u);
-
-                const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(
-                    url
-                )}&source=CREATE&name=${encodeURIComponent(parsedUser.fullName)}`;
-
-                setCreatePdfviewerURL(pdfViewerURL);
-
-                console.log('pdfViewerURL', pdfViewerURL);
-            }
-        })();
-    }, [url, RichText, imported, type, showOptions]);
+        setCreatePdfviewerURL(pdfViewerURL);
+    }, [url, imported, type, showOptions, showBooks, isQuiz]);
 
     /**
      * @description Sets user role
@@ -357,22 +362,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         if (!init) {
             return;
         }
-        console.log('Cue', cue);
-        let saveCue = '';
-        if (imported) {
-            const obj = {
-                type,
-                url,
-                title,
-            };
-            saveCue = JSON.stringify(obj);
-        } else if (isQuiz) {
+
+        if (isQuiz) {
             // Loop over entire quiz and save only the questions which are valid
             console.log('problems to store', problems);
             const validProblems = problems.filter((prob: any) => isCurrentQuestionValid(prob));
 
             const quiz = {
-                title,
+                title: quizTitle,
                 problems: validProblems,
                 timer,
                 duration,
@@ -385,6 +382,19 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             console.log('Store quizDraft', saveQuiz);
 
             storeDraft('quizDraft', saveQuiz);
+
+            return;
+        }
+
+        console.log('Cue', cue);
+        let saveCue = '';
+        if (imported) {
+            const obj = {
+                type,
+                url,
+                title,
+            };
+            saveCue = JSON.stringify(obj);
         } else {
             saveCue = cue;
         }
@@ -395,7 +405,21 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         } else {
             storeDraft('cueDraft', '');
         }
-    }, [cue, init, type, imported, url, title, problems, timer, duration, headers, quizInstructions]);
+    }, [
+        cue,
+        init,
+        type,
+        imported,
+        url,
+        title,
+        problems,
+        timer,
+        duration,
+        headers,
+        quizInstructions,
+        quizTitle,
+        isQuiz,
+    ]);
 
     console.log('Problems', problems);
     /**
@@ -442,9 +466,89 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         }).start();
     }, []);
 
-    console.log('create option', props.createOption);
+    const insertFormula = useCallback(
+        (state: any) => {
+            const url = state.url;
 
-    console.log('Is quiz', isQuiz);
+            console.log('URL', url);
+
+            const splitURL = url.split('?');
+
+            if (splitURL.length > 0) {
+                const query = splitURL[1];
+
+                const params = query.split('&');
+
+                console.log('Params', params);
+
+                params.map((param: any) => {
+                    if (param.includes('equationImageURL')) {
+                        const parts = param.split('=');
+
+                        const imageURL = decodeURIComponent(parts[1]);
+
+                        setInsertFormulaVisible(false);
+
+                        let editorRef: any = {};
+
+                        console.log('Insert formula quizOptionEditorIndex', quizOptionEditorIndex);
+
+                        if (quizOptionEditorIndex) {
+                            editorRef = getRef(quizOptionEditorIndex);
+                        } else if (quizEditorRef && quizEditorRef.current) {
+                            editorRef = quizEditorRef;
+                        } else {
+                            editorRef = RichText;
+                        }
+
+                        editorRef.current?.focusContentEditor();
+
+                        editorRef.current?.insertHTML('<div><br/></div>');
+
+                        editorRef.current?.insertHTML(imageURL);
+
+                        editorRef.current?.insertHTML('<div><br/></div>');
+
+                        setQuizOptionEditorIndex('');
+                    }
+                });
+            }
+        },
+        [RichText, quizEditorRef, quizOptionEditorIndex]
+    );
+
+    const renderFormulaEditor = () => {
+        return (
+            <View
+                style={{
+                    zIndex: 50000000,
+                    paddingTop: 15,
+                    width: '100%',
+                    height: '100%',
+                }}
+            >
+                <WebView
+                    source={{ uri: 'https://app.learnwithcues.com/equationEditor?showInsertButton=true' }}
+                    ref={formulaWebviewRef}
+                    startInLoadingState={true}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    onLoadProgress={({ nativeEvent }) => {
+                        console.log('nativeEvent', nativeEvent);
+                        //your code goes here
+                        insertFormula(nativeEvent);
+                    }}
+                    onNavigationStateChange={(state) => {
+                        console.log('State', state);
+
+                        insertFormula(state);
+
+                        //your code goes here
+                    }}
+                />
+            </View>
+        );
+    };
 
     useEffect(() => {
         if (selectedChannel === 'My Notes') {
@@ -1035,14 +1139,44 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             return;
         }
 
+        const sanitizeProblems = problems.map((problem: any) => {
+            if (problem.questionType === 'freeResponse') {
+                let updateProblem = {
+                    ...problem,
+                };
+
+                updateProblem.maxCharCount = Number(problem.maxCharCount);
+
+                return updateProblem;
+            } else {
+                // Make max Char count null since it is expected as a float
+                let updateProblem = {
+                    ...problem,
+                };
+
+                updateProblem.maxCharCount = null;
+
+                return updateProblem;
+            }
+        });
+
         const server = fetchAPI('');
         const durationMinutes = duration.hours * 60 + duration.minutes + duration.seconds / 60;
+
+        console.log('Create Quiz', {
+            problems: sanitizeProblems,
+            duration: timer ? durationMinutes.toString() : null,
+            shuffleQuiz,
+            instructions: quizInstructions,
+            headers: JSON.stringify(headers),
+        });
+
         server
             .mutate({
                 mutation: createQuiz,
                 variables: {
                     quiz: {
-                        problems,
+                        problems: sanitizeProblems,
                         duration: timer ? durationMinutes.toString() : null,
                         shuffleQuiz,
                         instructions: quizInstructions,
@@ -1061,6 +1195,21 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             })
             .catch((e) => {
                 console.log('Error', e);
+                console.error(e.name + ': ' + e.message);
+
+                if (e.response) {
+                    // Request made and server responded
+                    console.log(e.response.data);
+                    console.log(e.response.status);
+                    console.log(e.response.headers);
+                } else if (e.request) {
+                    // The request was made but no response was received
+                    console.log(e.request);
+                } else {
+                    // Something happened in setting up the request that triggered an e
+                    console.log('error', e.message);
+                }
+
                 setCreatingQuiz(false);
             });
     }, [
@@ -1194,6 +1343,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             if (quizOptionEditorIndex) {
                 const currRef: any = getRef(quizOptionEditorIndex);
                 currRef.current?.insertText(emoji);
+                setQuizOptionEditorIndex('');
             } else if (quizEditorRef) {
                 quizEditorRef.current?.insertText(emoji);
             } else {
@@ -1218,6 +1368,55 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             }
         },
         [RichText, RichText.current, emojiVisible]
+    );
+
+    const handleInsertFormula = useCallback(
+        (editorRef: any) => {
+            setEditorFocus(false);
+
+            if (editorRef) {
+                editorRef.current?.blurContentEditor();
+            } else {
+                RichText.current?.blurContentEditor();
+            }
+            setInsertFormulaVisible(true);
+            setEmojiVisible(false);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            if (editorRef) {
+                setQuizEditorRef(editorRef);
+            }
+        },
+        [RichText, RichText.current, emojiVisible, Keyboard]
+    );
+
+    console.log('quiz Option index', quizOptionEditorIndex);
+
+    const handleInsertFormulaOptions = useCallback(
+        (optionIndex: any) => {
+            setEditorFocus(false);
+
+            const currRef: any = getRef(optionIndex);
+
+            if (currRef && currRef.current) {
+                currRef.current?.blurContentEditor();
+            }
+
+            setInsertFormulaVisible(true);
+            setEmojiVisible(false);
+            setForeColorVisible(false);
+            setHiliteColorVisible(false);
+            setInsertImageVisible(false);
+            setInsertLinkVisible(false);
+
+            console.log('Option index', optionIndex);
+
+            setQuizOptionEditorIndex(optionIndex);
+        },
+        [RichText, RichText.current, emojiVisible, Keyboard]
     );
 
     const handleEmojiOptions = useCallback(
@@ -1356,6 +1555,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 editorRef.current?.insertImage(url, 'width:300px');
 
                 editorRef.current?.insertHTML('<div><br/></div>');
+
+                setQuizOptionEditorIndex('');
             }
 
             setInsertImageVisible(false);
@@ -1842,7 +2043,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#007AFF',
+                                borderColor: '#000',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(true);
@@ -1855,7 +2056,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -1887,7 +2088,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -1992,7 +2193,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#007AFF',
+                                borderColor: '#000',
                             }}
                             onPress={() => {
                                 setShowInitiateAtDateAndroid(false);
@@ -2005,7 +2206,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -2037,7 +2238,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -2158,7 +2359,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 marginBottom: 10,
                                 justifyContent: 'center',
                                 flexDirection: 'row',
-                                borderColor: '#007AFF',
+                                borderColor: '#000',
                             }}
                             onPress={() => {
                                 setShowAvailableUntilDateAndroid(true);
@@ -2171,7 +2372,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -2203,7 +2404,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 style={{
                                     textAlign: 'center',
                                     lineHeight: 30,
-                                    color: '#007AFF',
+                                    color: '#000',
                                     overflow: 'hidden',
                                     fontSize: 12,
                                     fontFamily: 'inter',
@@ -2278,7 +2479,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         opacity: modalAnimation,
                         // maxWidth: 1024,
                         paddingVertical: 10,
-                        paddingHorizontal: 15,
+                        paddingHorizontal: paddingResponsive(),
                         display: editorFocus && !isQuiz ? 'none' : 'flex',
                         zIndex: 500000,
                     }}
@@ -2298,7 +2499,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 // marginRight: 20
                                 position: 'absolute',
                                 left: 0,
-                                paddingLeft: 10,
+                                // paddingLeft: 10,
                             }}
                             onPress={() => {
                                 if (showOptions) {
@@ -2357,18 +2558,18 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 >
                                     <Text
                                         style={{
+                                            fontWeight: 'bold',
                                             textAlign: 'center',
-                                            lineHeight: 34,
-                                            color: 'white',
-                                            fontSize: 12,
-                                            backgroundColor: '#007AFF',
-                                            borderRadius: 17,
-                                            paddingHorizontal: 20,
+                                            borderColor: '#000',
+                                            borderWidth: 1,
+                                            color: '#fff',
+                                            backgroundColor: '#000',
+                                            fontSize: 11,
+                                            paddingHorizontal: 24,
                                             fontFamily: 'inter',
                                             overflow: 'hidden',
-                                            height: 35,
+                                            paddingVertical: 14,
                                             textTransform: 'uppercase',
-                                            marginRight: 5,
                                         }}
                                     >
                                         NEXT
@@ -2387,7 +2588,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     <ScrollView
                         nestedScrollEnabled={true}
                         ref={scrollViewRef}
-                        style={{ flexDirection: 'column', paddingHorizontal: 20 }}
+                        style={{ flexDirection: 'column', paddingHorizontal: paddingResponsive() }}
                         indicatorStyle="black"
                     >
                         {showOptions ? (
@@ -2459,9 +2660,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         setOpen={setIsChannelDropdownOpen}
                                                         setValue={setSelectedChannel}
                                                         style={{
-                                                            borderWidth: 0,
-                                                            borderBottomWidth: 1,
-                                                            borderBottomColor: '#f2f2f2',
+                                                            borderWidth: 1,
+                                                            borderColor: '#ccc',
+                                                            borderRadius: 0,
+                                                            height: 45,
                                                             // elevation: !showFrequencyDropdown ? 0 : 2
                                                         }}
                                                         dropDownContainerStyle={{
@@ -2478,7 +2680,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             shadowRadius: 12,
                                                         }}
                                                         textStyle={{
-                                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 15,
+                                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                                             fontFamily: 'overpass',
                                                         }}
                                                     />
@@ -2530,7 +2732,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             thumbColor={'#f4f4f6'}
                                                             trackColor={{
                                                                 false: '#f4f4f6',
-                                                                true: '#007AFF',
+                                                                true: '#000',
                                                             }}
                                                             style={{
                                                                 transform: [
@@ -2571,9 +2773,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     setOpen={setIsUsersDropdownOpen}
                                                                     setValue={setSelected}
                                                                     style={{
-                                                                        borderWidth: 0,
-                                                                        borderBottomWidth: 1,
-                                                                        borderBottomColor: '#f2f2f2',
+                                                                        borderWidth: 1,
+                                                                        borderColor: '#ccc',
+                                                                        borderRadius: 0,
+                                                                        height: 45,
                                                                         // elevation: !showFrequencyDropdown ? 0 : 2
                                                                     }}
                                                                     dropDownContainerStyle={{
@@ -2593,7 +2796,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                         fontSize:
                                                                             Dimensions.get('window').width < 768
                                                                                 ? 14
-                                                                                : 15,
+                                                                                : 16,
                                                                         fontFamily: 'overpass',
                                                                     }}
                                                                 />
@@ -2649,7 +2852,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             thumbColor={'#f4f4f6'}
                                                             trackColor={{
                                                                 false: '#f4f4f6',
-                                                                true: '#007AFF',
+                                                                true: '#000',
                                                             }}
                                                             style={{
                                                                 transform: [
@@ -2767,7 +2970,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 thumbColor={'#f4f4f6'}
                                                                 trackColor={{
                                                                     false: '#f4f4f6',
-                                                                    true: '#007AFF',
+                                                                    true: '#000',
                                                                 }}
                                                                 style={{
                                                                     transform: [
@@ -2867,7 +3070,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 thumbColor={'#f4f4f6'}
                                                                 trackColor={{
                                                                     false: '#f4f4f6',
-                                                                    true: '#007AFF',
+                                                                    true: '#000',
                                                                 }}
                                                                 style={{
                                                                     transform: [
@@ -2990,7 +3193,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             thumbColor={'#f4f4f6'}
                                                             trackColor={{
                                                                 false: '#f4f4f6',
-                                                                true: '#007AFF',
+                                                                true: '#000',
                                                             }}
                                                             style={{
                                                                 transform: [
@@ -3098,8 +3301,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 value={customCategory}
                                                                 style={{
                                                                     borderRadius: 0,
-                                                                    borderColor: '#f2f2f2',
-                                                                    borderBottomWidth: 1,
+                                                                    borderColor: '#ccc',
+                                                                    borderWidth: 1,
                                                                     fontSize: width < 768 ? 14 : 16,
                                                                     padding: 10,
                                                                     paddingVertical: 15,
@@ -3131,9 +3334,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 setOpen={setIsCategoryDropdownOpen}
                                                                 setValue={setCustomCategory}
                                                                 style={{
-                                                                    borderWidth: 0,
-                                                                    borderBottomWidth: 1,
-                                                                    borderBottomColor: '#f2f2f2',
+                                                                    borderWidth: 1,
+                                                                    borderColor: '#ccc',
+                                                                    borderRadius: 0,
+                                                                    height: 45,
                                                                     // elevation: !showFrequencyDropdown ? 0 : 2
                                                                 }}
                                                                 dropDownContainerStyle={{
@@ -3151,7 +3355,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 }}
                                                                 textStyle={{
                                                                     fontSize:
-                                                                        Dimensions.get('window').width < 768 ? 14 : 15,
+                                                                        Dimensions.get('window').width < 768 ? 14 : 16,
                                                                     fontFamily: 'overpass',
                                                                 }}
                                                             />
@@ -3607,7 +3811,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     thumbColor={'#f4f4f6'}
                                                     trackColor={{
                                                         false: '#f4f4f6',
-                                                        true: '#007AFF',
+                                                        true: '#000',
                                                     }}
                                                     style={{
                                                         transform: [
@@ -3785,7 +3989,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                     thumbColor={'#f4f4f6'}
                                                     trackColor={{
                                                         false: '#f4f4f6',
-                                                        true: '#007AFF',
+                                                        true: '#000',
                                                     }}
                                                     style={{
                                                         transform: [
@@ -3809,7 +4013,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                             borderColor: '#f2f2f2',
                                             flexDirection: 'row',
                                             alignItems: 'center',
-                                            paddingHorizontal: 10,
+                                            // paddingHorizontal: 10,
                                             justifyContent: orientation === 'LANDSCAPE' ? 'center' : 'flex-start',
                                         }}
                                     >
@@ -3831,15 +4035,16 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 // borderBottom: '1px solid #f2f2f2',
                                                 borderBottomWidth: 1,
                                                 borderColor: '#f2f2f2',
-                                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
+                                                fontSize: 16,
                                                 paddingTop: 13,
                                                 paddingBottom: 13,
+                                                padding: 10,
                                                 marginTop: 12,
                                                 marginBottom: 15,
                                                 borderRadius: 1,
                                             }}
                                             placeholder={'Title'}
-                                            placeholderTextColor="#66737C"
+                                            placeholderTextColor="#797979"
                                             maxHeight={200}
                                             minHeight={45}
                                             enableScrollToCaret
@@ -3865,7 +4070,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 >
                                                     CLEAR
                                                 </Text> */}
-                                                <Ionicons size={22} name={'trash-outline'} color="#007AFF" />
+                                                <Ionicons size={22} name={'trash-outline'} color="#000" />
                                             </TouchableOpacity>
                                         ) : null}
                                     </View>
@@ -3873,7 +4078,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 <View
                                     style={{
                                         width: '100%',
-                                        minHeight: isQuiz ? 0 : 500,
+                                        minHeight: isQuiz ? 0 : Dimensions.get('window').width < 768 ? 500 : 800,
                                         backgroundColor: 'white',
                                     }}
                                 >
@@ -4057,8 +4262,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 backgroundColor: '#fff',
                                                                 placeholderColor: '#a2a2ac',
                                                                 color: '#2f2f3c',
-                                                                contentCSSText: 'font-size: 16px; min-height: 120;',
+                                                                cssText: customFontFamily,
+                                                                initialCSSText: customFontFamily,
+                                                                contentCSSText:
+                                                                    'font-size: 16px; min-height: 120;font-family: Overpass;',
                                                             }}
+                                                            initialFocus={false}
                                                             initialContentHTML={quizInstructions}
                                                             initialHeight={120}
                                                             onScroll={() => Keyboard.dismiss()}
@@ -4082,7 +4291,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                 setQuizEditorRef({});
                                                                 setEditorFocus(true);
                                                             }}
-                                                            onBlur={() => setEditorFocus(false)}
+                                                            onBlur={() => {
+                                                                if (insertFormulaVisible || insertLinkVisible) return;
+
+                                                                setEditorFocus(false);
+                                                            }}
                                                             allowFileAccess={true}
                                                             allowFileAccessFromFileURLs={true}
                                                             allowUniversalAccessFromFileURLs={true}
@@ -4106,6 +4319,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 handleHiliteColor={handleHiliteColor}
                                                 handleForeColor={handleForeColor}
                                                 handleEmoji={handleEmoji}
+                                                handleInsertFormula={handleInsertFormula}
                                                 userId={userId}
                                                 setRef={setRef}
                                                 handleAddImageQuizOptions={handleAddImageQuizOptions}
@@ -4113,6 +4327,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 handleForeColorOptions={handleForeColorOptions}
                                                 handleEmojiOptions={handleEmojiOptions}
                                                 resetEditorOptionIndex={() => setQuizOptionEditorIndex('')}
+                                                handleInsertFormulaOptions={handleInsertFormulaOptions}
                                             />
                                         </View>
                                     ) : imported ? (
@@ -4169,7 +4384,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         justifyContent: 'center',
                                         display: 'flex',
                                         flexDirection: 'row',
-                                        height: 50,
+                                        // height: 50,
                                         paddingTop: 10,
                                     }}
                                 >
@@ -4185,49 +4400,31 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 await handleCreate();
                                             }
                                         }}
-                                        disabled={isSubmitting || creatingQuiz}
+                                        disabled={isSubmitting || creatingQuiz || props.user.email === disableEmailId}
                                         style={{
                                             borderRadius: 15,
                                             backgroundColor: 'white',
                                         }}
                                     >
-                                        {channelId === '' ? (
-                                            <Text
-                                                style={{
-                                                    textAlign: 'center',
-                                                    lineHeight: 34,
-                                                    color: 'white',
-                                                    fontSize: 12,
-                                                    backgroundColor: '#007AFF',
-                                                    borderRadius: 15,
-                                                    paddingHorizontal: 20,
-                                                    fontFamily: 'inter',
-                                                    overflow: 'hidden',
-                                                    height: 35,
-                                                    textTransform: 'uppercase',
-                                                }}
-                                            >
-                                                {isSubmitting ? 'Creating...' : 'Create'}
-                                            </Text>
-                                        ) : (
-                                            <Text
-                                                style={{
-                                                    textAlign: 'center',
-                                                    lineHeight: 34,
-                                                    color: 'white',
-                                                    fontSize: 12,
-                                                    backgroundColor: '#007AFF',
-                                                    borderRadius: 15,
-                                                    paddingHorizontal: 20,
-                                                    fontFamily: 'inter',
-                                                    overflow: 'hidden',
-                                                    height: 35,
-                                                    textTransform: 'uppercase',
-                                                }}
-                                            >
-                                                {isSubmitting ? 'Creating...' : 'CREATE'}
-                                            </Text>
-                                        )}
+                                        <Text
+                                            style={{
+                                                fontWeight: 'bold',
+                                                textAlign: 'center',
+                                                borderColor: '#000',
+                                                borderWidth: 1,
+                                                color: '#fff',
+                                                backgroundColor: '#000',
+                                                fontSize: 11,
+                                                paddingHorizontal: 24,
+                                                fontFamily: 'inter',
+                                                overflow: 'hidden',
+                                                paddingVertical: 14,
+                                                textTransform: 'uppercase',
+                                                width: 120,
+                                            }}
+                                        >
+                                            {isSubmitting ? 'Creating...' : 'CREATE'}
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -4277,6 +4474,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     actions.insertImage,
                                     actions.insertVideo,
                                     actions.insertLink,
+                                    'insertFormula',
                                     actions.insertBulletsList,
                                     actions.insertOrderedList,
                                     actions.checkboxList,
@@ -4294,10 +4492,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                     ),
                                     insertFile: importIcon,
                                     insertEmoji: emojiIcon,
+                                    insertFormula: formulaIcon,
                                 }}
                                 insertEmoji={handleEmoji}
                                 insertVideo={handleUploadAudioVideo}
                                 insertFile={handleUploadFile}
+                                insertFormula={handleInsertFormula}
                                 onPressAddImage={() => handleAddImage(null)}
                                 onInsertLink={() => handleInsertLink(null)}
                             />
@@ -4319,6 +4519,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                 // }}
                             >
                                 <RichEditor
+                                    initialFocus={false}
                                     key={reloadEditorKey.toString()}
                                     ref={RichText}
                                     useContainer={true}
@@ -4339,7 +4540,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         backgroundColor: '#fff',
                                         placeholderColor: '#a2a2ac',
                                         color: '#2f2f3c',
-                                        contentCSSText: 'font-size: 16px; min-height: 400px;',
+                                        cssText: customFontFamily,
+                                        initialCSSText: customFontFamily,
+                                        contentCSSText: 'font-size: 16px; min-height: 400px;font-family:Overpass;',
                                     }}
                                     initialContentHTML={cueDraft}
                                     initialHeight={400}
@@ -4500,6 +4703,47 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     ></TouchableOpacity>
                 </Reanimated.View>
             ) : null}
+            {insertFormulaVisible ? (
+                <Reanimated.View
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: 'black',
+                        opacity: animatedShadowOpacity,
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        position: 'absolute',
+                    }}
+                >
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: 'transparent',
+                            width: '100%',
+                            height: '100%',
+                        }}
+                        onPress={() => setInsertFormulaVisible(false)}
+                    ></TouchableOpacity>
+                </Reanimated.View>
+            ) : null}
+
+            {insertFormulaVisible && (
+                <BottomSheet
+                    snapPoints={[
+                        0,
+                        Dimensions.get('window').height -
+                            (Dimensions.get('window').width < 768 ? (Platform.OS === 'ios' ? 40 : 0) : 20),
+                    ]}
+                    close={() => {
+                        setInsertFormulaVisible(false);
+                    }}
+                    isOpen={insertFormulaVisible}
+                    title={'Insert Formula'}
+                    renderContent={() => renderFormulaEditor()}
+                    header={true}
+                    callbackNode={fall}
+                />
+            )}
             {emojiVisible && (
                 <BottomSheet
                     snapPoints={[0, 350]}
@@ -4525,50 +4769,69 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         <View style={{ paddingHorizontal: 10 }}>
                             <TouchableOpacity
                                 style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 19,
-                                    width: 150,
+                                    marginTop: 10,
                                     alignSelf: 'center',
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: '#000',
+                                    paddingHorizontal: 24,
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    width: 150,
                                 }}
                                 onPress={() => {
                                     uploadImageHandler(true);
                                 }}
                             >
+                                <Ionicons name="camera-outline" size={16} color={'#fff'} />
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
                                         color: '#fff',
+                                        fontSize: 11,
+                                        fontFamily: 'inter',
+                                        textTransform: 'uppercase',
+                                        paddingLeft: 4,
                                     }}
                                 >
                                     {' '}
                                     Camera{' '}
                                 </Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity
                                 style={{
-                                    marginTop: 20,
-                                    backgroundColor: '#007AFF',
-                                    borderRadius: 19,
-                                    width: 150,
+                                    marginTop: 15,
                                     alignSelf: 'center',
+                                    borderColor: '#000',
+                                    borderWidth: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: '#000',
+                                    paddingHorizontal: 24,
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    paddingVertical: 14,
+                                    width: 150,
                                 }}
                                 onPress={() => {
                                     uploadImageHandler(false);
                                 }}
                             >
+                                <Ionicons name="image-outline" size={16} color={'#fff'} />
                                 <Text
                                     style={{
+                                        fontWeight: 'bold',
                                         textAlign: 'center',
-                                        paddingHorizontal: 25,
-                                        fontFamily: 'inter',
-                                        height: 35,
-                                        lineHeight: 34,
                                         color: '#fff',
+                                        fontSize: 11,
+                                        fontFamily: 'inter',
+                                        textTransform: 'uppercase',
+                                        paddingLeft: 4,
                                     }}
                                 >
                                     {' '}
@@ -4629,7 +4892,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         fontFamily: 'inter',
                                         height: 35,
                                         lineHeight: 34,
-                                        color: '#007AFF',
+                                        color: '#000',
                                     }}
                                 >
                                     {' '}
@@ -4677,7 +4940,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                         fontFamily: 'inter',
                                         height: 35,
                                         lineHeight: 34,
-                                        color: '#007AFF',
+                                        color: '#000',
                                     }}
                                 >
                                     {' '}

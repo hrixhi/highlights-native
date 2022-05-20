@@ -131,7 +131,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
     const [isSsoEnabled, setIsSsoEnabled] = useState(false);
 
-    const [showNewPost, setShowNewPost] = useState(false);
+    const [showNewDiscussionPost, setShowNewDiscussionPost] = useState(false);
     const [showNewMeeting, setShowNewMeeting] = useState(false);
 
     const responseListener: any = useRef();
@@ -144,6 +144,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [createOption, setCreateOption] = useState('');
     const [userId, setUserId] = useState('');
     const [role, setRole] = useState('');
+    const [user, setUser] = useState<any>(null);
 
     // const [showSettings, setShowSettings] = useState(false);
 
@@ -636,6 +637,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 // Alert('Unable to load calendar.', 'Check connection.');
             });
     }, []);
+
+    console.log('channel cues home', cues[updateModalKey]);
 
     // const notificationScheduler = useCallback(
     //     async c => {
@@ -1485,6 +1488,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         delete u.__typename;
                         const sU = JSON.stringify(u);
                         await AsyncStorage.setItem('user', sU);
+                        setUser(u);
                         setLoadingUser(false);
                     }
                 })
@@ -2049,7 +2053,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const getNavbarText = (op: string) => {
         switch (op) {
             case 'To Do':
-                return 'Agenda';
+                return 'Plan';
             case 'Classroom':
                 return 'Workspace';
             case 'Search':
@@ -2064,7 +2068,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const getWorkspaceNavbarText = (op: string) => {
         switch (op) {
             case 'Content':
-                return 'Library';
+                return 'Coursework';
             case 'Discuss':
                 return 'Discussion';
             case 'Meet':
@@ -2126,6 +2130,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }
 
     const [searchTerm, setSearchTerm] = useState('');
+
+    console.log('Option', option);
+    console.log('Show Directory', showDirectory);
+    console.log('New chat button');
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
@@ -2267,7 +2275,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     <Text style={{
                                         fontSize: 18,
                                         color: getNavbarIconColor(op),
-                                        fontWeight: 'bold',
+                                        
                                         fontFamily: 'Inter',
                                         paddingLeft: 10
                                     }}>
@@ -2436,7 +2444,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 lineHeight: 34,
                                                 color: 'white',
                                                 fontSize: 12,
-                                                backgroundColor: '#007AFF',
+                                                backgroundColor: '#000',
                                                 paddingHorizontal: 20,
                                                 fontFamily: 'inter',
                                                 height: 35,
@@ -2466,7 +2474,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         <Text
                                             style={{
                                                 fontSize: 14,
-                                                color: '#007AFF',
+                                                color: '#000',
                                             }}
                                         >
                                             Back to Sign In
@@ -2574,7 +2582,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     alignItems: 'center',
                                                 }}
                                             >
-                                                <Ionicons name="lock-closed" size={18} color="#007AFF" />
+                                                <Ionicons name="lock-closed" size={18} color="#000" />
                                                 <Text style={{ paddingLeft: 7, color: '#1f1f1f', paddingTop: 3 }}>
                                                     Single sign-on enabled
                                                 </Text>
@@ -2606,8 +2614,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                     >
                                                         <Text
                                                             style={{
-                                                                fontSize: 13,
-                                                                color: '#007AFF',
+                                                                fontSize: 14,
+                                                                color: '#000',
+                                                                fontFamily: 'Inter',
                                                             }}
                                                         >
                                                             Forgot Password?
@@ -2648,13 +2657,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 }
                                             }}
                                             style={{
-                                                backgroundColor: '#007AFF',
-                                                borderRadius: 15,
-                                                overflow: 'hidden',
-                                                height: 35,
+                                                backgroundColor: 'white',
                                                 marginTop: 15,
-                                                width: 175,
-                                                alignSelf: 'center',
+                                                width: '100%',
                                                 justifyContent: 'center',
                                                 flexDirection: 'row',
                                             }}
@@ -2662,17 +2667,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             <Text
                                                 style={{
                                                     textAlign: 'center',
-                                                    lineHeight: 34,
-                                                    color: 'white',
-                                                    fontSize: 12,
-                                                    backgroundColor: '#007AFF',
-                                                    paddingHorizontal: 20,
+                                                    borderColor: '#000',
+                                                    borderWidth: 1,
+                                                    color: '#fff',
+                                                    backgroundColor: '#000',
+                                                    fontSize: 11,
+                                                    paddingHorizontal: Dimensions.get('window').width < 768 ? 15 : 24,
                                                     fontFamily: 'inter',
-                                                    height: 35,
-                                                    // width: 180,
-                                                    width: 175,
-                                                    borderRadius: 15,
+                                                    overflow: 'hidden',
+                                                    paddingVertical: 14,
                                                     textTransform: 'uppercase',
+                                                    width: 150,
                                                 }}
                                             >
                                                 {showForgotPassword
@@ -2699,7 +2704,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 <Text
                                                     style={{
                                                         fontSize: 14,
-                                                        color: '#007AFF'
+                                                        color: '#000'
                                                     }}>
                                                     Sign up now
                                                 </Text>
@@ -2758,7 +2763,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 <Text
                                                     style={{
                                                         fontSize: 14,
-                                                        color: '#007AFF',
+                                                        color: '#000',
                                                     }}
                                                 >
                                                     Back to Sign In
@@ -2793,11 +2798,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 ((option === 'Classroom' &&
                     modalType !== 'Create' &&
                     (workspaceActiveTab === 'Content' ||
-                        (workspaceActiveTab === 'Discuss' && !showNewPost && !hideNavbarDiscussions) ||
+                        (workspaceActiveTab === 'Discuss' && !showNewDiscussionPost && !hideNavbarDiscussions) ||
                         (workspaceActiveTab === 'Meet' &&
                             selectedWorkspace.split('-SPLIT-')[2] === userId &&
                             !showNewMeeting))) ||
-                    (option === 'Inbox' && !showDirectory && !hideNewChatButton) ||
+                    (option === 'Inbox' &&
+                        !showDirectory &&
+                        !hideNewChatButton &&
+                        Dimensions.get('window').width < 768) ||
                     (option === 'Channels' && !showCreate)) ? (
                     <TouchableOpacity
                         onPress={() => {
@@ -2817,13 +2825,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 if (selectedWorkspace === '' || workspaceActiveTab === 'Content') {
                                     openModal('Create');
                                 } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Discuss') {
-                                    setShowNewPost(true);
+                                    setShowNewDiscussionPost(true);
+                                    if (Dimensions.get('window').width < 768) {
+                                        setHideNavbarDiscussions(true);
+                                    }
                                 } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Meet') {
                                     setShowNewMeeting(true);
                                 }
-
-                                // setShowHome(false)
-                                // setMenuCollapsed(true)
                             } else if (option === 'Channels') {
                                 setShowCreate(true);
                             } else {
@@ -2841,7 +2849,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             width: Dimensions.get('window').width > 350 ? 62 : 58,
                             height: Dimensions.get('window').width > 350 ? 62 : 58,
                             borderRadius: Dimensions.get('window').width > 350 ? 32 : 29,
-                            backgroundColor: '#007AFF',
+                            backgroundColor:
+                                option === 'Classroom'
+                                    ? selectedWorkspace.split('-SPLIT-')[0] === 'My Notes'
+                                        ? '#000'
+                                        : selectedWorkspace.split('-SPLIT-')[3]
+                                    : '#000',
                             borderColor: '#f2f2f2',
                             borderWidth: 0,
                             shadowColor: '#000',
@@ -2858,7 +2871,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         <Text style={{ color: '#fff', width: '100%', textAlign: 'center' }}>
                             {option === 'Classroom' &&
                             (selectedWorkspace === '' || workspaceActiveTab === 'Content') ? (
-                                <Ionicons name="pencil-outline" size={Dimensions.get('window').width > 350 ? 26 : 25} />
+                                <Ionicons name="create-outline" size={Dimensions.get('window').width > 350 ? 26 : 25} />
                             ) : option === 'Channels' ||
                               (option === 'Classroom' &&
                                   selectedWorkspace !== '' &&
@@ -3054,8 +3067,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     setWorkspaceActiveTab={setWorkspaceActiveTab}
                                     hideNavbarDiscussions={hideNavbarDiscussions}
                                     setHideNavbarDiscussions={(hide: boolean) => setHideNavbarDiscussions(hide)}
-                                    showNewPost={showNewPost}
-                                    setShowNewPost={(show: boolean) => setShowNewPost(show)}
+                                    showNewDiscussionPost={showNewDiscussionPost}
+                                    setShowNewDiscussionPost={setShowNewDiscussionPost}
                                     showNewMeeting={showNewMeeting}
                                     setShowNewMeeting={(show: boolean) => setShowNewMeeting(show)}
                                     refreshingWorkspace={refreshingWorkspace}
@@ -3066,6 +3079,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     createActiveTab={createActiveTab}
                                     setDisableCreateNavbar={(disable: boolean) => setDisableCreateNavbar(disable)}
                                     setShowWorkspaceFilterModal={(show: boolean) => setShowWorkspaceFilterModal(show)}
+                                    user={user}
                                 />
                             )}
                         </View>
@@ -3099,11 +3113,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             createdBy={createdBy}
                             channelId={channelId}
                             channelCreatedBy={channelCreatedBy}
-                            channelCues={cues[channelId]}
+                            channelCues={cues[updateModalKey]}
                             reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
                             target={target}
                             openCue={(cueId: string) => openCueFromCalendar(channelId, cueId, channelCreatedBy)}
                             refreshCues={loadNewChannelCues}
+                            user={user}
                             // refreshAfterSubmittingQuiz={refreshAfterSubmittingQuiz}
                         />
                     ) : null}
@@ -3176,7 +3191,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             fontSize: width < 800 ? 11 : 16,
                                             lineHeight: width < 800 ? 11 : 23,
                                             color: getCreateNavbarIconColor(op),
-                                            fontWeight: 'bold',
+
                                             fontFamily: 'Inter',
                                             marginBottom: width < 800 ? 0 : 6,
                                             paddingLeft: width < 800 ? 0 : 5,
@@ -3258,7 +3273,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             fontSize: width < 800 ? 11 : 16,
                                             lineHeight: width < 800 ? 11 : 23,
                                             color: getWorkspaceNavbarIconColor(op),
-                                            fontWeight: 'bold',
+
                                             fontFamily: 'Inter',
                                             marginBottom: width < 800 ? 0 : 6,
                                             paddingLeft: width < 800 ? 0 : 5,
@@ -3349,7 +3364,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             fontSize: width < 800 ? 11 : 16,
                                             lineHeight: width < 800 ? 11 : 23,
                                             color: getNavbarIconColor(op),
-                                            fontWeight: 'bold',
+
                                             fontFamily: 'Inter',
                                             marginBottom: width < 800 ? 0 : 6,
                                             paddingLeft: width < 800 ? 0 : 5,
@@ -3380,7 +3395,7 @@ const styles = (channelId: string) =>
         all: {
             fontSize: 12,
             color: '#fff',
-            fontWeight: 'bold',
+
             height: 25,
             paddingHorizontal: 12,
             backgroundColor: '#000000',
@@ -3393,7 +3408,7 @@ const styles = (channelId: string) =>
             color: '#fff',
             paddingHorizontal: 12,
             borderRadius: 12,
-            backgroundColor: '#007AFF',
+            backgroundColor: '#000',
             lineHeight: 25,
             height: 25,
             fontFamily: 'inter',

@@ -1,6 +1,12 @@
 // REACT
 import React, { useState } from 'react';
-import { Text as DefaultText, View as DefaultView, TextInput as DefaultTextInput, StyleSheet, Dimensions } from 'react-native';
+import {
+    Text as DefaultText,
+    View as DefaultView,
+    TextInput as DefaultTextInput,
+    StyleSheet,
+    Dimensions,
+} from 'react-native';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 
 type FieldTypeProps = {
@@ -64,8 +70,8 @@ export function TextInput(props: TextInputProps) {
                 style={focused ? styles.focusedInput : styles.input}
                 {...props}
                 onBlur={() => {
-                    onValidateValue(props.value || '')
-                    setFocused(false)
+                    onValidateValue(props.value || '');
+                    setFocused(false);
                 }}
                 multiline={props.hasMultipleLines}
                 numberOfLines={props.hasMultipleLines ? 3 : 1}
@@ -79,39 +85,42 @@ export function TextInput(props: TextInputProps) {
 const styles = StyleSheet.create({
     textInputContainer: {
         marginTop: 10,
-        marginBottom: 20
+        marginBottom: 20,
+        width: '100%',
     },
     input: {
         width: '100%',
-        borderColor: '#f2f2f2',
-        borderBottomWidth: 1,
+        borderColor: '#ccc',
+        borderWidth: 1,
         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         paddingTop: 13,
         paddingBottom: 13,
         marginTop: 0,
         marginBottom: 5,
-        paddingHorizontal: 10
+        paddingHorizontal: 10,
+        fontFamily: 'Overpass',
     },
     focusedInput: {
         width: '100%',
-        borderColor: '#e4e6eb',
-        borderBottomWidth: 1,
+        borderColor: '#000',
+        borderWidth: 1,
         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         paddingTop: 13,
         paddingBottom: 13,
         marginTop: 0,
         marginBottom: 5,
-        paddingHorizontal: 10
+        paddingHorizontal: 10,
+        fontFamily: 'Overpass',
     },
     errorText: {
         width: '100%',
         fontSize: Dimensions.get('window').width < 768 ? 10 : 11,
         color: 'red',
-        textAlign: 'right'
+        textAlign: 'right',
     },
     footer: {
         width: '100%',
         fontSize: Dimensions.get('window').width < 768 ? 10 : 11,
-        textAlign: 'right'
-    }
+        textAlign: 'right',
+    },
 });

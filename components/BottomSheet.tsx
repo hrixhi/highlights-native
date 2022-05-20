@@ -147,6 +147,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
             onCloseEnd={() => props.close()}
             renderContent={renderContent}
             callbackNode={callbackNode}
+            enabledContentTapInteraction={false}
         />
     );
 };
