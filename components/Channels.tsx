@@ -14,7 +14,7 @@ const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any)
                 height: '100%',
                 backgroundColor: 'white',
                 borderTopRightRadius: 0,
-                borderTopLeftRadius: 0
+                borderTopLeftRadius: 0,
             }}
             onTouchMove={() => Keyboard.dismiss()}
         >
@@ -26,6 +26,7 @@ const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any)
                 // showCreate={props.showCreate}
                 showAddCourseModal={props.showAddCourseModal}
                 closeAddCourseModal={props.closeAddCourseModal}
+                user={props.user}
             />
         </View>
     );

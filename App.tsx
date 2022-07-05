@@ -21,6 +21,8 @@ export default function App() {
     const isLoadingComplete = useCachedResources();
     const colorScheme = useColorScheme();
 
+    LogBox.ignoreLogs(['Require cycle: node_modules/victory']);
+
     // Ignore log notification by message
     // LogBox.ignoreLogs(['Warning: ...']);
 
@@ -45,17 +47,17 @@ export default function App() {
         return null;
     } else {
         return (
-                <Fragment>
-                    <SafeAreaView style={{ flex: 0, backgroundColor: 'white' }} />
-                    <SafeAreaView style={styles.font}>
-                        <StatusBar style={'dark'} />
-                        <MenuProvider>
-                            <LanguageProvider>
-                                <Navigation colorScheme={colorScheme} />
-                            </LanguageProvider>
-                        </MenuProvider>
-                    </SafeAreaView>
-                </Fragment>
+            <Fragment>
+                <SafeAreaView style={{ flex: 0, backgroundColor: 'white' }} />
+                <SafeAreaView style={styles.font}>
+                    <StatusBar style={'dark'} />
+                    <MenuProvider>
+                        <LanguageProvider>
+                            <Navigation colorScheme={colorScheme} />
+                        </LanguageProvider>
+                    </MenuProvider>
+                </SafeAreaView>
+            </Fragment>
         );
     }
 }
@@ -64,6 +66,6 @@ const styles: any = StyleSheet.create({
     font: {
         maxHeight: '100%',
         backgroundColor: '#fff',
-        flex: 1
-    }
+        flex: 1,
+    },
 });

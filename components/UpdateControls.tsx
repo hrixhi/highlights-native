@@ -149,8 +149,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [availableUntil, setAvailableUntil] = useState<Date>(until);
     const [deadline, setDeadline] = useState<Date>(dead);
     const [initiateAt, setInitiateAt] = useState<Date>(initiate);
-    const [gradeWeight, setGradeWeight] = useState<any>(props.cue.gradeWeight ? props.cue.gradeWeight : 0);
-    const [graded, setGraded] = useState(props.cue.gradeWeight);
+    const [gradeWeight, setGradeWeight] = useState<any>(props.cue.gradeWeight ? props.cue.gradeWeight.toString() : '');
+    const [graded, setGraded] = useState(props.cue.gradeWeight ? true : false);
     const currentDate = new Date();
     const [submitted, setSubmitted] = useState(false);
     const [imported, setImported] = useState(false);
@@ -175,6 +175,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [allowedAttempts, setAllowedAttemps] = useState(
         !props.cue.allowedAttempts ? '' : props.cue.allowedAttempts.toString()
     );
+    const [totalPoints, setTotalPoints] = useState(!props.cue.totalPoints ? '' : props.cue.totalPoints.toString());
     const [submissionAttempts, setSubmissionAttempts] = useState<any[]>([]);
     const [submissionDraft, setSubmissionDraft] = useState('');
     const [updatingCueContent, setUpdatingCueContent] = useState(false);
@@ -722,6 +723,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     props.setSave(false);
                     return;
                 }
+
+                if (!isQuiz && Number.isNaN(Number(totalPoints))) {
+                    Alert('Enter valid total points for assignment.');
+                    return;
+                }
             }
 
             Alert('Save changes?', '', [
@@ -743,7 +749,22 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             ]);
             props.setSave(false);
         }
-    }, [props.save, props.channelOwner, props.showOriginal]);
+    }, [
+        props.save,
+        props.channelOwner,
+        isQuiz,
+        submission,
+        isOwner,
+        initiateAt,
+        deadline,
+        allowLateSubmission,
+        availableUntil,
+        imported,
+        isQuiz,
+        title,
+        original,
+        totalPoints,
+    ]);
 
     /**
      * @description Handle Save when props.save
@@ -2030,6 +2051,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 Alert('Late Submission date must be after deadline');
                 return;
             }
+
+            if (!isQuiz && Number.isNaN(Number(totalPoints))) {
+                Alert('Enter valid total points for assignment.');
+                return;
+            }
         }
 
         const saveCue = {
@@ -2046,6 +2072,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             allowedAttempts: unlimitedAttempts ? null : allowedAttempts,
             availableUntil: submission && allowLateSubmission ? availableUntil.toISOString() : '',
             limitedShares,
+            totalPoints: submission && !isQuiz ? totalPoints : '',
         };
 
         subCues[props.cueKey][props.cueIndex] = saveCue;
@@ -2072,6 +2099,8 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         isOwner,
         graded,
         limitedShares,
+        isQuiz,
+        totalPoints,
     ]);
 
     /**
@@ -5996,15 +6025,15 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         >
                             {isOwner ? (
                                 <TextInput
-                                    value={gradeWeight.toString()}
+                                    value={gradeWeight}
                                     style={{
-                                        borderBottomColor: '#f2f2f2',
-                                        borderBottomWidth: 1,
+                                        borderColor: '#cccccc',
+                                        borderWidth: 1,
                                         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
                                         padding: 15,
                                         paddingVertical: 12,
                                         marginTop: 0,
-                                        width: 80,
+                                        minWidth: 100,
                                     }}
                                     placeholder={'0-100'}
                                     onChangeText={(val) => setGradeWeight(val)}
@@ -6036,6 +6065,76 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             0%
                         </Text>
                     ) : null}
+                </View>
+            </View>
+        ) : null;
+    };
+
+    const renderTotalPointsInput = () => {
+        return submission && !isQuiz ? (
+            <View style={{ width: '100%', flexDirection: width < 768 ? 'column' : 'row', paddingTop: 40 }}>
+                <View
+                    style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        paddingBottom: 15,
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: 15,
+                            color: '#000000',
+                            fontFamily: 'Inter',
+                        }}
+                    >
+                        Total points
+                    </Text>
+                </View>
+                <View>
+                    <View
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: Dimensions.get('window').width < 768 ? 'flex-start' : 'flex-end',
+                            alignItems: 'center',
+                        }}
+                    >
+                        {isOwner ? (
+                            <TextInput
+                                value={totalPoints}
+                                style={{
+                                    width: 120,
+                                    borderColor: '#ccc',
+                                    borderWidth: 1,
+                                    borderRadius: 2,
+                                    fontSize: 15,
+                                    padding: 15,
+                                    paddingVertical: 10,
+                                    marginTop: 0,
+                                    backgroundColor: '#fff',
+                                }}
+                                placeholder={''}
+                                onChangeText={(val) => {
+                                    if (Number.isNaN(Number(val))) return;
+                                    setTotalPoints(val);
+                                }}
+                                placeholderTextColor={'#1F1F1F'}
+                            />
+                        ) : (
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    color: '#1F1F1F',
+                                    textAlign: 'left',
+                                    paddingRight: 10,
+                                    fontFamily: 'Inter',
+                                }}
+                            >
+                                {totalPoints ? totalPoints : '100'}
+                            </Text>
+                        )}
+                    </View>
                 </View>
             </View>
         ) : null;
@@ -7438,6 +7537,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         {renderSubmissionRequiredOptions()}
                                         {renderGradeOptions()}
                                         {renderLateSubmissionOptions()}
+                                        {renderTotalPointsInput()}
                                         {renderAttemptsOptions()}
                                     </View>
                                 ) : null}

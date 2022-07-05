@@ -16,6 +16,7 @@ const CustomBottomSheet: React.FunctionComponent<{ [label: string]: any }> = (pr
     }, [props.callbackNode]);
 
     useEffect(() => {
+        console.log('Bottom Sheet');
         if (props.isOpen && sheetRef && sheetRef.current) {
             sheetRef.current.snapTo(1);
         } else if (!props.isOpen && sheetRef && sheetRef.current) {

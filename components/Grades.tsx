@@ -245,6 +245,8 @@ const Grades: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     exportScores={props.exportScores}
                     setExportScores={props.setExportScores}
                     user={props.user}
+                    showNewAssignment={props.showNewAssignment}
+                    setShowNewAssignment={props.setShowNewAssignment}
                 />
             )}
         </View>

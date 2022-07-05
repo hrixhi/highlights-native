@@ -228,6 +228,8 @@ const Performance: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     setExportScores={props.setExportScores}
                     userId={props.userId}
                     user={props.user}
+                    showNewAssignment={props.showNewAssignment}
+                    setShowNewAssignment={props.setShowNewAssignment}
                 />
             )}
         </View>

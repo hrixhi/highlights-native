@@ -14,17 +14,17 @@ export const fetchAPI = (userId: any) => {
     return new ApolloClient({
         uri,
         headers: {
-            userId
+            userId,
         },
         fetchOptions: {
-            credentials: 'include'
+            credentials: 'include',
         },
-        request: async operation => {
+        request: async (operation) => {
             const token = await AsyncStorage.getItem('jwt_token');
             operation.setContext({
                 headers: {
-                    authorization: token || ''
-                }
+                    authorization: token || '',
+                },
             });
         },
         onError: ({ graphQLErrors, networkError }) => {
@@ -41,6 +41,6 @@ export const fetchAPI = (userId: any) => {
                 // logoutUser();
                 console.log(networkError);
             }
-        }
+        },
     });
 };

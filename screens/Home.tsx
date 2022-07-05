@@ -169,6 +169,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [showWorkspaceFilterModal, setShowWorkspaceFilterModal] = useState(false);
     const [reloadBottomBarKey, setReloadBottomBarKey] = useState(Math.random());
 
+    const [showNewAssignment, setShowNewAssignment] = useState(false);
+    const [hideNavbarGrades, setHideNavbarGrades] = useState(false);
+
     const height = Dimensions.get('window').height;
     const width = Dimensions.get('window').width;
 
@@ -180,14 +183,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         // await Updates.reloadAsync();
         setReloadBottomBarKey(reloadBottomBarKey);
     }, []);
-
-    // useEffect(() => {
-    //     if (selectedWorkspace && !loadDiscussionForChannelId) {
-    //         setWorkspaceActiveTab('Content')
-    //     } else if (selectedWorkspace && loadDiscussionForChannelId) {
-    //         setWorkspaceActiveTab('Discuss')
-    //     }
-    // }, [selectedWorkspace, loadDiscussionForChannelId])
 
     useEffect(() => {
         (async () => {
@@ -1618,6 +1613,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         color: cue.color.toString(),
                         date: new Date(cue.date).toISOString(),
                         gradeWeight: cue.submission && cue.gradeWeight ? cue.gradeWeight.toString() : undefined,
+                        totalPoints: cue.submission && cue.totalPoints ? cue.totalPoints.toString() : undefined,
                         endPlayAt: cue.endPlayAt && cue.endPlayAt !== '' ? new Date(cue.endPlayAt).toISOString() : '',
                         allowedAttempts:
                             cue.allowedAttempts && cue.allowedAttempts !== null ? cue.allowedAttempts.toString() : null,
@@ -2801,7 +2797,10 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         (workspaceActiveTab === 'Discuss' && !showNewDiscussionPost && !hideNavbarDiscussions) ||
                         (workspaceActiveTab === 'Meet' &&
                             selectedWorkspace.split('-SPLIT-')[2] === userId &&
-                            !showNewMeeting))) ||
+                            !showNewMeeting) ||
+                        (workspaceActiveTab === 'Scores' &&
+                            !showNewAssignment &&
+                            selectedWorkspace.split('-SPLIT-')[2] === userId))) ||
                     (option === 'Inbox' &&
                         !showDirectory &&
                         !hideNewChatButton &&
@@ -2831,6 +2830,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     }
                                 } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Meet') {
                                     setShowNewMeeting(true);
+                                } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Scores') {
+                                    if (Dimensions.get('window').width < 768) {
+                                        setHideNavbarGrades(true);
+                                    }
+                                    setShowNewAssignment(true);
                                 }
                             } else if (option === 'Channels') {
                                 setShowCreate(true);
@@ -2875,7 +2879,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             ) : option === 'Channels' ||
                               (option === 'Classroom' &&
                                   selectedWorkspace !== '' &&
-                                  (workspaceActiveTab === 'Discuss' || workspaceActiveTab === 'Meet')) ? (
+                                  (workspaceActiveTab === 'Discuss' ||
+                                      workspaceActiveTab === 'Meet' ||
+                                      workspaceActiveTab === 'Scores')) ? (
                                 <Ionicons
                                     name={workspaceActiveTab === 'Meet' ? 'videocam-outline' : 'add-outline'}
                                     size={
@@ -3067,10 +3073,14 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     setWorkspaceActiveTab={setWorkspaceActiveTab}
                                     hideNavbarDiscussions={hideNavbarDiscussions}
                                     setHideNavbarDiscussions={(hide: boolean) => setHideNavbarDiscussions(hide)}
+                                    hideNavbarGrades={hideNavbarGrades}
+                                    setHideNavbarGrades={(hide: boolean) => setHideNavbarGrades(hide)}
                                     showNewDiscussionPost={showNewDiscussionPost}
                                     setShowNewDiscussionPost={setShowNewDiscussionPost}
                                     showNewMeeting={showNewMeeting}
                                     setShowNewMeeting={(show: boolean) => setShowNewMeeting(show)}
+                                    showNewAssignment={showNewAssignment}
+                                    setShowNewAssignment={(show: boolean) => setShowNewAssignment(show)}
                                     refreshingWorkspace={refreshingWorkspace}
                                     onRefreshWorkspace={(subs: boolean) => handleRefreshWorkspace(subs)}
                                     setShowImportCreate={(showImport: boolean) => setShowImportCreate(showImport)}

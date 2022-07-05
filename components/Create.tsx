@@ -120,7 +120,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [showAvailableUntilDateAndroid, setShowAvailableUntilDateAndroid] = useState(false);
 
     const [showBooks, setShowBooks] = useState(props.option === 'Browse' ? true : false);
-    const [gradeWeight, setGradeWeight] = useState<any>(0);
+    const [gradeWeight, setGradeWeight] = useState<any>('');
     const [graded, setGraded] = useState(false);
     const [imported, setImported] = useState(false);
     const [url, setUrl] = useState('');
@@ -153,6 +153,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const screen = Dimensions.get('screen');
     const [dimensions, setDimensions] = useState({ window, screen });
     const [userId, setUserId] = useState('');
+    const [totalPoints, setTotalPoints] = useState('');
+
     const width = dimensions.window.width;
     const hours: any[] = [0, 1, 2, 3, 4, 5, 6];
     const minutes: any[] = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
@@ -558,7 +560,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             setCustomCategory('None');
             setAddCustomCategory(false);
             setSubmission(false);
-            setGradeWeight(0);
+            setGradeWeight('');
             setGraded(false);
             setSelected([]);
             setSubscribers([]);
@@ -575,7 +577,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             setAddCustomCategory(false);
             setCustomCategory('None');
             setSubmission(isQuiz ? true : false);
-            setGradeWeight(0);
+            setGradeWeight('');
             setGraded(false);
         }
     }, [selectedChannel]);
@@ -1789,6 +1791,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 return;
             }
 
+            if (submission && !isQuiz && Number.isNaN(Number(totalPoints))) {
+                Alert('Enter total points for assignment.');
+                setIsSubmitting(false);
+                return;
+            }
+
             let saveCue = '';
             if (quizId) {
                 const obj: any = {
@@ -1893,6 +1901,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     limitedShares: limitedShare,
                     allowedAttempts: attempts,
                     availableUntil: (submission || isQuiz) && allowLateSubmission ? availableUntil.toISOString() : '',
+                    totalPoints: submission && !isQuiz ? totalPoints.toString() : '',
                 };
 
                 server
@@ -1949,6 +1958,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             allowLateSubmission,
             availableUntil,
             quizTitle,
+            totalPoints,
         ]
     );
 
@@ -2996,8 +3006,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     value={gradeWeight}
                                                                     style={{
                                                                         // width: '25%',
-                                                                        borderBottomColor: '#f2f2f2',
-                                                                        borderBottomWidth: 1,
+                                                                        minWidth: 100,
+                                                                        borderColor: '#cccccc',
+                                                                        borderWidth: 1,
                                                                         fontSize: width < 768 ? 14 : 16,
                                                                         padding: 15,
                                                                         paddingVertical: 12,
@@ -3006,6 +3017,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                                     placeholder={'0-100'}
                                                                     onChangeText={(val) => setGradeWeight(val)}
                                                                     placeholderTextColor={'#1F1F1F'}
+                                                                    keyboardType="numeric"
                                                                 />
                                                                 <Text
                                                                     style={{
@@ -3138,6 +3150,58 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             </View>
                                                         ) : null}
                                                     </View>
+                                                </View>
+                                            </View>
+                                        ) : null}
+
+                                        {/* Total Score if it is an assignment */}
+                                        {submission && !isQuiz ? (
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    flexDirection: width < 768 ? 'column' : 'row',
+                                                    paddingTop: 40,
+                                                }}
+                                            >
+                                                <View
+                                                    style={{
+                                                        flex: 1,
+                                                        flexDirection: 'row',
+                                                        paddingBottom: 15,
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 15,
+                                                            color: '#000000',
+                                                            fontFamily: 'Inter',
+                                                        }}
+                                                    >
+                                                        Total points
+                                                    </Text>
+                                                </View>
+                                                <View style={{}}>
+                                                    <TextInput
+                                                        value={totalPoints}
+                                                        style={{
+                                                            width: 120,
+                                                            borderColor: '#cccccc',
+                                                            borderRadius: 2,
+                                                            borderWidth: 1,
+                                                            fontSize: 15,
+                                                            padding: 15,
+                                                            paddingVertical: 12,
+                                                            marginTop: 0,
+                                                            backgroundColor: '#fff',
+                                                        }}
+                                                        placeholder={''}
+                                                        onChangeText={(val) => {
+                                                            if (Number.isNaN(Number(val))) return;
+                                                            setTotalPoints(val);
+                                                        }}
+                                                        keyboardType="numeric"
+                                                        placeholderTextColor={'#1F1F1F'}
+                                                    />
                                                 </View>
                                             </View>
                                         ) : null}

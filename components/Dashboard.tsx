@@ -39,36 +39,28 @@ import {
 
 // COMPONENTS
 import { View, Text } from '../components/Themed';
-import Walkthrough from './Walkthrough';
-import Channels from './Channels';
 import Create from './Create';
 import CalendarX from './Calendar';
 import { TextInput } from './CustomTextInput';
 import alert from './Alert';
-import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import Performance from './Performance';
 import SearchResultCard from './SearchResultCard';
 import Inbox from './Inbox';
-import Card from './Card';
 import Alert from '../components/Alert';
 import Discussion from './Discussion';
 import ChannelSettings from './ChannelSettings';
-// import logo from '../components/default-images/cues-logo-white-exclamation-hidden.jpg';
-import InsetShadow from 'react-native-inset-shadow';
 import DropDownPicker from 'react-native-dropdown-picker';
 import BottomSheet from './BottomSheet';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import NewPostModal from './NewPostModal';
 import AccountPage from './AccountPage';
+import GradesList from './GradesList';
 import Reanimated from 'react-native-reanimated';
-import Carousel, { Pagination } from 'react-native-snap-carousel';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { htmlStringParser } from '../helpers/HTMLParser';
 import { disableEmailId, zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
 
-import logo from '../components/default-images/cues-logo-black-exclamation-hidden.jpg';
 import { contentsModalHeight, getDropdownHeight } from '../helpers/DropdownHeight';
 import { validateEmail } from '../helpers/emailCheck';
 
@@ -82,7 +74,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [role, setRole] = useState('');
     const [userCreatedOrg, setUserCreatedOrg] = useState(false);
     const [allowQuizCreation, setAllowQuizCreation] = useState(false);
-    const scrollViewRef: any = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [collapseMap, setCollapseMap] = useState<any>({});
     const [results, setResults] = useState<any>({
@@ -3004,7 +2995,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }}
             key={selectedWorkspace}
         >
-            {props.hideNavbarDiscussions ? null : (
+            {props.hideNavbarDiscussions || props.hideNavbarGrades ? null : (
                 <View
                     style={{
                         paddingHorizontal: paddingResponsive(),
@@ -3101,7 +3092,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     <Ionicons name={'filter-outline'} size={23} color="black" />
                                 </TouchableOpacity>
                             ) : null}
-                            {props.activeWorkspaceTab === 'Scores' &&
+                            {/* {props.activeWorkspaceTab === 'Scores' &&
                             selectedWorkspace.split('-SPLIT-')[2] === userId ? (
                                 <TouchableOpacity
                                     containerStyle={{
@@ -3119,7 +3110,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         color="black"
                                     />
                                 </TouchableOpacity>
-                            ) : null}
+                            ) : null} */}
                         </View>
                     ) : (
                         <View
@@ -3424,11 +3415,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         height: '100%',
                         maxHeight: '100%',
                     }}
-                    scrollEnabled={!props.hideNavbarDiscussions}
+                    scrollEnabled={!props.hideNavbarDiscussions && !props.hideNavbarGrades}
                     nestedScrollEnabled={true}
                     indicatorStyle="black"
                     ref={DashboardScrollViewRef}
-                    bounces={!props.hideNavbarDiscussions}
+                    bounces={!props.hideNavbarDiscussions && !props.hideNavbarGrades}
                     // alwaysBounceVertical={false}
 
                     // bounces={false}
@@ -3450,7 +3441,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 backgroundColor: props.activeWorkspaceTab === 'Content' ? '#fff' : '#fff',
                                 // This changes the height for all
                                 height:
-                                    props.activeWorkspaceTab === 'Settings'
+                                    props.activeWorkspaceTab === 'Settings' || props.activeWorkspaceTab === 'Scores'
                                         ? 'auto'
                                         : props.activeWorkspaceTab === 'Discuss'
                                         ? windowHeight
@@ -3538,29 +3529,17 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             </ScrollView>
                                         ) : // Scores
                                         props.activeWorkspaceTab === 'Scores' ? (
-                                            <Performance
-                                                channelName={selectedWorkspace.split('-SPLIT-')[0]}
-                                                onPress={(name: any, id: any, createdBy: any) => {
-                                                    props.setChannelFilterChoice('All');
-                                                    props.handleFilterChange(name);
-                                                    props.setChannelId(id);
-                                                    props.setChannelCreatedBy(createdBy);
-                                                    props.openGrades();
-                                                    props.hideHome();
-                                                }}
-                                                filterStart={filterStart}
-                                                channelId={selectedWorkspace.split('-SPLIT-')[1]}
-                                                channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
-                                                filterEnd={filterEnd}
-                                                subscriptions={props.subscriptions}
-                                                openCueFromGrades={props.openCueFromCalendar}
-                                                colorCode={selectedWorkspace.split('-SPLIT-')[3]}
-                                                activeTab={'scores'}
-                                                isEditor={selectedWorkspace.split('-SPLIT-')[2] === userId}
-                                                exportScores={exportScores}
-                                                setExportScores={(exp: boolean) => setExportScores(exp)}
-                                                userId={userId}
+                                            <GradesList
                                                 user={props.user}
+                                                userId={userId}
+                                                openCueFromGrades={props.openCueFromCalendar}
+                                                isOwner={selectedWorkspace.split('-SPLIT-')[2] === userId}
+                                                showNewAssignment={props.showNewAssignment}
+                                                setShowNewAssignment={props.setShowNewAssignment}
+                                                channelId={selectedWorkspace.split('-SPLIT-')[1]}
+                                                setHideNavbarGrades={props.setHideNavbarGrades}
+                                                hideNavbarGrades={props.hideNavbarGrades}
+                                                channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
                                             />
                                         ) : (
                                             <View

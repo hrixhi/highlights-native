@@ -1,6 +1,14 @@
 // REACT
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, ScrollView, TextInput, Dimensions, Image, ActivityIndicator } from 'react-native';
+import {
+    StyleSheet,
+    ScrollView,
+    TextInput,
+    Dimensions,
+    Image,
+    ActivityIndicator,
+    TextInput as DefaultTextInput,
+} from 'react-native';
 import _ from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -43,7 +51,8 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const categories = ['All', 'Delivered', 'Read'];
     const [showSubmission, setShowSubmission] = useState(false);
     const [submission, setSubmission] = useState<any>('');
-    const [score, setScore] = useState('0');
+    const [pointsScored, setPointsScored] = useState('');
+
     const [graded, setGraded] = useState(false);
     const [userId, setUserId] = useState('');
     const RichText: any = useRef();
@@ -65,6 +74,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [currentQuizAttempt, setCurrentQuizAttempt] = useState(0);
     const [problems, setProblems] = useState<any[]>([]);
     const [submittedAt, setSubmittedAt] = useState('');
+    const [totalPoints, setTotalPoints] = useState('');
     const [deadline, setDeadline] = useState('');
     const [headers, setHeaders] = useState({});
     const [exportAoa, setExportAoa] = useState<any[]>();
@@ -500,18 +510,18 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
      * @description Called when instructor saves grade
      */
     const handleGradeSubmit = useCallback(() => {
-        if (score === '') {
-            Alert('Enter a valid score');
+        if (pointsScored === '') {
+            Alert('Enter a valid score for grading this assingment.');
             return;
         }
 
-        if (Number.isNaN(Number(score))) {
-            Alert('Score must be a number');
+        if (Number.isNaN(Number(pointsScored))) {
+            Alert('Points entered must be a valid number');
             return;
         }
 
-        if (Number(score) > 100) {
-            Alert('Warning- Assigned score is greater than 100');
+        if (Number(pointsScored) > Number(totalPoints)) {
+            Alert('Warning- Points assigned are greater than the total points.');
         }
 
         const availableUntil =
@@ -549,7 +559,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             variables: {
                                 cueId: props.cueId,
                                 userId,
-                                score,
+                                pointsScored,
                                 comment,
                             },
                         })
@@ -561,7 +571,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 },
             },
         ]);
-    }, [score, userId, props.cueId, comment, props]);
+    }, [pointsScored, userId, props.cueId, comment]);
 
     // FUNCTIONS
 
@@ -1048,10 +1058,13 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 setSubmittedAt(subscriber.submittedAt);
                                                 setDeadline(subscriber.deadline);
                                                 setShowSubmission(true);
-                                                setScore(subscriber.score ? subscriber.score.toString() : '');
+                                                setPointsScored(
+                                                    subscriber.pointsScored ? subscriber.pointsScored.toString() : ''
+                                                );
                                                 setGraded(subscriber.graded);
                                                 setComment(subscriber.comment);
                                                 setUserId(subscriber.userId);
+                                                setTotalPoints(subscriber.totalPoints);
                                             }
                                         }}
                                         style={{
@@ -1187,7 +1200,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 props.reloadStatuses();
                                             }
                                             setShowSubmission(false);
-                                            setScore('0');
+                                            setPointsScored('');
                                             setUserId('');
                                         }}
                                         style={{
@@ -1282,7 +1295,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     props.reloadStatuses();
                                                 }
                                                 setShowSubmission(false);
-                                                setScore('0');
+                                                setPointsScored('');
                                                 setUserId('');
                                             }}
                                             style={{
@@ -1341,28 +1354,45 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             marginLeft: Dimensions.get('window').width < 768 ? 0 : 'auto',
                                         }}
                                     >
-                                        <TextInput
-                                            value={score}
-                                            numberOfLines={1}
+                                        <View
                                             style={{
-                                                width: 120,
-                                                borderBottomColor: '#f2f2f2',
-                                                borderBottomWidth: 1,
-                                                fontSize: 14,
-                                                // paddingTop: 13,
-                                                marginLeft: 10,
-                                                padding: 10,
-                                                marginRight: 20,
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                marginRight: 25,
                                             }}
-                                            placeholder={'Score 0-100'}
-                                            onChangeText={(val) => setScore(val)}
-                                            placeholderTextColor={'#1F1F1F'}
-                                        />
+                                        >
+                                            <DefaultTextInput
+                                                value={pointsScored}
+                                                numberOfLines={1}
+                                                style={{
+                                                    width: 100,
+                                                    borderColor: '#cccccc',
+                                                    borderWidth: 1,
+                                                    fontSize: 15,
+                                                    backgroundColor: '#fff',
+                                                    // paddingTop: 13,
+                                                    marginLeft: 10,
+                                                    padding: 10,
+                                                }}
+                                                placeholder={'Enter pts'}
+                                                onChangeText={(val) => setPointsScored(val)}
+                                                placeholderTextColor={'#1F1F1F'}
+                                            />
+                                            <Text
+                                                style={{
+                                                    fontSize: 18,
+                                                    paddingLeft: 7,
+                                                    fontFamily: 'Inter',
+                                                }}
+                                            >
+                                                / {totalPoints} points
+                                            </Text>
+                                        </View>
                                         <TouchableOpacity
                                             onPress={() => handleGradeSubmit()}
                                             style={{
                                                 backgroundColor: 'white',
-                                                marginLeft: Dimensions.get('window').width < 768 ? 20 : 0,
+                                                // marginLeft: Dimensions.get('window').width < 768 ? 20 : 0,
                                             }}
                                             disabled={props.user.email === disableEmailId}
                                         >
@@ -1380,7 +1410,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                     overflow: 'hidden',
                                                     paddingVertical: 14,
                                                     textTransform: 'uppercase',
-                                                    width: 150,
+                                                    width: 120,
                                                 }}
                                             >
                                                 UPDATE
