@@ -2190,3 +2190,26 @@ export const getStandardsCategories = gql`
         }
     }
 `;
+export const getStreamChatUserToken = gql`
+    mutation ($userId: String!) {
+        streamChat {
+            getUserToken(userId: $userId)
+        }
+    }
+`;
+export const getInboxDirectory = gql`
+    query ($userId: String!) {
+        streamChat {
+            getInboxDirectory(userId: $userId) {
+                _id
+                fullName
+                avatar
+                role
+                grade
+                section
+                roleDescription
+                courses
+            }
+        }
+    }
+`;

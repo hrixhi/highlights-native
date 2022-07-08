@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler';
+
 import { registerRootComponent } from 'expo';
 // import { gestureHandlerRootHOC } from 'react-native-gesture-handler';
 

@@ -55,6 +55,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AccountPage from './AccountPage';
 import GradesList from './GradesList';
 import Reanimated from 'react-native-reanimated';
+import Chat from './Chat';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
@@ -4225,15 +4226,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             />
                         ) : null}
                         {props.option === 'Inbox' ? (
-                            <Inbox
-                                showDirectory={props.showDirectory}
-                                setShowDirectory={(val: any) => props.setShowDirectory(val)}
-                                subscriptions={props.subscriptions}
-                                refreshUnreadInbox={props.refreshUnreadInbox}
-                                hideNewChatButton={props.hideNewChatButton}
-                                showSearchMobile={showSearchMobile}
-                                user={props.user}
-                            />
+                            <Chat user={props.user} subscriptions={props.subscriptions} />
                         ) : null}
                     </View>
                     //     )

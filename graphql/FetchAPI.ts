@@ -4,7 +4,8 @@ import * as Updates from 'expo-updates';
 
 export const fetchAPI = (userId: any) => {
     // const uri = 'http://localhost:8081/';
-    const uri = 'https://api.learnwithcues.com';
+    // const uri = 'https://api.learnwithcues.com';
+    const uri = 'https://f380-99-23-138-109.ngrok.io';
 
     const logoutUser = async () => {
         await AsyncStorage.clear();
