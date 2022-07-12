@@ -64,6 +64,12 @@ export type StackNavigatorParamList = {
         channel: Channel<StreamChatGenerics>;
         thread: ThreadContextValue<StreamChatGenerics>['thread'];
     };
+    NewMeetingScreen: {
+        channel: Channel<StreamChatGenerics>;
+    };
+    ExistingChannelAddMembersScreen: {
+        channel: Channel<StreamChatGenerics>;
+    };
 };
 
 export type UserSelectorParamList = {

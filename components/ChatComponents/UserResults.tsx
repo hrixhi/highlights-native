@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 8,
     },
-    searchResultUserLastOnline: { fontSize: 12 },
+    searchResultUserLastOnline: { fontSize: 12, marginTop: 3 },
     searchResultUserName: { fontSize: 14, fontWeight: '700' },
     sectionHeader: {
         fontSize: 14.5,
@@ -141,12 +141,16 @@ export const UserSearchResults: React.FC<UserSearchResultsProps> = ({
                 team: chatClient.user.schoolId,
             });
 
-            console.log('channel', channel);
+            if (!channel || !channel.id) {
+                await channel.create();
+            }
+
+            console.log('Start chat channel', channel.id);
 
             navigation.goBack();
 
             navigation.navigate('ChannelScreen', {
-                channel,
+                channelId: channel.id,
             });
         },
         [chatClient]

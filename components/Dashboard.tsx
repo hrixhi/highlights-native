@@ -68,6 +68,7 @@ import { validateEmail } from '../helpers/emailCheck';
 import { useOrientation } from '../hooks/useOrientation';
 import { filterLibraryModalHeight } from '../helpers/ModalHeights';
 import { paddingResponsive } from '../helpers/paddingHelper';
+import AttendanceList from './AttendanceList';
 
 const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const styles = styleObject();
@@ -562,6 +563,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     //     tempIndexes['My Notes'] = 0;
     //     setIndexMap(tempIndexes);
     // }, [props.subscriptions]);
+
+    useEffect(() => {
+        if (DashboardScrollViewRef && DashboardScrollViewRef.current) {
+            DashboardScrollViewRef.current.scrollTo({
+                y: 0,
+                animated: false,
+            });
+        }
+    }, [props.showNewAssignment, props.showNewAttendance]);
 
     /**
      * @description Setup the data for carousel
@@ -1852,8 +1862,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const renderOngoingMeetings = (createdBy: string, colorCode: string) => {
         console.log('Render ongoing meetings');
         return (
-            <View style={{ width: '100%', maxWidth: undefined, backgroundColor: '#fff', paddingBottom: 30 }}>
-                <Text style={{ color: '#1f1f1f', fontSize: 18, fontFamily: 'inter', marginBottom: 20 }}>
+            <View
+                style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    backgroundColor: '#fff',
+                    marginTop: 30,
+                    paddingHorizontal: paddingResponsive(),
+                }}
+            >
+                <Text style={{ color: '#1f1f1f', fontSize: 16, fontFamily: 'inter', marginBottom: 20 }}>
                     In Progress
                 </Text>
 
@@ -2996,7 +3014,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             }}
             key={selectedWorkspace}
         >
-            {props.hideNavbarDiscussions || props.hideNavbarGrades ? null : (
+            {props.hideNavbarDiscussions || props.hideNavbarGrades || props.hideNavbarAttendance ? null : (
                 <View
                     style={{
                         paddingHorizontal: paddingResponsive(),
@@ -3416,16 +3434,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         height: '100%',
                         maxHeight: '100%',
                     }}
-                    scrollEnabled={!props.hideNavbarDiscussions && !props.hideNavbarGrades}
+                    scrollEnabled={
+                        !props.hideNavbarDiscussions && !props.hideNavbarGrades && !props.hideNavbarAttendance
+                    }
                     nestedScrollEnabled={true}
                     indicatorStyle="black"
                     ref={DashboardScrollViewRef}
-                    bounces={!props.hideNavbarDiscussions && !props.hideNavbarGrades}
-                    // alwaysBounceVertical={false}
-
-                    // bounces={false}
+                    bounces={!props.hideNavbarDiscussions && !props.hideNavbarGrades && !props.hideNavbarAttendance}
                 >
-                    {/* {selectedWorkspace.split('-SPLIT-')[0] !== 'My Notes' ? renderTabs(selected) : null} */}
                     <View
                         style={{
                             flexDirection: 'row',
@@ -3442,7 +3458,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 backgroundColor: props.activeWorkspaceTab === 'Content' ? '#fff' : '#fff',
                                 // This changes the height for all
                                 height:
-                                    props.activeWorkspaceTab === 'Settings' || props.activeWorkspaceTab === 'Scores'
+                                    props.activeWorkspaceTab === 'Settings' ||
+                                    props.activeWorkspaceTab === 'Scores' ||
+                                    props.activeWorkspaceTab === 'Meet'
                                         ? 'auto'
                                         : props.activeWorkspaceTab === 'Discuss'
                                         ? windowHeight
@@ -3484,50 +3502,25 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             />
                                         ) : // Meet
                                         props.activeWorkspaceTab === 'Meet' ? (
-                                            <ScrollView
-                                                contentContainerStyle={{
-                                                    alignItems: 'center',
-                                                    backgroundColor: '#fff',
-                                                    paddingTop: 20,
-                                                    marginBottom: 50,
-                                                    paddingHorizontal: paddingResponsive(),
-                                                }}
-                                                style={{
-                                                    height: '100%',
-                                                }}
-                                                showsVerticalScrollIndicator={true}
-                                                indicatorStyle={'black'}
-                                            >
-                                                {ongoingMeetings.length > 0
+                                            <>
+                                                {ongoingMeetings.length > 0 && !props.showNewAttendance
                                                     ? renderOngoingMeetings(
                                                           selectedWorkspace.split('-SPLIT-')[2],
                                                           selectedWorkspace.split('-SPLIT-')[3]
                                                       )
                                                     : null}
 
-                                                <Performance
-                                                    channelName={selectedWorkspace.split('-SPLIT-')[0]}
-                                                    onPress={(name: any, id: any, createdBy: any) => {
-                                                        props.setChannelFilterChoice('All');
-                                                        props.handleFilterChange(name);
-                                                        props.setChannelId(id);
-                                                        props.setChannelCreatedBy(createdBy);
-                                                        props.openGrades();
-                                                        props.hideHome();
-                                                    }}
-                                                    filterStart={filterStart}
-                                                    filterEnd={filterEnd}
+                                                <AttendanceList
                                                     channelId={selectedWorkspace.split('-SPLIT-')[1]}
                                                     channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
-                                                    subscriptions={props.subscriptions}
-                                                    openCueFromGrades={props.openCueFromCalendar}
-                                                    colorCode={selectedWorkspace.split('-SPLIT-')[3]}
-                                                    activeTab={'meetings'}
-                                                    exportScores={exportScores}
-                                                    setExportScores={(exp: boolean) => setExportScores(exp)}
+                                                    channelColor={selectedWorkspace.split('-SPLIT-')[3]}
+                                                    isOwner={selectedWorkspace.split('-SPLIT-')[2] === userId}
+                                                    userId={userId}
                                                     user={props.user}
+                                                    showNewAttendance={props.showNewAttendance}
+                                                    setShowNewAttendance={props.setShowNewAttendance}
                                                 />
-                                            </ScrollView>
+                                            </>
                                         ) : // Scores
                                         props.activeWorkspaceTab === 'Scores' ? (
                                             <GradesList
@@ -4149,15 +4142,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 user={props.user}
                             />
                         ) : null}
-                        {/* {props.option === 'Channels' ? (
-                        <Channels
-                            setShowCreate={(val: any) => props.setShowCreate(val)}
-                            showCreate={props.showCreate}
-                            closeModal={() => {}}
-                            subscriptions={props.subscriptions}
-                            refreshSubscriptions={props.refreshSubscriptions}
-                        />
-                    ) : null} */}
                         {props.option === 'Classroom' || showSearchMobile
                             ? Dimensions.get('window').width < 768
                                 ? overviewMobile
@@ -4226,7 +4210,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             />
                         ) : null}
                         {props.option === 'Inbox' ? (
-                            <Chat user={props.user} subscriptions={props.subscriptions} />
+                            <Chat
+                                user={props.user}
+                                subscriptions={props.subscriptions}
+                                meetingProvider={meetingProvider}
+                            />
                         ) : null}
                     </View>
                     //     )

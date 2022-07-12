@@ -179,6 +179,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [showNewAssignment, setShowNewAssignment] = useState(false);
     const [hideNavbarGrades, setHideNavbarGrades] = useState(false);
 
+    const [showNewAttendance, setShowNewAttendance] = useState(false);
+    const [hideNavbarAttendance, setHideNavbarAttendance] = useState(false);
+
     const height = Dimensions.get('window').height;
     const width = Dimensions.get('window').width;
 
@@ -2888,7 +2891,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             (workspaceActiveTab === 'Discuss' && !showNewDiscussionPost && !hideNavbarDiscussions) ||
                             (workspaceActiveTab === 'Meet' &&
                                 selectedWorkspace.split('-SPLIT-')[2] === userId &&
-                                !showNewMeeting) ||
+                                !showNewMeeting &&
+                                !showNewAttendance) ||
                             (workspaceActiveTab === 'Scores' &&
                                 !showNewAssignment &&
                                 selectedWorkspace.split('-SPLIT-')[2] === userId))) ||
@@ -3186,6 +3190,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             setShowWorkspaceFilterModal(show)
                                         }
                                         user={user}
+                                        showNewAttendance={showNewAttendance}
+                                        setShowNewAttendance={(show: boolean) => {
+                                            setShowNewAttendance(show);
+                                            setHideNavbarAttendance(show);
+                                        }}
+                                        hideNavbarAttendance={hideNavbarAttendance}
                                     />
                                 )}
                             </View>

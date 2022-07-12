@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { useTheme } from 'stream-chat-expo';
+import { Avatar, useTheme } from 'stream-chat-expo';
 
 import { useAppContext } from '../../ChatContext/AppContext';
 import { useAppOverlayContext } from '../../ChatContext/AppOverlayContext';
@@ -15,6 +15,10 @@ import { getUserActivityStatus } from '../../helpers/getUserActivityStatus';
 import { Contacts, Delete, File, GoBack, GoForward, Mute, Notification, Picture, Pin } from '../../assets/chatIcons';
 
 const styles = StyleSheet.create({
+    avatarPresenceIndicator: {
+        right: 5,
+        top: 1,
+    },
     actionContainer: {
         borderBottomWidth: 1,
         flexDirection: 'row',
@@ -135,7 +139,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
         (channelMember) => channelMember.user?.id !== chatClient?.user?.id
     );
 
-    const user = member?.user;
+    const [user, setUser] = useState(member?.user);
     const [muted, setMuted] = useState(
         chatClient?.mutedUsers &&
             chatClient?.mutedUsers?.findIndex((mutedUser) => mutedUser.target.id === user?.id) > -1
@@ -144,6 +148,35 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
         chatClient?.mutedChannels &&
             chatClient.mutedChannels.findIndex((mutedChannel) => mutedChannel.channel?.id === channel.id) > -1
     );
+
+    const updatePresenceChanged = useCallback(
+        (event: any) => {
+            if (!event) return;
+
+            const channelId = event.channel_id;
+
+            const fetchChannel = chatClient?.channel('messaging', channelId);
+
+            if (!fetchChannel) return;
+
+            const member = Object.values(channel.state.members).find(
+                (channelMember) => channelMember.user?.id !== chatClient?.user?.id
+            );
+
+            setUser(member?.user);
+        },
+        [chatClient, channel]
+    );
+
+    useEffect(() => {
+        if (chatClient) {
+            chatClient.on('user.presence.changed', updatePresenceChanged);
+
+            return () => {
+                chatClient.off('user.presence.changed', updatePresenceChanged);
+            };
+        }
+    }, [chatClient]);
 
     /**
      * Opens confirmation sheet for deleting the conversation
@@ -169,11 +202,15 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
             index: 0,
             routes: [
                 {
-                    name: 'ChatScreen',
+                    name: 'ChannelListScreen',
                 },
             ],
         });
     };
+
+    function capitalizeFirstLetter(word: string) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }
 
     if (!user) return null;
 
@@ -181,7 +218,14 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
         <SafeAreaView style={[{ backgroundColor: white }, styles.container]}>
             <ScrollView contentContainerStyle={styles.contentContainer} style={styles.container}>
                 <View style={styles.userInfoContainer}>
-                    <Image source={{ uri: user.image }} style={styles.avatar} />
+                    {/* Avatar */}
+                    <Avatar
+                        image={user.image}
+                        name={user.name || user.id}
+                        // online={user.online}
+                        // presenceIndicatorContainerStyle={styles.avatarPresenceIndicator}
+                        size={100}
+                    />
                     <Text
                         style={[
                             styles.displayName,
@@ -221,7 +265,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
                                 },
                             ]}
                         >
-                            @{user.id}
+                            {user.name}
                         </Text>
                         <Text
                             style={[
@@ -231,7 +275,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
                                 },
                             ]}
                         >
-                            {user.name}
+                            {capitalizeFirstLetter(user.cues_role)}
                         </Text>
                     </View>
                     <TouchableOpacity
@@ -244,7 +288,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
                     </TouchableOpacity>
                 </View>
                 <Spacer />
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     style={[
                         styles.actionContainer,
                         {
@@ -282,7 +326,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
                             value={notificationsEnabled}
                         />
                     </View>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <TouchableOpacity
                     style={[
                         styles.actionContainer,
@@ -444,7 +488,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
                         <GoForward fill={grey} />
                     </View>
                 </TouchableOpacity>
-                <Spacer />
+                {/* <Spacer />
                 <TouchableOpacity
                     onPress={openDeleteConversationConfirmationSheet}
                     style={[
@@ -464,10 +508,10 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
                                 },
                             ]}
                         >
-                            Delete contact
+                            Delete chat
                         </Text>
                     </View>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </ScrollView>
         </SafeAreaView>
     );

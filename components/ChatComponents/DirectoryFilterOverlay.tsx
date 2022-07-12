@@ -194,7 +194,7 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                       easing: Easing.out(Easing.ease),
                   },
                   () => {
-                      //   runOnJS(reset)();
+                      //   runOnJS()();
                   }
               );
     };
@@ -406,11 +406,7 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                                                 style={{
                                                     backgroundColor: 'white',
                                                     display: 'flex',
-                                                    // height: showSelectChannelDropdown
-                                                    //     ? getDropdownHeight(courseDropdownOptions.length)
-                                                    //     : 50,
                                                     zIndex: showSelectChannelDropdown ? 1 : 0,
-                                                    // marginRight: 10
                                                 }}
                                             >
                                                 <DropDownPicker
@@ -458,13 +454,14 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                                                 width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
                                                 display: 'flex',
                                                 maxWidth: 600,
-                                                marginBottom: 20,
-                                                marginTop: 30,
+                                                // marginBottom: 20,
+                                                // marginTop: 30,
                                             }}
                                         >
                                             <View
                                                 style={{
                                                     width: '100%',
+                                                    paddingTop: 40,
                                                     backgroundColor: 'white',
                                                 }}
                                             >
@@ -522,8 +519,7 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                                                 width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
                                                 display: 'flex',
                                                 maxWidth: 600,
-                                                marginTop: 20,
-                                                marginBottom: 20,
+                                                marginTop: 30,
                                             }}
                                         >
                                             <View
@@ -587,7 +583,7 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                                                 width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
                                                 display: 'flex',
                                                 maxWidth: 600,
-                                                marginTop: 20,
+                                                marginTop: 30,
                                             }}
                                         >
                                             <View
@@ -645,7 +641,12 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                                         </View>
                                     )}
 
-                                    <TapGestureHandler onHandlerStateChange={({ nativeEvent: { state } }) => {}}>
+                                    <TapGestureHandler
+                                        onHandlerStateChange={({ nativeEvent: { state } }) => {
+                                            reset();
+                                            setOverlay('none');
+                                        }}
+                                    >
                                         <View
                                             style={[
                                                 styles.row,
@@ -656,31 +657,9 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                                             ]}
                                         >
                                             <View style={styles.rowInner}>
-                                                <Delete pathFill={accent_red} />
+                                                <CircleClose pathFill={accent_red} />
                                             </View>
                                             <Text style={[styles.rowText, { color: accent_red }]}>Reset</Text>
-                                        </View>
-                                    </TapGestureHandler>
-                                    <TapGestureHandler
-                                        onHandlerStateChange={({ nativeEvent: { state } }) => {
-                                            if (state === State.END) {
-                                                setOverlay('none');
-                                            }
-                                        }}
-                                    >
-                                        <View
-                                            style={[
-                                                styles.lastRow,
-                                                {
-                                                    borderBottomColor: border,
-                                                    borderTopColor: border,
-                                                },
-                                            ]}
-                                        >
-                                            <View style={styles.rowInner}>
-                                                <CircleClose pathFill={grey} />
-                                            </View>
-                                            <Text style={[styles.rowText, { color: black }]}>Close</Text>
                                         </View>
                                     </TapGestureHandler>
                                 </View>

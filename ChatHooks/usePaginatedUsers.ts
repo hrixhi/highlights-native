@@ -33,6 +33,7 @@ export type PaginatedUsers = {
     setIsCreatingGroup: (value: boolean) => void;
     allSelected: boolean;
     toggleAllSelected: () => void;
+    setExistingChannelMembers: (userIds: string[]) => void;
 };
 
 export const usePaginatedUsers = (): PaginatedUsers => {
@@ -45,6 +46,7 @@ export const usePaginatedUsers = (): PaginatedUsers => {
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<UserResponse<StreamChatGenerics>[]>([]);
     const [isCreatingGroup, setIsCreatingGroup] = useState<boolean>(false);
+    const [existingChannelMembers, setExistingChannelMembers] = useState<any>(undefined);
 
     const hasMoreResults = useRef(true);
     const offset = useRef(0);
@@ -139,7 +141,25 @@ export const usePaginatedUsers = (): PaginatedUsers => {
                 return;
             }
 
-            const res = await chatClient?.queryUsers({ id: { $in: userIds } }, { last_active: -1 }, { presence: true });
+            let res: any;
+
+            // For adding to existing groups
+            if (existingChannelMembers && existingChannelMembers.length !== 0) {
+                res = await chatClient?.queryUsers(
+                    {
+                        $and: [
+                            { id: { $in: userIds } },
+                            {
+                                id: { $nin: existingChannelMembers },
+                            },
+                        ],
+                    },
+                    { last_active: -1 },
+                    { presence: true }
+                );
+            } else {
+                res = await chatClient?.queryUsers({ id: { $in: userIds } }, { last_active: -1 }, { presence: true });
+            }
 
             if (res && res.users) {
                 let updateUsersWithRoles: any[] = [];
@@ -247,6 +267,7 @@ export const usePaginatedUsers = (): PaginatedUsers => {
         selectedSection,
         subscriptions,
         chatClient,
+        existingChannelMembers,
     ]);
 
     console.log('Selected users', selectedUsers);
@@ -354,12 +375,24 @@ export const usePaginatedUsers = (): PaginatedUsers => {
 
         try {
             queryInProgress.current = true;
-            const filter: UserFilters = {
-                id: {
-                    $nin: [chatClient?.userID],
-                },
-                role: 'user',
-            };
+
+            let filter: UserFilters;
+
+            if (existingChannelMembers) {
+                filter = {
+                    id: {
+                        $nin: [chatClient?.userID, ...existingChannelMembers],
+                    },
+                    role: 'user',
+                };
+            } else {
+                filter = {
+                    id: {
+                        $nin: [chatClient?.userID],
+                    },
+                    role: 'user',
+                };
+            }
 
             if (query) {
                 filter.name = { $autocomplete: query };
@@ -450,5 +483,6 @@ export const usePaginatedUsers = (): PaginatedUsers => {
         setDisplayUsers,
         allSelected,
         toggleAllSelected,
+        setExistingChannelMembers,
     };
 };

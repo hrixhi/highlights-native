@@ -1069,6 +1069,9 @@ export const getEvents = gql`
                 zoomMeetingScheduledBy
                 zoomMeetingCreatorProfile
                 meetingLink
+                isNonChannelMeeting
+                nonChannelGroupId
+                groupUsername
             }
         }
     }
@@ -1511,6 +1514,33 @@ export const handleDeleteStandard = gql`
     mutation ($standardId: String!) {
         standards {
             deleteStandard(standardId: $standardId)
+        }
+    }
+`;
+export const createChannelAttendance = gql`
+    mutation ($attendanceEntryInput: NewAttendanceEntryInput!) {
+        attendance {
+            createEntry(attendanceEntryInput: $attendanceEntryInput)
+        }
+    }
+`;
+
+export const editChannelAttendance = gql`
+    mutation ($attendanceEntryInput: NewAttendanceEntryInput!, $entryId: String!, $attendanceBookEntry: Boolean!) {
+        attendance {
+            editEntry(
+                attendanceEntryInput: $attendanceEntryInput
+                entryId: $entryId
+                attendanceBookEntry: $attendanceBookEntry
+            )
+        }
+    }
+`;
+
+export const deleteChannelAttendance = gql`
+    mutation ($entryId: String!, $attendanceBookEntry: Boolean!) {
+        attendance {
+            deleteEntry(entryId: $entryId, attendanceBookEntry: $attendanceBookEntry)
         }
     }
 `;
@@ -2190,6 +2220,29 @@ export const getStandardsCategories = gql`
         }
     }
 `;
+export const handleUpdateAttendanceBookEntry = gql`
+    mutation (
+        $userId: String!
+        $entryId: String!
+        $attendanceEntry: Boolean!
+        $attendanceType: String!
+        $late: Boolean!
+        $excused: Boolean!
+        $channelId: String!
+    ) {
+        attendance {
+            handleUpdateAttendanceBookEntry(
+                userId: $userId
+                entryId: $entryId
+                attendanceEntry: $attendanceEntry
+                attendanceType: $attendanceType
+                late: $late
+                excused: $excused
+                channelId: $channelId
+            )
+        }
+    }
+`;
 export const getStreamChatUserToken = gql`
     mutation ($userId: String!) {
         streamChat {
@@ -2197,6 +2250,114 @@ export const getStreamChatUserToken = gql`
         }
     }
 `;
+export const startChatMeeting = gql`
+    mutation ($userId: String!, $topic: String!, $start: String!, $end: String!, $groupId: String!) {
+        streamChat {
+            startChatMeeting(userId: $userId, start: $start, end: $end, topic: $topic, groupId: $groupId) {
+                title
+                meetingId
+                meetingProvider
+                meetingJoinLink
+                meetingStartLink
+                start
+                end
+            }
+        }
+    }
+`;
+export const toggleAdminRole = gql`
+    mutation ($groupId: String!, $userId: String!, $alreadyAdmin: Boolean!) {
+        streamChat {
+            toggleAdminRole(groupId: $groupId, userId: $userId, alreadyAdmin: $alreadyAdmin)
+        }
+    }
+`;
+export const deleteChannelPermanently = gql`
+    mutation ($groupId: String!) {
+        streamChat {
+            deleteChannelPermanently(groupId: $groupId)
+        }
+    }
+`;
+export const getAttendanceBook = gql`
+    query ($channelId: String!) {
+        attendance {
+            getAttendanceBook(channelId: $channelId) {
+                entries {
+                    title
+                    start
+                    end
+                    dateId
+                    attendanceEntryId
+                    recordingLink
+                    attendances {
+                        userId
+                        attendanceType
+                        late
+                        excused
+                        joinedAt
+                    }
+                }
+                totals {
+                    userId
+                    totalAttendancesPossible
+                    totalPresent
+                    totalLate
+                    totalExcused
+                    last30AttendancesPossible
+                    last30Present
+                    last30Late
+                    last30TotalExcused
+                    last7AttendancesPossible
+                    last7Present
+                    last7Late
+                    last7TotalExcused
+                }
+                users {
+                    userId
+                    fullName
+                    avatar
+                }
+            }
+        }
+    }
+`;
+
+export const getAttendanceBookStudent = gql`
+    query ($channelId: String!, $userId: String!) {
+        attendance {
+            getAttendanceBookStudent(channelId: $channelId, userId: $userId) {
+                entries {
+                    title
+                    start
+                    end
+                    dateId
+                    attendanceEntryId
+                    recordingLink
+                    attendanceType
+                    late
+                    excused
+                    joinedAt
+                }
+                total {
+                    totalAttendancesPossible
+                    totalPresent
+                    totalLate
+                    totalExcused
+                    last30AttendancesPossible
+                    last30Present
+                    last30Late
+                    last30TotalExcused
+                    last7AttendancesPossible
+                    last7Present
+                    last7Late
+                    last7TotalExcused
+                }
+            }
+        }
+    }
+`;
+
 export const getInboxDirectory = gql`
     query ($userId: String!) {
         streamChat {

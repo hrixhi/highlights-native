@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Keyboard, SafeAreaView, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -30,6 +30,10 @@ import type { StreamChatGenerics } from './types';
 
 import { UserResponse } from 'stream-chat';
 import { useAppContext } from '../../ChatContext/AppContext';
+import { AddUser, RemoveUser } from '../../assets/chatIcons';
+import { fetchAPI } from '../../graphql/FetchAPI';
+import { toggleAdminRole } from '../../graphql/QueriesAndMutations';
+import Alert from '../Alert';
 
 dayjs.extend(relativeTime);
 
@@ -104,11 +108,13 @@ export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
     const { setData } = useBottomSheetOverlayContext();
     const { data, reset } = useUserInfoOverlayContext();
 
+    const [channelRole, setChannelRole] = useState<string>('');
+
     const { channel, member, navigation } = data || {};
 
     const {
         theme: {
-            colors: { accent_red, black, border, grey, white },
+            colors: { accent_red, accent_blue, black, border, grey, white },
         },
     } = useTheme();
 
@@ -146,6 +152,56 @@ export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
         }
         fadeScreen(!!visible);
     }, [visible]);
+
+    useEffect(() => {
+        if (!member || !chatClient) return;
+
+        console.log('Member inside User info overlay', member);
+
+        if (member.role === 'owner') {
+            setChannelRole('owner');
+        } else if (member.is_moderator) {
+            setChannelRole('moderator');
+        } else {
+            setChannelRole('member');
+        }
+    }, [member, chatClient]);
+
+    const handleRemoveUser = useCallback(
+        async (userId: string) => {
+            if (!channel) return;
+
+            await channel.removeMembers([userId]);
+        },
+        [channel]
+    );
+
+    const handleToggleAdmin = useCallback(
+        (userId: string, alreadyAdmin: boolean) => {
+            if (!channel) return;
+
+            const server = fetchAPI('');
+            server
+                .mutate({
+                    mutation: toggleAdminRole,
+                    variables: {
+                        groupId: channel.id,
+                        userId,
+                        alreadyAdmin,
+                    },
+                })
+                .then(async (res) => {
+                    if (res.data && res.data.streamChat.toggleAdminRole) {
+                        Alert('Updated user successfully.');
+                    }
+                })
+                .catch((e) => {
+                    console.log('Error', e);
+                    return;
+                });
+        },
+        [channel]
+    );
 
     const onPan = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
         onActive: (evt) => {
@@ -210,6 +266,12 @@ export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
     if (!self || !member) {
         return null;
     }
+
+    // console.log('self', self);
+
+    // console.log('Channel', channel);
+
+    console.log('Channel Role', channelRole);
 
     if (!channel) return null;
 
@@ -347,6 +409,81 @@ export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
                                                     <Text style={[styles.rowText, { color: black }]}>Message</Text>
                                                 </View>
                                             </TapGestureHandler>
+                                            {channelCreatorId === chatClient?.user?.id && channelRole === 'member' ? (
+                                                <TapGestureHandler
+                                                    onHandlerStateChange={({ nativeEvent: { state } }) => {
+                                                        if (state === State.END) {
+                                                            setData({
+                                                                confirmText: 'MAKE ADMIN',
+                                                                onConfirm: () => {
+                                                                    if (member.user?.id) {
+                                                                        handleToggleAdmin(member.user.id, false);
+                                                                    }
+                                                                    setOverlay('none');
+                                                                },
+                                                                subtext: `Are you sure you want to make ${
+                                                                    member.user?.name
+                                                                } admin for ${channel?.data?.name || 'group'}?`,
+                                                                title: 'Make Admin',
+                                                            });
+                                                            setOverlay('confirmation');
+                                                        }
+                                                    }}
+                                                >
+                                                    <View
+                                                        style={[
+                                                            styles.row,
+                                                            {
+                                                                borderTopColor: border,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        <View style={styles.rowInner}>
+                                                            <AddUser fill={accent_blue} height={24} width={24} />
+                                                        </View>
+                                                        <Text style={[styles.rowText, { color: accent_blue }]}>
+                                                            Make Group Admin
+                                                        </Text>
+                                                    </View>
+                                                </TapGestureHandler>
+                                            ) : null}
+                                            {channelCreatorId === chatClient?.user?.id &&
+                                            channelRole === 'moderator' ? (
+                                                <TapGestureHandler
+                                                    onHandlerStateChange={({ nativeEvent: { state } }) => {
+                                                        if (state === State.END) {
+                                                            setData({
+                                                                confirmText: 'REMOVE',
+                                                                onConfirm: () => {
+                                                                    if (member.user?.id) {
+                                                                        handleToggleAdmin(member.user.id, true);
+                                                                    }
+                                                                    setOverlay('none');
+                                                                },
+                                                                subtext: `Are you sure you want to remove Admin rights for ${member.user?.name}?`,
+                                                                title: 'Remove Admin Rights',
+                                                            });
+                                                            setOverlay('confirmation');
+                                                        }
+                                                    }}
+                                                >
+                                                    <View
+                                                        style={[
+                                                            styles.row,
+                                                            {
+                                                                borderTopColor: border,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        <View style={styles.rowInner}>
+                                                            <UserMinus pathFill={accent_red} />
+                                                        </View>
+                                                        <Text style={[styles.rowText, { color: accent_red }]}>
+                                                            Remove Admin Rights
+                                                        </Text>
+                                                    </View>
+                                                </TapGestureHandler>
+                                            ) : null}
                                             {channelCreatorId === chatClient?.user?.id ? (
                                                 <TapGestureHandler
                                                     onHandlerStateChange={({ nativeEvent: { state } }) => {
@@ -355,7 +492,7 @@ export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
                                                                 confirmText: 'REMOVE',
                                                                 onConfirm: () => {
                                                                     if (member.user?.id) {
-                                                                        channel.removeMembers([member.user.id]);
+                                                                        handleRemoveUser(member.user.id);
                                                                     }
                                                                     setOverlay('none');
                                                                 },

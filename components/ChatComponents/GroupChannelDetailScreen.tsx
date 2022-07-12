@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -170,9 +170,48 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
     const displayName = useChannelPreviewDisplayName<StreamChatGenerics>(channel, 30);
 
     const allMembersLength = allMembers.length;
+
     useEffect(() => {
         setMembers(allMembers.slice(0, 3));
     }, [allMembersLength]);
+
+    const updateChannelMembers = useCallback(
+        (event?: any) => {
+            if (!event) return;
+
+            const channelId = event.channel_id;
+
+            const fetchChannel = chatClient?.channel('messaging', channelId);
+
+            if (!fetchChannel) return;
+
+            const updatedMembers = Object.values(channel.state.members);
+
+            console.log('Event', event);
+            if (allMembersLength !== members.length) {
+                setMembers(updatedMembers.slice(0, 3));
+            } else {
+                setMembers(updatedMembers);
+            }
+        },
+        [allMembersLength, members]
+    );
+
+    useEffect(() => {
+        if (chatClient) {
+            chatClient.on('user.presence.changed', updateChannelMembers);
+            chatClient.on('member.added', updateChannelMembers);
+            chatClient.on('member.removed', updateChannelMembers);
+            chatClient.on('member.updated', updateChannelMembers);
+
+            return () => {
+                chatClient.off('user.presence.changed', updateChannelMembers);
+                chatClient.off('member.added', updateChannelMembers);
+                chatClient.off('member.removed', updateChannelMembers);
+                chatClient.off('member.updated', updateChannelMembers);
+            };
+        }
+    }, [chatClient]);
 
     if (!channel) return null;
 
@@ -197,13 +236,10 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
     /**
      * Cancels the confirmation sheet.
      */
-    const openAddMembersSheet = () => {
-        if (chatClient?.user?.id) {
-            setBottomSheetOverlayData({
-                channel,
-            });
-            setAppOverlay('addMembers');
-        }
+    const openAddMembers = () => {
+        navigation.navigate('ExistingChannelAddMembersScreen', {
+            channel,
+        });
     };
 
     /**
@@ -220,11 +256,19 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
             index: 0,
             routes: [
                 {
-                    name: 'ChatScreen',
+                    name: 'ChannelListScreen',
+                },
+                {
+                    name: 'ChannelScreen',
+                    params: {
+                        channelId: channel.id,
+                    },
                 },
             ],
         });
     };
+
+    console.log('Members', members);
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: white }]}>
@@ -232,7 +276,7 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
                 inSafeArea
                 RightContent={() =>
                     channelCreatorId === chatClient?.user?.id ? (
-                        <TouchableOpacity onPress={openAddMembersSheet}>
+                        <TouchableOpacity onPress={openAddMembers}>
                             <AddUser fill={accent_blue} height={24} width={24} />
                         </TouchableOpacity>
                     ) : null
@@ -240,9 +284,13 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
                 subtitleText={membersStatus}
                 titleText={displayName}
             />
-            <ScrollView keyboardShouldPersistTaps="always" style={{ backgroundColor: white }}>
+            <ScrollView key={allMembersLength} keyboardShouldPersistTaps="always" style={{ backgroundColor: white }}>
                 {members.map((member) => {
                     if (!member.user?.id) return null;
+
+                    console.log('Member log', member);
+
+                    // Determine user role
 
                     return (
                         <TouchableOpacity
@@ -278,7 +326,13 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
                                     <Text style={{ color: grey }}>{getUserActivityStatus(member.user)}</Text>
                                 </View>
                             </View>
-                            <Text style={{ color: grey }}>{channelCreatorId === member.user?.id ? 'owner' : ''}</Text>
+                            <Text style={{ color: grey }}>
+                                {channelCreatorId === member.user?.id
+                                    ? 'Owner'
+                                    : member.is_moderator
+                                    ? 'Group admin'
+                                    : 'Viewer'}
+                            </Text>
                         </TouchableOpacity>
                     );
                 })}

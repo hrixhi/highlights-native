@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ArrowRight, Search, useTheme } from 'stream-chat-expo';
@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppOverlayContext } from '../../ChatContext/AppOverlayContext';
 import { UserSearchResults } from './UserResults';
 import { UserGridItem } from './UserGridItem';
+import { RouteProp } from '@react-navigation/native';
+import Alert from '../Alert';
 
 const styles = StyleSheet.create({
     container: {
@@ -90,65 +92,93 @@ const styles = StyleSheet.create({
     flatList: { paddingBottom: 16 },
 });
 
-type RightArrowButtonProps = {
+type ConfirmButtonProps = {
     disabled?: boolean;
     onPress?: () => void;
 };
 
-const RightArrowButton: React.FC<RightArrowButtonProps> = (props) => {
+const ConfirmButton: React.FC<ConfirmButtonProps> = (props) => {
     const { disabled, onPress } = props;
-
     const {
         theme: {
-            colors: { accent_blue },
+            colors: { accent_blue, grey },
         },
     } = useTheme();
 
     return (
-        <TouchableOpacity disabled={disabled} onPress={onPress} style={styles.navigationButton}>
-            <ArrowRight pathFill={disabled ? 'transparent' : accent_blue} />
+        <TouchableOpacity disabled={disabled} onPress={onPress}>
+            <Ionicons name={'checkmark-outline'} color={!disabled ? accent_blue : grey} size={20} />
         </TouchableOpacity>
     );
 };
 
-export type NewGroupChannelAddMemberScreenNavigationProp = StackNavigationProp<
+export type ExistingChannelAddMembersScreenNavigationProp = StackNavigationProp<
     StackNavigatorParamList,
-    'NewGroupChannelAddMemberScreen'
+    'ExistingChannelAddMembersScreen'
 >;
 
+type ExistingChannelAddMembersScreenRouteProp = RouteProp<StackNavigatorParamList, 'ExistingChannelAddMembersScreen'>;
+
 type Props = {
-    navigation: NewGroupChannelAddMemberScreenNavigationProp;
+    navigation: ExistingChannelAddMembersScreenNavigationProp;
+    route: ExistingChannelAddMembersScreenRouteProp;
 };
 
-export const NewGroupChannelAddMemberScreen: React.FC<Props> = ({ navigation }) => {
+export const ExistingChannelAddMembersScreen: React.FC<Props> = ({
+    navigation,
+    route: {
+        params: { channel },
+    },
+}) => {
     const {
         theme: {
-            colors: { accent_blue, black, border, grey, white },
+            colors: { accent_green, accent_red, black, border, grey, white, white_smoke },
         },
     } = useTheme();
     const { chatClient } = useAppContext();
-
     const { setOverlay } = useAppOverlayContext();
 
-    const { onChangeSearchText, onFocusInput, removeUser, reset, searchText, selectedUsers } = useUserSearchContext();
+    const {
+        onChangeSearchText,
+        onFocusInput,
+        removeUser,
+        reset,
+        searchText,
+        selectedUsers,
+        setExistingChannelMembers,
+    } = useUserSearchContext();
 
-    console.log('selected users', selectedUsers);
+    useEffect(() => {
+        if (channel) {
+            setExistingChannelMembers(Object.keys(channel.state.members));
+        }
+    }, [channel]);
 
-    const onRightArrowPress = () => {
-        if (selectedUsers.length === 0) return;
-        navigation.navigate('NewGroupChannelAssignNameScreen');
+    const onConfirm = async () => {
+        if (!channel) return;
+
+        const selectedUsersIds = selectedUsers.map((u) => u.id);
+
+        console.log('Selected members', selectedUsers);
+
+        try {
+            await channel.addMembers([...selectedUsersIds]);
+
+            Alert('Added members successfully.');
+
+            navigation.goBack();
+        } catch (e) {
+            console.log('Error', e);
+            Alert('Failed to add members. Try again.');
+        }
     };
-
-    if (!chatClient) return null;
 
     return (
         <View style={styles.container}>
             <ScreenHeader
                 onBack={reset}
-                RightContent={() => (
-                    <RightArrowButton disabled={selectedUsers.length === 0} onPress={onRightArrowPress} />
-                )}
-                titleText="New Group"
+                RightContent={() => <ConfirmButton disabled={selectedUsers.length === 0} onPress={onConfirm} />}
+                titleText="Add Group Members"
                 subtitleText={selectedUsers.length + ' users selected'}
             />
             <View
@@ -198,6 +228,7 @@ export const NewGroupChannelAddMemberScreen: React.FC<Props> = ({ navigation }) 
                     </Text>
                 </TouchableOpacity>
             </View>
+            {/*  */}
             <View
                 style={{
                     maxHeight: 150,
@@ -220,9 +251,6 @@ export const NewGroupChannelAddMemberScreen: React.FC<Props> = ({ navigation }) 
                     style={selectedUsers.length ? styles.flatList : {}}
                 />
             </View>
-
-            {/* Show Active filter */}
-
             {/* Show User List */}
             <UserSearchResults createGroup={true} />
         </View>

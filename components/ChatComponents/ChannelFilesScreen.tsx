@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SectionList, StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native';
 import Dayjs from 'dayjs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FileIcon, getFileSizeDisplayText, goToURL, ThemeProvider, useTheme } from 'stream-chat-expo';
+import { FileIcon, getFileSizeDisplayText, ThemeProvider, useTheme } from 'stream-chat-expo';
 
 import type { RouteProp } from '@react-navigation/native';
 import type { Attachment } from 'stream-chat';
@@ -137,7 +137,7 @@ export const ChannelFilesScreen: React.FC<ChannelFilesScreenProps> = ({
                         renderItem={({ index, item: attachment, section }) => (
                             <TouchableOpacity
                                 key={`${attachment.asset_url}${attachment.image_url}${attachment.og_scrape_url}${attachment.thumb_url}${attachment.type}`}
-                                onPress={() => goToURL(attachment.asset_url)}
+                                onPress={() => Linking.openURL(attachment.asset_url)}
                                 style={{
                                     borderBottomColor: border,
                                     borderBottomWidth: index === section.data.length - 1 ? 0 : 1,

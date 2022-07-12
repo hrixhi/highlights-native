@@ -1,38 +1,23 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { Dimensions, LogBox, Platform, SafeAreaView, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { Dimensions, LogBox, Platform, SafeAreaView } from 'react-native';
 
 import { View, Text } from './Themed';
 
 // STACK NAVIGATOR
-import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator, useHeaderHeight } from '@react-navigation/stack';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { createStackNavigator } from '@react-navigation/stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // STREAM
-import {
-    Channel,
-    ChannelList,
-    Chat,
-    MessageInput,
-    MessageList,
-    OverlayProvider,
-    Streami18n,
-    Thread,
-    useAttachmentPickerContext,
-    ThemeProvider,
-    useOverlayContext,
-} from 'stream-chat-expo';
+import { Chat, Streami18n, ThemeProvider, useOverlayContext } from 'stream-chat-expo';
 
 import { useAppContext } from '../ChatContext/AppContext';
 import {
     ChannelListScreen,
     ChannelScreen,
-    ScreenHeader,
     NewDirectMessagingScreen,
     NewGroupChannelAddMemberScreen,
+    NewMeetingScreen,
 } from './ChatComponents';
-import { TouchableOpacity } from './Themed';
-import { Ionicons } from '@expo/vector-icons';
 import { useStreamChatTheme } from '../ChatHooks/useStreamChatTheme';
 import { AppOverlayProvider } from '../ChatContext/AppOverlayProvider';
 import { UserSearchProvider } from '../ChatContext/useSearchContext';
@@ -44,6 +29,7 @@ import { ChannelFilesScreen } from './ChatComponents/ChannelFilesScreen';
 import { ChannelPinnedMessagesScreen } from './ChatComponents/ChannelPinnedMessagesScreen';
 import { SharedGroupsScreen } from './ChatComponents/SharedGroupsScreen';
 import { ThreadScreen } from './ChatComponents/ThreadScreen';
+import { ExistingChannelAddMembersScreen } from './ChatComponents/ExistingChannelAddMembersScreen';
 
 const Stack = createStackNavigator();
 
@@ -52,10 +38,6 @@ const streami18n = new Streami18n({
 });
 
 const Inbox = (props: any) => {
-    const { bottom } = useSafeAreaInsets();
-    const [channel, setChannel] = useState();
-    const [thread, setThread] = useState();
-    const [chatError, setChatError] = useState('');
     const { chatClient } = useAppContext();
 
     const streamChatTheme = useStreamChatTheme();
@@ -68,12 +50,8 @@ const Inbox = (props: any) => {
                 style={{
                     height:
                         Dimensions.get('window').width < 1024
-                            ? Dimensions.get('window').height - 135
-                            : Dimensions.get('window').height - 68,
-                    maxHeight:
-                        Dimensions.get('window').width < 1024
-                            ? Dimensions.get('window').height - 135
-                            : Dimensions.get('window').height - 68,
+                            ? Dimensions.get('window').height - (Platform.OS === 'ios' ? 135 : 70)
+                            : Dimensions.get('window').height - 113,
                 }}
             >
                 {chatClient && (
@@ -82,6 +60,8 @@ const Inbox = (props: any) => {
                             value={{
                                 subscriptions: props.subscriptions,
                                 currentUserRole: props.user.role,
+                                user: props.user,
+                                meetingProvider: props.meetingProvider,
                             }}
                         >
                             <UserSearchProvider>
@@ -177,6 +157,16 @@ const Inbox = (props: any) => {
                                             gestureEnabled: Platform.OS === 'ios' && overlay === 'none',
                                             headerShown: false,
                                         }}
+                                    />
+                                    <Stack.Screen
+                                        component={NewMeetingScreen}
+                                        name="NewMeetingScreen"
+                                        options={{ headerShown: false }}
+                                    />
+                                    <Stack.Screen
+                                        component={ExistingChannelAddMembersScreen}
+                                        name="ExistingChannelAddMembersScreen"
+                                        options={{ headerShown: false }}
                                     />
                                 </Stack.Navigator>
                             </UserSearchProvider>

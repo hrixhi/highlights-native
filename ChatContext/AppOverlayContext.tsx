@@ -7,6 +7,8 @@ export type Overlay = 'addMembers' | 'alert' | 'channelInfo' | 'confirmation' | 
 export type AppOverlayContextValue = {
     overlay: Overlay;
     setOverlay: React.Dispatch<React.SetStateAction<Overlay>>;
+    user: any;
+    meetingProvider: string;
     currentUserRole: string;
     subscriptions: any[];
 };

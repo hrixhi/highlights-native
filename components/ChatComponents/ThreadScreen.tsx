@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
     Channel,
@@ -66,7 +66,7 @@ export const ThreadScreen: React.FC<ThreadScreenProps> = ({
             <Channel<StreamChatGenerics>
                 channel={channel}
                 enforceUniqueReaction
-                keyboardVerticalOffset={0}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
                 thread={thread}
                 threadList
             >

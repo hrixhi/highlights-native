@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { FlatList, Keyboard, SafeAreaView, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Keyboard, SafeAreaView, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import {
@@ -7,6 +7,7 @@ import {
     PanGestureHandlerGestureEvent,
     State,
     TapGestureHandler,
+    FlatList,
 } from 'react-native-gesture-handler';
 import Animated, {
     cancelAnimation,
@@ -340,7 +341,7 @@ export const ChannelInfoOverlay = (props: ChannelInfoOverlayProps) => {
                                                     <Text style={[styles.rowText, { color: black }]}>View info</Text>
                                                 </View>
                                             </TapGestureHandler>
-                                            {otherMembers.length > 1 && (
+                                            {/* {otherMembers.length > 1 && (
                                                 <TapGestureHandler
                                                     onHandlerStateChange={({ nativeEvent: { state } }) => {
                                                         if (state === State.END) {
@@ -360,7 +361,7 @@ export const ChannelInfoOverlay = (props: ChannelInfoOverlayProps) => {
                                                         </Text>
                                                     </View>
                                                 </TapGestureHandler>
-                                            )}
+                                            )} */}
                                             <TapGestureHandler
                                                 onHandlerStateChange={({ nativeEvent: { state } }) => {
                                                     if (state === State.END) {

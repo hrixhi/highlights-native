@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { Check, generateRandomId, useTheme, vw } from 'stream-chat-expo';
+import { useTheme, vw } from 'stream-chat-expo';
 
 import type { StackNavigationProp } from '@react-navigation/stack';
 
@@ -12,6 +12,7 @@ import ScreenHeader from './ScreenHeader';
 import { UserSearchResults } from './UserResults';
 import { useAppContext } from '../../ChatContext/AppContext';
 import { useUserSearchContext } from '../../ChatContext/useSearchContext';
+import { nanoid } from 'nanoid';
 
 const styles = StyleSheet.create({
     absolute: { position: 'absolute' },
@@ -92,20 +93,28 @@ export const NewGroupChannelAssignNameScreen: React.FC<NewGroupChannelAssignName
 
     if (!chatClient) return null;
 
-    const onConfirm = () => {
+    const onConfirm = async () => {
         if (!chatClient.user || !selectedUsers || !groupName) return;
 
-        const channel = chatClient.channel('messaging', {
+        const channel = chatClient.channel('messaging', nanoid(), {
             members: [...selectedUserIds, chatClient.user?.id],
             name: groupName,
             team: chatClient.user?.schoolId,
         });
 
+        await channel.create();
+
+        console.log('New Channel', channel);
+
         // TODO: Maybe there is a better way to do this.
         reset();
-        navigation.pop(3);
+
+        navigation.goBack();
+        navigation.goBack();
+        navigation.goBack();
+
         navigation.navigate('ChannelScreen', {
-            channel: channel,
+            channelId: channel.id,
         });
     };
 

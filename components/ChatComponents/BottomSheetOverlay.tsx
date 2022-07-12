@@ -24,7 +24,7 @@ import { useAppOverlayContext } from '../../ChatContext/AppOverlayContext';
 import { useBottomSheetOverlayContext } from '../../ChatContext/BottomSheetOverlayContext';
 
 // import { AddMemberBottomSheet } from './AddMemberBottomSheet';
-// import { ConfirmationBottomSheet } from './ConfirmationBottomSheet';
+import { ConfirmationBottomSheet } from './ConfirmationBottomSheet';
 
 const styles = StyleSheet.create({
     addMembers: { borderRadius: 16, marginHorizontal: 8 },
@@ -195,7 +195,7 @@ export const BottomSheetOverlay = (props: BottomSheetOverlayProps) => {
                                         ]}
                                     >
                                         {/* {overlay === 'addMembers' && <AddMemberBottomSheet />} */}
-                                        {/* {overlay === 'confirmation' && <ConfirmationBottomSheet />} */}
+                                        {overlay === 'confirmation' && <ConfirmationBottomSheet />}
                                     </Animated.View>
                                 </TapGestureHandler>
                             </KeyboardCompatibleView>

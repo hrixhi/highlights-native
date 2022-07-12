@@ -125,12 +125,6 @@ export const NewDirectMessagingScreen: React.FC<NewDirectMessagingScreenProps> =
 
     const { onChangeSearchText, onFocusInput, removeUser, reset, searchText, selectedUsers } = useUserSearchContext();
 
-    console.log('selected users', selectedUsers);
-
-    // useEffect(() => {
-    //     reset();
-    // }, []);
-
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
             // The screen is focused
@@ -147,7 +141,22 @@ export const NewDirectMessagingScreen: React.FC<NewDirectMessagingScreenProps> =
 
     return (
         <View style={styles.container}>
-            <ScreenHeader onBack={reset} titleText="New Chat" />
+            <ScreenHeader
+                onBack={reset}
+                titleText="New Chat"
+                RightContent={() => (
+                    <TouchableOpacity
+                        onPress={() => {
+                            navigation.push('NewGroupChannelAddMemberScreen');
+                        }}
+                        // style={styles.createGroupButtonContainer}
+                    >
+                        <Text>
+                            <Ionicons name={'people-outline'} size={23} />
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            />
             <View
                 style={{
                     display: 'flex',
@@ -197,7 +206,7 @@ export const NewDirectMessagingScreen: React.FC<NewDirectMessagingScreenProps> =
                     </Text>
                 </TouchableOpacity>
             </View>
-            {!searchText && selectedUsers.length === 0 && (
+            {/* {!searchText && selectedUsers.length === 0 && (
                 <TouchableOpacity
                     onPress={() => {
                         navigation.push('NewGroupChannelAddMemberScreen');
@@ -219,7 +228,7 @@ export const NewDirectMessagingScreen: React.FC<NewDirectMessagingScreenProps> =
                         Create a Group
                     </Text>
                 </TouchableOpacity>
-            )}
+            )} */}
 
             {/* Show Active filter */}
 

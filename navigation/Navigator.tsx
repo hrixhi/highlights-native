@@ -4,6 +4,8 @@ import * as React from 'react';
 import { ColorSchemeName, View, Dimensions, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import NotFoundScreen from '../screens/NotFoundScreen';
 import { RootStackParamList } from '../types';
 import Home from '../screens/Home';
@@ -18,35 +20,37 @@ export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeNa
 
     return (
         <NavigationContainer linking={LinkingConfiguration} theme={DefaultTheme}>
-            <OverlayProvider
-                bottomInset={Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 68}
-                value={{ style: streamChatTheme }}
-            >
-                <Stack.Navigator screenOptions={{ headerShown: false }}>
-                    {/* Main app is in here */}
-                    <Stack.Screen name="Root" options={{ title: 'Cues!' }}>
-                        {(props) => (
-                            <SafeAreaProvider>
-                                <View
-                                    style={{
-                                        height: '100%',
-                                        width: '100%',
-                                        justifyContent: 'center',
-                                        flexDirection: 'row',
-                                        backgroundColor: '#fff',
-                                        flex: 1,
-                                    }}
-                                >
-                                    <Home {...props} />
-                                </View>
-                            </SafeAreaProvider>
-                        )}
-                    </Stack.Screen>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <OverlayProvider
+                    bottomInset={Dimensions.get('window').width < 1024 && Platform.OS === 'ios' ? 60 : 60}
+                    value={{ style: streamChatTheme }}
+                >
+                    <Stack.Navigator screenOptions={{ headerShown: false }}>
+                        {/* Main app is in here */}
+                        <Stack.Screen name="Root" options={{ title: 'Cues!' }}>
+                            {(props) => (
+                                <SafeAreaProvider>
+                                    <View
+                                        style={{
+                                            height: '100%',
+                                            width: '100%',
+                                            justifyContent: 'center',
+                                            flexDirection: 'row',
+                                            backgroundColor: '#fff',
+                                            flex: 1,
+                                        }}
+                                    >
+                                        <Home {...props} />
+                                    </View>
+                                </SafeAreaProvider>
+                            )}
+                        </Stack.Screen>
 
-                    {/* In case navigation ends up at a wrong location */}
-                    <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
-                </Stack.Navigator>
-            </OverlayProvider>
+                        {/* In case navigation ends up at a wrong location */}
+                        <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
+                    </Stack.Navigator>
+                </OverlayProvider>
+            </GestureHandlerRootView>
         </NavigationContainer>
     );
 }

@@ -27,6 +27,8 @@ export const AppOverlayProvider: React.FC<{
     const [overlay, setOverlay] = useState(value?.overlay || 'none');
     const [subscriptions] = useState(value?.subscriptions || []);
     const [currentUserRole] = useState(value?.currentUserRole || 'student');
+    const [user] = useState(value?.user);
+    const [meetingProvider] = useState(value?.meetingProvider || '');
 
     const overlayOpacity = useSharedValue(0);
     const { height, width } = useWindowDimensions();
@@ -67,6 +69,8 @@ export const AppOverlayProvider: React.FC<{
         setOverlay,
         subscriptions,
         currentUserRole,
+        user,
+        meetingProvider,
     };
 
     const directoryFilterContext = {

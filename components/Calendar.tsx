@@ -923,6 +923,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             zoomMeetingScheduledBy: item.zoomMeetingScheduledBy,
                             zoomMeetingCreatorProfile: item.zoomMeetingCreatorProfile,
                             meetingLink: item.meetingLink ? item.meetingLink : null,
+                            isNonChannelMeeting: item.isNonChannelMeeting,
+                            nonChannelGroupId: item.nonChannelGroupId,
+                            groupUsername: item.groupUsername,
                         };
 
                         allEvents.push(modifiedItem);
@@ -2019,7 +2022,12 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         const { title } = htmlStringParser(item.title);
 
         const assingmentDue = new Date() > new Date(item.start);
+
         const isMeeting = item.meeting;
+
+        const isNonChannelMeeting = item.isNonChannelMeeting;
+
+        const groupUsername = item.groupUsername;
 
         const startTime = new Date(item.start);
         const endTime = new Date(item.end);
@@ -2080,7 +2088,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                         numberOfLines={1}
                     >
-                        {item.title}
+                        {item.title} {isNonChannelMeeting ? ' · ' + groupUsername : ''}{' '}
                     </Text>
                 </View>
 
@@ -3387,7 +3395,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     isOpen={showAddEvent}
                     title={
                         editEvent && editChannelName
-                            ? `${editEvent && editEvent.meeting ? 'Meeting' : 'Event'} for ${editChannelName}`
+                            ? `${editEvent && editEvent.meeting ? 'Meeting' : 'Event'} ${
+                                  editEvent.isNonChannelMeeting
+                                      ? ': ' + editEvent.groupUsername
+                                      : 'for ' + editChannelName
+                              }`
                             : 'New event'
                     }
                     renderContent={() => renderEventModalContent()}

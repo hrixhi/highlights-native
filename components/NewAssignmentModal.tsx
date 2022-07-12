@@ -6,7 +6,6 @@ import { ScrollView, Switch } from 'react-native-gesture-handler';
 import Alert from './Alert';
 // // COMPONENTS
 import { View, Text, TouchableOpacity } from './Themed';
-import BottomSheet from './BottomSheet';
 import { TextInput as CustomTextInput } from './CustomTextInput';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
@@ -141,10 +140,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
             setEditStandardCategory(props.editStandard.category ? props.editStandard.category : '');
         }
     }, [props.editEntryId, props.editStandard]);
-
-    console.log('Props.entryId', props.editEntryId);
-    console.log('Props.editAssignment', props.editAssignment);
-    console.log('Props.instructorGradebook', props.instructorGradebook);
 
     useEffect(() => {
         if (props.editEntryId && props.editAssignment && props.instructorGradebook) {
@@ -730,7 +725,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                 {Platform.OS === 'android' ? (
                     <View
                         style={{
-                            width: '100%',
                             flexDirection: 'row',
                             marginTop: 12,
                             backgroundColor: '#fff',
@@ -1127,8 +1121,8 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                         style={{
                             width: '100%',
                             display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
+                            flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
+                            alignItems: Platform.OS === 'ios' ? 'center' : 'flex-start',
                             backgroundColor: '#fff',
                         }}
                     >
@@ -1142,7 +1136,7 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                             Deadline
                             {/* {PreferredLanguageText("repeatTill")}{" "} */}
                             {Platform.OS === 'android'
-                                ? ': ' + moment(new Date(newAssignmentDeadline)).format('MMMM Do YYYY')
+                                ? ': ' + moment(new Date(newAssignmentDeadline)).format('MMMM Do YYYY, h:mm a')
                                 : null}
                         </Text>
                         <View
@@ -1150,8 +1144,8 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                                 // width: Dimensions.get("window").width < 768 ? "100%" : "30%",
                                 flexDirection: Platform.OS === 'ios' ? 'row' : 'column',
                                 backgroundColor: '#fff',
-                                // marginTop: 12,
-                                marginLeft: 'auto',
+                                marginTop: Platform.OS === 'ios' ? 0 : 12,
+                                marginLeft: Platform.OS === 'ios' ? 'auto' : 0,
                             }}
                         >
                             {renderNewAssignmentDeadlineDateTimepicker()}
@@ -1616,8 +1610,9 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                                                                     <View
                                                                         style={{
                                                                             backgroundColor: '#fff',
-                                                                            flexDirection: 'row',
-                                                                            marginLeft: 'auto',
+                                                                            flexDirection: 'column',
+                                                                            alignItems: 'center',
+                                                                            // marginLeft: 'auto',
                                                                         }}
                                                                     >
                                                                         {Platform.OS === 'ios' ? (
@@ -1685,6 +1680,13 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                                                                                     );
                                                                                 }}
                                                                             />
+                                                                        ) : null}
+                                                                        {Platform.OS === 'android' ? (
+                                                                            <Text>
+                                                                                {moment(
+                                                                                    new Date(student.submittedAt)
+                                                                                ).format('MMMM Do YYYY')}
+                                                                            </Text>
                                                                         ) : null}
                                                                         {Platform.OS === 'android' ? (
                                                                             <View

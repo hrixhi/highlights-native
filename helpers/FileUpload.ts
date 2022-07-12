@@ -29,7 +29,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
             mediaTypes: ImagePicker.MediaTypeOptions.Videos,
             allowsEditing: false,
             quality: 0.8,
-            allowsMultipleSelection: false
+            allowsMultipleSelection: false,
         });
 
         if (!result.cancelled && result.type) {
@@ -52,12 +52,12 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
                 name: 'default.mp4',
                 // size: size,
                 uri: result.uri,
-                type: 'application/mp4'
+                type: 'application/mp4',
             };
 
             // const file = blobToFile(img, 'default.jpg');
 
-            alert("Upload in progress! Large files may take longer to process.")
+            alert('Upload in progress! Large files may take longer to process.');
 
             const response = await fileUpload(file, 'mp4', userId);
 
@@ -66,7 +66,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
                 return {
                     url: data.url,
                     type: 'mp4',
-                    name: 'default.mp4'
+                    name: 'default.mp4',
                 };
             } else {
                 return { type: '', url: '', name: '' };
@@ -131,11 +131,11 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
             name: name.split('.')[0],
             size: size,
             uri: uri,
-            type: 'application/' + type
+            type: 'application/' + type,
         };
 
-        alert("Upload in progress! Large files may take longer to process.")
-        
+        alert('Upload in progress! Large files may take longer to process.');
+
         // return { type: '', url: '' };
 
         const response = await fileUpload(file, type, userId);
@@ -145,7 +145,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
             return {
                 url: data.url,
                 type,
-                name: name.split('.')[0]
+                name: name.split('.')[0],
             };
         } else {
             return { type: '', url: '', name: '' };
@@ -153,7 +153,7 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
     }
 };
 
-const fileUpload = async (file: any, type: any, userId: string) => {
+export const fileUpload = async (file: any, type: any, userId: string) => {
     // LIVE
     const url = 'https://api.learnwithcues.com/api/upload';
     // DEV
@@ -164,8 +164,8 @@ const fileUpload = async (file: any, type: any, userId: string) => {
     formData.append('userId', userId);
     const config = {
         headers: {
-            'content-type': 'multipart/form-data'
-        }
+            'content-type': 'multipart/form-data',
+        },
     };
     const res = await axios.post(url, formData, config);
 

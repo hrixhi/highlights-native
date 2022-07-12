@@ -72,19 +72,11 @@ const CustomPreview: React.FC<CustomPreviewProps> = ({ channel }) => {
     const displayAvatar = getChannelPreviewDisplayAvatar(channel, chatClient);
 
     const switchToChannel = () => {
-        navigation.reset({
-            index: 1,
-            routes: [
-                {
-                    name: 'ChatScreen',
-                },
-                {
-                    name: 'ChannelScreen',
-                    params: {
-                        channelId: channel.id,
-                    },
-                },
-            ],
+        navigation.goBack();
+        navigation.goBack();
+
+        navigation.navigate('ChannelScreen', {
+            channelId: channel.id,
         });
     };
 
