@@ -25,7 +25,7 @@ import {
 } from '../../assets/chatIcons';
 
 import { getUserActivityStatus } from '../../helpers/getUserActivityStatus';
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useAppOverlayContext } from '../../ChatContext/AppOverlayContext';
 import { useBottomSheetOverlayContext } from '../../ChatContext/BottomSheetOverlayContext';
 import { useUserInfoOverlayContext } from '../../ChatContext/UserInfoOverlayContext';
@@ -147,7 +147,7 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
         params: { channel },
     },
 }) => {
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const { setOverlay: setAppOverlay } = useAppOverlayContext();
     const { setData: setBottomSheetOverlayData } = useBottomSheetOverlayContext();
     const { setData: setUserInfoOverlayData } = useUserInfoOverlayContext();

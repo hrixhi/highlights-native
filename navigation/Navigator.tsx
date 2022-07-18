@@ -13,6 +13,7 @@ import LinkingConfiguration from './Linking';
 
 import { OverlayProvider } from 'stream-chat-expo';
 import { useStreamChatTheme } from '../ChatHooks/useStreamChatTheme';
+import { RootNavigationRef } from '../ChatHooks/RootNavigation';
 
 // Main stack navigator
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {

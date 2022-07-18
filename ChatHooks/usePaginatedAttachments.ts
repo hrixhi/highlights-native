@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { Channel, MessageResponse } from 'stream-chat';
 
-import { useAppContext } from '../ChatContext/AppContext';
+import { useAppChatContext } from '../ChatContext/AppChatContext';
 
 import type { StreamChatGenerics } from '../components/ChatComponents/types';
 
 export const usePaginatedAttachments = (channel: Channel<StreamChatGenerics>, attachmentType: string) => {
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const offset = useRef(0);
     const hasMoreResults = useRef(true);
     const queryInProgress = useRef(false);

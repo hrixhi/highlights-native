@@ -1,17 +1,7 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import {
-    ActivityIndicator,
-    Animated,
-    Dimensions,
-    StyleSheet,
-    ScrollView,
-    Platform,
-    Switch,
-    Linking,
-} from 'react-native';
+import React, { useState } from 'react';
+import { Animated, Dimensions, Platform, Linking } from 'react-native';
 import { TouchableOpacity, View, Text } from './Themed';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Walkthrough from './Walkthrough';
 import Channels from './Channels';
@@ -20,9 +10,6 @@ import { useOrientation } from '../hooks/useOrientation';
 
 const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [activeTab, setActiveTab] = useState('profile');
-    // const windowHeight =
-    //     Dimensions.get('window').width < 768 ? Dimensions.get('window').height - 85 : Dimensions.get('window').height;
-
     const [showAddCourseModal, setShowAddCourseModal] = useState(false);
     const orientation = useOrientation();
 
@@ -47,9 +34,7 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
     return (
         <Animated.View
             style={{
-                // opacity: modalAnimation,
                 width: '100%',
-                // height: windowHeight,
                 height: windowHeight,
                 backgroundColor: 'white',
                 borderTopRightRadius: 0,
@@ -61,32 +46,17 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                     style={{
                         flexDirection: 'row',
                         justifyContent: 'flex-start',
-                        // paddingHorizontal: 20,
                         paddingTop: 10,
                         paddingBottom: 15,
                         display: showAddCourseModal ? 'none' : 'flex',
                         width: '100%',
-                        // maxWidth: 400,
-                        // alignSelf: 'center'
                         paddingLeft: 25,
                     }}
                 >
                     {/* Back button */}
-                    {/* <TouchableOpacity
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            paddingLeft: 20,
-                            paddingTop: 15
-                        }}
-                        onPress={() => props.setShowSettings(false)}
-                    >
-                        <Ionicons name={'arrow-back-outline'} size={25} color="black" />
-                    </TouchableOpacity> */}
 
                     <TouchableOpacity
                         style={{
-                            // backgroundColor: activeTab === 'agenda' ? '#000' : '#fff',
                             paddingTop: 6,
                             paddingBottom: 4,
                             marginHorizontal: 12,
@@ -127,41 +97,14 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             Courses
                         </Text>
                     </TouchableOpacity>
-
-                    {/* <View style={{ position: 'absolute', display: 'flex', flexDirection: 'row', alignItems: 'center', right: 14, top: activeTab === 'profile' ? 17 : 16 }}>
-                        <TouchableOpacity onPress={() => {
-                            if (activeTab === 'profile') {
-                                Linking.openURL('https://www.learnwithcues.com/help')
-                            } else {
-                                setShowAddCourseModal(true);
-                            }
-                        }}>
-                            <Ionicons name={activeTab === 'profile' ? 'help-circle-outline' : 'add-outline'} size={activeTab === 'profile' ? 24 : 28} color="black" />
-                        </TouchableOpacity>
-                    </View> */}
-
-                    {/* <TouchableOpacity
-                    style={{
-                        // position: 'absolute',
-                        marginTop: 9,
-                        marginLeft: 'auto'
-                    }}
-                    onPress={() => setShowFilterModal(!showFilterModal)}
-                >
-                    <Ionicons name={showFilterModal ? 'close-outline' : 'filter-outline'} size={22} color="black" />
-                </TouchableOpacity> */}
                 </View>
             }
             <View>
                 {activeTab === 'profile' ? (
                     <Walkthrough
                         closeModal={() => {}}
-                        saveDataInCloud={() => props.saveDataInCloud()}
-                        reOpenProfile={() => props.reOpenProfile()}
-                        reloadData={() => props.reloadData()}
                         setShowHelp={(val: any) => props.setShowHelp(val)}
                         showHelp={false}
-                        user={props.user}
                     />
                 ) : (
                     <Channels
@@ -170,11 +113,8 @@ const AccountPage: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         closeModal={() => {
                             setShowAddCourseModal(false);
                         }}
-                        subscriptions={props.subscriptions}
-                        refreshSubscriptions={props.refreshSubscriptions}
                         showAddCourseModal={showAddCourseModal}
                         closeAddCourseModal={() => setShowAddCourseModal(false)}
-                        user={props.user}
                     />
                 )}
             </View>

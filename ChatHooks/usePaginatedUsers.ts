@@ -1,12 +1,12 @@
+import { useApolloClient } from '@apollo/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { UserFilters, UserResponse } from 'stream-chat';
 
-import { useAppContext } from '../ChatContext/AppContext';
+import { useAppChatContext } from '../ChatContext/AppChatContext';
 import { useDirectoryFilterOverlayContext } from '../ChatContext/DirectoryFilterContext';
 
 import type { StreamChatGenerics } from '../components/ChatComponents/types';
-import { fetchAPI } from '../graphql/FetchAPI';
 import { getInboxDirectory } from '../graphql/QueriesAndMutations';
 
 export type PaginatedUsers = {
@@ -37,7 +37,9 @@ export type PaginatedUsers = {
 };
 
 export const usePaginatedUsers = (): PaginatedUsers => {
-    const { chatClient } = useAppContext();
+    const server = useApolloClient();
+
+    const { chatClient } = useAppChatContext();
 
     const [initialResults, setInitialResults] = useState<UserResponse<StreamChatGenerics>[] | null>(null);
     const [loading, setLoading] = useState(true);
@@ -343,8 +345,6 @@ export const usePaginatedUsers = (): PaginatedUsers => {
     const fetchInboxDirectory = useCallback(() => {
         if (chatClient && chatClient.userID) {
             setLoading(true);
-            console.log('chatClient ID', chatClient.userID);
-            const server = fetchAPI('');
             server
                 .query({
                     query: getInboxDirectory,

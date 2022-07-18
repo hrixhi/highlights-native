@@ -19,7 +19,7 @@ import Alert from '../components/Alert';
 import { View, Text, TouchableOpacity } from './Themed';
 import _ from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchAPI } from '../graphql/FetchAPI';
+
 import {
     createMessage,
     deleteThread,
@@ -62,11 +62,16 @@ import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor'
 import ColorPicker from './ColorPicker';
 import { EmojiView, InsertLink } from './ToolbarComponents';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
 const formulaIcon = require('../assets/images/formulaIcon3.png');
 
 const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user, userId } = useAppContext();
+
     // State
     const [loading, setLoading] = useState(false);
     const unparsedThreads: any[] = JSON.parse(JSON.stringify(props.threads));
@@ -78,7 +83,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     const [avatar, setAvatar] = useState('');
     const [threadCategories, setThreadCategories] = useState<any[]>([]);
     const [isOwner, setIsOwner] = useState(false);
-    const [userId, setUserId] = useState('');
     const [threadChat, setThreadChat] = useState<any[]>([]);
     const categories: any[] = [];
     const categoryObject: any = {};
@@ -173,6 +177,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         });
     });
 
+    const server = useApolloClient();
+
     // HOOKS
 
     useEffect(() => {
@@ -182,7 +188,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         }
         (async () => {
             setIsSearching(true);
-            const server = fetchAPI('');
+
             server
                 .query({
                     query: searchThreads,
@@ -238,22 +244,16 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      * Set is Owner on init
      */
     useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
-            if (u) {
-                const user = JSON.parse(u);
-                setUserId(user._id);
-                if (user.avatar) {
-                    setAvatar(user.avatar);
-                } else {
-                    setAvatar('https://cues-files.s3.amazonaws.com/images/default.png');
-                }
-                if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
-                    setIsOwner(true);
-                }
-            }
-        })();
-    }, []);
+        if (user.avatar) {
+            setAvatar(user.avatar);
+        } else {
+            setAvatar('https://cues-files.s3.amazonaws.com/images/default.png');
+        }
+        if (userId.toString().trim() === props.channelCreatedBy.toString().trim()) {
+            setIsOwner(true);
+        }
+    }, [props.channelCreatedBy]);
+
     /**
      * Load discussion from Search or Activity
      */
@@ -287,7 +287,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         if (props.channelId === undefined || props.channelId === null || props.channelId === '') {
             return;
         }
-        const server = fetchAPI('');
+
         server
             .query({
                 query: getThreadCategories,
@@ -308,7 +308,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      */
     const createNewThread = useCallback(
         async (title: string, message: any, category: any, isPrivate: boolean, anonymous: boolean) => {
-            const server = fetchAPI('');
             server
                 .mutate({
                     mutation: createMessage,
@@ -351,7 +350,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             {
                 text: 'Yes',
                 onPress: () => {
-                    const server = fetchAPI('');
                     server
                         .mutate({
                             mutation: deleteThread,
@@ -390,7 +388,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
             return;
         }
 
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: updateThread,
@@ -435,7 +432,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
         setIsSendingReply(true);
 
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: createMessage,
@@ -480,57 +476,53 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
      * @description Load the entire the Thread using the thread ID
      */
     const loadCueDiscussions = useCallback(async (threadId: string) => {
-        const u = await AsyncStorage.getItem('user');
-        if (u) {
-            props.setShowNewDiscussionPost(false);
-            const user = JSON.parse(u);
-            setThreadId(threadId);
-            setLoading(true);
-            setShowThreadCues(true);
+        props.setShowNewDiscussionPost(false);
+        setThreadId(threadId);
+        setLoading(true);
+        setShowThreadCues(true);
 
-            if (Dimensions.get('window').width < 768) {
-                props.setHideNavbarDiscussions(true);
-            }
-            const server = fetchAPI('');
-            server
-                .query({
-                    query: getThreadWithReplies,
-                    variables: {
-                        threadId,
-                    },
-                })
-                .then((res) => {
-                    const tempChat: any[] = [];
-                    res.data.thread.getThreadWithReplies.map((msg: any) => {
-                        if (msg._id !== threadId) {
-                            tempChat.push(msg);
-                        } else {
-                            setSelectedThread(msg);
-                        }
-                    });
-                    // tempChat.reverse();
-                    setThreadChat(tempChat);
-                    setLoading(false);
-                })
-                .catch((err) => {
-                    Alert(unableToLoadThreadAlert, checkConnectionAlert);
-                    setLoading(false);
-                });
-            server
-                .mutate({
-                    mutation: markThreadsAsRead,
-                    variables: {
-                        userId: user._id,
-                        threadId: threadId,
-                    },
-                })
-                .then((res) => {
-                    if (props.refreshUnreadDiscussionCount) {
-                        props.refreshUnreadDiscussionCount();
-                    }
-                })
-                .catch((e) => console.log(e));
+        if (Dimensions.get('window').width < 768) {
+            props.setHideNavbarDiscussions(true);
         }
+
+        server
+            .query({
+                query: getThreadWithReplies,
+                variables: {
+                    threadId,
+                },
+            })
+            .then((res) => {
+                const tempChat: any[] = [];
+                res.data.thread.getThreadWithReplies.map((msg: any) => {
+                    if (msg._id !== threadId) {
+                        tempChat.push(msg);
+                    } else {
+                        setSelectedThread(msg);
+                    }
+                });
+                // tempChat.reverse();
+                setThreadChat(tempChat);
+                setLoading(false);
+            })
+            .catch((err) => {
+                Alert(unableToLoadThreadAlert, checkConnectionAlert);
+                setLoading(false);
+            });
+        server
+            .mutate({
+                mutation: markThreadsAsRead,
+                variables: {
+                    userId,
+                    threadId: threadId,
+                },
+            })
+            .then((res) => {
+                if (props.refreshUnreadDiscussionCount) {
+                    props.refreshUnreadDiscussionCount();
+                }
+            })
+            .catch((e) => console.log(e));
     }, []);
 
     useEffect(() => {
@@ -574,7 +566,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     }, [hiliteColor]);
 
     const handleUploadFile = useCallback(async () => {
-        const res = await handleFile(false, props.userId);
+        const res = await handleFile(false, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -586,7 +578,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     }, [RichText, RichText.current]);
 
     const handleUploadAudioVideo = useCallback(async () => {
-        const res = await handleFile(true, props.userId);
+        const res = await handleFile(true, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -595,7 +587,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         setEditorFocus(false);
 
         setUploadResult(res.url, res.type, res.name);
-    }, [RichText, RichText.current, props.userId]);
+    }, [RichText, RichText.current, userId]);
 
     console.log('Attachments', attachments);
 
@@ -692,7 +684,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
     const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
-            const url = await handleImageUpload(takePhoto, props.userId);
+            const url = await handleImageUpload(takePhoto, userId);
 
             RichText.current?.focusContentEditor();
 
@@ -704,7 +696,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
             setInsertImageVisible(false);
         },
-        [RichText, RichText.current, props.userId]
+        [RichText, RichText.current, userId]
     );
 
     const handleInsertLink = useCallback(() => {
@@ -1385,7 +1377,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         setEditDiscussionThreadAnonymous(selectedThread.anonymous);
                                         setEditorFocus(true);
                                     }}
-                                    disabled={props.user.email === disableEmailId}
+                                    disabled={user.email === disableEmailId}
                                 >
                                     <Text>
                                         <Ionicons name={'pencil-outline'} size={16} color="#000" />
@@ -1400,7 +1392,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     onPress={() => {
                                         handleDeleteThread(selectedThread._id, undefined);
                                     }}
-                                    disabled={props.user.email === disableEmailId}
+                                    disabled={user.email === disableEmailId}
                                 >
                                     <Text>
                                         <Ionicons name={'trash-outline'} size={18} color="#000" />
@@ -1439,10 +1431,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 marginRight: 7,
                                             }}
                                         >
-                                            <input
-                                                type="checkbox"
-                                                checked={anonymous}
-                                                onChange={(e: any) => {
+                                            <BouncyCheckbox
+                                                isChecked={anonymous}
+                                                disableText={true}
+                                                onPress={(e: any) => {
                                                     setAnonymous(!anonymous);
                                                 }}
                                             />
@@ -1513,7 +1505,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         onPress={() => {
                                             handleUpdateThread();
                                         }}
-                                        disabled={isSendingReply || props.user.email === disableEmailId}
+                                        disabled={isSendingReply || user.email === disableEmailId}
                                     >
                                         <Text
                                             style={{
@@ -1761,10 +1753,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         marginRight: 7,
                                     }}
                                 >
-                                    <input
-                                        type="checkbox"
-                                        checked={anonymous}
-                                        onChange={(e: any) => {
+                                    <BouncyCheckbox
+                                        isChecked={anonymous}
+                                        disableText={true}
+                                        onPress={(e: any) => {
                                             setAnonymous(!anonymous);
                                         }}
                                     />
@@ -1833,7 +1825,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 onPress={() => {
                                     handleReply();
                                 }}
-                                disabled={isSendingReply || props.user.email === disableEmailId}
+                                disabled={isSendingReply || user.email === disableEmailId}
                             >
                                 <Text
                                     style={{
@@ -1973,7 +1965,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                     setEditDiscussionThreadAnonymous(thread.anonymous);
                                                     setEditorFocus(true);
                                                 }}
-                                                disabled={props.user.email === disableEmailId}
+                                                disabled={user.email === disableEmailId}
                                             >
                                                 <Text>
                                                     <Ionicons name={'pencil-outline'} size={14} color="#000" />
@@ -1988,7 +1980,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 onPress={() => {
                                                     handleDeleteThread(thread._id, thread.parentId);
                                                 }}
-                                                disabled={props.user.email === disableEmailId}
+                                                disabled={user.email === disableEmailId}
                                             >
                                                 <Text>
                                                     <Ionicons name={'trash-outline'} size={16} color="#000" />
@@ -2018,6 +2010,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                         flexDirection: 'row',
                                                         alignItems: 'center',
                                                     }}
+                                                    key={ind}
                                                 >
                                                     <View
                                                         style={{
@@ -2025,10 +2018,10 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                             marginRight: 7,
                                                         }}
                                                     >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={anonymous}
-                                                            onChange={(e: any) => {
+                                                        <BouncyCheckbox
+                                                            isChecked={anonymous}
+                                                            disableText={true}
+                                                            onPress={(e: any) => {
                                                                 setAnonymous(!anonymous);
                                                             }}
                                                         />
@@ -2326,7 +2319,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 marginRight: 2,
                                 width: '100%',
                             }}
-                            autoCompleteType={'xyz'}
                             placeholder={'Search'}
                             onChangeText={(val) => setSearchTerm(val)}
                             placeholderTextColor={'#000'}
@@ -2637,7 +2629,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         marginRight: 2,
                                         width: '100%',
                                     }}
-                                    autoCompleteType={'xyz'}
                                     placeholder={'Search'}
                                     onChangeText={(val) => setSearchTerm(val)}
                                     placeholderTextColor={'#000'}
@@ -2977,20 +2968,11 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             }}
                             onSend={createNewThread}
                             isOwner={isOwner}
-                            userId={userId}
-                            user={props.user}
                             setHideNavbarDiscussions={props.setHideNavbarDiscussions}
                         />
                     ) : showThreadCues ? (
                         renderSelectedThread()
                     ) : null}
-                    {/* <FormulaGuide
-                        value={equation}
-                        onChange={setEquation}
-                        show={showEquationEditor}
-                        onClose={() => setShowEquationEditor(false)}
-                        onInsertEquation={insertEquation}
-                    /> */}
                 </View>
             </View>
         );
@@ -3028,8 +3010,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         }}
                         onSend={createNewThread}
                         isOwner={isOwner}
-                        userId={userId}
-                        user={props.user}
                         setHideNavbarDiscussions={props.setHideNavbarDiscussions}
                     />
                 ) : null}
@@ -3039,7 +3019,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         style={{
                             width: '100%',
                             height: '100%',
-                            // maxWidth: '80%',
                             backgroundColor: '#fff',
                             borderRadius: 1,
                         }}

@@ -1,10 +1,8 @@
 // REACT
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Animated } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // API
-import { fetchAPI } from '../graphql/FetchAPI';
 import { getChannelThreads, totalUnreadDiscussionThreads } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -14,13 +12,19 @@ import ThreadsList from './ThreadsList';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
 
 const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { userId } = useAppContext();
+
     const [modalAnimation] = useState(new Animated.Value(1));
     const [loading, setLoading] = useState(true);
     const [threads, setThreads] = useState<any[]>([]);
     const unableToLoadDiscussionAlert = PreferredLanguageText('unableToLoadDiscussion');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
+
+    const server = useApolloClient();
 
     // HOOKS
 
@@ -35,14 +39,8 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
      * @description Fetches all the threads for the channel
      */
     const loadThreads = useCallback(async () => {
-        const u = await AsyncStorage.getItem('user');
-        let parsedUser: any = {};
-        if (u) {
-            parsedUser = JSON.parse(u);
-        }
         setLoading(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI(parsedUser._id);
             server
                 .query({
                     query: getChannelThreads,
@@ -53,11 +51,11 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 .then((res) => {
                     if (res.data.thread && res.data.thread.findByChannelId) {
                         let filteredThreads: any[] = [];
-                        if (parsedUser._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
+                        if (userId === props.channelCreatedBy.toString().trim()) {
                             filteredThreads = res.data.thread.findByChannelId;
                         } else {
                             filteredThreads = res.data.thread.findByChannelId.filter((thread: any) => {
-                                return !thread.isPrivate || thread.userId === parsedUser._id;
+                                return !thread.isPrivate || thread.userId === userId;
                             });
                         }
                         setThreads(filteredThreads);
@@ -95,13 +93,7 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
      * @description Used to refresh Unread Discussion count on opening a discussion thread (Currently not used)
      */
     const refreshUnreadDiscussionCount = useCallback(async () => {
-        if (props.channelId !== '') {
-            const u = await AsyncStorage.getItem('user');
-            if (u) {
-                const user = JSON.parse(u);
-                updateDiscussionNotidCounts(user._id);
-            }
-        }
+        updateDiscussionNotidCounts(userId);
     }, [props.channelId]);
 
     /**
@@ -109,7 +101,6 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
      */
     const updateDiscussionNotidCounts = useCallback(
         (userId) => {
-            const server = fetchAPI('');
             server
                 .query({
                     query: totalUnreadDiscussionThreads,
@@ -168,27 +159,16 @@ const Discussion: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     <ThreadsList
                         key={JSON.stringify(threads)}
                         threads={threads}
-                        cueId={null}
-                        channelName={props.filterChoice}
                         channelId={props.channelId}
-                        closeModal={() => {
-                            Animated.timing(modalAnimation, {
-                                toValue: 0,
-                                duration: 150,
-                                useNativeDriver: true,
-                            }).start(() => props.closeModal());
-                        }}
+                        closeModal={() => props.closeModal()}
                         channelCreatedBy={props.channelCreatedBy}
                         reload={() => loadThreads()}
                         refreshUnreadDiscussionCount={() => refreshUnreadDiscussionCount()}
-                        type={'Discussion'}
-                        channelColor={props.channelColor}
                         setNewPostCategories={(categories: any[]) => props.setNewPostCategories(categories)}
                         showNewDiscussionPost={props.showNewDiscussionPost}
                         setShowNewDiscussionPost={props.setShowNewDiscussionPost}
                         hideNavbarDiscussions={props.hideNavbarDiscussions}
                         setHideNavbarDiscussions={props.setHideNavbarDiscussions}
-                        user={props.user}
                     />
                 )}
             </Animated.View>

@@ -50,7 +50,7 @@ import { useUserInfoOverlayContext } from '../../ChatContext/UserInfoOverlayCont
 import type { StreamChatGenerics } from './types';
 
 import { UserResponse } from 'stream-chat';
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useDirectoryFilterOverlayContext } from '../../ChatContext/DirectoryFilterContext';
 import { getDropdownHeight } from '../../helpers/DropdownHeight';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     text: {
         fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
         color: '#000000',
-        marginBottom: Dimensions.get('window').width < 768 ? 10 : 0,
+        marginBottom: Dimensions.get('window').width < 768 ? 10 : 12,
         fontFamily: 'Inter',
         fontWeight: 'bold',
     },

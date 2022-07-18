@@ -1,6 +1,6 @@
 // // REACT
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { StyleSheet, TextInput, Dimensions, Platform, Keyboard, KeyboardAvoidingView, Image } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { TextInput, Dimensions, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Switch } from 'react-native-gesture-handler';
 import Alert from './Alert';
@@ -9,14 +9,13 @@ import { View, Text, TouchableOpacity } from './Themed';
 import { TextInput as CustomTextInput } from './CustomTextInput';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
-import Reanimated from 'react-native-reanimated';
 import { disableEmailId } from '../constants/zoomCredentials';
 import { RadioButton } from './RadioButton';
 import { paddingResponsive } from '../helpers/paddingHelper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
-import { fetchAPI } from '../graphql/FetchAPI';
+
 import {
     createGradebookEntry,
     handleEditStandard,
@@ -28,13 +27,12 @@ import {
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 
 import TagInput from 'react-native-tags-input';
-
-const customFontFamily = `@font-face {
-        font-family: 'Overpass';
-        src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf'); 
-   }`;
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
 
 const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user } = useAppContext();
+
     const [gradebookEntryType, setGradebookEntryType] = useState(
         props.gradebookEntryType ? props.gradebookEntryType : 'assignment'
     );
@@ -61,6 +59,8 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
     const [isUsersDropdownOpen, setIsUsersDropdownOpen] = useState(false);
     const [showSubmissionDatePickerAndroid, setShowSubmissionDatePickerAndroid] = useState('');
     const [editSetupComplete, setEditSetupComplete] = useState(false);
+
+    const server = useApolloClient();
 
     // STANDARDS BASED ENTRY
     const [newCategories, setNewCategories] = useState<any>({
@@ -375,8 +375,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
         setIsDeletingAssignment(true);
 
         if (gradebookEntryType === 'assignment') {
-            const server = fetchAPI('');
-
             server
                 .mutate({
                     mutation: deleteGradebookEntry,
@@ -402,8 +400,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                     setIsDeletingAssignment(false);
                 });
         } else {
-            const server = fetchAPI('');
-
             server
                 .mutate({
                     mutation: handleDeleteStandard,
@@ -497,10 +493,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                     scores: sanitizeScores,
                 };
 
-                console.log('New Assignment Input', gradebookEntryInput);
-
-                const server = fetchAPI('');
-
                 if (editing) {
                     server
                         .mutate({
@@ -565,8 +557,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                         return;
                     }
 
-                    const server = fetchAPI('');
-
                     server
                         .mutate({
                             mutation: handleEditStandard,
@@ -618,14 +608,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                         });
                     }
 
-                    console.log('Standards input', {
-                        standards: newStandards,
-                        standardsScores: gradeStudentsStandards ? sanitizeStandardsScores : undefined,
-                        channelId: props.channelId,
-                    });
-
-                    const server = fetchAPI('');
-
                     server
                         .mutate({
                             mutation: createStandards,
@@ -672,8 +654,6 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
             editStandardCategory,
         ]
     );
-
-    console.log('Gradebook Entry Points Scored', newAssignmentPointsScored);
 
     const renderNewAssignmentDeadlineDateTimepicker = () => {
         return (
@@ -865,7 +845,7 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                                 marginBottom: 20,
                             }}
                             onPress={() => handleCreateAssignment(true)}
-                            disabled={isCreatingAssignment || props.user.email === disableEmailId}
+                            disabled={isCreatingAssignment || user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -893,7 +873,7 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                                 marginBottom: 20,
                             }}
                             onPress={() => handleDeleteAssignment()}
-                            disabled={isDeletingAssignment || props.user.email === disableEmailId}
+                            disabled={isDeletingAssignment || user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -922,7 +902,7 @@ const NewAssignmentModal: React.FunctionComponent<{ [label: string]: any }> = (p
                             marginBottom: 20,
                         }}
                         onPress={() => handleCreateAssignment(false)}
-                        disabled={isCreatingAssignment || props.user.email === disableEmailId}
+                        disabled={isCreatingAssignment || user.email === disableEmailId}
                     >
                         <Text
                             style={{

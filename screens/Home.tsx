@@ -18,18 +18,15 @@ import axios from 'axios';
 import * as AuthSession from 'expo-auth-session';
 
 // API
-import { fetchAPI } from '../graphql/FetchAPI';
+
 import {
     getSubscriptions,
     getSsoLink,
-    getCues,
     getOrganisation,
-    saveCuesToCloud,
     login,
     getCuesFromCloud,
     findUserById,
     resetPassword,
-    totalInboxUnread,
     signup,
     authWithProvider,
     updateNotificationId,
@@ -64,36 +61,25 @@ import { blueButtonHomeMB, blueButtonMR } from '../helpers/BlueButtonPosition';
 import { StreamChat } from 'stream-chat';
 import { StreamChatGenerics } from '../components/ChatComponents/types';
 
-import { AppContext } from '../ChatContext/AppContext';
+import { AppChatContext } from '../ChatContext/AppChatContext';
+import { useApolloClient, useLazyQuery, useQuery } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
 
 const STREAM_CHAT_API_KEY = 'fa2jhu3kqpah';
 
 // import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
-    // read/learn
-    const version = 'learn';
-
-    // Dev/Prod
-    const env = 'DEV';
-
     const window = Dimensions.get('window');
     const screen = Dimensions.get('screen');
 
-    // Categories for Home
-    const [customCategories, setCustomCategories] = useState<any[]>([]);
-    // All channels
-    const [subscriptions, setSubscriptions] = useState<any[]>([]);
-    // All cues
-    const [cues, setCues] = useState<any>({});
-    const [fadeAnimation] = useState(new Animated.Value(0));
-
     // Open an existing Cue
-    const [updateModalIndex, setUpdateModalIndex] = useState(0);
-    const [updateModalKey, setUpdateModalKey] = useState('local');
+
+    const [activeCue, setActiveCue] = useState<any>(undefined);
+    const [channelCues, setChannelCues] = useState<any[]>([]);
+    const [activeChannelColor, setActiveChannelColor] = useState('#000');
 
     const [modalType, setModalType] = useState('');
-    // const [pageNumber, setPageNumber] = useState(0);
     const [channelId, setChannelId] = useState('');
     const [cueId, setCueId] = useState('');
     const [createdBy, setCreatedBy] = useState('');
@@ -108,15 +94,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
     const [isSignupSubmitDisabled, setIsSignupSubmitDisabled] = useState(true);
     const [signingUp, setSigningUp] = useState(false);
-    const [saveDataInProgress, setSaveDataInProgress] = useState(false);
     const [dimensions, setDimensions] = useState({ window, screen });
-    const [target, setTarget] = useState('');
     const [loadDiscussionForChannelId, setLoadDiscussionForChannelId] = useState('');
     const [openChannelId, setOpenChannelId] = useState('');
     const [passwordValidError, setPasswordValidError] = useState('');
 
     const [tab, setTab] = useState('Agenda');
-    const [showDirectory, setShowDirectory] = useState<any>(false);
     const [showCreate, setShowCreate] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
 
@@ -132,9 +115,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const invalidCredentialsAlert = PreferredLanguageText('invalidCredentials');
     const unableToRefreshCuesAlert = PreferredLanguageText('unableToRefreshCues');
     const passwordInvalidError = PreferredLanguageText('atleast8char');
-    const [filterStart, setFilterStart] = useState<any>(new Date());
-    const [filterEnd, setFilterEnd] = useState<any>(null);
-    const [showAddEvent, setShowAddEvent] = useState<any>(null);
     const [selectedWorkspace, setSelectedWorkspace] = useState<any>('');
     const [isSsoEnabled, setIsSsoEnabled] = useState(false);
 
@@ -148,33 +128,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [workspaceOptions] = useState(['Content', 'Discuss', 'Meet', 'Scores', 'Settings']);
     const [createOptions] = useState(['Content', 'Import', 'Quiz', 'Library']);
 
-    const [createOption, setCreateOption] = useState('');
-    const [userId, setUserId] = useState('');
-    const [role, setRole] = useState('');
-    const [user, setUser] = useState<any>(null);
-
-    // const [showSettings, setShowSettings] = useState(false);
-
     const [showHome, setShowHome] = useState(true);
-    const [hideNewChatButton, setHideNewChatButton] = useState(false);
-    const [hideNavbarDiscussions, setHideNavbarDiscussions] = useState(false);
-    const [loadingCues, setLoadingCues] = useState(true);
-    const [loadingSubs, setLoadingSubs] = useState(true);
-    const [loadingUser, setLoadingUser] = useState(true);
-    const [loadingOrg, setLoadingOrg] = useState(true);
-
-    const [syncingCues, setSyncingCues] = useState(false);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [workspaceActiveTab, setWorkspaceActiveTab] = useState('Content');
     const [createActiveTab, setCreateActiveTab] = useState('Content');
     const [disableCreateNavbar, setDisableCreateNavbar] = useState(false);
 
-    const [closingModal, setClosingModal] = useState(false);
-    const [refreshingWorkspace, setRefreshingWorkspace] = useState(false);
     const [showImportCreate, setShowImportCreate] = useState(false);
 
     const [showWorkspaceFilterModal, setShowWorkspaceFilterModal] = useState(false);
     const [reloadBottomBarKey, setReloadBottomBarKey] = useState(Math.random());
+
+    const [hideNewChatButton, setHideNewChatButton] = useState(false);
+    const [hideNavbarDiscussions, setHideNavbarDiscussions] = useState(false);
 
     const [showNewAssignment, setShowNewAssignment] = useState(false);
     const [hideNavbarGrades, setHideNavbarGrades] = useState(false);
@@ -190,12 +156,83 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const orientation = useOrientation();
 
-    console.log('Orientation', orientation);
-
+    // IPAD BUG WHILE CHANGING TO LANDSCAPE ORIENTATION
     const onOrientationChange = useCallback(async () => {
         // await Updates.reloadAsync();
         setReloadBottomBarKey(reloadBottomBarKey);
     }, []);
+
+    const server = useApolloClient();
+    const {
+        userId,
+        user,
+        org,
+        handleSetOrg,
+        subscriptions,
+        handleSetUser,
+        handleSetCues,
+        handleSetSubscriptions,
+        allCues,
+        customCategories,
+        handleReadCue,
+        loginUser,
+        refreshCues,
+        refreshSubscriptions,
+    } = useAppContext();
+
+    // QUERIES
+
+    const [fetchUser, { loading: loadingUser, error: userError, data: userData }] = useLazyQuery(findUserById, {
+        variables: { id: userId },
+    });
+
+    const [fetchOrg, { loading: loadingOrg, error: orgError, data: orgData }] = useLazyQuery(getOrganisation, {
+        variables: { userId },
+    });
+
+    const [fetchCues, { loading: loadingCues, error: cuesError, data: cuesData }] = useLazyQuery(getCuesFromCloud, {
+        variables: { userId },
+    });
+
+    const [fetchSubs, { loading: loadingSubs, error: subsError, data: subsData }] = useLazyQuery(getSubscriptions, {
+        variables: { userId },
+    });
+
+    // INIT
+    useEffect(() => {
+        if (userId) {
+            fetchSubs();
+            fetchUser();
+            fetchOrg();
+            fetchCues();
+            fetchStreamUserToken(userId);
+            setupEventsNotifications(userId);
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        if (userData) {
+            handleSetUser(userData.user.findById);
+        }
+    }, [userData]);
+
+    useEffect(() => {
+        if (subsData) {
+            handleSetSubscriptions(subsData.subscription.findByUserId);
+        }
+    }, [subsData]);
+
+    useEffect(() => {
+        if (orgData) {
+            handleSetOrg(orgData.school.findByUserId);
+        }
+    }, [orgData]);
+
+    useEffect(() => {
+        if (cuesData) {
+            handleSetCues(cuesData.cue.getCuesFromCloud);
+        }
+    }, [cuesData]);
 
     useEffect(() => {
         (async () => {
@@ -203,29 +240,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
             } else {
                 ScreenOrientation.addOrientationChangeListener(onOrientationChange);
-            }
-        })();
-    }, []);
-
-    useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
-            if (u) {
-                const user = JSON.parse(u);
-
-                console.log('User id ', user._id);
-
-                if (user && user._id && user._id !== '') {
-                    setUserId(user._id);
-                    setRole(user.role);
-                    await loadDataFromCloud();
-                    fetchStreamUserToken(user._id);
-                    setupEventsNotifications(user._id);
-                } else {
-                    setShowLoginWindow(true);
-                }
-            } else {
-                setShowLoginWindow(true);
             }
         })();
     }, []);
@@ -277,7 +291,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             if (ssoCode && ssoCode !== '') {
                 setIsLoggingIn(true);
 
-                const server = fetchAPI('');
                 server
                     .query({
                         query: loginFromSso,
@@ -295,23 +308,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         ) {
                             const u = r.data.user.loginFromSso.user;
                             const token = r.data.user.loginFromSso.token;
-                            if (u.__typename) {
-                                delete u.__typename;
+
+                            const userId = u._id;
+
+                            const res = await loginUser(userId, token);
+
+                            console.log('Res', res);
+
+                            if (!res) {
+                                Alert('Failed to login user. Try again.');
+                            } else {
+                                updateExpoNotificationId(u);
                             }
 
-                            if (u._id) {
-                                setUserId(u._id);
-                                setRole(u.role);
-                            }
-
-                            const sU = JSON.stringify(u);
-                            await AsyncStorage.setItem('jwt_token', token);
-                            await AsyncStorage.setItem('user', sU);
-
-                            updateExpoNotificationId(u);
-
-                            setShowLoginWindow(false);
-                            loadDataFromCloud();
                             setIsLoggingIn(false);
                         } else {
                             const { error } = r.data.user.loginFromSso;
@@ -336,6 +345,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
         setEmailValidError('');
     }, [email]);
+
+    // FOR NATIVE AND DESKTOP APPS WE WILL SHOW LOGIN SCREEN
+    useEffect(() => {
+        if (!userId || userId === '') {
+            setShowHome(false);
+            setShowLoginWindow(true);
+        } else {
+            setShowHome(true);
+            setShowLoginWindow(false);
+        }
+    }, [userId]);
 
     //   Validate Submit on Login state change
     useEffect(() => {
@@ -393,46 +413,15 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         setOpenChannelId('');
     }, [option]);
 
-    useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
-            if (u) {
-                const parsedUser: any = JSON.parse(u);
-                if (parsedUser.email && parsedUser.email !== '') {
-                    // do nothing
-                } else {
-                    setShowLoginWindow(true);
-                }
-            } else {
-                setShowLoginWindow(true);
-            }
-        })();
-    }, []);
+    function alertTimeDisplay(dbDate: string, twentyFourOffset: boolean) {
+        let date = moment(dbDate);
 
-    useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
-
-            if (u) {
-                const user = JSON.parse(u);
-
-                const server = fetchAPI('');
-
-                server
-                    .query({
-                        query: totalInboxUnread,
-                        variables: {
-                            userId: user._id,
-                        },
-                    })
-                    .then((res) => {
-                        if (res.data.messageStatus.totalInboxUnread) {
-                            setUnreadMessages(res.data.messageStatus.totalInboxUnread);
-                        }
-                    });
-            }
-        })();
-    }, []);
+        if (!twentyFourOffset) {
+            return 'Today at ' + date.format('h:mm a');
+        } else {
+            return 'Tomorrow at ' + date.format('h:mm a');
+        }
+    }
 
     const setupEventsNotifications = useCallback(async (userId: string) => {
         console.log('Setup event notifications');
@@ -474,16 +463,19 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             },
             handleError: (err) => console.log(err),
             handleSuccess: (res) => {
-                // loadData()
+                // Refresh Data on load
+                refreshCues();
+                refreshSubscriptions();
             },
         });
 
         // for when user taps on a notification
         responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
-            loadData();
+            // Refresh Data on load
+            refreshCues();
+            refreshSubscriptions();
         });
 
-        const server = fetchAPI('');
         server
             .query({
                 query: getNotificationEvents,
@@ -647,551 +639,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             });
     }, []);
 
-    console.log('channel cues home', cues[updateModalKey]);
-
-    // const notificationScheduler = useCallback(
-    //     async c => {
-    //         try {
-    //             if (c === undefined || c === null) {
-    //                 return;
-    //             }
-
-    //             // Clean out all already scheduled notifications
-    //             await Notifications.cancelAllScheduledNotificationsAsync();
-
-    //             // This is the object where we are going to collect all notifications that can be scheduled
-    //             // between two time points A and B
-    //             const notificationRequests: any[] = [];
-
-    //             // Get notification permission
-    //             const settings = await Notifications.getPermissionsAsync();
-    //             if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
-    //                 // permission granted
-    //             } else {
-    //                 await Notifications.requestPermissionsAsync({
-    //                     ios: {
-    //                         allowAlert: true,
-    //                         allowBadge: true,
-    //                         allowSound: true,
-    //                         allowAnnouncements: true
-    //                     }
-    //                 });
-    //                 const settings = await Notifications.getPermissionsAsync();
-    //                 if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
-    //                     // permission granted
-    //                 } else {
-    //                     // leave scheduler
-    //                     return;
-    //                 }
-    //             }
-
-    //             // Setting notification handler
-    //             Notifications.setNotificationHandler({
-    //                 handleNotification: async n => {
-    //                     return {
-    //                         shouldShowAlert: true,
-    //                         shouldPlaySound: true,
-    //                         shouldSetBadge: true
-    //                     };
-    //                 },
-    //                 handleError: err => console.log(err),
-    //                 handleSuccess: res => {
-    //                     // loadData()
-    //                 }
-    //             });
-
-    //             // for when user taps on a notification
-    //             responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-    //                 loadData();
-    //             });
-
-    //             // for the ones that are on shuffle
-    //             // const shuffledCues: any[] = []
-    //             // const unShuffledCues: any[] = []
-
-    //             // choose two dates - now (A) & now + 1 month (B) for timed cues
-    //             const A = new Date();
-    //             const B = new Date();
-    //             B.setMonth(B.getMonth() + 1);
-
-    //             // For sleep calculations
-    //             // let from = new Date(sleepFrom)
-    //             // let to = new Date(sleepTo)
-    //             // let a = from.getHours()
-    //             // let b = to.getHours()
-    //             // a += (from.getMinutes() / 60)
-    //             // b += (to.getMinutes() / 60)
-
-    //             const cuesArray: any[] = [];
-    //             if (c !== {}) {
-    //                 Object.keys(c).map(key => {
-    //                     c[key].map((cue: any, index: number) => {
-    //                         cuesArray.push({
-    //                             ...cue,
-    //                             key,
-    //                             index
-    //                         });
-    //                     });
-    //                 });
-    //             }
-
-    //             // First filter shuffled and unshuffled cues
-    //             cuesArray.map((item: any) => {
-    //                 if (item.shuffle) {
-    //                     if (item.frequency === '0' || !item.endPlayAt || item.endPlayAt === '') {
-    //                         return;
-    //                     }
-    //                     // One time reminder
-    //                     // must have endplayat stored
-    //                     let trigger = new Date(item.endPlayAt);
-    //                     if (trigger > A && trigger < B) {
-    //                         // if trigger is in the next 30 days
-    //                         const { title, subtitle } = htmlStringParser(item.cue);
-    //                         notificationRequests.push({
-    //                             content: {
-    //                                 title,
-    //                                 subtitle,
-    //                                 sound: true
-    //                             },
-    //                             trigger
-    //                         });
-    //                     }
-    //                     // shuffledCues.push(item)
-    //                 } else {
-    //                     if (item.frequency !== '0') {
-    //                         let trigger = new Date(item.date);
-    //                         let loopCheck = 0;
-    //                         let end = B;
-    //                         if (item.endPlayAt && item.endPlayAt !== '') {
-    //                             const playLimit = new Date(item.endPlayAt);
-    //                             if (playLimit < B) {
-    //                                 end = playLimit;
-    //                             }
-    //                         }
-    //                         while (trigger < end) {
-    //                             if (trigger < A) {
-    //                                 trigger = getNextDate(item.frequency, trigger);
-    //                                 continue;
-    //                             }
-    //                             loopCheck++;
-    //                             if (loopCheck > 64) {
-    //                                 // upto 50 valid notifications can be considered
-    //                                 break;
-    //                             }
-    //                             const { title, subtitle } = htmlStringParser(
-    //                                 item.channelId && item.channelId !== '' ? item.original : item.cue
-    //                             );
-    //                             notificationRequests.push({
-    //                                 content: {
-    //                                     title,
-    //                                     subtitle,
-    //                                     sound: true
-    //                                 },
-    //                                 trigger
-    //                             });
-    //                             trigger = getNextDate(item.frequency, trigger);
-    //                         }
-    //                     } else {
-    //                         // if frequency === 0
-    //                         // no reminder set - do nothing
-    //                     }
-    //                 }
-    //             });
-
-    //             const sortedRequests: any[] = notificationRequests.sort((a: any, b: any) => {
-    //                 return a.trigger - b.trigger;
-    //             });
-    //             if (sortedRequests.length === 0) {
-    //                 // no requests to process
-    //                 return;
-    //             }
-
-    //             let lastTriggerDate = new Date();
-    //             lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 5);
-    //             const iterateUpTo = sortedRequests.length >= 64 ? 63 : sortedRequests.length;
-    //             // iOS has a limit on scheduled notifications - 64 which is why we have to
-    //             // choose the first 64 notifications
-    //             // After that make the user revisit the app again
-    //             for (let i = 0; i < iterateUpTo; i++) {
-    //                 // Schedule notification
-    //                 await Notifications.scheduleNotificationAsync(sortedRequests[i]);
-    //                 // The last notification in the scheduling queue has to be the one
-    //                 if (i === iterateUpTo - 1) {
-    //                     lastTriggerDate = new Date(sortedRequests[i].trigger);
-    //                     lastTriggerDate.setMinutes(lastTriggerDate.getMinutes() + 1);
-    //                     const n = await Notifications.scheduleNotificationAsync({
-    //                         content: {
-    //                             title: 'Continue receiving notifications?',
-    //                             subtitle: "Open Cues! It's been a while...",
-    //                             sound: true
-    //                         },
-    //                         trigger: lastTriggerDate
-    //                     });
-    //                 }
-    //             }
-    //         } catch (e) {
-    //             console.log(e);
-    //         }
-    //     },
-    //     [cues, responseListener]
-    // );
-
-    console.log('Workspace active tab', workspaceActiveTab);
-
-    const refreshUnreadInbox = useCallback(async () => {
-        const u = await AsyncStorage.getItem('user');
-        if (u) {
-            const user = JSON.parse(u);
-            updateInboxCount(user._id);
-        }
-    }, []);
-
-    const updateInboxCount = useCallback((userId) => {
-        const server = fetchAPI('');
-        server
-            .query({
-                query: totalInboxUnread,
-                variables: {
-                    userId,
-                    channelId,
-                },
-            })
-            .then((res) => {
-                if (
-                    res.data.messageStatus.totalInboxUnread !== undefined &&
-                    res.data.messageStatus.totalInboxUnread !== null
-                ) {
-                    setUnreadMessages(res.data.messageStatus.totalInboxUnread);
-                }
-            })
-            .catch((err) => console.log(err));
-    }, []);
-
-    const handleRefreshWorkspace = useCallback(async (subscriptions: boolean) => {
-        let user = await AsyncStorage.getItem('user');
-        const unparsedCues = await AsyncStorage.getItem('cues');
-
-        if (user && unparsedCues) {
-            setRefreshingWorkspace(true);
-
-            if (subscriptions) {
-                await refreshSubscriptions();
-            }
-
-            const parsedUser = JSON.parse(user);
-            const server = fetchAPI(parsedUser._id);
-
-            const allCues: any = JSON.parse(unparsedCues);
-
-            server
-                .query({
-                    query: getCuesFromCloud,
-                    variables: {
-                        userId: parsedUser._id,
-                    },
-                })
-                .then(async (res) => {
-                    if (res.data.cue.getCuesFromCloud) {
-                        const allCues: any = {};
-                        res.data.cue.getCuesFromCloud.map((cue: any) => {
-                            const channelId = cue.channelId && cue.channelId !== '' ? cue.channelId : 'local';
-                            delete cue.__typename;
-                            if (allCues[channelId]) {
-                                allCues[channelId].push({ ...cue });
-                            } else {
-                                allCues[channelId] = [{ ...cue }];
-                            }
-                        });
-                        const custom: any = {};
-                        if (allCues['local']) {
-                            allCues['local'].map((item: any) => {
-                                if (item.customCategory !== '') {
-                                    if (!custom[item.customCategory]) {
-                                        custom[item.customCategory] = 0;
-                                    }
-                                }
-                            });
-                        } else {
-                            allCues['local'] = [];
-                        }
-                        const customC: any[] = [];
-                        Object.keys(custom).map((item) => {
-                            customC.push(item);
-                        });
-                        customC.sort();
-                        setCues(allCues);
-                        setCustomCategories(customC);
-                        const stringCues = JSON.stringify(allCues);
-                        console.log('Size of saved Cues', byteCount(stringCues));
-                        await AsyncStorage.setItem('cues', stringCues);
-                        // await notificationScheduler(allCues);
-                        setRefreshingWorkspace(false);
-                    }
-                })
-                .catch((err) => console.log(err));
-
-            // try {
-            //     const res = await server.query({
-            //         query: getCues,
-            //         variables: {
-            //             userId: parsedUser._id
-            //         }
-            //     });
-
-            //     if (res.data.cue.findByUserId) {
-            //         // Here we load all new Cues
-            //         // we update statuses for the cues that are already stored and add new cues to the list
-            //         // (cant directly replace the store because channel cues could be modified by the user)
-
-            //         const receivedCues = res.data.cue.findByUserId;
-            //         receivedCues.map((item: any) => {
-            //             const channelId = item.channelId.toString().trim();
-            //             let index = -1;
-            //             if (allCues[channelId]) {
-            //                 index = allCues[channelId].findIndex((cue: any) => {
-            //                     return cue._id.toString().trim() === item._id.toString().trim();
-            //                 });
-            //             }
-            //             if (index === -1) {
-            //                 let cue: any = {};
-            //                 cue = {
-            //                     ...item
-            //                 };
-            //                 delete cue.__typename;
-            //                 if (allCues[cue.channelId]) {
-            //                     allCues[cue.channelId].push(cue);
-            //                 } else {
-            //                     allCues[cue.channelId] = [cue];
-            //                 }
-            //             } else {
-            //                 allCues[item.channelId][index].unreadThreads = item.unreadThreads ? item.unreadThreads : 0;
-            //                 allCues[item.channelId][index].status = item.status;
-            //                 allCues[item.channelId][index].folderId = item.folderId;
-            //                 if (!allCues[item.channelId][index].original) {
-            //                     allCues[item.channelId][index].original = item.cue;
-            //                 }
-            //             }
-            //         });
-            //         const custom: any = {};
-            //         setCues(allCues);
-            //         if (allCues['local']) {
-            //             allCues['local'].map((item: any) => {
-            //                 if (item.customCategory !== '') {
-            //                     if (!custom[item.customCategory]) {
-            //                         custom[item.customCategory] = 0;
-            //                     }
-            //                 }
-            //             });
-            //             const customC: any[] = [];
-            //             Object.keys(custom).map(item => {
-            //                 customC.push(item);
-            //             });
-            //             customC.sort();
-            //             setCustomCategories(customC);
-            //         }
-            //         // await notificationScheduler(allCues);
-            //         const stringCues = JSON.stringify(allCues);
-            //         await AsyncStorage.setItem('cues', stringCues);
-            //         setRefreshingWorkspace(false)
-            //     }
-            // } catch (err) {
-            //     Alert(unableToRefreshCuesAlert, checkConnectionAlert);
-            //     const custom: any = {};
-            //     setCues(allCues);
-            //     if (allCues['local']) {
-            //         allCues['local'].map((item: any) => {
-            //             if (item.customCategory !== '') {
-            //                 if (!custom[item.customCategory]) {
-            //                     custom[item.customCategory] = 0;
-            //                 }
-            //             }
-            //         });
-            //         const customC: any[] = [];
-            //         Object.keys(custom).map(item => {
-            //             customC.push(item);
-            //         });
-            //         customC.sort();
-            //         setCustomCategories(customC);
-            //     }
-            //     setRefreshingWorkspace(false)
-            // }
-        }
-    }, []);
-
-    function byteCount(s: string) {
-        return encodeURI(s).split(/%..|./).length - 1;
-    }
-
-    // imp
-    const loadNewChannelCues = useCallback(async () => {
-        setSyncingCues(true);
-        let user = await AsyncStorage.getItem('user');
-        const unparsedCues = await AsyncStorage.getItem('cues');
-        if (user && unparsedCues) {
-            const allCues = JSON.parse(unparsedCues);
-            const parsedUser = JSON.parse(user);
-            const server = fetchAPI(parsedUser._id);
-
-            try {
-                const res = await server.query({
-                    query: getCues,
-                    variables: {
-                        userId: parsedUser._id,
-                    },
-                });
-
-                if (res.data.cue.findByUserId) {
-                    // Here we load all new Cues
-                    // we update statuses for the cues that are already stored and add new cues to the list
-                    // (cant directly replace the store because channel cues could be modified by the user)
-                    const receivedCues = res.data.cue.findByUserId;
-                    receivedCues.map((item: any) => {
-                        const channelId = item.channelId.toString().trim();
-                        let index = -1;
-                        if (allCues[channelId]) {
-                            index = allCues[channelId].findIndex((cue: any) => {
-                                return cue._id.toString().trim() === item._id.toString().trim();
-                            });
-                        }
-                        if (index === -1) {
-                            let cue: any = {};
-                            cue = {
-                                ...item,
-                            };
-                            delete cue.__typename;
-                            if (allCues[cue.channelId]) {
-                                allCues[cue.channelId].push(cue);
-                            } else {
-                                allCues[cue.channelId] = [cue];
-                            }
-                        } else {
-                            allCues[item.channelId][index].unreadThreads = item.unreadThreads ? item.unreadThreads : 0;
-                            allCues[item.channelId][index].status = item.status;
-                            allCues[item.channelId][index].folderId = item.folderId;
-                            if (!allCues[item.channelId][index].original) {
-                                allCues[item.channelId][index].original = item.cue;
-                            }
-                        }
-                    });
-                    const custom: any = {};
-                    setCues(allCues);
-                    if (allCues['local']) {
-                        allCues['local'].map((item: any) => {
-                            if (item.customCategory !== '') {
-                                if (!custom[item.customCategory]) {
-                                    custom[item.customCategory] = 0;
-                                }
-                            }
-                        });
-                        const customC: any[] = [];
-                        Object.keys(custom).map((item) => {
-                            customC.push(item);
-                        });
-                        customC.sort();
-                        setCustomCategories(customC);
-                    }
-                    // await notificationScheduler(allCues);
-                    const stringCues = JSON.stringify(allCues);
-                    await AsyncStorage.setItem('cues', stringCues);
-                    setSyncingCues(false);
-                    Animated.timing(fadeAnimation, {
-                        toValue: 1,
-                        duration: 150,
-                        useNativeDriver: true,
-                    }).start();
-                }
-            } catch (err) {
-                console.log('Error background', err);
-                Alert(unableToRefreshCuesAlert, checkConnectionAlert);
-                const custom: any = {};
-                setCues(allCues);
-                if (allCues['local']) {
-                    allCues['local'].map((item: any) => {
-                        if (item.customCategory !== '') {
-                            if (!custom[item.customCategory]) {
-                                custom[item.customCategory] = 0;
-                            }
-                        }
-                    });
-                    const customC: any[] = [];
-                    Object.keys(custom).map((item) => {
-                        customC.push(item);
-                    });
-                    customC.sort();
-                    setCustomCategories(customC);
-                }
-                setSyncingCues(false);
-                Animated.timing(fadeAnimation, {
-                    toValue: 1,
-                    duration: 150,
-                    useNativeDriver: true,
-                }).start();
-            }
-        } else if (unparsedCues) {
-            const custom: any = {};
-            const allCues = JSON.parse(unparsedCues);
-            setCues(allCues);
-            // await notificationScheduler(allCues);
-            if (allCues['local']) {
-                allCues['local'].map((item: any) => {
-                    if (item.customCategory !== '') {
-                        if (!custom[item.customCategory]) {
-                            custom[item.customCategory] = 0;
-                        }
-                    }
-                });
-                const customC: any[] = [];
-                Object.keys(custom).map((item) => {
-                    customC.push(item);
-                });
-                customC.sort();
-                setCustomCategories(customC);
-            }
-            setSyncingCues(false);
-            Animated.timing(fadeAnimation, {
-                toValue: 1,
-                duration: 150,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, []);
-
-    const syncOfflineDataOnInit = useCallback(async () => {
-        const sC = await AsyncStorage.getItem('cues');
-        // const sub = await AsyncStorage.getItem('subscriptions');
-
-        // LOAD CUES
-        if (sC) {
-            await loadNewChannelCues();
-        } else {
-            const custom: any = {};
-            let allCues: any = {};
-            allCues['local'] = [...defaultCues];
-            const stringSC = JSON.stringify(allCues);
-            await AsyncStorage.setItem('cues', stringSC);
-            allCues['local'].map((item: any) => {
-                if (item.customCategory !== '') {
-                    if (!custom[item.customCategory]) {
-                        custom[item.customCategory] = 0;
-                    }
-                }
-            });
-            const customC: any[] = [];
-            Object.keys(custom).map((item) => {
-                customC.push(item);
-            });
-            customC.sort();
-            setCues(allCues);
-            setCustomCategories(customC);
-            // START ANIMATION
-            Animated.timing(fadeAnimation, {
-                toValue: 1,
-                duration: 150,
-                useNativeDriver: true,
-            }).start();
-        }
-    }, []);
-
     const updateExpoNotificationId = useCallback(async (user: any) => {
         let existingStatus = await Notifications.getPermissionsAsync();
 
@@ -1214,7 +661,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
 
         if (existingStatus.granted || existingStatus.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
-            // const user = JSON.parse(u);
             let experienceId = undefined;
             if (!Constants.manifest) {
                 // Absence of the manifest means we're in bare workflow
@@ -1228,54 +674,40 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
             console.log('Update notification id INIT', notificationId);
 
+            const updatedNotificationId =
+                user.notificationId === 'NOT_SET' || user.notificationId === 'undefined'
+                    ? notificationId
+                    : user.notificationId + '-BREAK-' + notificationId;
+
             if (!user.notificationId || !user.notificationId.includes(notificationId)) {
-                const server = fetchAPI('');
-                server.mutate({
-                    mutation: updateNotificationId,
-                    variables: {
-                        userId: user._id,
-                        notificationId:
-                            user.notificationId === 'NOT_SET' || user.notificationId === 'undefined'
-                                ? notificationId
-                                : user.notificationId + '-BREAK-' + notificationId,
-                    },
-                });
+                server
+                    .mutate({
+                        mutation: updateNotificationId,
+                        variables: {
+                            userId: user._id,
+                            notificationId: updatedNotificationId,
+                        },
+                    })
+                    .then((res: any) => {
+                        const updateAsyncStorageUser = {
+                            ...user,
+                            notificationId: updatedNotificationId,
+                        };
+
+                        AsyncStorage.setItem('user', JSON.stringify(updateAsyncStorageUser));
+                    })
+                    .catch((e) => {
+                        console.log('error', e);
+                    });
             }
         }
     }, []);
-
-    // FETCH NEW DATA
-    const loadData = useCallback(
-        async (saveData?: boolean) => {
-            try {
-                let u = await AsyncStorage.getItem('user');
-
-                // HANDLE PROFILE
-                if (u) {
-                    // UPDATE NOTIFICATION ID
-
-                    const parsedUser = JSON.parse(u);
-                    if (parsedUser.email) {
-                        if (saveData) {
-                            await saveDataInCloud();
-                        } else {
-                            await loadDataFromCloud();
-                        }
-                    }
-                }
-            } catch (e) {
-                console.log(e);
-            }
-        },
-        [fadeAnimation]
-    );
 
     const handleSocialAuth = (user: any) => {
         const profile = user._profile;
 
         const { name, email, profilePicURL } = profile;
 
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: authWithProvider,
@@ -1304,7 +736,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     await AsyncStorage.setItem('jwt_token', token);
                     await AsyncStorage.setItem('user', sU);
                     setShowLoginWindow(false);
-                    loadDataFromCloud();
                 } else {
                     const { error } = r.data.user.authWithProvider;
                     Alert(error);
@@ -1339,7 +770,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
 
         setSigningUp(true);
-        const server = fetchAPI('');
+
         server
             .mutate({
                 mutation: signup,
@@ -1368,8 +799,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, [fullName, email, password, confirmPassword]);
 
     const handleSsoRedirect = useCallback(() => {
-        const server = fetchAPI('');
-
         if (!isSsoEnabled) {
             return;
         }
@@ -1413,7 +842,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     // Move to profile page
     const handleLogin = useCallback(() => {
         setIsLoggingIn(true);
-        const server = fetchAPI('');
+
         server
             .query({
                 query: login,
@@ -1423,30 +852,24 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 },
             })
             .then(async (r: any) => {
+                console.log('LOGIN USER RESPONSE', r.data.user.login);
                 if (r.data.user.login.user && r.data.user.login.token && !r.data.user.login.error) {
                     const u = r.data.user.login.user;
                     const token = r.data.user.login.token;
-                    if (u.__typename) {
-                        delete u.__typename;
+                    const userId = u._id;
+
+                    const res = await loginUser(userId, token);
+
+                    if (!res) {
+                        Alert('Failed to login user. Try again.');
+                    } else {
+                        updateExpoNotificationId(u);
                     }
-
-                    if (u._id) {
-                        setUserId(u._id);
-                        setRole(u.role);
-                    }
-
-                    const sU = JSON.stringify(u);
-                    await AsyncStorage.setItem('jwt_token', token);
-                    await AsyncStorage.setItem('user', sU);
-
-                    updateExpoNotificationId(u);
-                    setShowLoginWindow(false);
-                    loadDataFromCloud();
-                    setIsLoggingIn(false);
                 } else {
                     const { error } = r.data.user.login;
                     Alert(error);
                 }
+                setIsLoggingIn(false);
             })
             .catch((e) => {
                 console.log(e);
@@ -1455,23 +878,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             });
     }, [email, password]);
 
-    const timeToString = (time: any) => {
-        const date = new Date(time);
-        return moment(date).format('YYYY-MM-DD');
-    };
-
-    function alertTimeDisplay(dbDate: string, twentyFourOffset: boolean) {
-        let date = moment(dbDate);
-
-        if (!twentyFourOffset) {
-            return 'Today at ' + date.format('h:mm a');
-        } else {
-            return 'Tomorrow at ' + date.format('h:mm a');
-        }
-    }
-
     const fetchStreamUserToken = useCallback(async (userId: string) => {
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: getStreamChatUserToken,
@@ -1541,315 +948,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         };
     }, [streamUserToken, user]);
 
-    // imp
-    const loadDataFromCloud = useCallback(async () => {
-        const u = await AsyncStorage.getItem('user');
-        if (u) {
-            setLoadingCues(true);
-            setLoadingSubs(true);
-            setLoadingUser(true);
-            setLoadingOrg(true);
+    const openCue = useCallback(
+        (channelId, cueId, createdBy) => {
+            const findCue = allCues.find((cue: any) => cue._id === cueId);
 
-            const user = JSON.parse(u);
-            const server = fetchAPI(user._id);
-            // Get User info
-            server
-                .query({
-                    query: findUserById,
-                    variables: {
-                        id: user._id,
-                    },
-                })
-                .then(async (res) => {
-                    const u = res.data.user.findById;
-                    if (u) {
-                        // await AsyncStorage.setItem('cueDraft', u.currentDraft);
-                        delete u.currentDraft;
-                        delete u.__typename;
-                        const sU = JSON.stringify(u);
-                        await AsyncStorage.setItem('user', sU);
-                        setUser(u);
-                        setLoadingUser(false);
-                    }
-                })
-                .catch((err) => console.log(err));
-            // Get user cues
-            server
-                .query({
-                    query: getCuesFromCloud,
-                    variables: {
-                        userId: user._id,
-                    },
-                })
-                .then(async (res) => {
-                    if (res.data.cue.getCuesFromCloud) {
-                        const allCues: any = {};
-                        res.data.cue.getCuesFromCloud.map((cue: any) => {
-                            const channelId = cue.channelId && cue.channelId !== '' ? cue.channelId : 'local';
-                            delete cue.__typename;
-                            if (allCues[channelId]) {
-                                allCues[channelId].push({ ...cue });
-                            } else {
-                                allCues[channelId] = [{ ...cue }];
-                            }
-                        });
-                        const custom: any = {};
-                        if (allCues['local']) {
-                            allCues['local'].map((item: any) => {
-                                if (item.customCategory !== '') {
-                                    if (!custom[item.customCategory]) {
-                                        custom[item.customCategory] = 0;
-                                    }
-                                }
-                            });
-                        } else {
-                            allCues['local'] = [];
-                        }
-                        const customC: any[] = [];
-                        Object.keys(custom).map((item) => {
-                            customC.push(item);
-                        });
-                        customC.sort();
-                        setCues(allCues);
-                        setCustomCategories(customC);
-
-                        let cueCount = 0;
-                        let channelCount = Object.keys(allCues).length;
-
-                        Object.keys(allCues).map((cId: string) => {
-                            cueCount += allCues[cId].length;
-                        });
-
-                        const stringCues = JSON.stringify(allCues);
-
-                        // Print size
-                        await AsyncStorage.setItem('cues', stringCues);
-                        // await notificationScheduler(allCues);
-                        setLoadingCues(false);
-                    }
-                })
-                .catch((err) => console.log(err));
-            // Get subscription information
-            server
-                .query({
-                    query: getSubscriptions,
-                    variables: {
-                        userId: user._id,
-                    },
-                })
-                .then(async (res) => {
-                    if (res.data.subscription.findByUserId) {
-                        const sortedSubs = res.data.subscription.findByUserId.sort((a: any, b: any) => {
-                            if (a.channelName < b.channelName) {
-                                return -1;
-                            }
-                            if (a.channelName > b.channelName) {
-                                return 1;
-                            }
-                            return 0;
-                        });
-                        setSubscriptions(sortedSubs);
-                        const stringSub = JSON.stringify(sortedSubs);
-                        await AsyncStorage.setItem('subscriptions', stringSub);
-                        setLoadingSubs(false);
-                    }
-                })
-                .catch((err) => console.log(err));
-            // Get org
-            server
-                .query({
-                    query: getOrganisation,
-                    variables: {
-                        userId: user._id,
-                    },
-                })
-                .then(async (res) => {
-                    if (res.data && res.data.school.findByUserId) {
-                        const stringOrg = JSON.stringify(res.data.school.findByUserId);
-                        await AsyncStorage.setItem('school', stringOrg);
-                        setLoadingOrg(false);
-                    } else {
-                        setLoadingOrg(false);
-                    }
-                })
-                .catch((err) => console.log(err));
-        }
-    }, []);
-
-    // imp
-    const saveDataInCloud = useCallback(async () => {
-        if (saveDataInProgress) return;
-
-        setSaveDataInProgress(true);
-        const u: any = await AsyncStorage.getItem('user');
-        const parsedUser = JSON.parse(u);
-        const sC: any = await AsyncStorage.getItem('cues');
-        const parsedCues = JSON.parse(sC);
-
-        const allCuesToSave: any[] = [];
-        const allCues: any[] = [];
-
-        if (parsedCues !== {}) {
-            Object.keys(parsedCues).map((key) => {
-                parsedCues[key].map((cue: any) => {
-                    const cueInput = {
-                        ...cue,
-                        _id: cue._id.toString(),
-                        color: cue.color.toString(),
-                        date: new Date(cue.date).toISOString(),
-                        gradeWeight: cue.submission && cue.gradeWeight ? cue.gradeWeight.toString() : undefined,
-                        totalPoints: cue.submission && cue.totalPoints ? cue.totalPoints.toString() : undefined,
-                        endPlayAt: cue.endPlayAt && cue.endPlayAt !== '' ? new Date(cue.endPlayAt).toISOString() : '',
-                        allowedAttempts:
-                            cue.allowedAttempts && cue.allowedAttempts !== null ? cue.allowedAttempts.toString() : null,
-                    };
-                    allCuesToSave.push({ ...cueInput });
-                    // Deleting these because they should not be changed ...
-                    // but dont delete if it is the person who has made the cue
-                    // -> because those channel Cue changes are going to be propagated
-                    delete cueInput.score;
-                    // delete cueInput.deadline;
-                    delete cueInput.graded;
-                    delete cueInput.submittedAt;
-                    // delete cueInput.gradeWeight;
-                    // delete cueInput.submission;
-                    delete cueInput.comment;
-
-                    // this change is propagated only when the user actively changes folder structure...
-                    delete cueInput.folderId;
-
-                    delete cueInput.unreadThreads;
-                    // delete cueInput.createdBy;
-                    // delete cueInput.original;
-                    delete cueInput.status;
-                    delete cueInput.channelName;
-                    delete cueInput.__typename;
-                    allCues.push(cueInput);
-                });
-            });
-        }
-
-        const server = fetchAPI('');
-
-        // UPDATE CUES
-        server
-            .mutate({
-                mutation: saveCuesToCloud,
-                variables: {
-                    userId: parsedUser._id,
-                    cues: allCues,
-                },
-            })
-            .then(async (res) => {
-                if (res.data.cue.saveCuesToCloud) {
-                    const newIds: any = res.data.cue.saveCuesToCloud;
-                    const updatedCuesArray: any[] = [];
-                    allCuesToSave.map((c: any) => {
-                        const id = c._id;
-                        const updatedItem = newIds.find((i: any) => {
-                            return id.toString().trim() === i.oldId.toString().trim();
-                        });
-                        if (updatedItem) {
-                            updatedCuesArray.push({
-                                ...c,
-                                _id: updatedItem.newId,
-                            });
-                        } else {
-                            updatedCuesArray.push(c);
-                        }
-                    });
-                    const updatedCuesObj: any = {};
-                    updatedCuesArray.map((c: any) => {
-                        if (c.channelId && c.channelId !== '') {
-                            if (updatedCuesObj[c.channelId]) {
-                                updatedCuesObj[c.channelId].push(c);
-                            } else {
-                                updatedCuesObj[c.channelId] = [c];
-                            }
-                        } else {
-                            if (updatedCuesObj['local']) {
-                                updatedCuesObj['local'].push(c);
-                            } else {
-                                updatedCuesObj['local'] = [c];
-                            }
-                        }
-                    });
-                    const updatedCues = JSON.stringify(updatedCuesObj);
-                    await AsyncStorage.setItem('cues', updatedCues);
-                    if (newIds.length !== 0) {
-                        updateCuesHelper(updatedCuesObj);
-                    }
-                }
-
-                setSaveDataInProgress(false);
-            })
-            .catch((err) => console.log(err));
-    }, [cues]);
-
-    const updateCuesHelper = useCallback(
-        async (obj: any) => {
-            setCues(obj);
-            // await notificationScheduler(obj);
-        },
-        [cues]
-    );
-
-    // useEffect(() => {
-    //     (async () => {
-    //         await syncOfflineDataOnInit();
-    //         await loadData();
-    //     })();
-
-    //     // Called when component is loaded
-    // }, []);
-
-    const openModal = useCallback(
-        async (type) => {
-            if (option === 'Classroom' && selectedWorkspace !== '') {
-                await AsyncStorage.setItem('activeWorkspace', selectedWorkspace);
-                setSelectedWorkspace('');
-            }
-
-            setModalType(type);
-            // AsyncStorage.setItem('lastopened', type);
-        },
-        [cues, selectedWorkspace, option]
-    );
-
-    const openCueFromCalendar = useCallback(
-        async (channelId, _id, by) => {
-            setShowHome(false);
-
-            const fetchAsyncCues = await AsyncStorage.getItem('cues');
-
-            if (!fetchAsyncCues) {
-                ('Failed to open. Try again');
+            if (!findCue) {
                 return;
             }
-
-            const storageCues = JSON.parse(fetchAsyncCues);
-
-            // Get the latest cues from async storage and not state (Error in quiz)
-            let cueKey = '';
-            let cueIndex = 0;
-
-            if (storageCues !== {}) {
-                Object.keys(storageCues).map((key) => {
-                    storageCues[key].map((cue: any, index: number) => {
-                        if (cue._id === _id) {
-                            cueKey = key;
-                            cueIndex = index;
-                        }
-                    });
-                });
-            }
-
-            setUpdateModalKey(cueKey);
-            setUpdateModalIndex(cueIndex);
-            // setPageNumber(pageNumber);
-            setChannelId(channelId);
-
-            openModal('Update');
 
             if (channelId !== '') {
                 const sub = subscriptions.find((item: any) => {
@@ -1857,75 +962,24 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 });
                 if (sub) {
                     setChannelCreatedBy(sub.channelCreatedBy);
+                    setActiveChannelColor(sub.colorCode ? sub.colorCode : '#000');
                 }
-            }
-            setCreatedBy(by);
-            setCueId(_id);
-        },
-        [subscriptions]
-    );
 
-    const openUpdate = useCallback(
-        (key, index, pageNumber, _id, by, channId) => {
-            setUpdateModalKey(key);
-            setUpdateModalIndex(index);
-            // setPageNumber(pageNumber);
-            setChannelId(channId);
-            if (channId !== '') {
-                const sub = subscriptions.find((item: any) => {
-                    return item.channelId === channId;
-                });
-                if (sub) {
-                    setChannelCreatedBy(sub.channelCreatedBy);
-                }
+                const channelCues = allCues.filter((cue: any) => cue.channelId === channelId);
+
+                setChannelCues(channelCues);
             }
-            setCreatedBy(by);
-            setCueId(_id);
-            openModal('Update');
+            setChannelId(channelId);
+            setActiveCue(findCue);
+            setCreatedBy(createdBy);
+            setCueId(cueId);
+            setModalType('Update');
             setShowHome(false);
         },
-        [subscriptions, selectedWorkspace]
+        [subscriptions, allCues]
     );
 
-    const reloadCueListAfterUpdate = useCallback(async () => {
-        const unparsedCues = await AsyncStorage.getItem('cues');
-        const u = await AsyncStorage.getItem('user');
-        if (unparsedCues) {
-            const allCues = JSON.parse(unparsedCues);
-            const custom: any = {};
-            setCues(allCues);
-            if (allCues['local']) {
-                allCues['local'].map((item: any) => {
-                    if (item.customCategory !== '') {
-                        if (!custom[item.customCategory]) {
-                            custom[item.customCategory] = 0;
-                        }
-                    }
-                });
-                const customC: any[] = [];
-                Object.keys(custom).map((item) => {
-                    customC.push(item);
-                });
-                customC.sort();
-                setCustomCategories(customC);
-            }
-            // await notificationScheduler(allCues);
-            Animated.timing(fadeAnimation, {
-                toValue: 1,
-                duration: 150,
-                useNativeDriver: true,
-            }).start();
-        }
-        if (u) {
-            const user = JSON.parse(u);
-            if (user.email) {
-                await saveDataInCloud();
-            }
-        }
-    }, []);
-
     const forgotPassword = useCallback(() => {
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: resetPassword,
@@ -1943,108 +997,28 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             });
     }, [email]);
 
-    const refreshSubscriptions = async () => {
-        const u = await AsyncStorage.getItem('user');
+    const closeModal = useCallback(async () => {
+        setModalType('');
+        setCreateActiveTab('Content');
 
-        if (u) {
-            const parsedUser = JSON.parse(u);
-            const server = fetchAPI(parsedUser._id);
-            server
-                .query({
-                    query: getSubscriptions,
-                    variables: {
-                        userId: parsedUser._id,
-                    },
-                })
-                .then(async (res) => {
-                    if (res.data.subscription.findByUserId) {
-                        const sortedSubs = res.data.subscription.findByUserId.sort((a: any, b: any) => {
-                            if (a.channelName < b.channelName) {
-                                return -1;
-                            }
-                            if (a.channelName > b.channelName) {
-                                return 1;
-                            }
-                            return 0;
-                        });
-                        setSubscriptions(sortedSubs);
-                        const stringSub = JSON.stringify(sortedSubs);
-                        await AsyncStorage.setItem('subscriptions', stringSub);
-                    }
-                })
-                .catch((e) => {
-                    alert('Could not refresh Subscriptions');
-                });
-        }
-    };
-
-    const markCueAsRead = useCallback(async () => {
-        let subCues: any = {};
-        try {
-            const value = await AsyncStorage.getItem('cues');
-            if (value) {
-                subCues = JSON.parse(value);
-            }
-        } catch (e) {}
-        if (subCues[updateModalKey].length === 0) {
-            return;
+        // Mark as read
+        if (modalType === 'Update') {
+            handleReadCue(cueId);
         }
 
-        const unmodified = subCues ? subCues[updateModalKey][updateModalIndex] : {};
-
-        if (!unmodified) return;
-
-        const modified = {
-            ...unmodified,
-            status: 'read',
-        };
-
-        subCues[updateModalKey][updateModalIndex] = modified;
-
-        const stringifiedCues = JSON.stringify(subCues);
-        await AsyncStorage.setItem('cues', stringifiedCues);
-        reloadCueListAfterUpdate();
-    }, [cues, updateModalKey, updateModalIndex]);
-
-    const closeModal = useCallback(
-        async (submit?: boolean) => {
-            setClosingModal(true);
-
-            // Check if active workspace
-            if (option === 'Classroom') {
-                const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
-
-                if (activeWorkspace) {
-                    setSelectedWorkspace(activeWorkspace);
-                }
-            }
-
-            const cueDraftHome = await AsyncStorage.getItem('cueDraft');
-
-            await loadData();
-
-            setModalType('');
-
-            // Mark as read
-            if (modalType === 'Update' && !submit) {
-                await markCueAsRead();
-            }
-
-            setCueId('');
-            setShowHome(true);
-            setCreatedBy('');
-
-            if (modalType === 'Update') {
-                setChannelId('');
-            }
-
+        // If Closing modal after create then need to make it visible since it will be hidden
+        if (modalType === 'Create') {
             setDisableCreateNavbar(false);
-            setCreateActiveTab('Content');
+        }
 
-            setClosingModal(false);
-        },
-        [fadeAnimation, modalType, option]
-    );
+        setChannelCues([]);
+        setActiveCue(undefined);
+        setActiveChannelColor('#000');
+        setCueId('');
+        setCreatedBy('');
+        setShowHome(true);
+        setChannelId('');
+    }, [modalType]);
 
     /**
      * @description Helpter for icon to use in navbar
@@ -2061,21 +1035,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 return option === op ? 'chatbubble' : 'chatbubble-outline';
             default:
                 return option === op ? 'person' : 'person-outline';
-        }
-    };
-
-    const getNavBarColor = (op: string) => {
-        switch (op) {
-            case 'To Do':
-                return option === op ? '#f2f2f2' : '#fff';
-            case 'Classroom':
-                return option === op ? '#f2f2f2' : '#fff';
-            case 'Search':
-                return option === op ? '#f2f2f2' : '#fff';
-            case 'Inbox':
-                return option === op ? '#f2f2f2' : '#fff';
-            default:
-                return option === op ? '#f2f2f2' : '#fff';
         }
     };
 
@@ -2176,199 +1135,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         }
     };
 
-    const cuesArray: any[] = [];
-
-    if (cues !== {}) {
-        Object.keys(cues).map((key) => {
-            cues[key].map((cue: any, index: number) => {
-                cuesArray.push({
-                    ...cue,
-                    key,
-                    index,
-                });
-            });
-        });
-    }
-
-    const cuesCopy = cuesArray.sort((a: any, b: any) => {
-        if (a.color < b.color) {
-            return -1;
-        }
-        if (a.color > b.color) {
-            return 1;
-        }
-        return 0;
-    });
-
-    let dateFilteredCues: any[] = [];
-    if (filterStart && filterEnd) {
-        dateFilteredCues = cuesArray.filter((item) => {
-            const date = new Date(item.date);
-            return date >= filterStart && date <= filterEnd;
-        });
-    } else {
-        dateFilteredCues = cuesArray;
-    }
-
-    const [searchTerm, setSearchTerm] = useState('');
-
-    console.log('Option', option);
-    console.log('Show Directory', showDirectory);
-    console.log('New chat button');
-
     return (
-        <AppContext.Provider value={{ chatClient }}>
+        <AppChatContext.Provider value={{ chatClient }}>
             <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
-                {/* {
-                height <= width ? (
-                    <View
-                        style={{
-                            position: 'absolute',
-                            backgroundColor: '#fff',
-                            // alignSelf: 'flex-end',
-                            width: 0,
-                            paddingTop: 12,
-                            paddingBottom: Dimensions.get('window').width < 1024 ? 10 : 20,
-                            paddingHorizontal: Dimensions.get('window').width < 1024 ? 5 : 20,
-                            flexDirection: 'column',
-                            // justifyContent: 'center',
-                            height: '100%',
-                            // shadowColor: '#000',
-                            // shadowOffset: {
-                            //     width: 0,
-                            //     height: 0
-                            // },
-                            left: 0,
-                            // 0acity: 0.03,
-                            // shadowRadius: 10,
-                            borderColor: '#f2f2f2',
-                            borderRightWidth: 1,
-                            zIndex: showLoginWindow ? 40 : 100,
-                            elevation: showLoginWindow ? 40 : 120,
-                        }}
-                    >
-                        <View style={{
-                            flexDirection: 'row', marginBottom: 30, marginTop: 8, paddingBottom: 20
-                        }}>
-                            <Image
-                                source={{
-                                    uri:
-                                        'https://cues-files.s3.amazonaws.com/logo/cues-logo-black-exclamation-hidden.jpg'
-                                }}
-                                style={{
-                                    width: 76.59,
-                                    height: 23,
-                                    marginTop: 1
-                                }}
-                                resizeMode={'contain'}
-                            />
-                            <View style={{
-                                height: 23, flex: 1, flexDirection: 'row', justifyContent: 'flex-end'
-                            }}>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        const op = 'Search'
-                                        setOption(op);
-                                    }}>
-                                    <Text style={{
-                                        lineHeight: 23,
-                                        // textAlign: 'right'
-                                    }}>
-                                        <Ionicons
-                                            name={'search-outline'}
-                                            style={{ color: '#1f1f1f' }}
-                                            size={23}
-                                        />
-                                    </Text>
-                                </TouchableOpacity>
-                                <View style={{ width: 15 }} />
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        const op = 'Account'
-                                        setOption(op);
-                                    }}>
-                                    <Text style={{
-                                        lineHeight: 23,
-                                        // textAlign: 'right'
-                                    }}>
-                                        <Ionicons
-                                            name={'person-circle-outline'}
-                                            style={{ color: '#1f1f1f' }}
-                                            size={23}
-                                        />
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                         <TextInput
-                            // autoCompleteType="password"
-                            // textContentType="text"
-                            // secureTextEntry={true}
-                            value={searchTerm}
-                            placeholder={'Search'}
-                            onChangeText={(val: any) => setSearchTerm(val)}
-                            placeholderTextColor={'#1F1F1F'}
-                        />
-                        {options.map((op: any, ind: number) => {
-                            if (op === 'Search' || op === 'Account') {
-                                return
-                            }
-                            return (
-                                <TouchableOpacity
-                                    style={{
-                                        backgroundColor: getNavBarColor(op),
-                                        // width: '20%',
-                                        flexDirection: 'row',
-                                        justifyContent: 'flex-start',
-                                        alignItems: 'center',
-                                        marginTop: 5,
-                                        borderRadius: 10,
-                                        padding: 10,
-                                        paddingHorizontal: 20
-                                    }}
-                                    key={ind}
-                                    onPress={() => {
-                                        setOption(op);
-                                        if (op === 'Browse') {
-                                            // open create
-                                            setCueId('');
-                                            setModalType('');
-                                            setCreatedBy('');
-                                            if (modalType === 'Update') {
-                                                fadeAnimation.setValue(0);
-                                                if (modalType === 'Update') {
-                                                    setChannelId('');
-                                                }
-                                                loadData(true);
-                                            }
-                                            openModal('Create');
-                                        }
-                                        if (op === 'Classroom') {
-                                            setModalType('');
-                                            // setPageNumber(0);
-                                        }
-                                    }}
-                                >
-                                    <Ionicons
-                                        name={getNavbarIconName(op)}
-                                        style={{ color: getNavbarIconColor(op), marginBottom: 0 }}
-                                        size={23}
-                                    />
-                                    <Text style={{
-                                        fontSize: 18,
-                                        color: getNavbarIconColor(op),
-                                        
-                                        fontFamily: 'Inter',
-                                        paddingLeft: 10
-                                    }}>
-                                        {getNavbarText(op)}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-                ) : null
-            } */}
                 <View
                     style={styles(channelId).container}
                     key={showHome.toString() + option.toString() + tab.toString()}
@@ -2883,8 +1652,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     !loadingUser &&
                     !loadingSubs &&
                     !loadingOrg &&
-                    !saveDataInProgress &&
-                    !syncingCues &&
                     ((option === 'Classroom' &&
                         modalType !== 'Create' &&
                         (workspaceActiveTab === 'Content' ||
@@ -2900,20 +1667,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         <TouchableOpacity
                             onPress={() => {
                                 if (option === 'Classroom') {
-                                    setCueId('');
-                                    setModalType('');
-                                    setCreatedBy('');
-                                    // setChannelFilterChoice('All')
-                                    if (modalType === 'Update') {
-                                        fadeAnimation.setValue(0);
-                                        if (modalType === 'Update') {
-                                            setChannelId('');
-                                        }
-                                        loadData(true);
-                                    }
-
                                     if (selectedWorkspace === '' || workspaceActiveTab === 'Content') {
-                                        openModal('Create');
+                                        setModalType('Create');
                                     } else if (selectedWorkspace !== '' && workspaceActiveTab === 'Discuss') {
                                         setShowNewDiscussionPost(true);
                                         if (Dimensions.get('window').width < 768) {
@@ -2929,8 +1684,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     }
                                 } else if (option === 'Channels') {
                                     setShowCreate(true);
-                                } else {
-                                    setShowDirectory(true);
                                 }
                             }}
                             key={orientation.toString()}
@@ -3021,90 +1774,72 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     marginTop: 0,
                                 }}
                             >
-                                {loadingCues ||
+                                {!user ||
+                                !org ||
+                                !allCues ||
+                                !subscriptions ||
+                                loadingCues ||
                                 loadingUser ||
                                 loadingSubs ||
-                                loadingOrg ||
-                                saveDataInProgress ||
-                                closingModal ||
-                                syncingCues ? (
-                                    <View style={[styles(channelId).activityContainer, styles(channelId).horizontal]}>
-                                        <ActivityIndicator color={'#1F1F1F'} />
+                                loadingOrg ? (
+                                    <View
+                                        style={{
+                                            width: '100%',
+                                            backgroundColor: 'white',
+                                            flexDirection: 'row',
+                                            justifyContent: 'center',
+                                            flex: 1,
+                                        }}
+                                    >
+                                        <View
+                                            style={{
+                                                flexDirection: 'column',
+                                                alignSelf: 'center',
+                                                alignItems: 'center',
+                                            }}
+                                        >
+                                            <View
+                                                style={{
+                                                    marginTop: 10,
+                                                }}
+                                            >
+                                                <ActivityIndicator size={20} color={'#1F1F1F'} />
+                                                <Text
+                                                    style={{
+                                                        fontSize: 16,
+                                                        fontFamily: 'Inter',
+                                                        marginTop: 10,
+                                                    }}
+                                                >
+                                                    Loading...
+                                                </Text>
+                                            </View>
+                                        </View>
                                     </View>
                                 ) : (
                                     <Dashboard
-                                        version={version}
                                         setTab={(val: any) => setTab(val)}
                                         tab={tab}
                                         setShowCreate={(val: any) => setShowCreate(val)}
                                         showCreate={showCreate}
                                         setShowHelp={(val: any) => setShowHelp(val)}
                                         showHelp={showHelp}
-                                        showDirectory={showDirectory}
-                                        setShowDirectory={(val: any) => setShowDirectory(val)}
                                         selectedWorkspace={selectedWorkspace}
                                         setSelectedWorkspace={(val: any) => setSelectedWorkspace(val)}
                                         setOption={(op: any) => setOption(op)}
                                         option={option}
                                         options={options}
-                                        refreshSubscriptions={refreshSubscriptions}
-                                        hideHome={() => {
-                                            setShowHome(false);
-                                            loadData();
-                                        }}
-                                        closeModal={() => {
-                                            // setShowHome(true);
-                                            closeModal();
-                                        }}
-                                        saveDataInCloud={async () => await saveDataInCloud()}
-                                        reOpenProfile={() => {
-                                            setModalType('');
-                                            openModal('Profile');
-                                        }}
-                                        reloadData={() => {
-                                            loadDataFromCloud();
-                                        }}
+                                        closeModal={closeModal}
                                         openCreate={() => {
-                                            setCueId('');
-                                            setModalType('');
-                                            setCreatedBy('');
-                                            if (modalType === 'Update') {
-                                                fadeAnimation.setValue(0);
-                                                if (modalType === 'Update') {
-                                                    setChannelId('');
-                                                }
-                                                loadData(true);
-                                            }
-                                            openModal('Create');
+                                            setModalType('Create');
                                         }}
-                                        createOption={createOption}
-                                        cues={dateFilteredCues}
-                                        setChannelId={(id: string) => setChannelId(id)}
-                                        setChannelCreatedBy={(id: any) => setChannelCreatedBy(id)}
-                                        subscriptions={subscriptions}
-                                        openDiscussion={() => openModal('Discussion')}
-                                        openSubscribers={() => openModal('Subscribers')}
-                                        openGrades={() => openModal('Grades')}
-                                        openMeeting={() => openModal('Meeting')}
-                                        openChannelSettings={() => openModal('ChannelSettings')}
-                                        openUpdate={(
-                                            index: any,
-                                            key: any,
-                                            pageNumber: any,
-                                            _id: any,
-                                            by: any,
-                                            cId: any
-                                        ) => openUpdate(index, key, pageNumber, _id, by, cId)}
-                                        calendarCues={cues}
-                                        openCueFromCalendar={openCueFromCalendar}
+                                        openCue={openCue}
                                         key={
                                             option.toString() +
                                             showHome.toString() +
                                             tab.toString() +
-                                            showDirectory.toString() +
                                             showCreate.toString() +
-                                            showHelp.toString() +
-                                            cues.toString()
+                                            showHelp.toString()
                                         }
                                         openDiscussionFromActivity={(channelId: string) => {
                                             setOption('Classroom');
@@ -3115,37 +1850,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             setOption('Classroom');
                                             setOpenChannelId(channelId);
                                         }}
-                                        openQAFromSearch={(channelId: any, cueId: string) => {
-                                            const subscription = subscriptions.find((sub: any) => {
-                                                return sub.channelId === channelId;
-                                            });
-
-                                            if (subscription) {
-                                                openCueFromCalendar(channelId, cueId, subscription.channelCreatedBy);
-                                                setTarget('Q&A');
-                                            }
-                                        }}
-                                        openQAFromActivity={(channelId: any, cueId: string, by: string) => {
-                                            openCueFromCalendar(channelId, cueId, by);
-                                            setTarget('Q&A');
-                                        }}
                                         openDiscussionFromSearch={(channelId: any) => {
                                             // Find channel Created By from subscriptions
                                             setOption('Classroom');
-                                        }}
-                                        openClassroom={(channelId: any) => {
-                                            // Find channel Created By from subscriptions
-                                            const match = subscriptions.filter((sub: any) => {
-                                                return sub.channelId === channelId;
-                                            });
-                                            if (match && match.length !== 0) {
-                                                const createdBy = match[0].channelCreatedBy;
-                                                setChannelId(channelId);
-                                                setChannelCreatedBy(createdBy);
-                                                setCreatedBy(createdBy);
-                                                openModal('Meeting');
-                                                setShowHome(false);
-                                            }
                                         }}
                                         loadDiscussionForChannelId={loadDiscussionForChannelId}
                                         setLoadDiscussionForChannelId={setLoadDiscussionForChannelId}
@@ -3153,19 +1860,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         setOpenChannelId={setOpenChannelId}
                                         modalType={modalType}
                                         customCategories={customCategories}
-                                        closeCreateModal={() => {
-                                            setModalType('');
-                                            // setPageNumber(0);
-                                        }}
-                                        closeAfterCreatingMyNotes={async () => {
-                                            setDisableCreateNavbar(false);
-                                            setCreateActiveTab('Content');
-                                            setModalType('');
-                                            // setPageNumber(0);
-                                            await loadData(true);
-                                        }}
                                         unreadMessages={unreadMessages}
-                                        refreshUnreadInbox={refreshUnreadInbox}
                                         hideNewChatButton={(hide: boolean) => setHideNewChatButton(hide)}
                                         activeWorkspaceTab={workspaceActiveTab}
                                         setWorkspaceActiveTab={setWorkspaceActiveTab}
@@ -3179,8 +1874,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         setShowNewMeeting={(show: boolean) => setShowNewMeeting(show)}
                                         showNewAssignment={showNewAssignment}
                                         setShowNewAssignment={(show: boolean) => setShowNewAssignment(show)}
-                                        refreshingWorkspace={refreshingWorkspace}
-                                        onRefreshWorkspace={(subs: boolean) => handleRefreshWorkspace(subs)}
                                         setShowImportCreate={(showImport: boolean) => setShowImportCreate(showImport)}
                                         showImportCreate={showImportCreate}
                                         setCreateActiveTab={(tab: any) => setCreateActiveTab(tab)}
@@ -3189,7 +1882,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         setShowWorkspaceFilterModal={(show: boolean) =>
                                             setShowWorkspaceFilterModal(show)
                                         }
-                                        user={user}
                                         showNewAttendance={showNewAttendance}
                                         setShowNewAttendance={(show: boolean) => {
                                             setShowNewAttendance(show);
@@ -3218,24 +1910,17 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     >
                         {modalType === 'Update' ? (
                             <Update
-                                version={version}
-                                key={cueId.toString() + updateModalIndex.toString() + updateModalKey.toString()}
+                                key={cueId.toString()}
                                 customCategories={customCategories}
-                                cue={cues[updateModalKey][updateModalIndex]}
-                                cueIndex={updateModalIndex}
-                                cueKey={updateModalKey}
-                                closeModal={(submit?: boolean) => closeModal(submit)}
+                                cue={activeCue}
+                                activeChannelColor={activeChannelColor}
+                                closeModal={() => closeModal()}
                                 cueId={cueId}
                                 createdBy={createdBy}
                                 channelId={channelId}
                                 channelCreatedBy={channelCreatedBy}
-                                channelCues={cues[updateModalKey]}
-                                reloadCueListAfterUpdate={() => reloadCueListAfterUpdate()}
-                                target={target}
-                                openCue={(cueId: string) => openCueFromCalendar(channelId, cueId, channelCreatedBy)}
-                                refreshCues={loadNewChannelCues}
-                                user={user}
-                                // refreshAfterSubmittingQuiz={refreshAfterSubmittingQuiz}
+                                channelCues={channelCues}
+                                openCue={(cueId: string) => openCue(channelId, cueId, channelCreatedBy)}
                             />
                         ) : null}
                     </View>
@@ -3271,7 +1956,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             }}
                         >
                             {createOptions.map((op: any, ind: number) => {
-                                if (role !== 'instructor' && op === 'Quiz') {
+                                if (user.role !== 'instructor' && op === 'Quiz') {
                                     return null;
                                 }
 
@@ -3283,7 +1968,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     <TouchableOpacity
                                         style={{
                                             backgroundColor: '#fff',
-                                            width: role === 'instructor' ? '25%' : '33%',
+                                            width: user.role === 'instructor' ? '25%' : '33%',
                                             flexDirection: width < 800 ? 'column' : 'row',
                                             justifyContent: 'center',
                                             alignItems: 'center',
@@ -3450,24 +2135,6 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                         key={ind}
                                         onPress={() => {
                                             setOption(op);
-                                            if (op === 'Browse') {
-                                                // open create
-                                                setCueId('');
-                                                setModalType('');
-                                                setCreatedBy('');
-                                                if (modalType === 'Update') {
-                                                    fadeAnimation.setValue(0);
-                                                    if (modalType === 'Update') {
-                                                        setChannelId('');
-                                                    }
-                                                    loadData(true);
-                                                }
-                                                openModal('Create');
-                                            }
-                                            if (op === 'Classroom') {
-                                                setModalType('');
-                                                // setPageNumber(0);
-                                            }
                                         }}
                                     >
                                         <Ionicons
@@ -3495,7 +2162,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     ) : null}
                 </View>
             </SafeAreaView>
-        </AppContext.Provider>
+        </AppChatContext.Provider>
     );
 };
 

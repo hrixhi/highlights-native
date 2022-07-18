@@ -9,15 +9,15 @@ import type { StackNavigatorParamList, StreamChatGenerics } from './types';
 import { useTheme, vw } from 'stream-chat-expo';
 
 import { RouteProp, useNavigation } from '@react-navigation/native';
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import ScreenHeader from './ScreenHeader';
 import { Ionicons } from '@expo/vector-icons';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Alert from '../Alert';
-import { fetchAPI } from '../../graphql/FetchAPI';
 import { startChatMeeting } from '../../graphql/QueriesAndMutations';
 import moment from 'moment';
+import { useApolloClient } from '@apollo/client';
 
 type NewMeetingRouteProp = RouteProp<StackNavigatorParamList, 'NewMeetingScreen'>;
 
@@ -131,7 +131,7 @@ export const NewMeetingScreen: React.FC<NewMeetingProps> = ({
         params: { channel },
     },
 }) => {
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
 
     const [instantMeetingTitle, setInstantMeetingTitle] = useState('');
     const [instantMeetingDescription, setInstantMeetingDescription] = useState('');
@@ -149,6 +149,8 @@ export const NewMeetingScreen: React.FC<NewMeetingProps> = ({
     const navigation = useNavigation<NewMeetingScreenNavigationProps>();
 
     if (!chatClient) return null;
+
+    const server = useApolloClient();
 
     const [members] = useState(
         Object.values(channel?.state.members).filter(({ user }) => user?.id !== chatClient.userID)
@@ -494,7 +496,6 @@ export const NewMeetingScreen: React.FC<NewMeetingProps> = ({
             return;
         }
 
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: startChatMeeting,
@@ -658,7 +659,7 @@ export const NewMeetingScreen: React.FC<NewMeetingProps> = ({
                             justifyContent: 'center',
                             flexDirection: 'row',
                         }}
-                        // disabled={props.user.email === disableEmailId}
+                        // disabled={user.email === disableEmailId}
                     >
                         <Text
                             style={{

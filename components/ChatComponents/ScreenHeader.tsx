@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Dimensions, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { CompositeNavigationProp, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAttachmentPickerContext, useTheme } from 'stream-chat-expo';
@@ -41,10 +41,6 @@ const styles = StyleSheet.create({
     },
     subTitle: {
         fontSize: 12,
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: '700',
     },
 });
 
@@ -90,6 +86,7 @@ type ScreenHeaderProps = {
     Subtitle?: React.ElementType;
     subtitleText?: string;
     Title?: React.ElementType;
+    largeTitle?: boolean;
 };
 
 const HEADER_CONTENT_HEIGHT = 55;
@@ -106,6 +103,7 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = (props) => {
         subtitleText,
         Title,
         titleText = '',
+        largeTitle = false,
     } = props;
 
     const {
@@ -157,12 +155,11 @@ const ScreenHeader: React.FC<ScreenHeaderProps> = (props) => {
                         ) : (
                             !!titleText && (
                                 <Text
-                                    style={[
-                                        styles.title,
-                                        {
-                                            color: black,
-                                        },
-                                    ]}
+                                    style={{
+                                        color: black,
+                                        fontSize: largeTitle ? (Dimensions.get('window').width < 800 ? 22 : 26) : 18,
+                                        fontFamily: 'Inter',
+                                    }}
                                 >
                                     {titleText}
                                 </Text>

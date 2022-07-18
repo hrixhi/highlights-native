@@ -7,7 +7,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 
 import type { StackNavigatorParamList, StreamChatGenerics } from './types';
 
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useUserSearchContext } from '../../ChatContext/useSearchContext';
 import ScreenHeader from './ScreenHeader';
 import { Ionicons } from '@expo/vector-icons';
@@ -119,7 +119,7 @@ export const NewDirectMessagingScreen: React.FC<NewDirectMessagingScreenProps> =
             colors: { accent_blue, black, border, grey, white },
         },
     } = useTheme();
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
 
     const { setOverlay } = useAppOverlayContext();
 
@@ -156,6 +156,7 @@ export const NewDirectMessagingScreen: React.FC<NewDirectMessagingScreenProps> =
                         </Text>
                     </TouchableOpacity>
                 )}
+                largeTitle={true}
             />
             <View
                 style={{

@@ -6,7 +6,6 @@ import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 
 // API
-import { fetchAPI } from '../graphql/FetchAPI';
 import { retrievePDFFromArchive } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
@@ -17,6 +16,7 @@ import alert from './Alert';
 // import '@mobiscroll/react/dist/css/mobiscroll.react.min.css';
 import BottomSheet from './BottomSheet';
 import Reanimated from 'react-native-reanimated';
+import { useApolloClient } from '@apollo/client';
 
 const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -26,6 +26,8 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
     const [results, setResults] = useState<any[]>([]);
     const [selectedBook, setSelectedBook] = useState<any>(null);
     const [retrievingBook, setRetrievingBook] = useState<any>('');
+
+    const server = useApolloClient();
 
     const fall = new Reanimated.Value(1);
 
@@ -95,7 +97,6 @@ const Books: React.FunctionComponent<{ [label: string]: any }> = (props: any) =>
 
         // alert('Retrieving book... Large files may take a while to process');
 
-        const server = fetchAPI('');
         server
             .query({
                 query: retrievePDFFromArchive,

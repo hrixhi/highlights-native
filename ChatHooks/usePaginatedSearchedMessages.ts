@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { useAppContext } from '../ChatContext/AppContext';
+import { useAppChatContext } from '../ChatContext/AppChatContext';
 
 import type { MessageFilters, MessageResponse } from 'stream-chat';
 
@@ -16,7 +16,7 @@ export const usePaginatedSearchedMessages = (messageFilters: string | MessageFil
     const offset = useRef(0);
     const hasMoreResults = useRef(true);
     const queryInProgress = useRef(false);
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
 
     const done = () => {
         queryInProgress.current = false;

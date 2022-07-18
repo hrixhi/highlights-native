@@ -13,15 +13,10 @@ import {
     Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import _ from 'lodash';
 
 // GRAPHQL
-import { fetchAPI } from '../graphql/FetchAPI';
 import {
-    getAttendancesForChannel,
-    getPastDates,
-    modifyAttendance,
     getCourseStudents,
     getAttendanceBook,
     getAttendanceBookStudent,
@@ -45,6 +40,9 @@ import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import NewAttendanceModal from './NewAttendanceModal';
 
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
+
 const attendanceTypeOptions = [
     {
         value: 'present',
@@ -62,21 +60,10 @@ const attendanceTypeLabels = {
 };
 
 const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
-    const [fixedPastMeetings, setFixedPastMeetings] = useState<any[]>([]);
-    const [pastMeetings, setPastMeetings] = useState<any[]>([]);
-    const [allChannelAttendances, setAllChannelAttendances] = useState<any[]>([]);
-    const [channelAttendances, setChannelAttendances] = useState<any[]>([]);
-    const [isOwner, setIsOwner] = useState(false);
-    const [attendanceTotalMap, setAttendanceTotalMap] = useState<any>({});
-    const [exportAoa, setExportAoa] = useState<any[]>();
-    const [userId, setUserId] = useState('');
-    const [studentSearch, setStudentSearch] = useState('');
+    const { userId, user } = useAppContext();
 
-    const [showEditMeetingModal, setShowEditMeetingModal] = useState(false);
-    const [editMeetingTopic, setEditMeetingTopic] = useState('');
-    const [editMeetingRecordingLink, setEditMeetingRecordingLink] = useState('');
-    const [editMeeting, setEditMeeting] = useState<any>({});
-    const [updatingPastMeeting, setUpdatingPastMeeting] = useState(false);
+    const [exportAoa, setExportAoa] = useState<any[]>();
+    const [studentSearch, setStudentSearch] = useState('');
 
     const [editEntryId, setEditEntryId] = useState('');
     const [editEntryType, setEditEntryType] = useState('');
@@ -107,6 +94,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     const [attendanceBookAnalyticsSelectedUser, setAttendanceBookAnalyticsSelectedUser] = useState(undefined);
 
     const [isAttendanceAnalyticsDropdownOpen, setIsAttendanceAnalyticsDropdownOpen] = useState(false);
+
+    const server = useApolloClient();
 
     // HOOKS
 
@@ -203,18 +192,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     }, [props.isOwner, props.channelId]);
 
     const updateAttendanceBookEntry = useCallback(() => {
-        const server = fetchAPI('');
-
-        console.log('Variables', {
-            userId: activeUserId,
-            entryId: activeModifyId,
-            attendanceEntry: activeModifyEntryType === 'meeting' ? false : true,
-            attendanceType: attendanceEntry.attendanceType,
-            late: attendanceEntry.late,
-            excused: attendanceEntry.excused,
-            channelId: props.channelId,
-        });
-
         server
             .mutate({
                 mutation: handleUpdateAttendanceBookEntry,
@@ -256,7 +233,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     const loadCourseStudents = useCallback(() => {
         setIsFetchingStudents(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getCourseStudents,
@@ -283,7 +259,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     const fetchAttendancebookInstructor = useCallback(() => {
         setIsFetchingAttendanceBook(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getAttendanceBook,
@@ -334,13 +309,12 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
     const fetchAttendancebookStudent = useCallback(() => {
         setIsFetchingStudentAttendanceBook(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getAttendanceBookStudent,
                     variables: {
                         channelId: props.channelId,
-                        userId: props.user._id,
+                        userId,
                     },
                 })
                 .then((res) => {
@@ -396,312 +370,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
         },
         [instructorAttendanceBook]
     );
-
-    // useEffect(() => {
-    //     if (sortByOption === 'Title') {
-    //         const sortMeetings = [...fixedPastMeetings];
-
-    //         sortMeetings.sort((a: any, b: any) => {
-    //             if (a.title < b.title) {
-    //                 return sortByOrder ? 1 : -1;
-    //             } else if (a.title > b.title) {
-    //                 return sortByOrder ? -1 : 1;
-    //             } else {
-    //                 return 0;
-    //             }
-    //         });
-
-    //         setPastMeetings(sortMeetings);
-    //     } else if (sortByOption === 'Attendance') {
-    //         const sortMeetings = [...fixedPastMeetings];
-
-    //         sortMeetings.sort((a: any, b: any) => {
-    //             const attendanceObjectA = channelAttendances[0].attendances.find((s: any) => {
-    //                 return s.dateId.toString().trim() === a.dateId.toString().trim();
-    //             });
-
-    //             const attendanceObjectB = channelAttendances[0].attendances.find((s: any) => {
-    //                 return s.dateId.toString().trim() === b.dateId.toString().trim();
-    //             });
-
-    //             if (attendanceObjectA && !attendanceObjectB) {
-    //                 return sortByOrder ? -1 : 1;
-    //             } else if (!attendanceObjectA && attendanceObjectB) {
-    //                 return sortByOrder ? 1 : -1;
-    //             } else {
-    //                 return 0;
-    //             }
-    //         });
-
-    //         setPastMeetings(sortMeetings);
-    //     } else if (sortByOption === 'Date') {
-    //         const sortMeetings = [...fixedPastMeetings];
-
-    //         sortMeetings.sort((a: any, b: any) => {
-    //             const aDate = new Date(a.start);
-    //             const bDate = new Date(b.start);
-
-    //             if (aDate < bDate) {
-    //                 return sortByOrder ? -1 : 1;
-    //             } else if (aDate > bDate) {
-    //                 return sortByOrder ? 1 : -1;
-    //             } else {
-    //                 return 0;
-    //             }
-    //         });
-
-    //         setPastMeetings(sortMeetings);
-    //     }
-    // }, [sortByOption, sortByOrder, fixedPastMeetings, channelAttendances]);
-
-    // /**
-    //  * @description Load data on init
-    //  */
-    // useEffect(() => {
-    //     loadChannelAttendances();
-    //     setPastMeetings([]);
-    //     loadPastSchedule();
-    // }, [props.channelId]);
-
-    // /**
-    //  * @description Filter users by search
-    //  */
-    // useEffect(() => {
-    //     if (studentSearch === '') {
-    //         setChannelAttendances(allChannelAttendances);
-    //     } else {
-    //         const allAttendances = [...allChannelAttendances];
-
-    //         const matches = allAttendances.filter((student: any) => {
-    //             return student.fullName.toLowerCase().includes(studentSearch.toLowerCase());
-    //         });
-
-    //         setChannelAttendances(matches);
-    //     }
-    // }, [studentSearch]);
-
-    /**
-     * @description Set if user is owner
-     */
-    // useEffect(() => {
-    //     (async () => {
-    //         const u = await AsyncStorage.getItem('user');
-    //         if (u) {
-    //             const user = JSON.parse(u);
-    //             if (user._id.toString().trim() === props.channelCreatedBy) {
-    //                 setIsOwner(true);
-    //             }
-    //             setUserId(user._id);
-    //         }
-    //     })();
-    // }, [props.channelCreatedBy, props.channelId]);
-
-    /**
-     * @description Create Structure for exporting attendance data in Spreadsheet
-     */
-    // useEffect(() => {
-    //     if (allChannelAttendances.length === 0 || pastMeetings.length === 0) {
-    //         return;
-    //     }
-
-    //     // Calculate total for each student and add it to the end
-    //     const studentTotalMap: any = {};
-
-    //     allChannelAttendances.forEach((att) => {
-    //         let count = 0;
-    //         pastMeetings.forEach((meeting) => {
-    //             const attendanceObject = att.attendances.find((s: any) => {
-    //                 return s.dateId.toString().trim() === meeting.dateId.toString().trim();
-    //             });
-
-    //             if (attendanceObject) count++;
-    //         });
-
-    //         studentTotalMap[att.userId] = count;
-    //     });
-
-    //     setAttendanceTotalMap(studentTotalMap);
-
-    //     const exportAoa = [];
-
-    //     // Add row 1 with past meetings and total
-    //     let row1 = [''];
-
-    //     pastMeetings.forEach((meeting) => {
-    //         row1.push(moment(new Date(meeting.start)).format('MMMM Do, h:mm a'));
-    //     });
-
-    //     row1.push('Total');
-
-    //     exportAoa.push(row1);
-
-    //     allChannelAttendances.forEach((att) => {
-    //         let userRow = [];
-
-    //         userRow.push(att.fullName);
-
-    //         pastMeetings.forEach((meeting) => {
-    //             const attendanceObject = att.attendances.find((s: any) => {
-    //                 return s.dateId.toString().trim() === meeting.dateId.toString().trim();
-    //             });
-
-    //             if (attendanceObject) {
-    //                 userRow.push(`Joined at ${moment(new Date(attendanceObject.joinedAt)).format('MMMM Do, h:mm a')}`);
-    //             } else {
-    //                 userRow.push('-');
-    //             }
-    //         });
-
-    //         userRow.push(`${studentTotalMap[att.userId]} / ${pastMeetings.length}`);
-
-    //         exportAoa.push(userRow);
-    //     });
-
-    //     setExportAoa(exportAoa);
-    // }, [allChannelAttendances, pastMeetings]);
-
-    /**
-     * @description Filter meetings with start and end
-     */
-    // useEffect(() => {
-    //     if (start && end) {
-    //         const filteredPastMeetings = fixedPastMeetings.filter((meeting) => {
-    //             return new Date(meeting.start) > start && new Date(meeting.end) < end;
-    //         });
-
-    //         setPastMeetings(filteredPastMeetings);
-    //     } else {
-    //         setPastMeetings(fixedPastMeetings);
-    //     }
-    // }, [start, end]);
-
-    /**
-     * @description API call to fetch user attendances
-     */
-    // const loadChannelAttendances = useCallback(() => {
-    //     setLoadingAttendances(true);
-    //     const server = fetchAPI('');
-    //     server
-    //         .query({
-    //             query: getAttendancesForChannel,
-    //             variables: {
-    //                 channelId: props.channelId,
-    //             },
-    //         })
-    //         .then(async (res) => {
-    //             if (res.data && res.data.attendance.getAttendancesForChannel) {
-    //                 const u = await AsyncStorage.getItem('user');
-    //                 if (u) {
-    //                     const user = JSON.parse(u);
-    //                     if (user._id.toString().trim() === props.channelCreatedBy.toString().trim()) {
-    //                         // all attendances
-    //                         setAllChannelAttendances(res.data.attendance.getAttendancesForChannel);
-    //                         setChannelAttendances(res.data.attendance.getAttendancesForChannel);
-    //                     } else {
-    //                         // only user's attendances
-    //                         const attendances = res.data.attendance.getAttendancesForChannel.find((u: any) => {
-    //                             return u.userId.toString().trim() === user._id.toString().trim();
-    //                         });
-    //                         const userAttendances = [{ ...attendances }];
-    //                         setAllChannelAttendances(userAttendances);
-    //                         setChannelAttendances(userAttendances);
-    //                     }
-    //                     setLoadingAttendances(false);
-    //                 }
-    //             }
-    //         })
-    //         .catch((e: any) => {
-    //             setLoadingAttendances(false);
-    //         });
-    // }, [props.channelId]);
-
-    // /**
-    //  * @description API call to fetch past meetings
-    //  */
-    // const loadPastSchedule = useCallback(() => {
-    //     setLoadingMeetings(true);
-    //     const server = fetchAPI('');
-    //     server
-    //         .query({
-    //             query: getPastDates,
-    //             variables: {
-    //                 channelId: props.channelId,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             if (res.data && res.data.attendance.getPastDates) {
-    //                 setFixedPastMeetings(res.data.attendance.getPastDates);
-    //                 setPastMeetings(res.data.attendance.getPastDates);
-    //             }
-    //             setLoadingMeetings(false);
-    //         })
-    //         .catch((e: any) => {
-    //             setLoadingMeetings(false);
-    //         });
-    // }, [props.channelId]);
-
-    // FUNCTIONS
-
-    /**
-     * @description Mark as present/absent
-     */
-    // const onChangeAttendance = (dateId: String, userId: String, markPresent: Boolean) => {
-    //     Alert(markPresent ? 'Mark Present?' : 'Mark Absent?', '', [
-    //         {
-    //             text: 'Cancel',
-    //             style: 'cancel',
-    //             onPress: () => {
-    //                 return;
-    //             },
-    //         },
-    //         {
-    //             text: 'Yes',
-    //             onPress: async () => {
-    //                 const server = fetchAPI('');
-    //                 server
-    //                     .mutate({
-    //                         mutation: modifyAttendance,
-    //                         variables: {
-    //                             dateId,
-    //                             userId,
-    //                             channelId: props.channelId,
-    //                             markPresent,
-    //                         },
-    //                     })
-    //                     .then((res) => {
-    //                         if (res.data && res.data.attendance.modifyAttendance) {
-    //                             loadChannelAttendances();
-    //                         }
-    //                     });
-    //             },
-    //         },
-    //     ]);
-    // };
-
-    // /**
-    //  * @description Export attendance data into spreadsheet
-    //  */
-    // const exportAttendance = async () => {
-    //     const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
-    //     const fileExtension = '.xlsx';
-
-    //     const ws = XLSX.utils.aoa_to_sheet(exportAoa);
-    //     const wb = XLSX.utils.book_new();
-    //     XLSX.utils.book_append_sheet(wb, ws, 'Attendance ');
-    //     /* generate XLSX file and send to client */
-    //     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-
-    //     const uri = FileSystem.cacheDirectory + 'attendance.xlsx';
-    //     await FileSystem.writeAsStringAsync(uri, wbout, {
-    //         encoding: FileSystem.EncodingType.Base64,
-    //     });
-
-    //     await Sharing.shareAsync(uri, {
-    //         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //         dialogTitle: 'MyWater data',
-    //         UTI: 'com.microsoft.excel.xlsx',
-    //     });
-    // };
 
     const renderStudentsMeetingsList = () => {
         return (
@@ -1399,7 +1067,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                                             onPress={() => {
                                                                 updateAttendanceBookEntry();
                                                             }}
-                                                            disabled={props.user.email === disableEmailId}
+                                                            disabled={user.email === disableEmailId}
                                                         >
                                                             <Ionicons
                                                                 name="checkmark-circle-outline"
@@ -1626,7 +1294,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 width: '100%',
                                 backgroundColor: 'white',
                                 maxHeight: Dimensions.get('window').height - 64 - 45 - 120,
-                                maxWidth: 1024,
+                                maxWidth: '100%',
                                 borderRadius: 2,
                                 borderWidth: 1,
                                 marginTop: 20,
@@ -1812,24 +1480,21 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     </View>
                 ) : null}
 
-                {/* <View
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        width: '100%',
-                        marginTop: 30,
-                    }}
-                > */}
                 <ScrollView
                     horizontal={true}
+                    contentContainerStyle={
+                        {
+                            // width: '100%',
+                        }
+                    }
                     style={{
                         marginTop: 25,
+                        width: '100%',
                     }}
                 >
                     <View
                         style={{
-                            width: 200,
+                            width: Dimensions.get('window').width < 768 ? 200 : '25%',
                         }}
                     >
                         <View
@@ -1945,8 +1610,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 
                     <View
                         style={{
-                            width: 200,
-                            paddingLeft: 20,
+                            width: Dimensions.get('window').width < 768 ? 200 : '25%',
+                            paddingLeft: 25,
                         }}
                     >
                         <View
@@ -2062,8 +1727,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 
                     <View
                         style={{
-                            width: 200,
-                            paddingLeft: 20,
+                            width: Dimensions.get('window').width < 768 ? 200 : '25%',
+                            paddingLeft: 25,
                         }}
                     >
                         <View
@@ -2179,8 +1844,8 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
 
                     <View
                         style={{
-                            width: 200,
-                            paddingLeft: 20,
+                            width: Dimensions.get('window').width < 768 ? 200 : '25%',
+                            paddingLeft: 25,
                         }}
                     >
                         <View
@@ -2376,7 +2041,7 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                                 width: '100%',
                                 backgroundColor: 'white',
                                 maxHeight: Dimensions.get('window').height - 64 - 45 - 120,
-                                maxWidth: 1024,
+                                maxWidth: '100%',
                                 borderRadius: 2,
                                 borderWidth: 1,
                                 marginTop: 20,
@@ -2432,7 +2097,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
                     setEditEntryType('');
                     setEditAttendance(undefined);
                 }}
-                user={props.user}
                 // Refresh Functions
                 refreshAttendanceData={() => {
                     fetchAttendancebookInstructor();
@@ -2456,7 +2120,6 @@ const AttendanceList: React.FunctionComponent<{ [label: string]: any }> = (props
             }}
         >
             {props.isOwner ? renderInstructorAttendances() : renderStudentAttendances()}
-            {/* {renderEditDateModal()} */}
         </View>
     );
 };

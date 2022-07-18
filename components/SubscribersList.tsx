@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     StyleSheet,
     ScrollView,
-    TextInput,
     Dimensions,
     Image,
     ActivityIndicator,
@@ -18,7 +17,6 @@ import * as Sharing from 'expo-sharing';
 import moment from 'moment';
 
 // API
-import { fetchAPI } from '../graphql/FetchAPI';
 import {
     submitGrade,
     getQuiz,
@@ -34,17 +32,19 @@ import Alert from './Alert';
 import { Video } from 'expo-av';
 import alert from './Alert';
 import QuizGrading from './QuizGrading';
-import { htmlStringParser } from '../helpers/HTMLParser';
-// import parser from 'html-react-parser';
 import { WebView } from 'react-native-webview';
-// import { Select } from '@mobiscroll/react';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { downloadFileToDevice } from '../helpers/DownloadFile';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
+import { renderLoadingSpinner, renderWebviewError } from './LoadingSpinnersWebview';
 
 const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user } = useAppContext();
+
     const [filterChoice, setFilterChoice] = useState('All');
     const unparsedSubs: any[] = JSON.parse(JSON.stringify(props.subscribers));
     const [subscribers] = useState<any[]>(unparsedSubs.reverse());
@@ -55,7 +55,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
 
     const [graded, setGraded] = useState(false);
     const [userId, setUserId] = useState('');
-    const RichText: any = useRef();
     const submissionViewerRef: any = useRef();
     const [comment, setComment] = useState('');
     const [quizSolutions, setQuizSolutions] = useState<any>({});
@@ -83,11 +82,13 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     const videoRef: any = useRef();
     const [downloadFeedbackInProgress, setDownloadFeedbackInProgress] = useState(false);
 
+    const server = useApolloClient();
+
     if (props.cue && props.cue.submission) {
         categories.push('Submitted');
         categories.push('Graded');
     }
-    const styles = styleObject();
+
     let filteredSubscribers: any = [];
     switch (filterChoice) {
         case 'All':
@@ -338,28 +339,23 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
     }, [submission]);
 
+    console.log('pdfViewerURL', feedbackPdfviewerURL);
+
     /**
      * @description Setup PDFTRON Webviewer with Submission
      */
     useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
+        if (submissionAttempts && submissionAttempts.length > 0) {
+            const attempt = submissionAttempts[submissionAttempts.length - 1];
+            let url = attempt.html !== undefined ? attempt.annotationPDF : attempt.url;
+            const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(url)}&cueId=${
+                props.cue._id
+            }&userId=${userId}&source=FEEDBACK&name=${encodeURIComponent(
+                user.fullName
+            )}&feedbackUser=${encodeURIComponent(user._id)}`;
+            setFeedbackPdfviewerURL(pdfViewerURL);
+        }
 
-            if (u) {
-                const parsedUser = JSON.parse(u);
-
-                if (submissionAttempts && submissionAttempts.length > 0) {
-                    const attempt = submissionAttempts[submissionAttempts.length - 1];
-                    let url = attempt.html !== undefined ? attempt.annotationPDF : attempt.url;
-                    const pdfViewerURL = `https://app.learnwithcues.com/pdfviewer?url=${encodeURIComponent(
-                        url
-                    )}&cueId=${props.cue._id}&userId=${userId}&source=FEEDBACK&name=${encodeURIComponent(
-                        parsedUser.fullName
-                    )}`;
-                    setFeedbackPdfviewerURL(pdfViewerURL);
-                }
-            }
-        })();
         // if (submissionAttempts && submissionAttempts.length > 0 && submissionViewerRef && submissionViewerRef.current) {
         //     const attempt = submissionAttempts[submissionAttempts.length - 1];
 
@@ -423,7 +419,15 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
         //         );
         //     });
         // }
-    }, [submissionAttempts, submissionViewerRef, submissionViewerRef.current, viewSubmissionTab, props.cue]);
+    }, [
+        submissionAttempts,
+        submissionViewerRef,
+        submissionViewerRef.current,
+        viewSubmissionTab,
+        props.cue,
+        user,
+        userId,
+    ]);
 
     /**
      * @description if submission is a quiz then fetch Quiz
@@ -435,7 +439,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             setLoading(true);
 
             if (obj.quizId) {
-                const server = fetchAPI('');
                 server
                     .query({
                         query: getQuiz,
@@ -476,35 +479,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
     //         });
     //     });
     // }, [url, RichText, imported, type, submissionAttempts, viewSubmissionTab]);
-
-    /**
-     * @description Save instructor annotations to cloud
-     */
-    const handleAnnotationsUpdate = useCallback(
-        (attempts: any) => {
-            const server = fetchAPI('');
-            server
-                .mutate({
-                    mutation: updateAnnotation,
-                    variables: {
-                        cueId: props.cueId,
-                        userId,
-                        attempts: JSON.stringify(attempts),
-                    },
-                })
-                .then((res) => {
-                    if (res.data.cue.updateAnnotation) {
-                        // props.reload()
-                        // setShowSubmission(false)
-                    }
-                })
-                .catch((e) => {
-                    console.log('Error', e);
-                    Alert('Could not save annotation.');
-                });
-        },
-        [userId, props.cueId]
-    );
 
     /**
      * @description Called when instructor saves grade
@@ -552,7 +526,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
             {
                 text: 'Yes',
                 onPress: async () => {
-                    const server = fetchAPI('');
                     server
                         .mutate({
                             mutation: submitGrade,
@@ -579,7 +552,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
      * @description Modify which attempt is active for Student
      */
     const modifyActiveQuizAttempt = () => {
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: modifyActiveAttemptQuiz,
@@ -600,7 +572,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
      * @description On Save quiz scores
      */
     const onGradeQuiz = (problemScores: string[], problemComments: string[], score: number, comment: string) => {
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: gradeQuiz,
@@ -693,27 +664,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                 {
                     text: 'Yes',
                     onPress: async () => {
-                        const server = fetchAPI('');
-                        server
-                            .mutate({
-                                mutation: editReleaseSubmission,
-                                variables: {
-                                    cueId: props.cueId,
-                                    releaseSubmission: !releaseSubmission,
-                                },
-                            })
-                            .then((res: any) => {
-                                if (res.data && res.data.cue.editReleaseSubmission) {
-                                    props.updateCueWithReleaseSubmission(!releaseSubmission);
-                                    setReleaseSubmission(!releaseSubmission);
-                                } else {
-                                    alert('Something went wrong');
-                                }
-                            })
-                            .catch((err) => {
-                                console.log(err);
-                                alert('Something went wrong');
-                            });
+                        props.updateCueWithReleaseSubmission(!releaseSubmission);
                     },
                 },
             ]
@@ -910,8 +861,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 style={{ height: Dimensions.get('window').width < 1024 ? '50vh' : '70vh' }}></div> */}
                             <WebView
                                 source={{ uri: feedbackPdfviewerURL }}
+                                startInLoadingState={true}
                                 // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
                                 style={{ height: 500, width: '100%' }}
+                                renderLoading={() => renderLoadingSpinner()}
+                                renderError={() => renderWebviewError()}
                             />
                         </View>
                     )
@@ -928,8 +882,11 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                             //     ref={submissionViewerRef}
                             //     style={{ height: Dimensions.get('window').width < 1024 ? '50vh' : '70vh' }}></div>
                             <WebView
+                                startInLoadingState={true}
                                 source={{ uri: feedbackPdfviewerURL }}
                                 style={{ height: 500, width: '100%' }}
+                                renderLoading={() => renderLoadingSpinner()}
+                                renderError={() => renderWebviewError()}
                                 // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
                             />
                         )}
@@ -1260,7 +1217,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         }
                                     });
                                 }}
-                                user={props.user}
                             />
                         </ScrollView>
                     ) : (
@@ -1394,7 +1350,7 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                                 backgroundColor: 'white',
                                                 // marginLeft: Dimensions.get('window').width < 768 ? 20 : 0,
                                             }}
-                                            disabled={props.user.email === disableEmailId}
+                                            disabled={user.email === disableEmailId}
                                         >
                                             <Text
                                                 style={{
@@ -1418,20 +1374,6 @@ const SubscribersList: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         </TouchableOpacity>
                                     </View>
                                 </View>
-                                {/* <View style={{ flexDirection: 'row' }}>
-                                    {imported && !isQuiz ? (
-                                        <View style={{ }}>
-                                            <TextInput
-                                                editable={false}
-                                                value={title}
-                                                style={styles.input}
-                                                placeholder={'Title'}
-                                                onChangeText={val => setTitle(val)}
-                                                placeholderTextColor={'#1F1F1F'}
-                                            />
-                                        </View>
-                                    ) : null}
-                                </View> */}
                                 {submissionAttempts.length > 0 && !props.isQuiz ? renderViewSubmission() : null}
                             </ScrollView>
                         </View>

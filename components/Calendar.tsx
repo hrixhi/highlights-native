@@ -14,15 +14,12 @@ import { TextInput } from './CustomTextInput';
 import { ScrollView, Switch, TouchableOpacity } from 'react-native-gesture-handler';
 import Alert from './Alert';
 import { Text, View } from './Themed';
-import { fetchAPI } from '../graphql/FetchAPI';
 import {
     getChannels,
     getEvents,
     createDateV1,
     editDateV1,
     deleteDateV1,
-    meetingRequest,
-    markAttendance,
     getActivity,
     markActivityAsRead,
     regenZoomMeeting,
@@ -35,11 +32,7 @@ import moment from 'moment';
 import * as Clipboard from 'expo-clipboard';
 
 import { Agenda } from 'react-native-calendars';
-// import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { eventFrequencyOptions } from '../helpers/FrequencyOptions';
-// import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
-import InsetShadow from 'react-native-inset-shadow';
-// import BottomSheet from 'reanimated-bottom-sheet';
 import BottomSheet from './BottomSheet';
 
 import _ from 'lodash';
@@ -52,10 +45,14 @@ import { useOrientation } from '../hooks/useOrientation';
 
 import { blueButtonMR, blueButtonCalendarMB } from '../helpers/BlueButtonPosition';
 import { filterEventModalHeight, filterActivityModalHeight, newEventModalHeight } from '../helpers/ModalHeights';
-import { paddingResponsive } from '../helpers/paddingHelper';
 import { disableEmailId } from '../constants/zoomCredentials';
 
+import { paddingResponsive } from '../helpers/paddingHelper';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
+
 const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { userId, org, user, subscriptions } = useAppContext();
     const [modalAnimation] = useState(new Animated.Value(1));
     const [title, setTitle] = useState('');
     const [start, setStart] = useState(new Date());
@@ -67,8 +64,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [channelId, setChannelId] = useState('');
     const [currentMonth, setCurrentMonth] = useState(moment(new Date()).format('MMMM YYYY'));
 
-    // v1
-    const current = new Date();
     const [description, setDescription] = useState('');
     const [recurring, setRecurring] = useState(false);
     const [frequency, setFrequency] = useState('1-W');
@@ -81,11 +76,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [editChannelName, setEditChannelName] = useState('');
     const [isEditingEvents, setIsEditingEvents] = useState(false);
     const [isDeletingEvents, setIsDeletingEvents] = useState(false);
-    const [userId, setUserId] = useState('');
+
     const [allActivity, setAllActivity] = useState<any[]>([]);
     const [activity, setActivity] = useState<any[]>([]);
-    const [userZoomInfo, setUserZoomInfo] = useState<any>('');
-    const [meetingProvider, setMeetingProvider] = useState('');
     const [unreadCount, setUnreadCount] = useState<any>(0);
     const [loadingEvents, setLoadingEvents] = useState(true);
     const [selectedChannel, setSelectedChannel] = useState('My Events');
@@ -124,9 +117,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [showFilterByChannelDropdown, setShowFilterByChannelDropdown] = useState(false);
     const [showFilterTypeDropdown, setShowFilterTypeDropdown] = useState(false);
-
-    console.log('Show Filter modal', showFilterModal);
-    console.log('Channel id', channelId);
+    const [userZoomInfo] = useState<any>(user.zoomInfo);
+    const [meetingProvider] = useState(org.meetingProvider ? org.meetingProvider : '');
 
     const orientation = useOrientation();
 
@@ -154,6 +146,8 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         '7': 'Sat',
     };
 
+    const server = useApolloClient();
+
     const fall = new Reanimated.Value(1);
 
     const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
@@ -175,21 +169,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
         setSelectedDays([startDay.toString()]);
     }, [start]);
 
-    /**
-     * @description Fetch meeting provider for org
-     */
-    useEffect(() => {
-        (async () => {
-            const org = await AsyncStorage.getItem('school');
-
-            if (org) {
-                const school = JSON.parse(org);
-
-                setMeetingProvider(school.meetingProvider ? school.meetingProvider : '');
-            }
-        })();
-    }, []);
-
     const renderTimeMessage = () => {
         const currentTime = new Date();
 
@@ -203,24 +182,19 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const loadChannels = useCallback(async () => {
-        const uString: any = await AsyncStorage.getItem('user');
-        if (uString) {
-            const user = JSON.parse(uString);
-            const server = fetchAPI('');
-            server
-                .query({
-                    query: getChannels,
-                    variables: {
-                        userId: user._id,
-                    },
-                })
-                .then((res) => {
-                    if (res.data.channel.findByUserId) {
-                        setChannels(res.data.channel.findByUserId);
-                    }
-                })
-                .catch((err) => {});
-        }
+        server
+            .query({
+                query: getChannels,
+                variables: {
+                    userId,
+                },
+            })
+            .then((res) => {
+                if (res.data.channel.findByUserId) {
+                    setChannels(res.data.channel.findByUserId);
+                }
+            })
+            .catch((err) => {});
     }, []);
 
     useEffect(() => {
@@ -325,53 +299,28 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
      * @description Fetch user activity
      */
     useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
-            if (u) {
-                const user = JSON.parse(u);
-
-                setUserId(user._id);
-                if (user.zoomInfo) {
-                    setUserZoomInfo(user.zoomInfo);
-                }
-                const server = fetchAPI(user._id);
-                server
-                    .query({
-                        query: getActivity,
-                        variables: {
-                            userId: user._id,
-                        },
-                    })
-                    .then((res) => {
-                        if (res.data && res.data.activity.getActivity) {
-                            const tempActivity = res.data.activity.getActivity;
-                            let unread = 0;
-                            tempActivity.map((act: any) => {
-                                if (act.status === 'unread') {
-                                    unread++;
-                                }
-                            });
-                            setUnreadCount(unread);
-                            setActivity(tempActivity);
-                            setAllActivity(tempActivity);
+        server
+            .query({
+                query: getActivity,
+                variables: {
+                    userId,
+                },
+            })
+            .then((res) => {
+                if (res.data && res.data.activity.getActivity) {
+                    const tempActivity = [...res.data.activity.getActivity];
+                    let unread = 0;
+                    tempActivity.map((act: any) => {
+                        if (act.status === 'unread') {
+                            unread++;
                         }
                     });
-            }
-        })();
+                    setUnreadCount(unread);
+                    setActivity(tempActivity);
+                    setAllActivity(tempActivity);
+                }
+            });
     }, []);
-
-    // console.log('Is Submit disabled', isSubmitDisabled);
-
-    // useEffect(() => {
-    //     if (title !== '' && end > start) {
-    //         console.log('Title', title);
-
-    //         setIsSubmitDisabled(false);
-    //         return;
-    //     }
-
-    //     setIsSubmitDisabled(true);
-    // }, [title, start, end]);
 
     // use effect for edit events
     useEffect(() => {
@@ -417,16 +366,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     backgroundColor: 'white',
                 }}
             >
-                {/* <InsetShadow
-                    shadowColor={'#000'}
-                    shadowOffset={2}
-                    shadowOpacity={0.12}
-                    shadowRadius={10}
-                    // elevation={600000}
-                    containerStyle={{
-                        height: 'auto'
-                    }}
-                > */}
                 <View>
                     <ScrollView
                         style={{
@@ -465,19 +404,14 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             return (
                                 <TouchableOpacity
                                     onPress={async () => {
-                                        const uString: any = await AsyncStorage.getItem('user');
-                                        if (uString) {
-                                            const user = JSON.parse(uString);
-                                            const server = fetchAPI('');
-                                            server.mutate({
-                                                mutation: markActivityAsRead,
-                                                variables: {
-                                                    activityId: act._id,
-                                                    userId: user._id,
-                                                    markAllRead: false,
-                                                },
-                                            });
-                                        }
+                                        server.mutate({
+                                            mutation: markActivityAsRead,
+                                            variables: {
+                                                activityId: act._id,
+                                                userId,
+                                                markAllRead: false,
+                                            },
+                                        });
 
                                         // Opens the cue from the activity
                                         if (
@@ -487,7 +421,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             createdBy !== '' &&
                                             target === 'CUE'
                                         ) {
-                                            props.openCueFromCalendar(channelId, cueId, createdBy);
+                                            props.openCue(channelId, cueId, createdBy);
                                         }
 
                                         if (target === 'DISCUSSION') {
@@ -505,14 +439,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         ) {
                                             props.openChannel(channelId);
                                         }
-
-                                        if (target === 'Q&A') {
-                                            if (threadId && threadId !== '') {
-                                                await AsyncStorage.setItem('openThread', threadId);
-                                            }
-
-                                            props.openQA(channelId, cueId, createdBy);
-                                        }
                                     }}
                                     style={{
                                         flexDirection: 'row',
@@ -523,8 +449,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         backgroundColor: 'white',
                                         height: 90,
                                         paddingHorizontal: paddingResponsive(),
-                                        // borderLeftWidth: 3,
-                                        // borderLeftColor: act.colorCode
                                     }}
                                     key={index}
                                 >
@@ -617,39 +541,10 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             );
                         })}
                     </ScrollView>
-                    {/* </InsetShadow> */}
                 </View>
             </View>
         );
     };
-
-    //   const onDateClick = useCallback((title, date, dateId) => {
-    //     Alert("Delete " + title + "?", date, [
-    //       {
-    //         text: "Cancel",
-    //         style: "cancel"
-    //       },
-    //       {
-    //         text: "Delete",
-    //         onPress: async () => {
-    //           const server = fetchAPI("");
-    //           server
-    //             .mutate({
-    //               mutation: deleteDate,
-    //               variables: {
-    //                 dateId
-    //               }
-    //             })
-    //             .then(res => {
-    //               if (res.data && res.data.date.delete) {
-    //                 Alert("Event Deleted!");
-    //                 loadEvents();
-    //               }
-    //             });
-    //         }
-    //       }
-    //     ]);
-    //   }, []);
 
     /**
      * @description Handle Create event
@@ -683,67 +578,61 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         const repeatDays = recurring && frequency === '1-W' ? selectedDays : '';
 
-        const u = await AsyncStorage.getItem('user');
-        if (u) {
-            const user = JSON.parse(u);
-
-            const server = fetchAPI('');
-            server
-                .mutate({
-                    mutation: createDateV1,
-                    variables: {
-                        title,
-                        userId: user._id,
-                        start: start.toUTCString(),
-                        end: end.toUTCString(),
-                        channelId,
-                        meeting,
-                        description,
-                        recordMeeting,
-                        frequency: freq,
-                        repeatTill: repeat,
-                        repeatDays,
-                    },
-                })
-                .then((res) => {
-                    if (res.data && res.data.date.createV1 === 'SUCCESS') {
-                        loadEvents();
-                        setTitle('');
-                        setRepeatTill(new Date());
-                        setIsMeeting(false);
-                        setDescription('');
-                        setFrequency('1-W');
-                        setRecurring(false);
-                        setRecordMeeting(false);
-                        setIsCreatingEvents(false);
-                        setShowAddEvent(false);
-                        setSelectedDays([]);
-                        setSelectedStartDay('');
-                        props.setTab('Agenda');
-                    } else if (res.data && res.data.date.createV1 === 'ZOOM_MEETING_CREATE_FAILED') {
-                        Alert('Event scheduled but Zoom meeting could not be created.');
-                        loadEvents();
-                        setTitle('');
-                        setRepeatTill(new Date());
-                        setIsMeeting(false);
-                        setDescription('');
-                        setFrequency('1-W');
-                        setRecurring(false);
-                        setRecordMeeting(false);
-                        setIsCreatingEvents(false);
-                        setShowAddEvent(false);
-                        setSelectedDays([]);
-                        setSelectedStartDay('');
-                    } else {
-                        Alert('Failed to create event. Try again.');
-                        setIsCreatingEvents(false);
-                    }
-                })
-                .catch((err) => {
+        server
+            .mutate({
+                mutation: createDateV1,
+                variables: {
+                    title,
+                    userId,
+                    start: start.toUTCString(),
+                    end: end.toUTCString(),
+                    channelId,
+                    meeting,
+                    description,
+                    recordMeeting,
+                    frequency: freq,
+                    repeatTill: repeat,
+                    repeatDays,
+                },
+            })
+            .then((res) => {
+                if (res.data && res.data.date.createV1 === 'SUCCESS') {
+                    loadEvents();
+                    setTitle('');
+                    setRepeatTill(new Date());
+                    setIsMeeting(false);
+                    setDescription('');
+                    setFrequency('1-W');
+                    setRecurring(false);
+                    setRecordMeeting(false);
                     setIsCreatingEvents(false);
-                    console.log(err);
-                });
-        }
+                    setShowAddEvent(false);
+                    setSelectedDays([]);
+                    setSelectedStartDay('');
+                    props.setTab('Agenda');
+                } else if (res.data && res.data.date.createV1 === 'ZOOM_MEETING_CREATE_FAILED') {
+                    Alert('Event scheduled but Zoom meeting could not be created.');
+                    loadEvents();
+                    setTitle('');
+                    setRepeatTill(new Date());
+                    setIsMeeting(false);
+                    setDescription('');
+                    setFrequency('1-W');
+                    setRecurring(false);
+                    setRecordMeeting(false);
+                    setIsCreatingEvents(false);
+                    setShowAddEvent(false);
+                    setSelectedDays([]);
+                    setSelectedStartDay('');
+                } else {
+                    Alert('Failed to create event. Try again.');
+                    setIsCreatingEvents(false);
+                }
+            })
+            .catch((err) => {
+                setIsCreatingEvents(false);
+                console.log(err);
+            });
     }, [
         title,
         start,
@@ -784,7 +673,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 onPress: () => {
                     setIsEditingEvents(true);
 
-                    const server = fetchAPI('');
                     server
                         .mutate({
                             mutation: editDateV1,
@@ -825,7 +713,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
             setIsDeletingEvents(true);
 
-            const server = fetchAPI('');
             server
                 .mutate({
                     mutation: deleteDateV1,
@@ -859,20 +746,11 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const loadEvents = useCallback(async () => {
         setLoadingEvents(true);
 
-        const u = await AsyncStorage.getItem('user');
-        let parsedUser: any = {};
-        if (u) {
-            parsedUser = JSON.parse(u);
-        } else {
-            return;
-        }
-
-        const server = fetchAPI('');
         server
             .query({
                 query: getEvents,
                 variables: {
-                    userId: parsedUser._id,
+                    userId,
                 },
             })
             .then((res) => {
@@ -891,7 +769,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                         let colorCode = '#202025';
 
-                        const matchSubscription = props.subscriptions.find((sub: any) => {
+                        const matchSubscription = subscriptions.find((sub: any) => {
                             return sub.channelId === item.channelId;
                         });
 
@@ -991,7 +869,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     useNativeDriver: true,
                 }).start();
             });
-    }, [props.tab, modalAnimation, props.subscriptions]);
+    }, [props.tab, modalAnimation, subscriptions]);
 
     const roundSeconds = (time: Date) => {
         time.setMinutes(time.getMinutes() + Math.round(time.getSeconds() / 60));
@@ -1676,7 +1554,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 Linking.openURL(editEvent.zoomStartUrl);
                             }
                         }}
-                        disabled={props.user.email === disableEmailId}
+                        disabled={user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -1747,7 +1625,6 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </Text>
                     <TouchableOpacity
                         onPress={() => {
-                            const server = fetchAPI('');
                             server
                                 .mutate({
                                     mutation: regenZoomMeeting,
@@ -1833,7 +1710,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         backgroundColor: 'white',
                     }}
                     onPress={() => handleEdit()}
-                    disabled={isEditingEvents || isDeletingEvents || props.user.email === disableEmailId}
+                    disabled={isEditingEvents || isDeletingEvents || user.email === disableEmailId}
                 >
                     <Text
                         style={{
@@ -1878,7 +1755,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             },
                         ]);
                     }}
-                    disabled={isEditingEvents || isDeletingEvents || props.user.email === disableEmailId}
+                    disabled={isEditingEvents || isDeletingEvents || user.email === disableEmailId}
                 >
                     <Text
                         style={{
@@ -1926,7 +1803,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 },
                             ]);
                         }}
-                        disabled={isEditingEvents || isDeletingEvents || props.user.email === disableEmailId}
+                        disabled={isEditingEvents || isDeletingEvents || user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -1956,7 +1833,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     useEffect(() => {
         loadEvents();
         loadChannels();
-    }, [props.subscriptions]);
+    }, []);
 
     const loadItemsForMonth = useCallback(
         (month: any) => {
@@ -2173,97 +2050,90 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const onSelectEvent = async (event: any) => {
-        const uString: any = await AsyncStorage.getItem('user');
-        // Only allow edit if event is not past
-        if (uString) {
-            const user = JSON.parse(uString);
+        const timeString = datesEqual(event.start, event.end)
+            ? moment(new Date(event.start)).format('MMMM Do YY, h:mm a')
+            : moment(new Date(event.start)).format('MMMM Do YY, h:mm a') +
+              ' to ' +
+              moment(new Date(event.end)).format('MMMM Do YY, h:mm a');
 
-            const timeString = datesEqual(event.start, event.end)
-                ? moment(new Date(event.start)).format('MMMM Do YY, h:mm a')
-                : moment(new Date(event.start)).format('MMMM Do YY, h:mm a') +
-                  ' to ' +
-                  moment(new Date(event.end)).format('MMMM Do YY, h:mm a');
+        const descriptionString = event.description ? event.description + '- ' + timeString : '' + timeString;
 
-            const descriptionString = event.description ? event.description + '- ' + timeString : '' + timeString;
+        if (userId === event.createdBy && new Date(event.end) > new Date() && event.eventId) {
+            setEditEvent(event);
+            // setTab('Add');
+            setShowAddEvent(true);
+        } else if (
+            userId === event.createdBy &&
+            event.cueId === '' &&
+            new Date(event.end) < new Date() &&
+            event.eventId
+        ) {
+            Alert('Delete ' + event.title + '?', descriptionString, [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                    onPress: () => {
+                        return;
+                    },
+                },
+                {
+                    text: 'Delete',
+                    onPress: async () => {
+                        server
+                            .mutate({
+                                mutation: deleteDateV1,
+                                variables: {
+                                    id: event.eventId,
+                                    deleteAll: false,
+                                },
+                            })
+                            .then((res) => {
+                                if (res.data && res.data.date.deleteV1) {
+                                    Alert('Event Deleted!');
+                                    loadEvents();
+                                }
+                            });
+                    },
+                },
+            ]);
+        } else {
+            const date = new Date();
 
-            if (user._id === event.createdBy && new Date(event.end) > new Date() && event.eventId) {
-                setEditEvent(event);
-                // setTab('Add');
-                setShowAddEvent(true);
-            } else if (
-                user._id === event.createdBy &&
-                event.cueId === '' &&
-                new Date(event.end) < new Date() &&
-                event.eventId
-            ) {
-                Alert('Delete ' + event.title + '?', descriptionString, [
+            if (date > new Date(event.start) && date < new Date(event.end) && event.meeting) {
+                const meetingLink = !meetingProvider
+                    ? event.zoomRegistrationJoinUrl
+                        ? event.zoomRegistrationJoinUrl
+                        : event.zoomJoinUrl
+                    : event.meetingLink;
+
+                if (!meetingLink) {
+                    Alert('No meeting link set. Contact your instructor.');
+                    return;
+                }
+
+                Alert('Join meeting?', '', [
                     {
-                        text: 'Cancel',
+                        text: 'No',
                         style: 'cancel',
                         onPress: () => {
                             return;
                         },
                     },
                     {
-                        text: 'Delete',
+                        text: 'Yes',
                         onPress: async () => {
-                            const server = fetchAPI('');
-                            server
-                                .mutate({
-                                    mutation: deleteDateV1,
-                                    variables: {
-                                        id: event.eventId,
-                                        deleteAll: false,
-                                    },
-                                })
-                                .then((res) => {
-                                    if (res.data && res.data.date.deleteV1) {
-                                        Alert('Event Deleted!');
-                                        loadEvents();
-                                    }
-                                });
+                            if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
+                                window.open(meetingLink, '_blank');
+                            } else {
+                                Linking.openURL(meetingLink);
+                            }
                         },
                     },
                 ]);
+            } else if (event.cueId !== '') {
+                props.openCue(event.channelId, event.cueId, event.createdBy);
             } else {
-                const date = new Date();
-
-                if (date > new Date(event.start) && date < new Date(event.end) && event.meeting) {
-                    const meetingLink = !meetingProvider
-                        ? event.zoomRegistrationJoinUrl
-                            ? event.zoomRegistrationJoinUrl
-                            : event.zoomJoinUrl
-                        : event.meetingLink;
-
-                    if (!meetingLink) {
-                        Alert('No meeting link set. Contact your instructor.');
-                        return;
-                    }
-
-                    Alert('Join meeting?', '', [
-                        {
-                            text: 'No',
-                            style: 'cancel',
-                            onPress: () => {
-                                return;
-                            },
-                        },
-                        {
-                            text: 'Yes',
-                            onPress: async () => {
-                                if (Platform.OS === 'web' || Platform.OS === 'macos' || Platform.OS === 'windows') {
-                                    window.open(meetingLink, '_blank');
-                                } else {
-                                    Linking.openURL(meetingLink);
-                                }
-                            },
-                        },
-                    ]);
-                } else if (event.cueId !== '') {
-                    props.openCueFromCalendar(event.channelId, event.cueId, event.createdBy);
-                } else {
-                    Alert(event.title, descriptionString);
-                }
+                Alert(event.title, descriptionString);
             }
         }
     };
@@ -2873,7 +2743,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     paddingLeft: Dimensions.get('window').width < 768 ? 20 : 10,
                                     paddingVertical: Dimensions.get('window').width < 768 ? 10 : 0,
                                 }}
-                                disabled={props.user.email === disableEmailId}
+                                disabled={user.email === disableEmailId}
                             >
                                 <Text
                                     style={{
@@ -2906,7 +2776,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 marginTop: 40,
                             }}
                             onPress={() => handleCreate()}
-                            disabled={isCreatingEvents || props.user.email === disableEmailId}
+                            disabled={isCreatingEvents || user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -2945,7 +2815,7 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
             { value: '', label: 'My Events' },
         ];
 
-        props.subscriptions.map((sub: any) => {
+        subscriptions.map((sub: any) => {
             filterChannelOptions.push({
                 value: sub.channelId,
                 label: sub.channelName,
@@ -3271,50 +3141,47 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     {
                                         text: 'Yes',
                                         onPress: async () => {
-                                            const uString: any = await AsyncStorage.getItem('user');
-                                            if (uString) {
-                                                const user = JSON.parse(uString);
-                                                const server = fetchAPI(user._id);
-                                                server
-                                                    .mutate({
-                                                        mutation: markActivityAsRead,
-                                                        variables: {
-                                                            userId: user._id,
-                                                            markAllRead: true,
-                                                        },
-                                                    })
-                                                    .then((res) => {
-                                                        if (res.data.activity.markActivityAsRead) {
-                                                            server
-                                                                .query({
-                                                                    query: getActivity,
-                                                                    variables: {
-                                                                        userId: user._id,
-                                                                    },
-                                                                })
-                                                                .then((res) => {
-                                                                    if (res.data && res.data.activity.getActivity) {
-                                                                        const tempActivity =
-                                                                            res.data.activity.getActivity;
-                                                                        let unread = 0;
-                                                                        tempActivity.map((act: any) => {
-                                                                            if (act.status === 'unread') {
-                                                                                unread++;
-                                                                            }
-                                                                        });
-                                                                        setUnreadCount(unread);
-                                                                        setActivity(tempActivity);
-                                                                    }
-                                                                });
-                                                        }
-                                                    })
-                                                    .catch((err) => {});
-                                            }
+                                            server
+                                                .mutate({
+                                                    mutation: markActivityAsRead,
+                                                    variables: {
+                                                        userId,
+
+                                                        markAllRead: true,
+                                                    },
+                                                })
+                                                .then((res) => {
+                                                    if (res.data.activity.markActivityAsRead) {
+                                                        server
+                                                            .query({
+                                                                query: getActivity,
+                                                                variables: {
+                                                                    userId,
+                                                                },
+                                                            })
+                                                            .then((res) => {
+                                                                if (res.data && res.data.activity.getActivity) {
+                                                                    const tempActivity = [
+                                                                        ...res.data.activity.getActivity,
+                                                                    ];
+                                                                    let unread = 0;
+                                                                    tempActivity.map((act: any) => {
+                                                                        if (act.status === 'unread') {
+                                                                            unread++;
+                                                                        }
+                                                                    });
+                                                                    setUnreadCount(unread);
+                                                                    setActivity(tempActivity);
+                                                                }
+                                                            });
+                                                    }
+                                                })
+                                                .catch((err) => {});
                                         },
                                     },
                                 ]);
                             }}
-                            disabled={props.user.email === disableEmailId}
+                            disabled={user.email === disableEmailId}
                         >
                             <Ionicons
                                 name={'checkmark-done-outline'}
@@ -3521,112 +3388,9 @@ const CalendarX: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     </Text>
                 </TouchableOpacity>
             ) : null}
-
-            {/* {activeTab === 'activity' && unreadCount && unreadCount > 0 ? (
-                <TouchableOpacity
-                    onPress={async () => {
-                        const uString: any = await AsyncStorage.getItem('user');
-                        if (uString) {
-                            const user = JSON.parse(uString);
-                            const server = fetchAPI(user._id);
-                            server
-                                .mutate({
-                                    mutation: markActivityAsRead,
-                                    variables: {
-                                        userId: user._id,
-                                        markAllRead: true
-                                    }
-                                })
-                                .then(res => {
-                                    if (res.data.activity.markActivityAsRead) {
-                                        server
-                                            .query({
-                                                query: getActivity,
-                                                variables: {
-                                                    userId: user._id
-                                                }
-                                            })
-                                            .then(res => {
-                                                if (res.data && res.data.activity.getActivity) {
-                                                    const tempActivity = res.data.activity.getActivity.reverse();
-                                                    let unread = 0;
-                                                    tempActivity.map((act: any) => {
-                                                        if (act.status === 'unread') {
-                                                            unread++;
-                                                        }
-                                                    });
-                                                    setUnreadCount(unread);
-                                                    setActivity(tempActivity);
-                                                }
-                                            });
-                                    }
-                                })
-                                .catch(err => {});
-                        }
-                    }}
-                    style={{
-                        position: 'absolute',
-                        marginRight:
-                            Dimensions.get('window').width >= 1100
-                                ? (Dimensions.get('window').width - 1100) / 2 - 25
-                                : Dimensions.get('window').width >= 768
-                                ? 30
-                                : 24,
-                        marginBottom: Dimensions.get('window').width < 768 ? 35 : 75,
-                        right: 0,
-                        justifyContent: 'center',
-                        bottom: 0,
-                        // width: 58,
-                        // height: 58,
-                        paddingVertical: 15,
-                        paddingHorizontal: 20,
-                        borderRadius: 29,
-                        backgroundColor: '#000',
-                        borderColor: '#f2f2f2',
-                        borderWidth: 0,
-                        shadowColor: '#000',
-                        shadowOffset: {
-                            width: 4,
-                            height: 4
-                        },
-                        shadowOpacity: 0.12,
-                        shadowRadius: 10,
-                        zIndex: 50
-                    }}
-                >
-                    <Text
-                        style={{
-                            color: '#fff',
-                            width: '100%',
-                            textAlign: 'center',
-                            fontFamily: 'inter',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Mark as Read
-                    </Text>
-                </TouchableOpacity>
-            ) : null} */}
         </Animated.View>
     );
 };
-
-// export default React.memo(CalendarX, (prev, next) => {
-//     return _.isEqual(
-//         {
-//             ...prev.tab,
-//             ...prev.cues,
-//             ...prev.showSearchMobile,
-//             ...prev.setShowSearchMobile
-//         },
-//         {
-//             ...next.tab,
-//             ...next.cues,
-//             ...next.showSearchMobile,
-//             ...next.setShowSearchMobile
-//         }
-//     );
-// });
 
 export default React.memo(CalendarX);
 

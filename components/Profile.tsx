@@ -26,13 +26,9 @@ const Profile: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                 }}
             >
                 <ProfileControls
-                    saveDataInCloud={() => props.saveDataInCloud()}
-                    reOpenProfile={() => props.reOpenProfile()}
                     closeModal={() => props.closeModal()}
-                    reloadData={() => props.reloadData()}
                     setShowSavePassword={(val: any) => props.setShowSavePassword(val)}
                     showSavePassword={props.showSavePassword}
-                    user={props.user}
                 />
             </View>
         </View>

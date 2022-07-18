@@ -4,10 +4,10 @@ import type { StreamChat } from 'stream-chat';
 
 import type { StreamChatGenerics } from '../components/ChatComponents/types';
 
-type AppContextType = {
+type AppChatContextType = {
     chatClient: StreamChat<StreamChatGenerics> | null;
 };
 
-export const AppContext = React.createContext({} as AppContextType);
+export const AppChatContext = React.createContext({} as AppChatContextType);
 
-export const useAppContext = () => React.useContext(AppContext);
+export const useAppChatContext = () => React.useContext(AppChatContext);

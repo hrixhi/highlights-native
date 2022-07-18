@@ -1,20 +1,15 @@
 // // REACT
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { StyleSheet, TextInput, Dimensions, Platform, Keyboard, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, TextInput, Dimensions, Platform, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Switch } from 'react-native-gesture-handler';
 import Alert from './Alert';
 // // COMPONENTS
 import { View, Text, TouchableOpacity } from './Themed';
 import BottomSheet from './BottomSheet';
-// import { Popup } from '@mobiscroll/react';
-// import TextareaAutosize from 'react-textarea-autosize';
-// import { Select } from '@mobiscroll/react';
-import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 import { TextInput as CustomTextInput } from './CustomTextInput';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
-import { useOrientation } from '../hooks/useOrientation';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
 import { handleFile } from '../helpers/FileUpload';
 import { handleImageUpload } from '../helpers/ImageUpload';
@@ -22,6 +17,7 @@ import ColorPicker from './ColorPicker';
 import { EmojiView, InsertLink } from './ToolbarComponents';
 import Reanimated from 'react-native-reanimated';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useAppContext } from '../contexts/AppContext';
 
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
@@ -31,12 +27,13 @@ const customFontFamily = `@font-face {
         src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf'); 
    }`;
 const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { userId, user } = useAppContext();
+
     const [customCategory, setCustomCategory] = useState('None');
     const [addCustomCategory, setAddCustomCategory] = useState(false);
     const [isPrivate, setIsPrivate] = useState(false);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const [anonymous, setAnonymous] = useState(false);
-    // const [dropdownHeight, setDropdownHeight] = useState(250);
     const [editorFocus, setEditorFocus] = useState(false);
     const [emojiVisible, setEmojiVisible] = useState(false);
     const [hiliteColorVisible, setHiliteColorVisible] = useState(false);
@@ -55,8 +52,6 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     const [height, setHeight] = useState(100);
 
     const styles = styleObject();
-
-    const width = Dimensions.get('window').width;
 
     useEffect(() => {
         if (Dimensions.get('window').width >= 768) {
@@ -79,7 +74,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     }, [hiliteColor]);
 
     const handleUploadFile = useCallback(async () => {
-        const res = await handleFile(false, props.userId);
+        const res = await handleFile(false, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -91,7 +86,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     }, [RichText, RichText.current]);
 
     const handleUploadAudioVideo = useCallback(async () => {
-        const res = await handleFile(true, props.userId);
+        const res = await handleFile(true, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -100,7 +95,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         setEditorFocus(false);
 
         setUploadResult(res.url, res.type, res.name);
-    }, [RichText, RichText.current, props.userId]);
+    }, [RichText, RichText.current, userId]);
 
     console.log('Attachments', attachments);
 
@@ -197,7 +192,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
 
     const uploadImageHandler = useCallback(
         async (takePhoto: boolean) => {
-            const url = await handleImageUpload(takePhoto, props.userId);
+            const url = await handleImageUpload(takePhoto, userId);
 
             RichText.current?.focusContentEditor();
 
@@ -209,7 +204,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
 
             setInsertImageVisible(false);
         },
-        [RichText, RichText.current, props.userId]
+        [RichText, RichText.current, userId]
     );
 
     const handleInsertLink = useCallback(() => {
@@ -444,7 +439,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                         flexDirection: 'column',
                         width: '100%',
                         paddingHorizontal: 10,
-                        marginBottom: 50,
+                        paddingBottom: editorFocus ? 0 : Dimensions.get('window').width < 768 ? 50 : 100,
                         maxHeight: editorFocus ? '100%' : 'auto',
                     }}
                     indicatorStyle="black"
@@ -510,7 +505,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 }}
                                 editor={RichText}
                                 disabled={false}
-                                selectedIconTint={'#007AFF'}
+                                selectedIconTint={'#000'}
                                 disabledIconTint={'#bfbfbf'}
                                 actions={[
                                     actions.keyboard,
@@ -624,7 +619,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 editor={RichText}
                                 disabled={false}
                                 // iconTint={color}
-                                selectedIconTint={'#007AFF'}
+                                selectedIconTint={'#000'}
                                 disabledIconTint={'#bfbfbf'}
                                 // onPressAddImage={that.onPressAddImage}
                                 // iconSize={24}
@@ -826,7 +821,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         thumbColor={'#f4f4f6'}
                                         trackColor={{
                                             false: '#f4f4f6',
-                                            true: '#007AFF',
+                                            true: '#000',
                                         }}
                                         style={{
                                             transform: [
@@ -870,7 +865,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         thumbColor={'#f4f4f6'}
                                         trackColor={{
                                             false: '#f4f4f6',
-                                            true: '#007AFF',
+                                            true: '#000',
                                         }}
                                         style={{
                                             transform: [
@@ -917,7 +912,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     anonymous
                                 );
                             }}
-                            disabled={props.user.email === disableEmailId}
+                            disabled={user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -968,11 +963,18 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                             <View style={{ paddingHorizontal: 10, zIndex: 10000 }}>
                                 <TouchableOpacity
                                     style={{
-                                        marginTop: 20,
-                                        backgroundColor: '#007AFF',
-                                        borderRadius: 19,
-                                        width: 150,
+                                        marginTop: 10,
                                         alignSelf: 'center',
+                                        borderColor: '#000',
+                                        borderWidth: 1,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: '#000',
+                                        paddingHorizontal: 24,
+                                        justifyContent: 'center',
+                                        overflow: 'hidden',
+                                        paddingVertical: 14,
+                                        width: 150,
                                     }}
                                     onPress={() => {
                                         uploadImageHandler(true);
@@ -980,12 +982,13 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 >
                                     <Text
                                         style={{
+                                            fontWeight: 'bold',
                                             textAlign: 'center',
-                                            paddingHorizontal: 25,
-                                            fontFamily: 'inter',
-                                            height: 35,
-                                            lineHeight: 34,
                                             color: '#fff',
+                                            fontSize: 11,
+                                            fontFamily: 'inter',
+                                            textTransform: 'uppercase',
+                                            paddingLeft: 4,
                                         }}
                                     >
                                         {' '}
@@ -994,11 +997,18 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={{
-                                        marginTop: 20,
-                                        backgroundColor: '#007AFF',
-                                        borderRadius: 19,
-                                        width: 150,
+                                        marginTop: 15,
                                         alignSelf: 'center',
+                                        borderColor: '#000',
+                                        borderWidth: 1,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: '#000',
+                                        paddingHorizontal: 24,
+                                        justifyContent: 'center',
+                                        overflow: 'hidden',
+                                        paddingVertical: 14,
+                                        width: 150,
                                     }}
                                     onPress={() => {
                                         uploadImageHandler(false);
@@ -1006,12 +1016,13 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                 >
                                     <Text
                                         style={{
+                                            fontWeight: 'bold',
                                             textAlign: 'center',
-                                            paddingHorizontal: 25,
-                                            fontFamily: 'inter',
-                                            height: 35,
-                                            lineHeight: 34,
                                             color: '#fff',
+                                            fontSize: 11,
+                                            fontFamily: 'inter',
+                                            textTransform: 'uppercase',
+                                            paddingLeft: 4,
                                         }}
                                     >
                                         {' '}
@@ -1071,7 +1082,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                             fontFamily: 'inter',
                                             height: 35,
                                             lineHeight: 34,
-                                            color: '#007AFF',
+                                            color: '#000',
                                         }}
                                     >
                                         {' '}
@@ -1119,7 +1130,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                             fontFamily: 'inter',
                                             height: 35,
                                             lineHeight: 34,
-                                            color: '#007AFF',
+                                            color: '#000',
                                         }}
                                     >
                                         {' '}

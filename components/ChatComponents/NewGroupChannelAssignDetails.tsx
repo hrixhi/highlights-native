@@ -10,7 +10,7 @@ import { TouchableOpacity } from '../Themed';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenHeader from './ScreenHeader';
 import { UserSearchResults } from './UserResults';
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useUserSearchContext } from '../../ChatContext/useSearchContext';
 import { nanoid } from 'nanoid';
 
@@ -80,7 +80,7 @@ export type NewGroupChannelAssignNameScreenProps = {
 };
 
 export const NewGroupChannelAssignNameScreen: React.FC<NewGroupChannelAssignNameScreenProps> = ({ navigation }) => {
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const { selectedUserIds, selectedUsers, reset } = useUserSearchContext();
 
     const {

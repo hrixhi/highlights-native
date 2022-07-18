@@ -21,13 +21,14 @@ import {
 } from 'stream-chat-expo';
 
 import ScreenHeader from './ScreenHeader';
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useNavigation, useScrollToTop } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { StreamChatGenerics } from './types';
 import { usePaginatedSearchedMessages } from '../../ChatHooks/usePaginatedSearchedMessages';
 import ChannelPreview from './ChannelPreview';
 import { MessageSearchList } from './MessageSearchList';
+import { useAppContext } from '../../contexts/AppContext';
 
 const styles = StyleSheet.create({
     channelListContainer: {
@@ -75,8 +76,38 @@ const options = {
 };
 
 const ChannelListScreen = ({}) => {
-    const { chatClient } = useAppContext();
+    const { openChannelId, setOpenChannelId, openMessageId, setOpenMessageId } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const navigation = useNavigation();
+
+    // INIT SEARCH
+    const [channelIdFromSearch, setChannelIdFromSearch] = useState(undefined);
+    const [messageIdFromSearch, setMessageIdFromSearch] = useState(undefined);
+
+    useEffect(() => {
+        if (openChannelId) {
+            setChannelIdFromSearch(openChannelId);
+        }
+    }, [openChannelId]);
+
+    useEffect(() => {
+        if (openMessageId) {
+            setMessageIdFromSearch(openMessageId);
+        }
+    }, [openMessageId]);
+
+    useEffect(() => {
+        if (channelIdFromSearch && messageIdFromSearch) {
+            navigation.navigate('ChannelScreen', {
+                channelId: channelIdFromSearch,
+                messageId: messageIdFromSearch,
+            });
+            setOpenChannelId('');
+            setOpenMessageId('');
+            setMessageIdFromSearch(undefined);
+            setChannelIdFromSearch(undefined);
+        }
+    }, [channelIdFromSearch, messageIdFromSearch]);
 
     const {
         theme: {
@@ -134,6 +165,7 @@ const ChannelListScreen = ({}) => {
                     </TouchableOpacity>
                 )}
                 titleText="Chats"
+                largeTitle={true}
             />
 
             <View style={styles.flex}>

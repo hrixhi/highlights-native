@@ -1,6 +1,6 @@
 // REACT
 import React from 'react';
-import { ScrollView, Keyboard } from 'react-native';
+import { Keyboard } from 'react-native';
 
 // COMPONENTS
 import { View } from './Themed';
@@ -19,14 +19,11 @@ const Channels: React.FunctionComponent<{ [label: string]: any }> = (props: any)
             onTouchMove={() => Keyboard.dismiss()}
         >
             <ChannelControls
-                subscriptions={props.subscriptions}
                 closeModal={() => props.closeModal()}
-                refreshSubscriptions={props.refreshSubscriptions}
                 setShowCreate={(val: any) => props.setShowCreate(val)}
                 // showCreate={props.showCreate}
                 showAddCourseModal={props.showAddCourseModal}
                 closeAddCourseModal={props.closeAddCourseModal}
-                user={props.user}
             />
         </View>
     );

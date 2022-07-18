@@ -29,11 +29,11 @@ import { useUserInfoOverlayContext } from '../../ChatContext/UserInfoOverlayCont
 import type { StreamChatGenerics } from './types';
 
 import { UserResponse } from 'stream-chat';
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { AddUser, RemoveUser } from '../../assets/chatIcons';
-import { fetchAPI } from '../../graphql/FetchAPI';
 import { toggleAdminRole } from '../../graphql/QueriesAndMutations';
 import Alert from '../Alert';
+import { useApolloClient } from '@apollo/client';
 
 dayjs.extend(relativeTime);
 
@@ -102,7 +102,7 @@ export type UserInfoOverlayProps = {
 
 export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
     const { overlayOpacity, visible } = props;
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const { overlay, setOverlay } = useAppOverlayContext();
     const { client } = useChatContext<StreamChatGenerics>();
     const { setData } = useBottomSheetOverlayContext();
@@ -117,6 +117,8 @@ export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
             colors: { accent_red, accent_blue, black, border, grey, white },
         },
     } = useTheme();
+
+    const server = useApolloClient();
 
     const offsetY = useSharedValue(0);
     const translateY = useSharedValue(0);
@@ -180,7 +182,6 @@ export const UserInfoOverlay = (props: UserInfoOverlayProps) => {
         (userId: string, alreadyAdmin: boolean) => {
             if (!channel) return;
 
-            const server = fetchAPI('');
             server
                 .mutate({
                     mutation: toggleAdminRole,

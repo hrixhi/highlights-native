@@ -10,12 +10,12 @@ import {
     Animated,
     Dimensions,
     Platform,
+    ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // API
-import { fetchAPI } from '../graphql/FetchAPI';
 import {
     createCue,
     createQuiz,
@@ -41,7 +41,6 @@ import DropDownPicker from 'react-native-dropdown-picker';
 // import DateTimePicker from '@react-native-community/datetimepicker';
 import { WebView } from 'react-native-webview';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
 import { EmojiView, InsertLink } from './ToolbarComponents';
 import BottomSheet from './BottomSheet';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -50,9 +49,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { handleFile } from '../helpers/FileUpload';
 import { handleImageUpload } from '../helpers/ImageUpload';
-import { timedFrequencyOptions } from '../helpers/FrequencyOptions';
 import ColorPicker from './ColorPicker';
-// import { SafeAreaView } from 'react-native-safe-area-context';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
 const formulaIcon = require('../assets/images/formulaIcon3.png');
@@ -66,6 +63,9 @@ import useDynamicRefs from 'use-dynamic-refs';
 import { useOrientation } from '../hooks/useOrientation';
 import { paddingResponsive } from '../helpers/paddingHelper';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
+import { renderLoadingSpinner, renderLoadingSpinnerFormula, renderWebviewError } from './LoadingSpinnersWebview';
 
 const customFontFamily = `@font-face {
     font-family: 'Overpass';
@@ -73,6 +73,8 @@ const customFontFamily = `@font-face {
 }`;
 
 const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { userId, user, customCategories: localCustomCategories, handleUpdateCue, handleAddCue } = useAppContext();
+
     const current = new Date();
     const [cue, setCue] = useState('');
     const [cueDraft, setCueDraft] = useState('<h1>Title</h1><br/><h3>Body</h3>');
@@ -82,8 +84,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [color, setColor] = useState(0);
     const [frequency, setFrequency] = useState('0');
     const [customCategory, setCustomCategory] = useState('None');
-    const [localCustomCategories] = useState(props.customCategories);
-    const [customCategories, setCustomCategories] = useState(props.customCategories);
+    const [customCategories, setCustomCategories] = useState(localCustomCategories);
     const [addCustomCategory, setAddCustomCategory] = useState(false);
     const [channels, setChannels] = useState<any[]>([]);
     const [channelOptions, setChannelOptions] = useState<any[]>([]);
@@ -102,7 +103,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const scrollRef: any = useRef();
     const [init, setInit] = useState(false);
     const [role, setRole] = useState('');
-    const [allowQuizCreation, setAllowQuizCreation] = useState(false);
     const [submission, setSubmission] = useState(false);
     const [deadline, setDeadline] = useState(new Date(current.getTime() + 1000 * 60 * 60 * 24));
     const [initiateAt, setInitiateAt] = useState(new Date(current.getTime()));
@@ -119,7 +119,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const [showAvailableUntilTimeAndroid, setShowAvailableUntilTimeAndroid] = useState(false);
     const [showAvailableUntilDateAndroid, setShowAvailableUntilDateAndroid] = useState(false);
 
-    const [showBooks, setShowBooks] = useState(props.option === 'Browse' ? true : false);
+    const [showBooks, setShowBooks] = useState(false);
     const [gradeWeight, setGradeWeight] = useState<any>('');
     const [graded, setGraded] = useState(false);
     const [imported, setImported] = useState(false);
@@ -139,20 +139,15 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         minutes: 0,
         seconds: 0,
     });
-    const [equation, setEquation] = useState('y = x + 1');
-    const [showEquationEditor, setShowEquationEditor] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [shuffleQuiz, setShuffleQuiz] = useState(false);
     const [quizInstructions, setQuizInstructions] = useState('');
-    const [initialQuizInstructions, setInitialQuizInstructions] = useState('');
-    const [initialDuration, setInitialDuration] = useState(null);
     const [limitedShare, setLimitedShare] = useState(false);
     const [unlimitedAttempts, setUnlimitedAttempts] = useState(false);
     const [attempts, setAttempts] = useState('1');
     const window = Dimensions.get('window');
     const screen = Dimensions.get('screen');
     const [dimensions, setDimensions] = useState({ window, screen });
-    const [userId, setUserId] = useState('');
     const [totalPoints, setTotalPoints] = useState('');
 
     const width = dimensions.window.width;
@@ -197,7 +192,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
     const formulaWebviewRef: any = useRef(null);
 
-    let testEditorRef: any = {};
+    const server = useApolloClient();
 
     // Alerts
     const enterOneProblemAlert = PreferredLanguageText('enterOneProblem');
@@ -214,8 +209,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const enterTitleAlert = PreferredLanguageText('enterTitle');
 
     // HOOK
-
-    console.log('URL', url);
 
     const fall = new Reanimated.Value(1);
 
@@ -324,25 +317,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     }, [url, imported, type, showOptions, showBooks, isQuiz]);
 
     /**
-     * @description Sets user role
-     */
-    useEffect(() => {
-        (async () => {
-            const uString: any = await AsyncStorage.getItem('user');
-            const parsedUser = JSON.parse(uString);
-            if (parsedUser.role) {
-                setRole(parsedUser.role);
-            }
-            if (parsedUser.allowQuizCreation) {
-                setAllowQuizCreation(parsedUser.allowQuizCreation);
-            }
-            if (parsedUser._id) {
-                setUserId(parsedUser._id);
-            }
-        })();
-    });
-
-    /**
      * @description Loads channel categories and subscribers for Create
      */
     useEffect(() => {
@@ -423,7 +397,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         isQuiz,
     ]);
 
-    console.log('Problems', problems);
     /**
      * @description Loads Drafts on Init
      */
@@ -439,18 +412,14 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 }
                 const quizDraft = await AsyncStorage.getItem('quizDraft');
                 if (quizDraft !== null) {
-                    console.log('Quiz Draft on init', quizDraft);
-
                     const { duration, timer, problems, title, headers, quizInstructions } = JSON.parse(quizDraft);
                     setDuration(duration);
-                    setInitialDuration(duration);
                     setTimer(timer);
                     setProblems(problems);
                     // setTitle(title);
                     setQuizTitle(title);
                     setHeaders(headers);
                     setQuizInstructions(quizInstructions);
-                    setInitialQuizInstructions(quizInstructions);
                 }
                 setInit(true);
             } catch (e) {
@@ -472,16 +441,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         (state: any) => {
             const url = state.url;
 
-            console.log('URL', url);
-
             const splitURL = url.split('?');
 
             if (splitURL.length > 0) {
                 const query = splitURL[1];
 
                 const params = query.split('&');
-
-                console.log('Params', params);
 
                 params.map((param: any) => {
                     if (param.includes('equationImageURL')) {
@@ -492,8 +457,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         setInsertFormulaVisible(false);
 
                         let editorRef: any = {};
-
-                        console.log('Insert formula quizOptionEditorIndex', quizOptionEditorIndex);
 
                         if (quizOptionEditorIndex) {
                             editorRef = getRef(quizOptionEditorIndex);
@@ -544,9 +507,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                         console.log('State', state);
 
                         insertFormula(state);
-
-                        //your code goes here
                     }}
+                    renderLoading={() => renderLoadingSpinnerFormula()}
+                    renderError={() => renderWebviewError()}
                 />
             </View>
         );
@@ -564,15 +527,8 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             setGraded(false);
             setSelected([]);
             setSubscribers([]);
-            // setProblems([]);
-            // console.log('Set not quiz')
-            // setIsQuiz(false);
             setTimer(false);
         } else {
-            // const match = channels.find((c: any) => {
-            //     return c._id === selectedChannel;
-            // });
-            // setSelectedChannel(match._id);
             setChannelId(selectedChannel);
             setAddCustomCategory(false);
             setCustomCategory('None');
@@ -585,28 +541,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
     const onDimensionsChange = useCallback(({ window, screen }: any) => {
         setDimensions({ window, screen });
     }, []);
-
-    console.log('Window dimensions', dimensions);
-
-    /**
-     * @description Used to insert equation into Editor HTML
-     */
-    const insertEquation = useCallback(() => {
-        if (equation === '') {
-            Alert('Equation cannot be empty.');
-            return;
-        }
-
-        let currentContent = editorRef.current.getContent();
-
-        const SVGEquation = TeXToSVG(equation, { width: 100 }); // returns svg in html format
-        currentContent += '<div contenteditable="false" style="display: inline-block">' + SVGEquation + '<br/></div>';
-
-        editorRef.current.setContent(currentContent);
-
-        setShowEquationEditor(false);
-        setEquation('');
-    }, [equation, RichText, RichText.current, cue]);
 
     /**
      * @description Validates Quiz for Creation
@@ -1045,6 +979,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * @description Handles creating new Quiz
      */
     const createNewQuiz = useCallback(() => {
+        console.log('Create new Quiz called');
         setIsSubmitting(true);
         setCreatingQuiz(true);
         let error = false;
@@ -1162,17 +1097,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             }
         });
 
-        const server = fetchAPI('');
         const durationMinutes = duration.hours * 60 + duration.minutes + duration.seconds / 60;
-
-        console.log('Create Quiz', {
-            problems: sanitizeProblems,
-            duration: timer ? durationMinutes.toString() : null,
-            shuffleQuiz,
-            instructions: quizInstructions,
-            headers: JSON.stringify(headers),
-        });
-
         server
             .mutate({
                 mutation: createQuiz,
@@ -1198,20 +1123,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             .catch((e) => {
                 console.log('Error', e);
                 console.error(e.name + ': ' + e.message);
-
-                if (e.response) {
-                    // Request made and server responded
-                    console.log(e.response.data);
-                    console.log(e.response.status);
-                    console.log(e.response.headers);
-                } else if (e.request) {
-                    // The request was made but no response was received
-                    console.log(e.request);
-                } else {
-                    // Something happened in setting up the request that triggered an e
-                    console.log('error', e.message);
-                }
-
                 setCreatingQuiz(false);
             });
     }, [
@@ -1219,7 +1130,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         cue,
         modalAnimation,
         customCategory,
-        props.saveDataInCloud,
         isQuiz,
         gradeWeight,
         deadline,
@@ -1248,6 +1158,9 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         availableUntil,
         allowLateSubmission,
     ]);
+
+    console.log('creating quiz', creatingQuiz);
+    console.log('Is Submitting', isSubmitting);
 
     // EDITOR METHODS
 
@@ -1395,8 +1308,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         [RichText, RichText.current, emojiVisible, Keyboard]
     );
 
-    console.log('quiz Option index', quizOptionEditorIndex);
-
     const handleInsertFormulaOptions = useCallback(
         (optionIndex: any) => {
             setEditorFocus(false);
@@ -1518,7 +1429,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
         if (editorRef) {
             setQuizEditorRef(editorRef);
-            testEditorRef = editorRef;
         }
     }, []);
 
@@ -1599,17 +1509,10 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * @description Loads channel Categories and subscribers for Create optins
      */
     const loadChannelCategoriesAndSubscribers = useCallback(async () => {
-        const uString: any = await AsyncStorage.getItem('user');
-
-        const userId = JSON.parse(uString);
-        if (userId.role) {
-            setRole(userId.role);
-        }
         if (channelId === '') {
             setCustomCategories(localCustomCategories);
             return;
         }
-        const server = fetchAPI('');
         // get categories
         server
             .query({
@@ -1620,10 +1523,11 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             })
             .then((res) => {
                 if (res.data.channel && res.data.channel.getChannelCategories) {
+                    const fetchedCategories = [...res.data.channel.getChannelCategories];
                     if (role === 'instructor') {
                         const categories = new Set();
 
-                        res.data.channel.getChannelCategories.map((category: any) => {
+                        fetchedCategories.map((category: any) => {
                             console.log('Channel category', category);
                             categories.add(category);
                         });
@@ -1687,40 +1591,34 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
      * @description Loads all the channels for user to create for
      */
     const loadChannels = useCallback(async () => {
-        const uString: any = await AsyncStorage.getItem('user');
-        if (uString) {
-            const user = JSON.parse(uString);
-            const server = fetchAPI('');
-            server
-                .query({
-                    query: getChannels,
-                    variables: {
-                        userId: user._id,
-                    },
-                })
-                .then((res) => {
-                    if (res.data.channel.findByUserId) {
-                        setChannels(res.data.channel.findByUserId);
-                        const options = [
-                            {
-                                value: 'My Notes',
-                                label: 'My Notes',
-                            },
-                        ];
+        server
+            .query({
+                query: getChannels,
+                variables: {
+                    userId,
+                },
+            })
+            .then((res) => {
+                if (res.data.channel.findByUserId) {
+                    setChannels(res.data.channel.findByUserId);
+                    const options = [
+                        {
+                            value: 'My Notes',
+                            label: 'My Notes',
+                        },
+                    ];
 
-                        res.data.channel.findByUserId.map((channel: any) => {
-                            options.push({
-                                value: channel._id,
-                                label: channel.name,
-                            });
+                    res.data.channel.findByUserId.map((channel: any) => {
+                        options.push({
+                            value: channel._id,
+                            label: channel.name,
                         });
+                    });
 
-                        setChannelOptions(options);
-                    }
-                })
-                .catch((err) => {});
-        }
-        // setInit(true);
+                    setChannelOptions(options);
+                }
+            })
+            .catch((err) => {});
     }, []);
 
     // Don't save question if no question entered
@@ -1750,13 +1648,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         [title]
     );
 
-    console.log('createPdfviewerURL', createPdfviewerURL);
-
     /**
      * @description Handles creation of Cue
      */
     const handleCreate = useCallback(
         async (quizId?: string) => {
+            console.log('Handle Create called', quizId);
             setIsSubmitting(true);
 
             if (isSubmitting) return;
@@ -1767,7 +1664,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 return;
             }
 
-            if ((imported && title === '') || (isQuiz && quizTitle === '')) {
+            if ((imported && title === '' && !quizId) || (quizTitle === '' && quizId)) {
                 Alert(enterTitleAlert);
                 setIsSubmitting(false);
                 return;
@@ -1820,68 +1717,30 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
 
             // LOCAL CUE
             if (channelId === '') {
-                let subCues: any = {};
-                try {
-                    const value = await AsyncStorage.getItem('cues');
-                    if (value) {
-                        subCues = JSON.parse(value);
-                    }
-                } catch (e) {}
+                const cueInput = {
+                    _id: Math.random().toString(),
+                    cue: saveCue,
+                    date: new Date(),
+                    color: color.toString(),
+                    shuffle,
+                    frequency,
+                    starred,
+                    customCategory: customCategory === 'None' ? '' : customCategory,
+                    endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : '',
+                    createdBy: userId,
+                };
 
-                let localCues: any[] = subCues['local'] ? subCues['local'] : [];
+                const success = await handleUpdateCue(cueInput, true);
 
-                let _id = localCues.length;
-
-                while (true) {
-                    const duplicateId = localCues.findIndex((item: any) => {
-                        return item._id === _id;
-                    });
-                    if (duplicateId === -1) {
-                        break;
-                    } else {
-                        _id++;
-                    }
-                }
-                subCues['local'] = [
-                    ...localCues,
-                    {
-                        _id,
-                        cue: saveCue,
-                        date: new Date(),
-                        color,
-                        shuffle,
-                        frequency,
-                        starred,
-                        customCategory: customCategory === 'None' ? '' : customCategory,
-                        endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : '',
-                    },
-                ];
-                const stringifiedCues = JSON.stringify(subCues);
-                await AsyncStorage.setItem('cues', stringifiedCues);
-                storeDraft('cueDraft', '');
-                props.closeAfterCreatingMyNotes();
-            } else {
-                // CHANNEL CUE
-                const uString = await AsyncStorage.getItem('user');
-                if (!uString) {
+                if (!success) {
+                    Alert('Failed to create content. Try again.');
+                    setIsSubmitting(false);
                     return;
                 }
-
-                const userName = await JSON.parse(uString);
-                let ownerarray: any = selected;
-                const userSubscriptions = await AsyncStorage.getItem('subscriptions');
-                if (userSubscriptions) {
-                    const list = JSON.parse(userSubscriptions);
-                    list.map((i: any) => {
-                        if (i.channelId === channelId) {
-                            ownerarray.push(i.channelCreatedBy);
-                        }
-                    });
-                    setSelected(ownerarray);
-                }
-
-                const user = JSON.parse(uString);
-                const server = fetchAPI('');
+                storeDraft('cueDraft', '');
+                props.closeModal();
+            } else {
+                // CHANNEL CUE
 
                 const variables = {
                     cue: saveCue,
@@ -1891,7 +1750,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     frequency,
                     customCategory: customCategory === 'None' ? '' : customCategory,
                     shuffle,
-                    createdBy: user._id,
+                    createdBy: userId,
                     gradeWeight: gradeWeight.toString(),
                     submission: submission || isQuiz,
                     deadline: submission || isQuiz ? deadline.toISOString() : '',
@@ -1918,6 +1777,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                             }).start(() => {
                                 storeDraft('cueDraft', '');
                                 setIsSubmitting(false);
+                                handleAddCue(res.data.cue.create);
                                 props.closeModal();
                             });
                         }
@@ -1932,7 +1792,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             cue,
             modalAnimation,
             customCategory,
-            props.saveDataInCloud,
             isQuiz,
             timer,
             duration,
@@ -1959,6 +1818,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             availableUntil,
             quizTitle,
             totalPoints,
+            userId,
         ]
     );
 
@@ -1984,8 +1844,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     setProblems([]);
                     setIsQuiz(false);
                     setTimer(false);
-                    setShowEquationEditor(false);
-                    setEquation('');
                 },
             },
         ]);
@@ -2470,8 +2328,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             </View>
         );
     };
-
-    console.log('Props.showImportCreate', props.showImportCreate);
 
     return (
         <KeyboardAvoidingView
@@ -4342,7 +4198,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                             }}
                                                             // onHeightChange={handleHeightChange}
                                                             onHeightChange={(height: React.SetStateAction<number>) => {
-                                                                console.log('Set height', height);
                                                                 setHeight(height);
                                                                 if (height >= scrollViewHeight) {
                                                                     setTimeout(() => {
@@ -4384,7 +4239,6 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 handleForeColor={handleForeColor}
                                                 handleEmoji={handleEmoji}
                                                 handleInsertFormula={handleInsertFormula}
-                                                userId={userId}
                                                 setRef={setRef}
                                                 handleAddImageQuizOptions={handleAddImageQuizOptions}
                                                 handleHiliteColorOptions={handleHiliteColorOptions}
@@ -4431,7 +4285,12 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                         borderColor: '#f2f2f2',
                                                         borderRadius: 1
                                                     }}></div> */}
-                                                <WebView source={{ uri: createPdfviewerURL }} />
+                                                <WebView
+                                                    startInLoadingState={true}
+                                                    source={{ uri: createPdfviewerURL }}
+                                                    renderLoading={() => renderLoadingSpinner()}
+                                                    renderError={() => renderWebviewError()}
+                                                />
                                             </View>
                                         )
                                     ) : null}
@@ -4464,7 +4323,7 @@ const Create: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                                                 await handleCreate();
                                             }
                                         }}
-                                        disabled={isSubmitting || creatingQuiz || props.user.email === disableEmailId}
+                                        disabled={isSubmitting || creatingQuiz || user.email === disableEmailId}
                                         style={{
                                             borderRadius: 15,
                                             backgroundColor: 'white',

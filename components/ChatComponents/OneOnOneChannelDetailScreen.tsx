@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Avatar, useTheme } from 'stream-chat-expo';
 
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useAppOverlayContext } from '../../ChatContext/AppOverlayContext';
 import { useBottomSheetOverlayContext } from '../../ChatContext/BottomSheetOverlayContext';
 
@@ -131,7 +131,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
             colors: { accent_green, accent_red, black, border, grey, white, white_smoke },
         },
     } = useTheme();
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const { setOverlay } = useAppOverlayContext();
     const { setData } = useBottomSheetOverlayContext();
 

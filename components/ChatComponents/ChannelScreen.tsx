@@ -17,7 +17,7 @@ import { Image, Platform, StyleSheet, View, TouchableOpacity, Linking } from 're
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import ScreenHeader from './ScreenHeader';
 
 import type { StackNavigatorParamList, StreamChatGenerics } from './types';
@@ -28,7 +28,7 @@ import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
 
 import zoomLogo from '../../assets/images/zoomLogo.png';
-import { fileUpload } from '../../helpers/FileUpload';
+import { fileUpload, fileUploadInbox } from '../../helpers/FileUpload';
 
 const styles = StyleSheet.create({
     flex: { flex: 1 },
@@ -50,7 +50,7 @@ const ChannelHeader: React.FC<ChannelHeaderProps> = ({ channel }) => {
     const membersStatus = useChannelMembersStatus(channel);
     const displayName = useChannelPreviewDisplayName(channel, 30);
     const { isOnline } = useChatContext();
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const navigation = useNavigation<ChannelScreenNavigationProp>();
     const typing = useTypingString();
     const { user, meetingProvider } = useAppOverlayContext();
@@ -124,7 +124,7 @@ const ChannelScreen: React.FC<ChannelScreenProps> = ({
         params: { channel: channelFromProp, channelId, messageId },
     },
 }) => {
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const navigation = useNavigation();
     const { bottom } = useSafeAreaInsets();
     const {
@@ -168,7 +168,7 @@ const ChannelScreen: React.FC<ChannelScreenProps> = ({
 
         if (!chatClient || !chatClient.userID) return;
 
-        const res = await fileUpload(file, type, chatClient.userID);
+        const res = await fileUploadInbox(file, type, chatClient.userID);
 
         console.log('Image upload', res);
 

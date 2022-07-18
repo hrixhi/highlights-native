@@ -1,24 +1,15 @@
 // REACT
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import {
-    Dimensions,
-    TextInput as DefaultTextInput,
-    Keyboard,
-    StyleSheet,
-    useWindowDimensions,
-    Image,
-} from 'react-native';
-import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
+import { Dimensions, TextInput as DefaultTextInput, Keyboard, useWindowDimensions, Image } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import lodash from 'lodash';
 import { Ionicons } from '@expo/vector-icons';
-import { Buffer } from 'buffer';
 
 // COMPONENTS
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 import { Text, TouchableOpacity, View } from '../components/Themed';
 import Alert from '../components/Alert';
-import useDynamicRefs from 'use-dynamic-refs';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
 const emojiIcon = require('../assets/images/emojiIcon.png');
@@ -35,7 +26,7 @@ import { Video } from 'expo-av';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { handleFile } from '../helpers/FileUpload';
-import HTMLView from 'react-native-htmlview';
+import { useAppContext } from '../contexts/AppContext';
 
 const customFontFamily = `@font-face {
     font-family: 'Overpass';
@@ -91,28 +82,17 @@ const requiredLabels = {
 };
 
 const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user, userId } = useAppContext();
+
     const [problems, setProblems] = useState<any[]>(props.problems ? props.problems : []);
     const [headers, setHeaders] = useState<any>(props.headers ? props.headers : {});
     const [editQuestionNumber, setEditQuestionNumber] = useState(0);
     const [editQuestion, setEditQuestion] = useState<any>({});
-    const [equation, setEquation] = useState('');
-    const [showEquationEditor, setShowEquationEditor] = useState(false);
-    const [showFormulaGuide, setShowFormulaGuide] = useState(false);
-    const [getRef, setRef] = useDynamicRefs();
     const [optionEquations, setOptionEquations] = useState<any[]>([]);
     const [optionEditorRefs, setOptionEditorRefs] = useState<boolean[]>([]);
     const [showOptionFormulas, setShowOptionFormulas] = useState<any[]>([]);
     let RichText: any = useRef();
-
-    const [emojiVisible, setEmojiVisible] = useState(false);
-    const [hiliteColorVisible, setHiliteColorVisible] = useState(false);
-    const [foreColorVisible, setForeColorVisible] = useState(false);
-    const [hiliteColor, setHiliteColor] = useState('#ffffff');
-    const [foreColor, setForeColor] = useState('#000000');
-    const [insertLinkVisible, setInsertLinkVisible] = useState(false);
-    const [insertImageVisible, setInsertImageVisible] = useState(false);
     const [questionEditorFocus, setQuestionEditorFocus] = useState(false);
-    const [repository, setRepository] = useState(null);
     const { width: contentWidth } = useWindowDimensions();
 
     useEffect(() => {
@@ -134,7 +114,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
     const handleUploadVideoQuestion = useCallback(
         async (index: number) => {
-            const res = await handleFile(true, props.userId);
+            const res = await handleFile(true, userId);
 
             if (!res || res.url === '' || res.type === '') {
                 return;
@@ -148,7 +128,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
             setProblems(newProbs);
             props.setProblems(newProbs);
         },
-        [props.userId, problems]
+        [userId, problems]
     );
 
     // EDITOR METHODS
@@ -159,7 +139,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const renderAudioVideoPlayer = (url: string, type: string) => {
         return (
             <Video
-                // ref={audioRef}
                 style={{
                     width: '100%',
                     height: 250,
@@ -170,7 +149,6 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 useNativeControls
                 resizeMode="contain"
                 isLooping
-                // onPlaybackStatusUpdate={status => setStatus(() => status)}
             />
         );
     };
@@ -1931,61 +1909,3 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
 };
 
 export default QuizCreate;
-
-const styles = StyleSheet.create({
-    header: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 16,
-    },
-    hederName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    board: {
-        paddingVertical: 16,
-        backgroundColor: '#E0E8EF',
-    },
-    column: {
-        backgroundColor: '#F8FAFB',
-        marginLeft: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 4,
-    },
-    columnHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 16,
-    },
-    columnName: {
-        fontWeight: 'bold',
-    },
-    addColumn: {
-        marginRight: 12,
-        padding: 12,
-        minWidth: 200,
-    },
-    card: {
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#F6F7FB',
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: 24,
-        paddingVertical: 16,
-        marginBottom: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    addCard: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgb(233, 233, 233)',
-        borderRadius: 4,
-        paddingVertical: 12,
-        borderWidth: 1,
-        borderColor: '#F5F6F8',
-    },
-});

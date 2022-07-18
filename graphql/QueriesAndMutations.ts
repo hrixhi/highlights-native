@@ -15,6 +15,7 @@ export const createUser = gql`
         }
     }
 `;
+
 export const createChannel = gql`
     mutation (
         $name: String!
@@ -116,7 +117,39 @@ export const createCue = gql`
                 allowedAttempts: $allowedAttempts
                 availableUntil: $availableUntil
                 totalPoints: $totalPoints
-            )
+            ) {
+                _id
+                cue
+                color
+                channelId
+                customCategory
+                unreadThreads
+                frequency
+                date
+                folderId
+                endPlayAt
+                channelName
+                starred
+                createdBy
+                shuffle
+                original
+                submission
+                deadline
+                initiateAt
+                gradeWeight
+                score
+                graded
+                comment
+                status
+                submittedAt
+                releaseSubmission
+                active
+                limitedShares
+                allowedAttempts
+                annotations
+                availableUntil
+                totalPoints
+            }
         }
     }
 `;
@@ -216,6 +249,46 @@ export const saveCuesToCloud = gql`
             saveCuesToCloud(userId: $userId, cues: $cues) {
                 newId
                 oldId
+            }
+        }
+    }
+`;
+
+export const handleSaveCue = gql`
+    mutation ($userId: String!, $cue: CueInputObject!, $create: Boolean!) {
+        cue {
+            handleSaveCue(userId: $userId, cue: $cue, create: $create) {
+                _id
+                cue
+                color
+                channelId
+                customCategory
+                unreadThreads
+                frequency
+                date
+                folderId
+                endPlayAt
+                channelName
+                starred
+                createdBy
+                shuffle
+                original
+                submission
+                deadline
+                initiateAt
+                gradeWeight
+                score
+                graded
+                comment
+                status
+                submittedAt
+                releaseSubmission
+                active
+                limitedShares
+                allowedAttempts
+                annotations
+                availableUntil
+                totalPoints
             }
         }
     }
@@ -689,14 +762,13 @@ export const findUserById = gql`
                     accountId
                 }
                 notificationId
-                randomShuffleFrequency
-                sleepFrom
-                sleepTo
                 email
-                currentDraft
                 role
                 allowQuizCreation
+                schoolId
+                orgName
                 userCreatedOrg
+                createdAt
             }
         }
     }
@@ -1649,6 +1721,7 @@ export const findChannelById = gql`
                 tags
                 isPublic
                 meetingUrl
+                colorCode
             }
         }
     }
@@ -2370,6 +2443,46 @@ export const getInboxDirectory = gql`
                 section
                 roleDescription
                 courses
+            }
+        }
+    }
+`;
+
+export const findCueById = gql`
+    query ($cueId: String!, $userId: String!) {
+        cue {
+            findCueById(cueId: $cueId, userId: $userId) {
+                _id
+                cue
+                color
+                channelId
+                customCategory
+                unreadThreads
+                frequency
+                date
+                folderId
+                endPlayAt
+                channelName
+                starred
+                createdBy
+                shuffle
+                original
+                submission
+                deadline
+                initiateAt
+                gradeWeight
+                score
+                graded
+                comment
+                status
+                submittedAt
+                releaseSubmission
+                active
+                limitedShares
+                allowedAttempts
+                annotations
+                availableUntil
+                totalPoints
             }
         }
     }

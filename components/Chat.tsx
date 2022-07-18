@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, LogBox, Platform, SafeAreaView } from 'react-native';
 
 import { View, Text } from './Themed';
@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // STREAM
 import { Chat, Streami18n, ThemeProvider, useOverlayContext } from 'stream-chat-expo';
 
-import { useAppContext } from '../ChatContext/AppContext';
+import { useAppChatContext } from '../ChatContext/AppChatContext';
 import {
     ChannelListScreen,
     ChannelScreen,
@@ -30,6 +30,8 @@ import { ChannelPinnedMessagesScreen } from './ChatComponents/ChannelPinnedMessa
 import { SharedGroupsScreen } from './ChatComponents/SharedGroupsScreen';
 import { ThreadScreen } from './ChatComponents/ThreadScreen';
 import { ExistingChannelAddMembersScreen } from './ChatComponents/ExistingChannelAddMembersScreen';
+import { useAppContext } from '../contexts/AppContext';
+import { navigateToChannel } from '../ChatHooks/RootNavigation';
 
 const Stack = createStackNavigator();
 
@@ -38,11 +40,14 @@ const streami18n = new Streami18n({
 });
 
 const Inbox = (props: any) => {
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
 
     const streamChatTheme = useStreamChatTheme();
 
     const { overlay } = useOverlayContext();
+
+    const { subscriptions, user, meetingProvider, openChannelId, setOpenChannelId, openMessageId, setOpenMessageId } =
+        useAppContext();
 
     return (
         <ThemeProvider theme={streamChatTheme}>
@@ -58,15 +63,15 @@ const Inbox = (props: any) => {
                     <Chat client={chatClient} i18nInstance={streami18n}>
                         <AppOverlayProvider
                             value={{
-                                subscriptions: props.subscriptions,
-                                currentUserRole: props.user.role,
-                                user: props.user,
-                                meetingProvider: props.meetingProvider,
+                                subscriptions: subscriptions,
+                                currentUserRole: user.role,
+                                user: user,
+                                meetingProvider: meetingProvider,
                             }}
                         >
                             <UserSearchProvider>
                                 <Stack.Navigator
-                                    initialRouteName="ChannelList"
+                                    initialRouteName={'ChannelListScreen'}
                                     screenOptions={{
                                         headerStyle: {
                                             backgroundColor: '#fff',
@@ -83,7 +88,7 @@ const Inbox = (props: any) => {
                                     {/* INIT SCREEN WITH CHANNEL LIST */}
                                     <Stack.Screen
                                         component={ChannelListScreen}
-                                        name="ChannelList"
+                                        name="ChannelListScreen"
                                         options={{
                                             headerShown: false,
                                         }}
@@ -91,11 +96,10 @@ const Inbox = (props: any) => {
 
                                     <Stack.Screen
                                         component={ChannelScreen}
-                                        // initialParams={
-                                        //     initialChannelIdGlobalRef.current
-                                        //         ? { channelId: initialChannelIdGlobalRef.current }
-                                        //         : undefined
-                                        // }
+                                        // initialParams={{
+                                        //     channelId: channelIdFromSearch,
+                                        //     messageId: messageIdFromSearch,
+                                        // }}
                                         name="ChannelScreen"
                                         options={{
                                             gestureEnabled: Platform.OS === 'ios' && overlay === 'none',

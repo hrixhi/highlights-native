@@ -1,56 +1,37 @@
 // REACT
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, Dimensions, Keyboard, ActivityIndicator, Switch, Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StyleSheet, Dimensions, ActivityIndicator, Switch, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 // API
-import { fetchAPI } from '../graphql/FetchAPI';
 import {
     findChannelById,
-    getOrganisation,
     getSubscribers,
     getUserCount,
     subscribe,
     unsubscribe,
     updateChannel,
-    getChannelColorCode,
     duplicateChannel,
     resetAccessCode,
-    getChannelModerators,
     deleteChannel,
-    addUsersByEmail,
 } from '../graphql/QueriesAndMutations';
 
 // COMPONENTS
 import { Text, TouchableOpacity, View } from './Themed';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { TextInput } from './CustomTextInput';
-import { ScrollView } from 'react-native-gesture-handler';
-
 import ColorPicker from './ColorPicker';
-
-// import {
-//     Menu,
-//     MenuOptions,
-//     MenuOption,
-//     MenuTrigger,
-// } from 'react-native-popup-menu';
 import DropDownPicker from 'react-native-dropdown-picker';
-
 import Alert from './Alert';
-// import TextareaAutosize from 'react-textarea-autosize';
-import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 import * as Clipboard from 'expo-clipboard';
-
-// import ReactTagInput from "@pathofdev/react-tag-input";
-// import "@pathofdev/react-tag-input/build/index.css";
 import { getDropdownHeight } from '../helpers/DropdownHeight';
-import BottomSheet from './BottomSheet';
-import Reanimated from 'react-native-reanimated';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
 
 const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user, userId, org, refreshSubscriptions } = useAppContext();
+
     const [loadingOrg, setLoadingOrg] = useState(true);
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [loadingChannelColor, setLoadingChannelColor] = useState(true);
@@ -59,7 +40,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [password, setPassword] = useState('');
     const [temporary, setTemporary] = useState(false);
     const [isUpdatingChannel, setIsUpdatingChannel] = useState(false);
-    const [school, setSchool] = useState<any>(null);
     const [accessCode, setAccessCode] = useState('');
     const [description, setDescription] = useState('');
     const [isPublic, setIsPublic] = useState(false);
@@ -68,30 +48,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [originalSubs, setOriginalSubs] = useState<any[]>([]);
     const [options, setOptions] = useState<any[]>([]);
     const [selected, setSelected] = useState<any[]>([]);
-    const [owner, setOwner] = useState<any>({});
     const [owners, setOwners] = useState<any[]>([]);
     const [channelCreator, setChannelCreator] = useState('');
     const [colorCode, setColorCode] = useState('');
-    const colorChoices = [
-        '#f44336',
-        '#e91e63',
-        '#9c27b0',
-        '#673ab7',
-        '#3f51b5',
-        '#2196f3',
-        '#03a9f4',
-        '#00bcd4',
-        '#009688',
-        '#4caf50',
-        '#8bc34a',
-        '#cddc39',
-        '#0d5d35',
-        '#ffc107',
-        '#ff9800',
-        '#ff5722',
-        '#795548',
-        '#607db8',
-    ];
     const grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
     const sections = [
         'A',
@@ -187,38 +146,21 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const [isSectionDropdownOpen, setIsSectionDropdownOpen] = useState(false);
     const [isViewersDropdownOpen, setIsViewersDropdownOpen] = useState(false);
     const [isEditorsDropdownOpen, setIsEditorsDropdownOpen] = useState(false);
-    const [meetingProvider, setMeetingProvider] = useState('');
     const [meetingUrl, setMeetingUrl] = useState('');
 
-    const fall = new Reanimated.Value(1);
+    const server = useApolloClient();
 
-    const animatedShadowOpacity = Reanimated.interpolateNode(fall, {
-        inputRange: [0, 1],
-        outputRange: [0.5, 0],
-    });
+    //
+    const [isDuplicatingChannel, setIsDuplicatingChannel] = useState(false);
+    const [isDeletingChannel, setIsDeletingChannel] = useState(false);
+
+    // HOOKS
 
     useEffect(() => {
         let filterRemovedModerators = selectedModerators.filter((mod: any) => selectedValues.includes(mod));
 
         setSelectedModerators(filterRemovedModerators);
     }, [selectedValues]);
-
-    // HOOKS
-
-    /**
-     * @description Fetch meeting provider for org
-     */
-    useEffect(() => {
-        (async () => {
-            const org = await AsyncStorage.getItem('school');
-
-            if (org) {
-                const school = JSON.parse(org);
-
-                setMeetingProvider(school.meetingProvider ? school.meetingProvider : '');
-            }
-        })();
-    }, []);
 
     /**
      * @description Filter dropdown users based on Roles, Grades and Section
@@ -287,7 +229,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
      * @description Filter out channel Creator from the Subscribers dropdown
      */
     useEffect(() => {
-        setLoadingChannelColor(true);
         if (channelCreator !== '') {
             const subscribers = [...selectedValues];
 
@@ -297,7 +238,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
 
             setSelectedValues(filterOutOwner);
         }
-        setLoadingChannelColor(false);
     }, [channelCreator, allUsers]);
 
     useEffect(() => {
@@ -308,264 +248,159 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     }, [props.refreshChannelSettings]);
 
     const fetchChannelSettings = useCallback(async () => {
-        const u = await AsyncStorage.getItem('user');
+        setLoadingUsers(true);
+        setLoadingOrg(true);
 
-        let schoolObj: any;
+        // get all users
 
-        if (u) {
-            setLoadingUsers(true);
-            setLoadingChannelColor(true);
-            setLoadingOrg(true);
+        console.log('fetchChannelSettings user', user);
 
-            const user = JSON.parse(u);
-            const server = fetchAPI('');
-            // get all users
-            server
-                .query({
-                    query: getOrganisation,
-                    variables: {
-                        userId: user._id,
-                    },
-                })
-                .then((res) => {
-                    if (res.data && res.data.school.findByUserId) {
-                        setSchool(res.data.school.findByUserId);
-                        schoolObj = res.data.school.findByUserId;
-                        const schoolId = res.data.school.findByUserId._id;
-                        if (schoolId && schoolId !== '') {
-                            server
-                                .query({
-                                    query: getUserCount,
-                                    variables: {
-                                        schoolId,
-                                    },
-                                })
-                                .then((res) => {
-                                    res.data.user.getSchoolUsers.sort((a: any, b: any) => {
-                                        if (a.fullName < b.fullName) {
-                                            return -1;
-                                        }
-                                        if (a.fullName > b.fullName) {
-                                            return 1;
-                                        }
-                                        return 0;
+        server
+            .query({
+                query: getUserCount,
+                variables: {
+                    schoolId: user.schoolId,
+                },
+            })
+            .then((res) => {
+                const users = [...res.data.user.getSchoolUsers];
+                users.sort((a: any, b: any) => {
+                    if (a.fullName < b.fullName) {
+                        return -1;
+                    }
+                    if (a.fullName > b.fullName) {
+                        return 1;
+                    }
+                    return 0;
+                });
+
+                setAllUsers(users);
+
+                const tempUsers: any[] = [];
+                users.map((item: any, index: any) => {
+                    const x = { ...item, selected: false, index };
+                    delete x.__typename;
+                    tempUsers.push({
+                        group: item.fullName[0].toUpperCase(),
+                        label: item.fullName + ', ' + item.email,
+                        value: item._id,
+                    });
+                    return x;
+                });
+
+                // get channel details
+                server
+                    .query({
+                        query: findChannelById,
+                        variables: {
+                            channelId: props.channelId,
+                        },
+                    })
+                    .then((res) => {
+                        if (res.data && res.data.channel.findById) {
+                            setName(res.data.channel.findById.name);
+                            setOriginalName(res.data.channel.findById.name);
+                            setPassword(res.data.channel.findById.password ? res.data.channel.findById.password : '');
+                            setTemporary(res.data.channel.findById.temporary ? true : false);
+                            setChannelCreator(res.data.channel.findById.channelCreator);
+                            setIsPublic(res.data.channel.findById.isPublic ? true : false);
+                            setDescription(res.data.channel.findById.description);
+                            setTags(res.data.channel.findById.tags ? res.data.channel.findById.tags : []);
+                            setAccessCode(res.data.channel.findById.accessCode);
+                            setMeetingUrl(
+                                res.data.channel.findById.meetingUrl ? res.data.channel.findById.meetingUrl : ''
+                            );
+
+                            setColorCode(res.data.channel.findById.colorCode);
+
+                            if (res.data.channel.findById.owners) {
+                                const ownerOptions: any[] = [];
+                                tempUsers.map((item: any) => {
+                                    const u = res.data.channel.findById.owners.find((i: any) => {
+                                        return i === item.value;
                                     });
-
-                                    setAllUsers(res.data.user.getSchoolUsers);
-
-                                    const tempUsers: any[] = [];
-                                    res.data.user.getSchoolUsers.map((item: any, index: any) => {
-                                        const x = { ...item, selected: false, index };
-                                        delete x.__typename;
-                                        tempUsers.push({
-                                            group: item.fullName[0].toUpperCase(),
-                                            label: item.fullName + ', ' + item.email,
-                                            value: item._id,
-                                        });
-                                        return x;
-                                    });
-
-                                    // get channel details
-                                    server
-                                        .query({
-                                            query: findChannelById,
-                                            variables: {
-                                                channelId: props.channelId,
-                                            },
-                                        })
-                                        .then((res) => {
-                                            if (res.data && res.data.channel.findById) {
-                                                setName(res.data.channel.findById.name);
-                                                setOriginalName(res.data.channel.findById.name);
-                                                setPassword(
-                                                    res.data.channel.findById.password
-                                                        ? res.data.channel.findById.password
-                                                        : ''
-                                                );
-                                                setTemporary(res.data.channel.findById.temporary ? true : false);
-                                                setChannelCreator(res.data.channel.findById.channelCreator);
-                                                setIsPublic(res.data.channel.findById.isPublic ? true : false);
-                                                setDescription(res.data.channel.findById.description);
-                                                setTags(
-                                                    res.data.channel.findById.tags ? res.data.channel.findById.tags : []
-                                                );
-                                                setAccessCode(res.data.channel.findById.accessCode);
-                                                setMeetingUrl(
-                                                    res.data.channel.findById.meetingUrl
-                                                        ? res.data.channel.findById.meetingUrl
-                                                        : ''
-                                                );
-
-                                                if (res.data.channel.findById.owners) {
-                                                    const ownerOptions: any[] = [];
-                                                    tempUsers.map((item: any) => {
-                                                        const u = res.data.channel.findById.owners.find((i: any) => {
-                                                            return i === item.value;
-                                                        });
-                                                        if (u) {
-                                                            ownerOptions.push(item);
-                                                        }
-                                                    });
-
-                                                    // Filter out the main channel creator from the moderators list
-
-                                                    const filterOutMainOwner = ownerOptions.filter((user: any) => {
-                                                        return user.value !== res.data.channel.findById.channelCreator;
-                                                    });
-
-                                                    const mod = filterOutMainOwner.map((user: any) => user.value);
-
-                                                    setOwners(filterOutMainOwner);
-
-                                                    setSelectedModerators(mod);
-
-                                                    setLoadingOrg(false);
-                                                }
-                                            }
-                                        });
-
-                                    const sort = tempUsers.sort((a, b) => {
-                                        if (a.text < b.text) {
-                                            return -1;
-                                        }
-                                        if (a.text > b.text) {
-                                            return 1;
-                                        }
-                                        return 0;
-                                    });
-
-                                    setOptions(sort);
+                                    if (u) {
+                                        ownerOptions.push(item);
+                                    }
                                 });
+
+                                // Filter out the main channel creator from the moderators list
+
+                                const filterOutMainOwner = ownerOptions.filter((user: any) => {
+                                    return user.value !== res.data.channel.findById.channelCreator;
+                                });
+
+                                const mod = filterOutMainOwner.map((user: any) => user.value);
+
+                                setOwners(filterOutMainOwner);
+
+                                setSelectedModerators(mod);
+
+                                setLoadingOrg(false);
+                            }
                         }
-                    } else {
-                        // get channel details
-                        server
-                            .query({
-                                query: findChannelById,
-                                variables: {
-                                    channelId: props.channelId,
-                                },
-                            })
-                            .then((res) => {
-                                if (res.data && res.data.channel.findById) {
-                                    setName(res.data.channel.findById.name);
-                                    setOriginalName(res.data.channel.findById.name);
-                                    setPassword(
-                                        res.data.channel.findById.password ? res.data.channel.findById.password : ''
-                                    );
-                                    setTemporary(res.data.channel.findById.temporary ? true : false);
-                                    setChannelCreator(res.data.channel.findById.channelCreator);
+                    });
 
-                                    setIsPublic(res.data.channel.findById.isPublic ? true : false);
-                                    setDescription(res.data.channel.findById.description);
-                                    setTags(res.data.channel.findById.tags ? res.data.channel.findById.tags : []);
-                                    setAccessCode(res.data.channel.findById.accessCode);
-
-                                    server
-                                        .query({
-                                            query: getChannelModerators,
-                                            variables: {
-                                                channelId: props.channelId,
-                                            },
-                                        })
-                                        .then((res) => {
-                                            if (res.data && res.data.channel.getChannelModerators) {
-                                                const tempUsers: any[] = [];
-                                                res.data.channel.getChannelModerators.map((item: any, index: any) => {
-                                                    const x = { ...item, selected: false, index };
-
-                                                    delete x.__typename;
-                                                    tempUsers.push({
-                                                        name: item.fullName,
-                                                        id: item._id,
-                                                    });
-
-                                                    // add the user always
-                                                });
-
-                                                const tempSelectedValues: any[] = [];
-
-                                                res.data.channel.getChannelModerators.map((item: any, index: any) => {
-                                                    tempSelectedValues.push(item._id);
-                                                });
-
-                                                setOwners(tempUsers);
-                                                setSelectedModerators(tempSelectedValues);
-                                            }
-                                        });
-
-                                    setLoadingOrg(false);
-                                }
-                            });
+                const sort = tempUsers.sort((a, b) => {
+                    if (a.text < b.text) {
+                        return -1;
                     }
-                })
-                .catch((e) => {
-                    alert('Could not fetch course data. Check connection.');
+                    if (a.text > b.text) {
+                        return 1;
+                    }
+                    return 0;
                 });
 
-            // get subs
-            server
-                .query({
-                    query: getSubscribers,
-                    variables: {
-                        channelId: props.channelId,
-                    },
-                })
-                .then((res) => {
-                    if (res.data && res.data.user.findByChannelId) {
-                        const tempUsers: any[] = [];
-                        res.data.user.findByChannelId.map((item: any, index: any) => {
-                            const x = { ...item, selected: false, index };
+                setOptions(sort);
+            })
+            .catch((e) => {
+                console.log('Error', e);
+            });
 
-                            delete x.__typename;
-                            tempUsers.push({
-                                name: item.fullName,
-                                id: item._id,
-                            });
+        // get subs
+        server
+            .query({
+                query: getSubscribers,
+                variables: {
+                    channelId: props.channelId,
+                },
+            })
+            .then((res) => {
+                if (res.data && res.data.user.findByChannelId) {
+                    const tempUsers: any[] = [];
+                    res.data.user.findByChannelId.map((item: any, index: any) => {
+                        const x = { ...item, selected: false, index };
+
+                        delete x.__typename;
+                        tempUsers.push({
+                            name: item.fullName,
+                            id: item._id,
                         });
+                    });
 
-                        console.log('Options', tempUsers);
+                    const tempSelectedValues: any[] = [];
 
-                        if (!schoolObj) {
-                            setAllUsers(res.data.user.findByChannelId);
-                            setOptions(tempUsers);
-                        }
+                    res.data.user.findByChannelId.map((item: any, index: any) => {
+                        tempSelectedValues.push(item._id);
+                    });
 
-                        const tempSelectedValues: any[] = [];
-
-                        res.data.user.findByChannelId.map((item: any, index: any) => {
-                            tempSelectedValues.push(item._id);
-                        });
-
-                        setSelectedValues(tempSelectedValues);
-                        setOriginalSubs(tempUsers);
-                        setSelected(tempUsers);
-                        setLoadingUsers(false);
-                    }
-                });
-
-            server
-                .query({
-                    query: getChannelColorCode,
-                    variables: {
-                        channelId: props.channelId,
-                    },
-                })
-                .then((res) => {
-                    if (res.data && res.data.channel.getChannelColorCode) {
-                        setColorCode(res.data.channel.getChannelColorCode);
-                        setLoadingChannelColor(false);
-                    }
-                });
-        }
-    }, [props.channelId, props.user]);
+                    setSelectedValues(tempSelectedValues);
+                    setOriginalSubs(tempUsers);
+                    setSelected(tempUsers);
+                    setLoadingUsers(false);
+                }
+            })
+            .catch((e) => {
+                console.log('Error', e);
+            });
+    }, [props.channelId]);
 
     /**
      * @description Fetches all the data for the channel
      */
     useEffect(() => {
         fetchChannelSettings();
-    }, [props.channelId, props.user]);
+    }, [props.channelId]);
 
     /**
      * @description Handles duplicating channel
@@ -581,7 +416,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             return;
         }
 
-        const server = fetchAPI('');
+        setIsDuplicatingChannel(true);
+
         server
             .mutate({
                 mutation: duplicateChannel,
@@ -599,11 +435,14 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                 if (res2.data && res2.data.channel.duplicate === 'created') {
                     alert('Course duplicated successfully.');
                     // Refresh Subscriptions for user
-                    props.closeModal();
+                    refreshSubscriptions();
+                    props.handleDeleteChannel();
+                    setIsDuplicatingChannel(false);
                 }
             })
             .catch((e) => {
                 alert('Something went wrong. Try again.');
+                setIsDuplicatingChannel(false);
             });
     }, [
         duplicateChannel,
@@ -622,7 +461,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
     const handleResetCode = useCallback(() => {
         setCopied(false);
 
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: resetAccessCode,
@@ -670,8 +508,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         }
 
         setIsUpdatingChannel(true);
-
-        const server = fetchAPI('');
 
         server
             .mutate({
@@ -743,10 +579,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                     // Set updated subs as new subs
                     setOriginalSubs(updatedOriginalSubs);
 
-                    // need to refresh channel subscriptions since name will be updated
-
-                    // props.closeModal();
                     props.handleUpdateChannel(name.trim(), colorCode);
+
+                    refreshSubscriptions();
                 } else {
                     setIsUpdatingChannel(false);
                     alert('Something went wrong. Try again.');
@@ -776,7 +611,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
      * @description Handle delete channel (Note: Only temporary channels can be deleted)
      */
     const handleDelete = useCallback(async () => {
-        const server = fetchAPI('');
+        setIsDeletingChannel(true);
         server
             .mutate({
                 mutation: deleteChannel,
@@ -786,10 +621,13 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
             })
             .then((res: any) => {
                 Alert('Deleted Course successfully.');
-                props.closeModal();
+                refreshSubscriptions();
+                props.handleDeleteChannel();
+                setIsDeletingChannel(false);
             })
             .catch((e: any) => {
                 Alert('Failed to delete Course.');
+                setIsDeletingChannel(false);
                 console.log('Error', e);
             });
     }, [props.channelId]);
@@ -935,7 +773,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
         );
     };
 
-    if (loadingOrg || loadingUsers || loadingChannelColor) {
+    if (loadingOrg || loadingUsers) {
         return (
             <View
                 style={{
@@ -1042,60 +880,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     required={true}
                                 />
                             </View>
-                            {!school ? (
-                                <View style={{ backgroundColor: 'white' }}>
-                                    <Text
-                                        style={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                            color: '#000000',
-                                            fontFamily: 'Inter',
-                                        }}
-                                    >
-                                        Description
-                                    </Text>
-                                    {/* <TextareaAutosize
-                                value={description}
-                                style={{
-                                    fontFamily: 'overpass',
-                                    width: "100%",
-                                    maxWidth: 500,
-                                    borderBottom: '1px solid #f2f2f2',
-                                    fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                    paddingTop: 13,
-                                    paddingBottom: 13,
-                                    marginTop: 12,
-                                    marginBottom: 20,
-                                    borderRadius: 1,
 
-                                }}
-                                minRows={2}
-                                placeholder={""}
-                                onChange={(e: any) => setDescription(e.target.value)}
-                                /> */}
-                                    <AutoGrowingTextInput
-                                        value={description}
-                                        onChange={(event: any) => setDescription(event.nativeEvent.text || '')}
-                                        style={{
-                                            fontFamily: 'overpass',
-                                            width: '100%',
-                                            maxWidth: 500,
-                                            borderBottom: '1px solid #f2f2f2',
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                            paddingTop: 13,
-                                            paddingBottom: 13,
-                                            marginTop: 12,
-                                            marginBottom: 20,
-                                            borderRadius: 1,
-                                        }}
-                                        placeholder={'Description'}
-                                        placeholderTextColor="#66737C"
-                                        maxHeight={200}
-                                        minHeight={45}
-                                        enableScrollToCaret
-                                        // ref={}
-                                    />
-                                </View>
-                            ) : null}
                             <View style={{ backgroundColor: 'white' }}>
                                 <Text
                                     style={{
@@ -1141,95 +926,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     </View>
                                 </View>
                             </View>
-                            {!school ? (
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        marginTop: 25,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            width: '100%',
-                                            // paddingTop: 40,
-                                            paddingBottom: 15,
-                                            backgroundColor: 'white',
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                                color: '#000000',
-                                                fontFamily: 'Inter',
-                                            }}
-                                        >
-                                            Public
-                                        </Text>
-                                    </View>
-                                    <View
-                                        style={{
-                                            backgroundColor: 'white',
-                                            width: '100%',
-                                            height: 30,
-                                            // marginHorizontal: 10
-                                        }}
-                                    >
-                                        <Switch
-                                            value={isPublic}
-                                            onValueChange={() => setIsPublic(!isPublic)}
-                                            style={{ height: 20 }}
-                                            trackColor={{
-                                                false: '#f2f2f2',
-                                                true: '#000',
-                                            }}
-                                            activeThumbColor="white"
-                                        />
-                                    </View>
-                                    <Text style={{ color: '#1F1F1F', fontSize: 12 }}>
-                                        Makes your channel visible to all users
-                                    </Text>
-                                </View>
-                            ) : null}
-                            {!school ? (
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        marginTop: 25,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            width: '100%',
-                                            paddingBottom: 15,
-                                            backgroundColor: 'white',
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                                color: '#000000',
-                                            }}
-                                        >
-                                            Tags
-                                        </Text>
-                                    </View>
-                                    <View
-                                        style={{
-                                            backgroundColor: 'white',
-                                            width: '100%',
-                                        }}
-                                    >
-                                        {/* <ReactTagInput 
-                                        tags={tags} 
-                                        placeholder=" "
-                                        removeOnBackspace={true}
-                                        maxTags={5}
-                                        onChange={(newTags) => setTags(newTags)}
-                                        /> */}
-                                    </View>
-                                    <Text style={{ color: '#1F1F1F', fontSize: 12, marginTop: 10 }}>Add up to 5</Text>
-                                </View>
-                            ) : null}
+
                             {/* Switch to copy Subscribers */}
                             {selected.length > 0 ? (
                                 <View>
@@ -1348,7 +1045,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         // overflow: 'hidden',
                                         // height: 35,
                                     }}
-                                    disabled={props.user.email === disableEmailId}
+                                    disabled={isDuplicatingChannel || user.email === disableEmailId}
                                 >
                                     <Text
                                         style={{
@@ -1367,7 +1064,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             width: 150,
                                         }}
                                     >
-                                        SAVE
+                                        {isDuplicatingChannel ? 'SAVING...' : 'SAVE'}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -1548,7 +1245,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             />
                         </View>
 
-                        {meetingProvider && meetingProvider !== '' ? (
+                        {org.meetingProvider && org.meetingProvider !== '' ? (
                             <View style={{ backgroundColor: 'white' }}>
                                 <Text
                                     style={{
@@ -1601,97 +1298,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             </View>
                         </View>
 
-                        {!school ? (
-                            <View
-                                style={{
-                                    width: '100%',
-                                    marginTop: 25,
-                                }}
-                            >
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        // paddingTop: 40,
-                                        paddingBottom: 15,
-                                        backgroundColor: 'white',
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                            color: '#000000',
-                                            fontFamily: 'Inter',
-                                        }}
-                                    >
-                                        Public
-                                    </Text>
-                                </View>
-                                <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        width: '100%',
-                                        height: 30,
-                                        // marginHorizontal: 10
-                                    }}
-                                >
-                                    <Switch
-                                        value={isPublic}
-                                        onValueChange={() => setIsPublic(!isPublic)}
-                                        style={{ height: 20 }}
-                                        trackColor={{
-                                            false: '#f2f2f2',
-                                            true: '#000',
-                                        }}
-                                        activeThumbColor="white"
-                                    />
-                                </View>
-                                <Text style={{ color: '#1F1F1F', fontSize: 12 }}>
-                                    Makes your channel visible to all users
-                                </Text>
-                            </View>
-                        ) : null}
-                        {!school ? (
-                            <View
-                                style={{
-                                    width: '100%',
-                                    marginTop: 25,
-                                }}
-                            >
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        paddingBottom: 15,
-                                        backgroundColor: 'white',
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            fontSize: Dimensions.get('window').width < 768 ? 14 : 16,
-                                            color: '#000000',
-                                            fontFamily: 'Inter',
-                                        }}
-                                    >
-                                        Tags
-                                    </Text>
-                                </View>
-                                <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        width: '100%',
-                                    }}
-                                >
-                                    <ReactTagInput
-                                        tags={tags}
-                                        placeholder=" "
-                                        removeOnBackspace={true}
-                                        maxTags={5}
-                                        onChange={(newTags) => setTags(newTags)}
-                                    />
-                                </View>
-                                <Text style={{ color: '#1F1F1F', fontSize: 12, marginTop: 10 }}>Add up to 5</Text>
-                            </View>
-                        ) : null}
-
                         <View
                             style={{
                                 display: 'flex',
@@ -1727,7 +1333,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     <Ionicons name="help-circle-outline" size={18} color="#939699" />
                                 </TouchableOpacity>
                             </View>
-                            {props.userCreatedOrg ? (
+                            {user.userCreatedOrg ? (
                                 <TouchableOpacity
                                     onPress={() => props.setShowInviteByEmailsModal(true)}
                                     style={{
@@ -1760,7 +1366,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                             ) : null}
                         </View>
 
-                        {school && !props.userCreatedOrg ? renderSubscriberFilters() : null}
+                        {!user.userCreatedOrg ? renderSubscriberFilters() : null}
                         <View
                             style={{
                                 flexDirection: 'column',
@@ -1812,7 +1418,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 />
                             </View>
                         </View>
-                        {props.userId === channelCreator ? (
+                        {userId === channelCreator ? (
                             <View
                                 style={{
                                     flexDirection: 'row',
@@ -1842,7 +1448,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 </TouchableOpacity>
                             </View>
                         ) : null}
-                        {props.userId === channelCreator ? (
+                        {userId === channelCreator ? (
                             <View
                                 style={{
                                     height: isEditorsDropdownOpen ? getDropdownHeight(moderatorOptions.length) : 50,
@@ -1883,30 +1489,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 />
                             </View>
                         ) : null}
-                        {/* <label style={{ width: '100%', maxWidth: Dimensions.get('window').width < 768 ? 320 : 600 }}>
-                            <Select
-                                themeVariant="light"
-                                select="multiple"
-                                selectMultiple={true}
-                                placeholder="Select..."
-                                inputClass="mobiscrollCustomMultiInput"
-                                value={selectedModerators}
-                                data={moderatorOptions}
-                                onChange={(val: any) => {
-                                    setSelectedModerators(val.value)
-                                }}
-                                touchUi={true}
-                                responsive={{
-                                    small: {
-                                        display: 'bubble'
-                                    },
-                                    medium: {
-                                        touchUi: false,
-                                    }
-                                }}
-                            // minWidth={[60, 320]}
-                            />
-                        </label> */}
 
                         <View
                             style={{ flexDirection: 'column', alignItems: 'center', marginTop: 50, paddingBottom: 100 }}
@@ -1932,10 +1514,8 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                 style={{
                                     backgroundColor: 'white',
                                     borderRadius: 15,
-                                    // overflow: 'hidden',
-                                    // height: 35,
                                 }}
-                                disabled={isUpdatingChannel || props.user.email === disableEmailId}
+                                disabled={isUpdatingChannel || user.email === disableEmailId}
                             >
                                 <Text
                                     style={{
@@ -1954,11 +1534,11 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                         width: 150,
                                     }}
                                 >
-                                    {isUpdatingChannel ? 'UPDATING' : 'UPDATE'}
+                                    {isUpdatingChannel ? 'UPDATING...' : 'UPDATE'}
                                 </Text>
                             </TouchableOpacity>
 
-                            {props.userId === channelCreator ? (
+                            {userId === channelCreator ? (
                                 <TouchableOpacity
                                     onPress={() => {
                                         props.scrollToTop();
@@ -1967,8 +1547,6 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     style={{
                                         backgroundColor: 'white',
                                         borderRadius: 15,
-                                        // overflow: 'hidden',
-                                        // height: 35,
                                         marginTop: 15,
                                     }}
                                 >
@@ -2014,12 +1592,9 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                     }}
                                     style={{
                                         backgroundColor: 'white',
-                                        // borderRadius: 15,
-                                        // overflow: 'hidden',
-                                        // height: 35,
                                         marginTop: 15,
                                     }}
-                                    disabled={props.user.email === disableEmailId}
+                                    disabled={isDeletingChannel || user.email === disableEmailId}
                                 >
                                     <Text
                                         style={{
@@ -2038,7 +1613,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                                             width: 150,
                                         }}
                                     >
-                                        DELETE
+                                        {isDeletingChannel ? 'DELETING...' : 'DELETE'}
                                     </Text>
                                 </TouchableOpacity>
                             ) : null}

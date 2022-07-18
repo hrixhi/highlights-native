@@ -9,10 +9,16 @@ import Alert from './Alert';
 // COMPONENTS
 import { Text, View, TouchableOpacity } from '../components/Themed';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useAppContext } from '../contexts/AppContext';
+import { Avatar } from 'stream-chat-expo';
 
 const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user } = useAppContext();
+
     const colorScheme = 'dark';
     const styleObject = styles(colorScheme, props.colorCode || 'black', props.option);
+
+    console.log('Search result card', props);
 
     /**
      * @description Formats time in email format
@@ -26,7 +32,6 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
     }
 
     return (
-        // <View style={styleObject.swiper}>
         <TouchableOpacity
             key={'textPage'}
             onPress={() => {
@@ -51,21 +56,29 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                         <Text style={styleObject.date}>{props.channelName}</Text>
                     ) : props.option === 'Messages' ? (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            {props.messageSenderAvatar ? (
-                                <Image
-                                    source={{
-                                        uri: props.messageSenderAvatar,
-                                    }}
-                                    style={{
-                                        width: 26,
-                                        height: 26,
-                                        borderRadius: 24,
-                                        marginRight: 10,
-                                    }}
-                                    // resizeMode="contain"
-                                />
-                            ) : null}
-                            <Text style={styleObject.date}>{props.messageSenderName}</Text>
+                            <Image
+                                source={{
+                                    uri: props.messageSenderAvatar
+                                        ? props.messageSenderAvatar
+                                        : 'https://cues-files.s3.amazonaws.com/images/default.png',
+                                }}
+                                style={{
+                                    height: 26,
+                                    width: 26,
+                                    borderRadius: 24,
+                                    marginRight: 10,
+                                }}
+                            />
+                            {/* <Avatar
+                                name={props.messageSenderName}
+                                image={props.messageSenderAvatar}
+                                online={props.messageSenderOnline}
+                                size={24}
+                            /> */}
+                            <Text style={styleObject.date}>
+                                {props.messageSenderName +
+                                    (props.messageSenderChannel ? ' in ' + props.messageSenderChannel : '')}
+                            </Text>
                         </View>
                     ) : (
                         <Text style={styleObject.date}> </Text>
@@ -127,7 +140,7 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                                         ]);
                                     }}
                                     style={{ marginTop: 1 }}
-                                    disabled={props.user.email === disableEmailId}
+                                    disabled={user.email === disableEmailId}
                                 >
                                     <Text style={{}}>
                                         <Ionicons name="enter-outline" size={24} color="#000" />
@@ -139,7 +152,6 @@ const SearchResultCard: React.FunctionComponent<{ [label: string]: any }> = (pro
                 </View>
             </View>
         </TouchableOpacity>
-        // </View>
     );
 };
 

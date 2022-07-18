@@ -18,7 +18,7 @@ import lodash from 'lodash';
 import moment from 'moment';
 
 // API
-import { fetchAPI } from '../graphql/FetchAPI';
+
 import {
     createCue,
     deleteCue,
@@ -34,7 +34,6 @@ import {
     startQuiz,
     submit,
     modifyQuiz,
-    // findBySchoolId,
     getRole,
     getOrganisation,
     duplicateQuiz,
@@ -44,33 +43,22 @@ import {
 // COMPONENTS
 import Alert from '../components/Alert';
 import { Text, View, TouchableOpacity } from './Themed';
-import FileUpload from './UploadFiles';
 import Quiz from './Quiz';
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
 import TeXToSVG from 'tex-to-svg';
 import { Video } from 'expo-av';
 import QuizGrading from './QuizGrading';
-// import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
-// import TextareaAutosize from 'react-textarea-autosize';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
-// import parser from 'html-react-parser';
 import { WebView } from 'react-native-webview';
-// import Select from 'react-select';
-// import { Datepicker as MobiscrollDatePicker } from '@mobiscroll/react5';
-// import '@mobiscroll/react/dist/css/mobiscroll.react.min.css';
-// import FormulaGuide from './FormulaGuide';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
 import ColorPicker from './ColorPicker';
-// import { SafeAreaView } from 'react-native-safe-area-context';
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
 const formulaIcon = require('../assets/images/formulaIcon3.png');
-import MultiSelectComponent from './MultiSelect';
 import DropDownPicker from 'react-native-dropdown-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import BottomSheet from './BottomSheet';
 import { EmojiView, InsertLink } from './ToolbarComponents';
-import RenderHtml from 'react-native-render-html';
 import Reanimated from 'react-native-reanimated';
 import useDynamicRefs from 'use-dynamic-refs';
 import * as FileSystem from 'expo-file-system';
@@ -85,6 +73,10 @@ import { getDropdownHeight } from '../helpers/DropdownHeight';
 import { downloadFileToDevice } from '../helpers/DownloadFile';
 import { paddingResponsive } from '../helpers/paddingHelper';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
+import { omitTypename } from '../helpers/omitTypename';
+import { renderLoadingSpinner, renderLoadingSpinnerFormula, renderWebviewError } from './LoadingSpinnersWebview';
 
 const customFontFamily = `@font-face {
     font-family: 'Overpass';
@@ -92,8 +84,18 @@ const customFontFamily = `@font-face {
 }`;
 
 const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const {
+        user,
+        userId,
+        customCategories: localCustomCategories,
+        handleUpdateCue,
+        handleDeleteCue,
+        handleSubmissionDraftUpdate,
+        refreshCues,
+    } = useAppContext();
+
     const current = new Date();
-    const [cue] = useState(props.cue.cue);
+    const [initializedSubmissionDraft, setInitializedSubmissionDraft] = useState(false);
     const [initialSubmissionDraft, setInitialSubmissionDraft] = useState('');
     const [shuffle, setShuffle] = useState(props.cue.shuffle);
     const [starred, setStarred] = useState(props.cue.starred);
@@ -105,7 +107,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
     const [initializedCustomCategories, setInitializedCustomCategories] = useState(false);
     const [addCustomCategory, setAddCustomCategory] = useState(false);
-    const [markedAsRead, setMarkedAsRead] = useState(false);
     const [isOwner, setIsOwner] = useState(false);
     const stopPlay =
         props.cue.endPlayAt && props.cue.endPlayAt !== ''
@@ -121,7 +122,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const editorRef: any = useRef();
     const scrollRef: any = useRef();
 
-    const submissionViewerRef: any = useRef();
     const colorChoices: any[] = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#35AC78'].reverse();
     const [submission, setSubmission] = useState(props.cue.submission ? props.cue.submission : false);
     const [limitedShares, setLimitedShares] = useState(props.cue.limitedShares ? props.cue.limitedShares : false);
@@ -213,8 +213,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const [selectedChannelOwner, setSelectedChannelOwner] = useState<any>(undefined);
     const [submissionSavedAt, setSubmissionSavedAt] = useState(new Date());
     const [failedToSaveSubmission, setFailedToSaveSubmission] = useState(false);
-    const [userId, setUserId] = useState('');
-    const [userFullName, setUserFullName] = useState('');
+    const [userFullName] = useState(user.fullName);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const [isShareWithDropdownOpen, setIsShareWithDropdownOpen] = useState(false);
     const [isFrequencyDropdownOpen, setIsFrequencyDropdownOpen] = useState(false);
@@ -253,7 +252,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     const [getRef, setRef] = useDynamicRefs();
     const [quizOptionEditorIndex, setQuizOptionEditorIndex] = useState('');
-    const [downloadUrl, setDownloadUrl] = useState('');
     const [downloadOriginalInProgress, setDownloadOriginalInProgress] = useState(false);
     const [downloadSubmissionInProgress, setDownloadSubmissionInProgress] = useState(false);
 
@@ -269,7 +267,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
 
     // ALERTS
     const unableToStartQuizAlert = PreferredLanguageText('unableToStartQuiz');
-    const cueDeletedAlert = PreferredLanguageText('cueDeleted');
     const submissionCompleteAlert = PreferredLanguageText('submissionComplete');
     const tryAgainLaterAlert = PreferredLanguageText('tryAgainLater');
     const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
@@ -277,11 +274,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const cannotUndoAlert = PreferredLanguageText('cannotUndo');
     const sharedAlert = PreferredLanguageText('sharedAlert');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
-    const fillMissingProblemsAlert = PreferredLanguageText('fillMissingProblems');
-    const enterNumericPointsAlert = PreferredLanguageText('enterNumericPoints');
-    // const mustHaveOneOptionAlert = PreferredLanguageText('mustHaveOneOption')
-    const fillMissingOptionsAlert = PreferredLanguageText('fillMissingOptions');
-    const eachOptionOneCorrectAlert = PreferredLanguageText('eachOptionOneCorrect');
 
     const fall = new Reanimated.Value(1);
 
@@ -290,14 +282,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         outputRange: [0.5, 0],
     });
 
-    // HOOKS
+    const server = useApolloClient();
 
-    /**
-     * @description Load User on Init
-     */
-    useEffect(() => {
-        loadUser();
-    }, []);
+    // HOOKS
 
     useEffect(() => {
         if (showTwoMinuteAlert && !twoMinuteAlertDisplayed) {
@@ -310,7 +297,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     // SHARE WITH ANY OTHER CHANNEL IN INSTITUTE
     // useEffect(() => {
     //     if (role === 'instructor' && school) {
-    //         const server = fetchAPI('');
+    //
     //         server
     //             .query({
     //                 query: findBySchoolId,
@@ -396,7 +383,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Load PDFTron Webviewer for submission
      */
     useEffect(() => {
-        if (!userId || !userFullName) return;
+        if (!userId || !userFullName || !props.cue) return;
 
         if (submissionAttempts && submissionAttempts.length > 0) {
             const attempt = submissionAttempts[submissionAttempts.length - 1];
@@ -414,7 +401,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         props.showOptions,
         userId,
         userFullName,
+        props.cue,
     ]);
+
+    console.log('Submission pdf url', submissionPdfviewerURL);
 
     /**
      * @description Used to detect ongoing quiz and
@@ -487,7 +477,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     setFetchingQuiz(true);
 
                     // load quiz here and set problems
-                    const server = fetchAPI('');
+
                     server
                         .query({
                             query: getQuiz,
@@ -499,7 +489,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             if (res.data && res.data.quiz.getQuiz) {
                                 setQuizId(obj.quizId);
 
-                                const solutionsObject = cue ? JSON.parse(cue) : {};
+                                const solutionsObject = props.cue.cue ? JSON.parse(props.cue.cue) : {};
 
                                 if (solutionsObject.solutions) {
                                     setSolutions(solutionsObject.solutions);
@@ -537,7 +527,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 }
 
                                 if (solutionsObject.attempts !== undefined) {
-                                    setQuizAttempts(solutionsObject.attempts);
+                                    setQuizAttempts(lodash.cloneDeep(solutionsObject.attempts));
 
                                     // FInd the active one and set it to quizSolutions
                                     solutionsObject.attempts.map((attempt: any) => {
@@ -556,9 +546,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     );
                                 }
 
-                                setProblems(res.data.quiz.getQuiz.problems);
-
                                 const deepCopy = lodash.cloneDeep(res.data.quiz.getQuiz.problems);
+
+                                setProblems(deepCopy);
+
                                 setUnmodifiedProblems(deepCopy);
 
                                 let totalPoints = 0;
@@ -619,7 +610,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             }
         }
         setLoading(false);
-    }, [props.cue, cue, loading, original]);
+    }, [props.cue, loading, original]);
 
     /**
      * @description Imports for local cues
@@ -641,12 +632,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      */
     useEffect(() => {
         if (props.cue.channelId && props.cue.channelId !== '') {
-            const data = cue;
+            const data = props.cue.cue;
 
             if (data && data[0] && data[0] === '{' && data[data.length - 1] === '}') {
                 const obj = JSON.parse(data);
 
-                // New Schema
                 if (obj.submissionDraft !== undefined) {
                     if (obj.submissionDraft[0] === '{' && obj.submissionDraft[obj.submissionDraft.length - 1] === '}') {
                         let parse = JSON.parse(obj.submissionDraft);
@@ -657,28 +647,30 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             setSubmissionType(parse.type);
                             setSubmissionTitle(parse.title);
                         }
-
-                        setSubmissionDraft(obj.submissionDraft);
-                    } else {
-                        setInitialSubmissionDraft(obj.submissionDraft);
-                        setSubmissionDraft(obj.submissionDraft);
                     }
+                    setSubmissionDraft(obj.submissionDraft);
                 }
 
-                if (obj.attempts) {
-                    setSubmissionAttempts(obj.attempts);
-                    props.setSubmissionAttempts(obj.attempts);
-                }
+                setSubmissionAttempts(obj.attempts ? obj.attempts : []);
             }
+            setInitializedSubmissionDraft(true);
         }
-    }, [cue, props.cue.channelId]);
+    }, [props.cue.channelId]);
 
     /**
-     * @description Update cue status as Read on opening
+     * @description Update submissionDraft when the Submission title is updated
      */
     useEffect(() => {
-        updateStatusAsRead();
-    }, [props.cue.status]);
+        const existingSubmissionDraft: any = submissionDraft;
+
+        if (existingSubmissionDraft !== '') {
+            const parsedSubmissionDraft = JSON.parse(existingSubmissionDraft);
+
+            parsedSubmissionDraft.title = submissionTitle;
+
+            setSubmissionDraft(JSON.stringify(parsedSubmissionDraft));
+        }
+    }, [submissionTitle]);
 
     /**
      * @description
@@ -730,24 +722,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 }
             }
 
-            Alert('Save changes?', '', [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                    onPress: () => {
-                        return;
-                    },
-                },
-                {
-                    text: 'Yes',
-                    onPress: async () => {
-                        await handleUpdateContent();
-                        await handleUpdateDetails();
-                        await handleRestrictAccessUpdate();
-                    },
-                },
-            ]);
             props.setSave(false);
+            updateCue();
+            handleRestrictAccessUpdate();
         }
     }, [
         props.save,
@@ -772,7 +749,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     useEffect(() => {
         if (props.submit) {
             handleSubmit();
-            props.setSubmit(false);
         }
     }, [props.submit]);
 
@@ -877,7 +853,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Sync user submission responses to cloud (IMP since submissions should be saved in real time)
      */
     useEffect(() => {
-        handleUpdateCue();
+        handleUpdateCueSubmission();
     }, [
         submitted,
         solutions,
@@ -894,9 +870,9 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     /**
      * @description Handle bookmark (Not used right now)
      */
-    useEffect(() => {
-        handleUpdateStarred();
-    }, [starred]);
+    // useEffect(() => {
+    //     handleUpdateStarred();
+    // }, [starred]);
 
     /**
      * @description Update submission response in Editor on Tab change
@@ -913,126 +889,236 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     }, [props.showOriginal, props.showComments, props.showOptions]);
 
     /**
-     * @description Called when new user selected in share with dropdown
-     */
-    const onAddNew = useCallback(
-        (userId) => {
-            const server = fetchAPI('');
-            server
-                .mutate({
-                    mutation: shareCueWithMoreIds,
-                    variables: {
-                        cueId: props.cue._id,
-                        userId,
-                    },
-                })
-                .then((res) => {
-                    if (res.data && res.data.cue.shareCueWithMoreIds) {
-                        loadChannelsAndSharedWith();
-                    }
-                })
-                .catch((err) => console.log(err));
-            const updatedSelected: any[] = [...selected];
-            updatedSelected.push(userId);
-            setSelected(updatedSelected);
-        },
-        [subscribers, props.cue, selected]
-    );
-
-    /**
      * @description Loads all the channel categories and list of people cue has been shared with
      */
     const loadChannelsAndSharedWith = useCallback(async () => {
-        const uString: any = await AsyncStorage.getItem('user');
-        if (uString) {
-            const user = JSON.parse(uString);
-            const server = fetchAPI('');
-
-            if (props.channelId) {
-                server
-                    .query({
-                        query: getChannelCategories,
-                        variables: {
-                            channelId: props.channelId,
-                        },
-                    })
-                    .then((res) => {
-                        if (res.data.channel && res.data.channel.getChannelCategories) {
-                            setCustomCategories(res.data.channel.getChannelCategories);
-                            setInitializedCustomCategories(true);
-                        }
-                    })
-                    .catch((err) => {});
-            } else {
-                setCustomCategories(props.customCategories);
-                setInitializedCustomCategories(true);
-            }
-
+        if (props.channelId) {
             server
                 .query({
-                    query: getChannels,
+                    query: getChannelCategories,
                     variables: {
-                        userId: user._id,
+                        channelId: props.channelId,
                     },
                 })
                 .then((res) => {
-                    if (res.data.channel.findByUserId) {
-                        setChannels(res.data.channel.findByUserId);
+                    if (res.data.channel && res.data.channel.getChannelCategories) {
+                        setCustomCategories(res.data.channel.getChannelCategories);
+                        setInitializedCustomCategories(true);
                     }
                 })
                 .catch((err) => {});
-            if (props.channelOwner && props.cue.channelId && props.cue.channelId !== '') {
-                // owner
-                server
-                    .query({
-                        query: getSharedWith,
-                        variables: {
-                            channelId: props.cue.channelId,
-                            cueId: props.cue._id,
-                        },
-                    })
-                    .then((res: any) => {
-                        if (res.data && res.data.cue.getSharedWith) {
-                            const format = res.data.cue.getSharedWith.map((sub: any) => {
-                                return {
-                                    value: sub.value,
-                                    label: sub.label,
-                                };
-                            });
+        } else {
+            setCustomCategories(localCustomCategories);
+            setInitializedCustomCategories(true);
+        }
 
-                            setSubscribers(format);
+        server
+            .query({
+                query: getChannels,
+                variables: {
+                    userId,
+                },
+            })
+            .then((res) => {
+                if (res.data.channel.findByUserId) {
+                    setChannels(res.data.channel.findByUserId);
+                }
+            })
+            .catch((err) => {});
+        if (props.channelOwner && props.cue.channelId && props.cue.channelId !== '') {
+            // owner
+            server
+                .query({
+                    query: getSharedWith,
+                    variables: {
+                        channelId: props.cue.channelId,
+                        cueId: props.cue._id,
+                    },
+                })
+                .then((res: any) => {
+                    if (res.data && res.data.cue.getSharedWith) {
+                        const format = res.data.cue.getSharedWith.map((sub: any) => {
+                            return {
+                                value: sub.value,
+                                label: sub.label,
+                            };
+                        });
 
-                            // clear selected
-                            const sel = res.data.cue.getSharedWith.filter((item: any) => {
-                                return item.sharedWith;
-                            });
+                        setSubscribers(format);
 
-                            const formatSel = sel.map((sub: any) => {
-                                return sub.value;
-                            });
+                        // clear selected
+                        const sel = res.data.cue.getSharedWith.filter((item: any) => {
+                            return item.sharedWith;
+                        });
 
-                            setSelected(formatSel);
-                            setOriginalSelected(formatSel);
-                        }
-                    })
-                    .catch((err: any) => console.log(err));
-            }
+                        const formatSel = sel.map((sub: any) => {
+                            return sub.value;
+                        });
+
+                        setSelected(formatSel);
+                        setOriginalSelected(formatSel);
+                    }
+                })
+                .catch((err: any) => console.log(err));
         }
     }, [props.cue, props.channelId]);
 
-    const reactSelectStyles = {
-        multiValue: (base: any, state: any) => {
-            return { ...base, backgroundColor: '#0096Fb', borderRadius: 11 };
-        },
-        multiValueLabel: (base: any, state: any) => {
-            return state.data.isFixed
-                ? { ...base, fontWeight: 'bold', color: 'white', paddingRight: 6 }
-                : { ...base, color: 'white' };
-        },
-        multiValueRemove: (base: any, state: any) => {
-            return state.data.isFixed ? { ...base, display: 'none' } : base;
-        },
-    };
+    const updateCue = useCallback(async () => {
+        if (submission && isOwner) {
+            if (initiateAt > deadline) {
+                Alert('Deadline must be after available date');
+                return;
+            }
+
+            if (allowLateSubmission && availableUntil < deadline) {
+                Alert('Late Submission date must be after deadline');
+                return;
+            }
+
+            if (!isQuiz && Number.isNaN(Number(totalPoints))) {
+                Alert('Enter valid total points for assignment.');
+                return;
+            }
+        }
+
+        let tempOriginal = '';
+
+        let saveCue: any = undefined;
+
+        if (!props.cue.channelId) {
+            if (imported) {
+                if (title === '') {
+                    Alert('Title cannot be empty');
+                    setUpdatingCueContent(false);
+                    return;
+                }
+
+                const obj = {
+                    type,
+                    url,
+                    title,
+                };
+                tempOriginal = JSON.stringify(obj);
+            } else {
+                tempOriginal = original;
+            }
+
+            const currCue = props.cue;
+
+            saveCue = {
+                ...currCue,
+                _id: currCue._id.toString(),
+                color: color.toString(),
+                cue: tempOriginal,
+                shuffle,
+                frequency,
+                customCategory: customCategory === 'None' ? '' : customCategory,
+            };
+        } else {
+            if (imported) {
+                if (title === '') {
+                    Alert('Title cannot be empty');
+                    setUpdatingCueContent(false);
+                    return;
+                }
+
+                const obj = {
+                    type,
+                    url,
+                    title,
+                };
+                tempOriginal = JSON.stringify(obj);
+            } else if (isQuiz) {
+                if (title === '') {
+                    Alert('Title cannot be empty');
+                    setUpdatingCueContent(false);
+                    return;
+                }
+
+                const parse = JSON.parse(original);
+                const obj = {
+                    quizId: parse.quizId,
+                    title,
+                };
+                tempOriginal = JSON.stringify(obj);
+            } else {
+                tempOriginal = original;
+            }
+
+            const currCue = props.cue;
+
+            saveCue = {
+                ...currCue,
+                original: tempOriginal,
+                _id: currCue._id.toString(),
+                date: new Date(currCue.date).toISOString(),
+                color: color.toString(),
+                shuffle,
+                frequency,
+                customCategory: customCategory === 'None' ? '' : customCategory,
+                gradeWeight: graded ? gradeWeight.toString() : null,
+                endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : '',
+                submission,
+                deadline: submission ? deadline.toISOString() : '',
+                initiateAt: submission ? initiateAt.toISOString() : '',
+                allowedAttempts: unlimitedAttempts ? null : allowedAttempts.toString(),
+                availableUntil: submission && allowLateSubmission ? availableUntil.toISOString() : '',
+                limitedShares,
+                totalPoints: submission && !isQuiz ? totalPoints : '',
+            };
+        }
+
+        const success = await handleUpdateCue(saveCue, false);
+
+        if (!success) {
+            Alert('Failed to update content. Try again.');
+            return;
+        } else {
+            Alert('Changes saved successfully. Continue editing?', '', [
+                {
+                    text: 'No',
+                    style: 'cancel',
+                    onPress: () => {
+                        props.closeModal();
+                    },
+                },
+                {
+                    text: 'Yes',
+                    onPress: async () => {
+                        setInitialOriginal(tempOriginal);
+                    },
+                },
+            ]);
+        }
+    }, [
+        // CONTENT
+        title,
+        original,
+        imported,
+        type,
+        url,
+        isQuiz,
+
+        // DETAILS
+        submission,
+        deadline,
+        initiateAt,
+        gradeWeight,
+        customCategory,
+        endPlayAt,
+        color,
+        frequency,
+        notify,
+        allowedAttempts,
+        unlimitedAttempts,
+        allowLateSubmission,
+        availableUntil,
+        isOwner,
+        graded,
+        limitedShares,
+        isQuiz,
+        totalPoints,
+    ]);
 
     /**
      * @description Update cue with URL and Filetype after upload
@@ -1456,24 +1542,20 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             >
                 <WebView
                     source={{ uri: 'https://app.learnwithcues.com/equationEditor?showInsertButton=true' }}
-                    // onLoadEnd={() => this.hideSpinner()}
-                    // onMessage={onMessage.bind(this)}
                     ref={formulaWebviewRef}
                     startInLoadingState={true}
                     javaScriptEnabled={true}
                     domStorageEnabled={true}
                     onLoadProgress={({ nativeEvent }) => {
-                        console.log('nativeEvent', nativeEvent);
-                        //your code goes here
                         insertFormula(nativeEvent);
                     }}
                     onNavigationStateChange={(state) => {
                         console.log('State', state);
 
                         insertFormula(state);
-
-                        //your code goes here
                     }}
+                    renderLoading={() => renderLoadingSpinnerFormula()}
+                    renderError={() => renderWebviewError()}
                 />
             </View>
         );
@@ -1495,24 +1577,18 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             'https://app.learnwithcues.com/equationEditor?equation=' +
                             (equationEditorValue !== '' ? encodeURIComponent(equationEditorValue) : ''),
                     }}
-                    // onLoadEnd={() => this.hideSpinner()}
-                    // onMessage={onMessage.bind(this)}
                     ref={formulaWebviewRef}
                     startInLoadingState={true}
                     javaScriptEnabled={true}
                     domStorageEnabled={true}
                     onLoadProgress={({ nativeEvent }) => {
-                        console.log('nativeEvent', nativeEvent);
-                        //your code goes here
                         modifyEquation(nativeEvent);
                     }}
                     onNavigationStateChange={(state) => {
-                        console.log('State', state);
-
                         modifyEquation(state);
-
-                        //your code goes here
                     }}
+                    renderLoading={() => renderLoadingSpinnerFormula()}
+                    renderError={() => renderWebviewError()}
                 />
             </View>
             // null
@@ -1619,32 +1695,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     };
 
     /**
-     * @description Insert equation into Cue
-     */
-    const insertEquation = useCallback(() => {
-        let currentContent = editorRef.current.getContent();
-
-        const SVGEquation = TeXToSVG(equation, { width: 100 }); // returns svg in html format
-        currentContent += '<div contenteditable="false" style="display: inline-block">' + SVGEquation + '<br/></div>';
-
-        editorRef.current.setContent(currentContent);
-        setShowEquationEditor(false);
-        setEquation('');
-    }, [equation, RichText, RichText.current, cue]);
-
-    /**
-     * @description Fetch user organization and role
-     */
-    const loadUser = useCallback(async () => {
-        const u = await AsyncStorage.getItem('user');
-        if (u) {
-            const parsedUser = JSON.parse(u);
-            setUserId(parsedUser._id);
-            setUserFullName(parsedUser.fullName);
-        }
-    }, []);
-
-    /**
      * @description Initialize the quiz (Timed quiz)
      */
     const initQuiz = useCallback(async () => {
@@ -1662,12 +1712,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             return;
         }
 
-        // const now = new Date();
-        const server = fetchAPI('');
-        // const saveCue = JSON.stringify({
-        //     solutions,
-        //     initiatedAt: now,
-        // });
         server
             .mutate({
                 mutation: startQuiz,
@@ -1690,23 +1734,17 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     /**
      * @description Handle cue content for Submissions and Quiz responses
      */
-    const handleUpdateCue = useCallback(async () => {
+    const handleUpdateCueSubmission = useCallback(async () => {
         if (isSubmitting) return;
 
-        let subCues: any = {};
-        try {
-            const value = await AsyncStorage.getItem('cues');
-            if (value) {
-                subCues = JSON.parse(value);
-            }
-        } catch (e) {}
-        if (subCues[props.cueKey] && subCues[props.cueKey].length === 0) {
-            return;
-        }
-
-        const currCue = subCues[props.cueKey][props.cueIndex];
+        const currCue = props.cue;
 
         const currCueValue: any = currCue.cue;
+
+        // ONLY UPDATE IF FOLLOWING CONDITIONS MET
+        if (!userId || !currCue.submission || !initializedSubmissionDraft) {
+            return;
+        }
 
         // If there are no existing submissions then initiate cue obj
         let submissionObj = {
@@ -1761,9 +1799,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             updatedCue = JSON.stringify(submissionObj);
         }
 
-        if (!userId) return;
-
-        const server = fetchAPI(userId);
         server
             .mutate({
                 mutation: saveSubmissionDraft,
@@ -1775,6 +1810,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             })
             .then((res) => {
                 if (res.data && res.data.cue.saveSubmissionDraft) {
+                    handleSubmissionDraftUpdate(props.cue._id, updatedCue);
                     setSubmissionSavedAt(new Date());
                     setFailedToSaveSubmission(false);
                 } else {
@@ -1786,6 +1822,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 setFailedToSaveSubmission(true);
             });
     }, [
+        initializedSubmissionDraft,
         submitted,
         solutions,
         initiatedAt,
@@ -1802,102 +1839,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     ]);
 
     /**
-     * @description Update bookmark
-     */
-    const handleUpdateStarred = useCallback(async () => {
-        try {
-            let subCues: any = {};
-
-            const value = await AsyncStorage.getItem('cues');
-            if (value) {
-                subCues = JSON.parse(value);
-            }
-
-            if (subCues[props.cueKey] && subCues[props.cueKey].length === 0) {
-                return;
-            }
-
-            const currCue = subCues[props.cueKey][props.cueIndex];
-
-            const saveCue = {
-                ...currCue,
-                starred,
-            };
-
-            subCues[props.cueKey][props.cueIndex] = saveCue;
-
-            const stringifiedCues = JSON.stringify(subCues);
-            await AsyncStorage.setItem('cues', stringifiedCues);
-            props.reloadCueListAfterUpdate();
-        } catch (e) {}
-    }, [starred]);
-
-    /**
      * @description Handle update Cue content (Channel owner)
      */
     const handleUpdateContent = useCallback(async () => {
         setUpdatingCueContent(true);
 
         if (!props.cue.channelId) {
-            let subCues: any = {};
-            try {
-                const value = await AsyncStorage.getItem('cues');
-                if (value) {
-                    subCues = JSON.parse(value);
-                }
-                if (subCues[props.cueKey].length === 0) {
-                    return;
-                }
-
-                let tempOriginal = '';
-                if (imported) {
-                    if (title === '') {
-                        Alert('Title cannot be empty');
-                        setUpdatingCueContent(false);
-                        return;
-                    }
-
-                    const obj = {
-                        type,
-                        url,
-                        title,
-                    };
-                    tempOriginal = JSON.stringify(obj);
-                } else {
-                    tempOriginal = original;
-                }
-
-                const currCue = subCues[props.cueKey][props.cueIndex];
-
-                const saveCue = {
-                    ...currCue,
-                    cue: tempOriginal,
-                };
-
-                subCues[props.cueKey][props.cueIndex] = saveCue;
-
-                const stringifiedCues = JSON.stringify(subCues);
-                await AsyncStorage.setItem('cues', stringifiedCues);
-                props.reloadCueListAfterUpdate();
-
-                // Update initial Value for Editor
-                setInitialOriginal(tempOriginal);
-                setUpdatingCueContent(false);
-            } catch (e) {
-                console.log('Error', e);
-            }
-
-            return;
-        }
-
-        let subCues: any = {};
-        try {
-            const value = await AsyncStorage.getItem('cues');
-            console.log('Value', value?.length);
-            if (value) {
-                subCues = JSON.parse(value);
-            }
-
             let tempOriginal = '';
             if (imported) {
                 if (title === '') {
@@ -1912,51 +1859,75 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     title,
                 };
                 tempOriginal = JSON.stringify(obj);
-            } else if (isQuiz) {
-                if (title === '') {
-                    Alert('Title cannot be empty');
-                    setUpdatingCueContent(false);
-                    return;
-                }
-
-                const parse = JSON.parse(original);
-                const obj = {
-                    quizId: parse.quizId,
-                    title,
-                };
-                tempOriginal = JSON.stringify(obj);
             } else {
                 tempOriginal = original;
             }
 
-            const currCue = subCues[props.cueKey][props.cueIndex];
+            const currCue = props.cue;
 
             const saveCue = {
                 ...currCue,
-                original: tempOriginal,
+                cue: tempOriginal,
             };
 
-            subCues[props.cueKey][props.cueIndex] = saveCue;
-
-            const stringifiedCues = JSON.stringify(subCues);
-            await AsyncStorage.setItem('cues', stringifiedCues);
-            props.reloadCueListAfterUpdate();
+            handleUpdateCue(saveCue, false);
 
             // Update initial Value for Editor
             setInitialOriginal(tempOriginal);
             setUpdatingCueContent(false);
-        } catch (e) {}
-        if (subCues[props.cueKey].length === 0) {
+
             return;
         }
-    }, [title, original, imported, type, url, isQuiz]);
+
+        let tempOriginal = '';
+        if (imported) {
+            if (title === '') {
+                Alert('Title cannot be empty');
+                setUpdatingCueContent(false);
+                return;
+            }
+
+            const obj = {
+                type,
+                url,
+                title,
+            };
+            tempOriginal = JSON.stringify(obj);
+        } else if (isQuiz) {
+            if (title === '') {
+                Alert('Title cannot be empty');
+                setUpdatingCueContent(false);
+                return;
+            }
+
+            const parse = JSON.parse(original);
+            const obj = {
+                quizId: parse.quizId,
+                title,
+            };
+            tempOriginal = JSON.stringify(obj);
+        } else {
+            tempOriginal = original;
+        }
+
+        const currCue = props.cue;
+
+        const saveCue = {
+            ...currCue,
+            original: tempOriginal,
+        };
+
+        handleUpdateCue(saveCue, false);
+
+        setInitialOriginal(tempOriginal);
+        setUpdatingCueContent(false);
+    }, [title, original, imported, type, url, isQuiz, props.cue]);
 
     /**
      * @description Handle changes to restrict access
      */
     const handleRestrictAccessUpdate = useCallback(async () => {
         // If restrict access initially and it is now turned off
-        const server = fetchAPI('');
 
         if (props.cue.limitedShares && !limitedShares) {
             server
@@ -2023,87 +1994,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     }, [props.cue, originalSelected, selected, limitedShares]);
 
     /**
-     * @description Handle update cue details
-     */
-    const handleUpdateDetails = useCallback(async () => {
-        setUpdatingCueDetails(true);
-        let subCues: any = {};
-        try {
-            const value = await AsyncStorage.getItem('cues');
-            if (value) {
-                subCues = JSON.parse(value);
-            }
-        } catch (e) {}
-        if (subCues[props.cueKey].length === 0) {
-            return;
-        }
-
-        const currCue = subCues[props.cueKey][props.cueIndex];
-
-        // Perform validation for dates
-        if (submission && isOwner) {
-            if (initiateAt > deadline) {
-                Alert('Deadline must be after available date');
-                return;
-            }
-
-            if (allowLateSubmission && availableUntil < deadline) {
-                Alert('Late Submission date must be after deadline');
-                return;
-            }
-
-            if (!isQuiz && Number.isNaN(Number(totalPoints))) {
-                Alert('Enter valid total points for assignment.');
-                return;
-            }
-        }
-
-        const saveCue = {
-            ...currCue,
-            color,
-            shuffle,
-            frequency,
-            customCategory: customCategory === 'None' ? '' : customCategory,
-            gradeWeight,
-            endPlayAt: notify && (shuffle || !playChannelCueIndef) ? endPlayAt.toISOString() : '',
-            submission,
-            deadline: submission ? deadline.toISOString() : '',
-            initiateAt: submission ? initiateAt.toISOString() : '',
-            allowedAttempts: unlimitedAttempts ? null : allowedAttempts,
-            availableUntil: submission && allowLateSubmission ? availableUntil.toISOString() : '',
-            limitedShares,
-            totalPoints: submission && !isQuiz ? totalPoints : '',
-        };
-
-        subCues[props.cueKey][props.cueIndex] = saveCue;
-
-        const stringifiedCues = JSON.stringify(subCues);
-        await AsyncStorage.setItem('cues', stringifiedCues);
-        props.reloadCueListAfterUpdate();
-
-        setUpdatingCueDetails(false);
-    }, [
-        submission,
-        deadline,
-        initiateAt,
-        gradeWeight,
-        customCategory,
-        endPlayAt,
-        color,
-        frequency,
-        notify,
-        allowedAttempts,
-        unlimitedAttempts,
-        allowLateSubmission,
-        availableUntil,
-        isOwner,
-        graded,
-        limitedShares,
-        isQuiz,
-        totalPoints,
-    ]);
-
-    /**
      * @description Handle delete cue
      */
     const handleDelete = useCallback(async () => {
@@ -2121,7 +2011,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             {
                 text: 'Okay',
                 onPress: async () => {
-                    const server = fetchAPI('');
                     if (props.cue.channelId && isOwner) {
                         server
                             .mutate({
@@ -2134,37 +2023,34 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 if (res.data.cue.deleteForEveryone) {
                                     Alert('Deleted successfully.');
                                 }
+                            })
+                            .catch((e) => {
+                                Alert('Failed to delete. Try again.');
+                                return;
                             });
                     }
 
                     if (!props.cue.channelId) {
-                        server.mutate({
-                            mutation: deleteCue,
-                            variables: {
-                                cueId: props.cue._id,
-                            },
-                        });
+                        server
+                            .mutate({
+                                mutation: deleteCue,
+                                variables: {
+                                    cueId: props.cue._id,
+                                },
+                            })
+                            .then((res) => {
+                                if (res.data.cue.deleteForEveryone) {
+                                    Alert('Deleted successfully.');
+                                }
+                            })
+                            .catch((e) => {
+                                Alert('Failed to delete. Try again.');
+                                return;
+                            });
                     }
 
-                    let subCues: any = {};
-                    try {
-                        const value = await AsyncStorage.getItem('cues');
-                        if (value) {
-                            subCues = JSON.parse(value);
-                        }
-                    } catch (e) {}
-                    if (subCues[props.cueKey].length === 0) {
-                        return;
-                    }
-                    const updatedCues: any[] = [];
-                    subCues[props.cueKey].map((i: any, j: any) => {
-                        if (j !== props.cueIndex) {
-                            updatedCues.push({ ...i });
-                        }
-                    });
-                    subCues[props.cueKey] = updatedCues;
-                    const stringifiedCues = JSON.stringify(subCues);
-                    await AsyncStorage.setItem('cues', stringifiedCues);
+                    handleDeleteCue(props.cue._id);
+
                     props.closeModal();
                 },
             },
@@ -2180,45 +2066,37 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const submitQuizEndTime = useCallback(async () => {
         setSubmittingQuizEndTime(true);
         setIsSubmitting(true);
-        const u: any = await AsyncStorage.getItem('user');
-        if (u) {
-            const parsedUser = JSON.parse(u);
-            if (!parsedUser.email || parsedUser.email === '') {
-                // cannot submit
-                return;
-            }
-            const saveCue = JSON.stringify({
-                solutions,
-                initiatedAt,
-            });
 
-            const server = fetchAPI('');
-            server
-                .mutate({
-                    mutation: submit,
-                    variables: {
-                        cue: saveCue,
-                        cueId: props.cue._id,
-                        userId: parsedUser._id,
-                        quizId,
-                    },
-                })
-                .then((res) => {
-                    if (res.data.cue.submitModification) {
-                        Alert(submissionCompleteAlert, new Date().toString(), [
-                            {
-                                text: 'Okay',
-                                onPress: () => props.closeModal(true),
-                            },
-                        ]);
-                    }
-                })
-                .catch((err) => {
-                    Alert(somethingWentWrongAlert, tryAgainLaterAlert);
-                    setIsSubmitting(false);
-                });
-        }
-    }, [cue, props.cue, isQuiz, quizId, initiatedAt, solutions]);
+        const saveCue = JSON.stringify({
+            solutions,
+            initiatedAt,
+        });
+
+        server
+            .mutate({
+                mutation: submit,
+                variables: {
+                    cue: saveCue,
+                    cueId: props.cue._id,
+                    userId,
+                    quizId,
+                },
+            })
+            .then((res) => {
+                if (res.data.cue.submitModification) {
+                    Alert(submissionCompleteAlert, moment(new Date()).format('MMMM Do, h:mm a'), [
+                        {
+                            text: 'Okay',
+                            onPress: () => props.closeModal(),
+                        },
+                    ]);
+                }
+            })
+            .catch((err) => {
+                Alert(somethingWentWrongAlert, tryAgainLaterAlert);
+                setIsSubmitting(false);
+            });
+    }, [props.cue, isQuiz, quizId, initiatedAt, solutions]);
 
     const submitResponse = useCallback(() => {
         let now = new Date();
@@ -2233,6 +2111,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     text: 'Cancel',
                     style: 'cancel',
                     onPress: () => {
+                        props.setSubmit(false);
                         return;
                     },
                 },
@@ -2240,67 +2119,53 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     text: 'Okay',
                     onPress: async () => {
                         setIsSubmitting(true);
-                        const u: any = await AsyncStorage.getItem('user');
-                        if (u) {
-                            const parsedUser = JSON.parse(u);
-                            if (!parsedUser.email || parsedUser.email === '') {
-                                // cannot submit
-                                return;
-                            }
-                            let saveCue = '';
-                            if (isQuiz) {
-                                saveCue = JSON.stringify({
-                                    solutions,
-                                    initiatedAt,
-                                });
-                            } else if (submissionImported) {
-                                saveCue = JSON.stringify({
-                                    url: submissionUrl,
-                                    type: submissionType,
-                                    title: submissionTitle,
-                                    annotations: '',
-                                });
-                            } else {
-                                saveCue = submissionDraft;
-                            }
 
-                            const server = fetchAPI('');
-                            server
-                                .mutate({
-                                    mutation: submit,
-                                    variables: {
-                                        cue: saveCue,
-                                        cueId: props.cue._id,
-                                        userId: parsedUser._id,
-                                        quizId: isQuiz ? quizId : null,
-                                    },
-                                })
-                                .then((res: any) => {
-                                    if (res.data.cue.submitModification) {
-                                        // setIsSubmitting(false);
-                                        Alert(submissionCompleteAlert, new Date().toString(), [
-                                            {
-                                                text: 'Okay',
-                                                onPress: () => props.closeModal(true),
-                                            },
-                                        ]);
-                                    } else {
-                                        Alert('Submission failed. Try again. ');
-                                        setIsSubmitting(false);
-                                    }
-                                })
-                                .catch((err: any) => {
-                                    setIsSubmitting(false);
-                                    Alert(somethingWentWrongAlert, tryAgainLaterAlert);
-                                });
+                        let saveCue = '';
+                        if (isQuiz) {
+                            saveCue = JSON.stringify({
+                                solutions,
+                                initiatedAt,
+                            });
+                        } else {
+                            saveCue = submissionDraft;
                         }
+
+                        server
+                            .mutate({
+                                mutation: submit,
+                                variables: {
+                                    cue: saveCue,
+                                    cueId: props.cue._id,
+                                    userId,
+                                    quizId: isQuiz ? quizId : null,
+                                },
+                            })
+                            .then((res: any) => {
+                                if (res.data.cue.submitModification) {
+                                    // setIsSubmitting(false);
+                                    Alert(submissionCompleteAlert, moment(new Date()).format('MMMM Do, h:mm a'), [
+                                        {
+                                            text: 'Okay',
+                                            onPress: () => props.closeModal(),
+                                        },
+                                    ]);
+                                } else {
+                                    Alert('Submission failed. Try again. ');
+                                    setIsSubmitting(false);
+                                    props.setSubmit(false);
+                                }
+                            })
+                            .catch((err: any) => {
+                                props.setSubmit(false);
+                                setIsSubmitting(false);
+                                Alert(somethingWentWrongAlert, tryAgainLaterAlert);
+                            });
                     },
                 },
             ]
         );
     }, [
         props.cue,
-        cue,
         submissionTitle,
         submissionType,
         submissionUrl,
@@ -2311,6 +2176,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         solutions,
         deadline,
         submissionDraft,
+        userId,
     ]);
 
     /**
@@ -2319,6 +2185,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
     const handleSubmit = useCallback(async () => {
         if (!isQuiz && submissionImported && submissionTitle === '') {
             Alert('Your submission has no title');
+            props.setSubmit(false);
             return;
         }
 
@@ -2528,6 +2395,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     text: 'Cancel',
                     style: 'cancel',
                     onPress: () => {
+                        props.setSubmit(false);
                         return;
                     },
                 },
@@ -2543,7 +2411,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         }
     }, [
         props.cue,
-        cue,
         submissionTitle,
         submissionType,
         submissionUrl,
@@ -2557,33 +2424,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         shuffleQuiz,
         shuffleQuizAttemptOrder,
     ]);
-
-    /**
-     * @description update Cue status as read
-     */
-    const updateStatusAsRead = useCallback(async () => {
-        if (props.cue.status && props.cue.status !== 'read' && !markedAsRead) {
-            const u = await AsyncStorage.getItem('user');
-            if (u) {
-                const user = JSON.parse(u);
-                const server = fetchAPI('');
-                server
-                    .mutate({
-                        mutation: markAsRead,
-                        variables: {
-                            cueId: props.cue._id,
-                            userId: user._id,
-                        },
-                    })
-                    .then((res) => {
-                        if (res.data.status.markAsRead) {
-                            setMarkedAsRead(true);
-                        }
-                    })
-                    .catch((err) => {});
-            }
-        }
-    }, [props.cue, markedAsRead]);
 
     /**
      * @description Clear all cue content and imports
@@ -2641,8 +2481,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             shareWithUserIds: limitedShares ? [props.cue.createdBy] : null,
         };
 
-        const server = fetchAPI('');
-
         if (
             props.cue.channelId &&
             props.cue.original &&
@@ -2697,6 +2535,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 .then((res1) => {
                     if (res1.data.cue.create) {
                         Alert(sharedAlert, 'Cue has been successfully shared.');
+                        refreshCues();
                     }
                 })
                 .catch((err) => {
@@ -2705,7 +2544,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 });
         }
     }, [
-        cue,
         starred,
         color,
         frequency,
@@ -2727,45 +2565,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         allowedAttempts,
         graded,
     ]);
-
-    /**
-     * @description Share cue with subscribers dropdown change
-     */
-    const onChange = useCallback(
-        (value, { action, option, removedValue }) => {
-            switch (action) {
-                case 'remove-value':
-                case 'pop-value':
-                    if (removedValue.isFixed) {
-                        return;
-                    }
-                    break;
-                case 'select-option':
-                    const server = fetchAPI('');
-                    server
-                        .mutate({
-                            mutation: shareCueWithMoreIds,
-                            variables: {
-                                cueId: props.cue._id,
-                                userId: option.value,
-                            },
-                        })
-                        .then((res) => {
-                            if (res.data && res.data.cue.shareCueWithMoreIds) {
-                                loadChannelsAndSharedWith();
-                            }
-                        })
-                        .catch((err) => console.log(err));
-                    return;
-
-                case 'clear':
-                    value = subscribers.filter((v) => v.isFixed);
-                    break;
-            }
-            setSelected(value);
-        },
-        [subscribers, props.cue]
-    );
 
     // FUNCTIONS
 
@@ -2824,12 +2623,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 text: 'Okay',
                 onPress: async () => {
                     setLoadingAfterModifyingQuiz(true);
-                    const server = fetchAPI('');
-
-                    console.log('Timer', timer);
-
-                    // Update title as well
-                    handleUpdateContent();
 
                     // VALIDATION:
                     // Check if any question without a correct answer
@@ -3229,31 +3022,23 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         return;
                     }
 
+                    // Update title as well
+                    handleUpdateContent();
+
                     // Points should be a string not a number
 
                     const sanitizeProblems = problems.map((prob: any) => {
-                        const { options } = prob;
-                        const sanitizeOptions = options.map((option: any) => {
-                            const clone = option;
+                        const sanitizedProb = JSON.parse(JSON.stringify(prob), omitTypename);
 
-                            delete clone.__typename;
-
-                            return clone;
-                        });
-
-                        delete prob.__typename;
-                        delete prob.problemIndex;
+                        delete sanitizedProb.problemIndex;
                         return {
-                            ...prob,
+                            ...sanitizedProb,
                             points: prob.points.toString(),
-                            options: sanitizeOptions,
                             maxCharCount: prob.questionType === 'freeResponse' ? Number(prob.maxCharCount) : null,
                         };
                     });
 
                     const durationMinutes = duration.hours * 60 + duration.minutes + duration.seconds / 60;
-
-                    console.log('duration minutes', durationMinutes);
 
                     let variables = {
                         cueId: props.cue._id,
@@ -3277,7 +3062,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         })
                         .then((res: any) => {
                             if (res.data && res.data.quiz.modifyQuiz) {
-                                const server = fetchAPI('');
                                 server
                                     .query({
                                         query: getQuiz,
@@ -3287,7 +3071,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     })
                                     .then((res) => {
                                         if (res.data && res.data.quiz.getQuiz) {
-                                            setProblems(res.data.quiz.getQuiz.problems);
+                                            setProblems(lodash.cloneDeep(res.data.quiz.getQuiz.problems));
                                             const deepCopy = lodash.cloneDeep(res.data.quiz.getQuiz.problems);
                                             setUnmodifiedProblems(deepCopy);
                                             setInstructions(
@@ -3319,10 +3103,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             },
         ]);
     };
-
-    if (loading || loadingAfterModifyingQuiz || fetchingQuiz) {
-        return null;
-    }
 
     /**
      * @description QUIZ TIMER OR DOWNLOAD/REFRESH IF UPLOADED
@@ -4261,7 +4041,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     setEquationEditorValue={(value: string) => setEquationEditorValue(value)}
                     resetEditEquationQuestionNumber={resetEditEquationQuestionNumber}
                     setResetEditEquationQuestionNumber={setResetEditEquationQuestionNumber}
-                    user={props.user}
                 />
                 {renderSubmissionDraftStatus()}
                 {renderFooter()}
@@ -4278,7 +4057,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             flexDirection: 'row',
                             marginVertical: 50,
                         }}
-                        disabled={props.user.email === disableEmailId}
+                        disabled={user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -4365,7 +4144,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                         setShowEquationEditorInput={setShowEquationEditorInput}
                         equationEditorValue={equationEditorValue}
                         setEquationEditorValue={(value: string) => setEquationEditorValue(value)}
-                        user={props.user}
                     />
                     {renderSubmissionDraftStatus()}
                     {renderFooter()}
@@ -4405,7 +4183,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     key={url + props.showOriginal.toString() + props.reloadViewerKey}
                     style={{ minHeight: Dimensions.get('window').width < 768 ? 500 : 800 }}
                 >
-                    <WebView source={{ uri: originalPdfviewerURL }} />
+                    <WebView
+                        source={{ uri: originalPdfviewerURL }}
+                        startInLoadingState={true}
+                        renderLoading={() => renderLoadingSpinner()}
+                        renderError={() => renderWebviewError()}
+                    />
                 </View>
             )
         ) : null;
@@ -4558,8 +4341,10 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     }
                 >
                     <WebView
-                        // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
+                        startInLoadingState={true}
                         source={{ uri: originalPdfviewerURL }}
+                        renderLoading={() => renderLoadingSpinner()}
+                        renderError={() => renderWebviewError()}
                     />
                     {renderSubmissionDraftStatus()}
                     {/* {renderFooter()} */}
@@ -5197,8 +4982,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     props.reloadViewerKey
                                 }
                                 // style={{ height: Dimensions.get('window').width < 768 ? '50vh' : '70vh' }}
+                                startInLoadingState={true}
                                 source={{ uri: submissionPdfviewerURL }}
                                 style={{ height: 550, width: '100%', flex: 1 }}
+                                renderLoading={() => renderLoadingSpinner()}
+                                renderError={() => renderWebviewError()}
                             />
                         </View>
                     )
@@ -5296,8 +5084,11 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                             //     key={viewSubmissionTab}></div>
                             <WebView
                                 // key={viewSubmissionTab}
+                                startInLoadingState={true}
                                 source={{ uri: submissionPdfviewerURL }}
                                 style={{ height: 550, width: '100%', flex: 1 }}
+                                renderLoading={() => renderLoadingSpinner()}
+                                renderError={() => renderWebviewError()}
                             />
                         )}
                     </View>
@@ -5630,7 +5421,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             //         // skin: useDarkMode ? 'oxide-dark' : 'oxide',
             //         // content_css: useDarkMode ? 'dark' : 'default',
             //     }}
-            //     onChange={(e: any) => setSubmissionDraft(e.target.getContent())}
             // />
         );
     };
@@ -7280,7 +7070,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 // If no more remaining attempts for quiz
                                 (isQuiz && remainingAttempts === 0) ||
                                 isSubmitting ||
-                                props.user.email === disableEmailId
+                                user.email === disableEmailId
                             }
                             onPress={() => handleSubmit()}
                             style={{ borderRadius: 15, backfaceVisibility: 'hidden' }}
@@ -7319,6 +7109,45 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             </View>
         );
     };
+
+    if (loading || loadingAfterModifyingQuiz || fetchingQuiz || updatingCueContent || updatingCueDetails) {
+        return (
+            <View
+                style={{
+                    width: '100%',
+                    backgroundColor: 'white',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    flex: 1,
+                }}
+            >
+                <View
+                    style={{
+                        flexDirection: 'column',
+                        alignSelf: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <View
+                        style={{
+                            marginTop: 10,
+                        }}
+                    >
+                        <ActivityIndicator size={20} color={'#1F1F1F'} />
+                        <Text
+                            style={{
+                                fontSize: 16,
+                                fontFamily: 'Inter',
+                                marginTop: 10,
+                            }}
+                        >
+                            Loading...
+                        </Text>
+                    </View>
+                </View>
+            </View>
+        );
+    }
 
     if (initiateAt > new Date() && !isOwner) {
         return (
@@ -7502,7 +7331,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                         handleHiliteColor={handleHiliteColor}
                                         handleForeColor={handleForeColor}
                                         handleEmoji={handleEmoji}
-                                        user={props.user}
                                     />
                                 ) : (remainingAttempts === 0 ||
                                       props.cue.releaseSubmission ||
@@ -7511,8 +7339,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                   !isOwner &&
                                   isQuiz ? (
                                     renderQuizEndedMessage()
-                                ) : // renderMainCueContent()
-                                null}
+                                ) : null}
                             </View>
                         )}
                         {props.showOptions ? (
@@ -7567,7 +7394,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             !submissionImported &&
             !isQuiz &&
             !isOwner &&
-            !cueGraded &&
             !props.cue.releaseSubmission &&
             !(
                 remainingAttempts === 0 ||

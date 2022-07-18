@@ -25,7 +25,7 @@ const FileUpload: React.FC<any> = (props: any) => {
             (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') &&
             props.action !== 'message_send'
         ) {
-            Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
+            Alert('Error! Use gallery icon from toolbar to upload images.');
             setUploading(false);
             return;
         }

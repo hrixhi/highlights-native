@@ -7,7 +7,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 
 import type { StackNavigatorParamList, StreamChatGenerics } from './types';
 
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useUserSearchContext } from '../../ChatContext/useSearchContext';
 import ScreenHeader from './ScreenHeader';
 import { Ionicons } from '@expo/vector-icons';
@@ -135,7 +135,7 @@ export const ExistingChannelAddMembersScreen: React.FC<Props> = ({
             colors: { accent_green, accent_red, black, border, grey, white, white_smoke },
         },
     } = useTheme();
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
     const { setOverlay } = useAppOverlayContext();
 
     const {

@@ -17,36 +17,25 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import XLSX from 'xlsx';
 import moment from 'moment';
-import useDynamicRefs from 'use-dynamic-refs';
 
 // COMPONENTS
 import { View, Text, TouchableOpacity } from './Themed';
-import { TextInput as CustomTextInput } from '../components/CustomTextInput';
 import * as Progress from 'react-native-progress';
 // HELPERS
-import { htmlStringParser } from '../helpers/HTMLParser';
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 
-import GradesSheet from './GradesSheet';
 import { paddingResponsive } from '../helpers/paddingHelper';
 import { disableEmailId } from '../constants/zoomCredentials';
 import NewAssignmentModal from './NewAssignmentModal';
 
-import { fetchAPI } from '../graphql/FetchAPI';
 import Alert from './Alert';
 import {
-    createGradebookEntry,
-    editGradebookEntry,
     getStudentAnalytics,
     getGradebookInstructor,
     getAssignmentAnalytics,
     getCourseStudents,
-    deleteGradebookEntry,
     getStandardsBasedGradingScale,
-    createStandards,
     getStandardsGradebook,
-    updateStandardsScore,
-    revertOverriddenStandardScore,
     getStandardsInsights,
     handleUpdateGradebookScore,
     getCourseGradingScale,
@@ -54,8 +43,6 @@ import {
     getGradebookStudent,
     getStandardsGradebookStudent,
     getStandardsCategories,
-    handleEditStandard,
-    handleDeleteStandard,
 } from '../graphql/QueriesAndMutations';
 
 import {
@@ -72,6 +59,8 @@ import {
 } from 'victory-native';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { useAppContext } from '../contexts/AppContext';
+import { useApolloClient } from '@apollo/client';
 
 const masteryColors = {
     '': '#f94144',
@@ -84,6 +73,8 @@ const masteryColors = {
 };
 
 const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { userId } = useAppContext();
+
     const [exportAoa, setExportAoa] = useState<any[]>();
     const [activeModifyId, setActiveModifyId] = useState('');
     const [activeUserId, setActiveUserId] = useState('');
@@ -200,8 +191,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const [editStandardDescription, setEditStandardDescription] = useState('');
     const [editStandardCategory, setEditStandardCategory] = useState('');
 
-    console.log('Student gradebook', studentGradebook);
-
     const newEntryTabs = [
         {
             value: 'assignment',
@@ -234,6 +223,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
             label: 'Standards',
         },
     ];
+
+    const server = useApolloClient();
 
     useEffect(() => {
         if (props.isOwner && props.channelId) {
@@ -518,7 +509,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const loadCourseStudents = useCallback(() => {
         setIsFetchingStudents(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getCourseStudents,
@@ -545,7 +535,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const fetchGradebookInstructor = useCallback(() => {
         setIsFetchingGradebook(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getGradebookInstructor,
@@ -579,13 +568,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const fetchGradebookStudent = useCallback(() => {
         setIsFetchingStudentGradebook(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getGradebookStudent,
                     variables: {
                         channelId: props.channelId,
-                        userId: props.user._id,
+                        userId,
                     },
                 })
                 .then((res) => {
@@ -606,12 +594,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     setIsFetchingStudentGradebook(false);
                 });
         }
-    }, [props.channelId, props.user]);
+    }, [props.channelId, userId]);
 
     const fetchStandardsBasedGradingScale = useCallback(() => {
         setIsFetchingStandardsBasedGrading(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getStandardsBasedGradingScale,
@@ -680,7 +667,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
     const fetchCourseGradingScale = useCallback(async () => {
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getCourseGradingScale,
@@ -704,7 +690,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const fetchCourseAssignmentsAnalytics = useCallback(() => {
         setIsFetchingAssignmentAnalytics(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getAssignmentAnalytics,
@@ -732,7 +717,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const fetchStandardsBasedGradebookInstructor = useCallback(() => {
         setIsFetchingStandardsGradebook(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getStandardsGradebook,
@@ -834,13 +818,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const fetchStandardsBasedGradebookStudent = useCallback(() => {
         setIsFetchingStandardsGradebookStudent(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getStandardsGradebookStudent,
                     variables: {
                         channelId: props.channelId,
-                        userId: props.user._id,
+                        userId,
                     },
                 })
                 .then((res) => {
@@ -896,7 +879,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             setStandardAnalyticsSelected(entries[0]._id);
                         }
 
-                        setStandardAnalyticsSelectedUser(props.user._id);
+                        setStandardAnalyticsSelectedUser(userId);
 
                         setStandardsGradebookEntriesStudent(entries);
                         setStandardsGradebookCategories(categoryCountMap);
@@ -916,12 +899,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     setIsFetchingStandardsGradebookStudent(false);
                 });
         }
-    }, [props.channelId, props.user]);
+    }, [props.channelId, userId]);
 
     const fetchStandardsCategories = useCallback(() => {
         setIsFetchingStandardsCategories(true);
         if (props.channelId && props.channelId !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getStandardsCategories,
@@ -946,7 +928,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
     const fetchStudentAnalytics = useCallback(() => {
         setIsFetchingStudentAnalytics(true);
-        const server = fetchAPI('');
+
         server
             .query({
                 query: getStudentAnalytics,
@@ -973,7 +955,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
     const fetchStandardsAnalytics = useCallback(() => {
         setIsFetchingStandardsAnalytics(true);
-        const server = fetchAPI('');
+
         server
             .query({
                 query: getStandardsInsights,
@@ -1001,7 +983,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
     const handleUpdateAssignmentScore = useCallback(
         async (totalPoints: number) => {
             async function updateScore() {
-                const server = fetchAPI('');
                 server
                     .mutate({
                         mutation: handleUpdateGradebookScore,
@@ -1891,7 +1872,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 key={col.toString()}
                                 onPress={() => {
                                     if (entry.cueId) {
-                                        props.openCueFromGrades(entry.cueId);
+                                        props.openCueFromGrades(props.channelId, entry.cueId, props.channelCreatedBy);
                                     } else {
                                         handleEditGradebookEntry(entry.gradebookEntryId);
                                     }
@@ -2118,7 +2099,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             onPress={() => {
                                                                 handleUpdateAssignmentScore(entry.totalPoints);
                                                             }}
-                                                            disabled={props.user.email === disableEmailId}
+                                                            disabled={user.email === disableEmailId}
                                                         >
                                                             <Ionicons
                                                                 name="checkmark-circle-outline"
@@ -2247,7 +2228,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
         async (entryId: string, entryType: string, releaseSubmission: boolean, deadlinePassed: boolean) => {
             async function updateReleaseSubmission() {
                 setIsFetchingAssignmentAnalytics(true);
-                const server = fetchAPI('');
+
                 server
                     .mutate({
                         mutation: handleReleaseSubmission,
@@ -2709,7 +2690,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 <View
                     style={{
                         display: 'flex',
-                        flexDirection: Dimensions.get('window').width > 768 ? 'row' : 'column',
+                        flexDirection: Dimensions.get('window').width >= 768 ? 'row' : 'column',
                         width: '100%',
                         padding: 20,
                         marginTop: 30,
@@ -2720,8 +2701,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 >
                     <View
                         style={{
-                            width: Dimensions.get('window').width > 768 ? '33%' : '100%',
-
+                            width: Dimensions.get('window').width >= 768 ? '33%' : '100%',
                             flexDirection: 'column',
                             alignItems: 'center',
                         }}
@@ -2743,8 +2723,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             <View>
                                 <VictoryPie
                                     width={
-                                        Dimensions.get('window').width > 768 ? 350 : Dimensions.get('window').width - 50
+                                        Dimensions.get('window').width >= 768
+                                            ? Dimensions.get('window').width * 0.3
+                                            : Dimensions.get('window').width - 50
                                     }
+                                    height={250}
                                     colorScale={['tomato', 'orange', 'green']}
                                     data={[
                                         {
@@ -3352,6 +3335,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             </Text>
                             <View>
                                 <VictoryPie
+                                    width={
+                                        Dimensions.get('window').width >= 768
+                                            ? Dimensions.get('window').width * 0.3
+                                            : Dimensions.get('window').width - 50
+                                    }
+                                    height={250}
                                     data={data}
                                     innerRadius={120}
                                     cornerRadius={25}
@@ -3402,6 +3391,12 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             >
                                 <VictoryPie
                                     colorScale={['tomato', 'orange', 'green']}
+                                    width={
+                                        Dimensions.get('window').width >= 768
+                                            ? Dimensions.get('window').width * 0.3
+                                            : Dimensions.get('window').width - 50
+                                    }
+                                    height={250}
                                     data={[
                                         {
                                             x: 1,
@@ -4015,6 +4010,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 contentContainerStyle={{
                     flexDirection: 'column',
                     alignItems: 'center',
+                    width: '100%',
                 }}
                 nestedScrollEnabled={true}
             >
@@ -4031,8 +4027,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     <View
                         style={{
                             backgroundColor: '#f8f8f8',
-                            minWidth: 150,
-                            maxWidth: 150,
+                            minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                            maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                             padding: 10,
                             borderRightWidth: 1,
                             borderRightColor: '#f2f2f2',
@@ -4078,8 +4074,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     <View
                         style={{
                             backgroundColor: '#f8f8f8',
-                            minWidth: 150,
-                            maxWidth: 150,
+                            minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                            maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                             padding: 10,
                             borderRightWidth: 1,
                             borderRightColor: '#f2f2f2',
@@ -4125,8 +4121,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     <View
                         style={{
                             backgroundColor: '#f8f8f8',
-                            minWidth: 150,
-                            maxWidth: 150,
+                            minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                            maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                             padding: 10,
                             borderRightWidth: 1,
                             borderRightColor: '#f2f2f2',
@@ -4172,8 +4168,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     <View
                         style={{
                             backgroundColor: '#f8f8f8',
-                            minWidth: 200,
-                            maxWidth: 200,
+                            minWidth: Dimensions.get('window').width < 768 ? 200 : '34%',
+                            maxWidth: Dimensions.get('window').width < 768 ? 200 : '34%',
                             padding: 10,
                             borderRightWidth: 1,
                             borderRightColor: '#f2f2f2',
@@ -4219,7 +4215,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                 </View>
 
                 {/* Search results empty */}
-                {gradebookStudentEntries.length === 0 ? (
+                {standardsGradebookEntriesStudent.length === 0 ? (
                     <View>
                         <Text
                             style={{
@@ -4231,7 +4227,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 fontFamily: 'inter',
                             }}
                         >
-                            No assignments.
+                            No standards.
                         </Text>
                     </View>
                 ) : null}
@@ -4241,6 +4237,9 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     horizontal={false}
                     contentContainerStyle={{
                         // height: '100%',
+                        width: '100%',
+                    }}
+                    style={{
                         width: '100%',
                     }}
                     nestedScrollEnabled={true}
@@ -4270,8 +4269,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             >
                                 <View
                                     style={{
-                                        minWidth: 150,
-                                        maxWidth: 150,
+                                        minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                        maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                         padding: 10,
                                         borderRightWidth: 1,
                                         borderRightColor: '#f2f2f2',
@@ -4291,8 +4290,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </View>
                                 <View
                                     style={{
-                                        minWidth: 150,
-                                        maxWidth: 150,
+                                        minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                        maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                         padding: 10,
                                         borderRightWidth: 1,
                                         borderRightColor: '#f2f2f2',
@@ -4311,8 +4310,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </View>
                                 <View
                                     style={{
-                                        minWidth: 150,
-                                        maxWidth: 150,
+                                        minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                        maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                         padding: 10,
                                         borderRightWidth: 1,
                                         borderRightColor: '#f2f2f2',
@@ -4331,17 +4330,18 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 </View>
                                 <View
                                     style={{
-                                        minWidth: 200,
-                                        maxWidth: 200,
+                                        minWidth: Dimensions.get('window').width < 768 ? 200 : '34%',
+                                        maxWidth: Dimensions.get('window').width < 768 ? 200 : '34%',
                                         padding: 10,
                                         borderRightWidth: 1,
                                         borderRightColor: '#f2f2f2',
                                         flexDirection: 'column',
                                         justifyContent: 'center',
+                                        alignItems: 'center',
                                     }}
                                 >
                                     {entry.masteryPoints ? (
-                                        <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                                        <View style={{ flexDirection: 'column', alignItems: 'center', maxWidth: 200 }}>
                                             <View
                                                 style={{
                                                     flexDirection: 'row',
@@ -4428,6 +4428,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                     contentContainerStyle={{
                         flexDirection: 'column',
                         alignItems: 'center',
+                        width: '100%',
                     }}
                     nestedScrollEnabled={true}
                 >
@@ -4445,8 +4446,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         <View
                             style={{
                                 backgroundColor: '#f8f8f8',
-                                minWidth: 150,
-                                maxWidth: 150,
+                                minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                 padding: 10,
                                 borderRightWidth: 1,
                                 borderRightColor: '#f2f2f2',
@@ -4493,8 +4494,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         <View
                             style={{
                                 backgroundColor: '#f8f8f8',
-                                minWidth: 150,
-                                maxWidth: 150,
+                                minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                 padding: 10,
                                 borderRightWidth: 1,
                                 borderRightColor: '#f2f2f2',
@@ -4540,8 +4541,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         <View
                             style={{
                                 backgroundColor: '#f8f8f8',
-                                minWidth: 150,
-                                maxWidth: 150,
+                                minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                 padding: 10,
                                 borderRightWidth: 1,
                                 borderRightColor: '#f2f2f2',
@@ -4588,8 +4589,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         <View
                             style={{
                                 backgroundColor: '#f8f8f8',
-                                minWidth: 250,
-                                maxWidth: 250,
+                                minWidth: Dimensions.get('window').width < 768 ? 150 : '34%',
+                                maxWidth: Dimensions.get('window').width < 768 ? 150 : '34%',
                                 padding: 10,
                                 borderRightWidth: 1,
                                 borderRightColor: '#f2f2f2',
@@ -4711,8 +4712,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 >
                                     <View
                                         style={{
-                                            minWidth: 150,
-                                            maxWidth: 150,
+                                            minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                            maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                             padding: 10,
                                             borderRightWidth: 1,
                                             borderRightColor: '#f2f2f2',
@@ -4724,7 +4725,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                             onPress={() => {
                                                 if (!entry || !entry.cueId) return;
 
-                                                props.openCueFromGrades(entry.cueId);
+                                                props.openCueFromGrades(
+                                                    props.channelId,
+                                                    entry.cueId,
+                                                    props.channelCreatedBy
+                                                );
                                             }}
                                             disabled={!entry.cueId}
                                         >
@@ -4741,8 +4746,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     </View>
                                     <View
                                         style={{
-                                            minWidth: 150,
-                                            maxWidth: 150,
+                                            minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                            maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                             padding: 10,
                                             borderRightWidth: 1,
                                             borderRightColor: '#f2f2f2',
@@ -4761,8 +4766,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     </View>
                                     <View
                                         style={{
-                                            minWidth: 150,
-                                            maxWidth: 150,
+                                            minWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
+                                            maxWidth: Dimensions.get('window').width < 768 ? 150 : '22%',
                                             padding: 10,
                                             borderRightWidth: 1,
                                             borderRightColor: '#f2f2f2',
@@ -4841,8 +4846,8 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
 
                                     <View
                                         style={{
-                                            minWidth: 250,
-                                            maxWidth: 250,
+                                            minWidth: Dimensions.get('window').width < 768 ? 250 : '34%',
+                                            maxWidth: Dimensions.get('window').width < 768 ? 250 : '34%',
                                             padding: 10,
                                             borderRightWidth: 1,
                                             borderRightColor: '#f2f2f2',
@@ -4943,6 +4948,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             progress={remaining ? remaining / 100 : 0}
                                                             color={'#007AFF'}
                                                             style={{ transform: [{ rotateY: '180deg' }] }}
+                                                            width={
+                                                                Dimensions.get('window').width < 768
+                                                                    ? Dimensions.get('window').width * 0.01 * 34 - 20
+                                                                    : 230
+                                                            }
                                                         />
                                                     </View>
                                                 ) : null}
@@ -5003,6 +5013,11 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                             progress={remaining ? remaining / 100 : 0}
                                                             color={'#FFC107'}
                                                             style={{ transform: [{ rotateY: '180deg' }] }}
+                                                            width={
+                                                                Dimensions.get('window').width < 768
+                                                                    ? Dimensions.get('window').width * 0.01 * 34 - 20
+                                                                    : 230
+                                                            }
                                                         />
                                                     </View>
                                                 ) : null}
@@ -5075,7 +5090,9 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                 Scores
                             </Text>
 
-                            {renderSwitchGradebookViewpoints()}
+                            {Dimensions.get('window').width > 768 || standardsBasedScale
+                                ? null
+                                : renderSwitchGradebookViewpoints()}
                         </View>
                         {isFetchingGradebook ? (
                             <View
@@ -5131,7 +5148,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                     width: '100%',
                                     backgroundColor: 'white',
                                     maxHeight: Dimensions.get('window').height - 64 - 45 - 120,
-                                    maxWidth: 1024,
+                                    maxWidth: '100%',
                                     borderRadius: 2,
                                     borderWidth: 1,
                                     marginTop: 20,
@@ -5687,7 +5704,6 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                         setEditAssignment(undefined);
                         setEditStandard(undefined);
                     }}
-                    user={props.user}
                     standardsBasedScale={standardsBasedScale}
                     standardsCategories={standardsCategories}
                     masteryDropdownOptions={masteryDropdownOptions}
@@ -5809,6 +5825,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                         );
                                     })}
                                 </View>
+
                                 {renderSwitchGradebookViewpoints()}
                             </View>
                         )

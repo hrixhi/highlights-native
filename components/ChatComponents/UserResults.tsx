@@ -11,7 +11,7 @@ import { StreamChatGenerics } from './types';
 import { useUserSearchContext } from '../../ChatContext/useSearchContext';
 import { useDirectoryFilterOverlayContext } from '../../ChatContext/DirectoryFilterContext';
 import { useNavigation } from '@react-navigation/native';
-import { useAppContext } from '../../ChatContext/AppContext';
+import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { usePaginatedUsers } from '../../ChatHooks/usePaginatedUsers';
 // import { Search } from '../../icons/Search';
 
@@ -109,7 +109,7 @@ export const UserSearchResults: React.FC<UserSearchResultsProps> = ({
 
     const navigation = useNavigation();
 
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
 
     const {
         theme: {

@@ -1,5 +1,5 @@
 // REACT
-import React, { useEffect, useState, useCallback, useRef, createRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
     StyleSheet,
     TextInput,
@@ -14,7 +14,7 @@ import {
     Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import lodash, { update } from 'lodash';
+import lodash from 'lodash';
 import { TouchableOpacity as RNGHTouchableOpacity } from 'react-native-gesture-handler';
 
 // COMPONENT
@@ -22,7 +22,6 @@ import { Text, View } from './Themed';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import FileUpload from './UploadFiles';
-import useDynamicRefs from 'use-dynamic-refs';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { Video } from 'expo-av';
@@ -35,6 +34,7 @@ import HTMLView from 'react-native-htmlview';
 import MathJax from 'react-native-mathjax';
 import RenderHtml from 'react-native-render-html';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useAppContext } from '../contexts/AppContext';
 
 const emojiIcon = require('../assets/images/emojiIcon.png');
 const importIcon = require('../assets/images/importIcon.png');
@@ -46,13 +46,13 @@ const customFontFamily = `@font-face {
 }`;
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user, userId } = useAppContext();
+
     const [problems, setProblems] = useState<any[]>(props.problems.slice());
     const [headers, setHeaders] = useState<any>(props.headers);
     const [instructions, setInstructions] = useState(props.instructions);
-    const [initialInstructions, setInitialInstructions] = useState(props.instructions);
     const [solutions, setSolutions] = useState<any>([]);
     const [initialSolutions, setInitialSolutions] = useState<any>([]);
-    const [shuffledProblems, setShuffledProblems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [duration, setDuration] = useState({
         hours: 1,
@@ -64,16 +64,11 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [modifiedCorrectAnswerProblems, setModifiedCorrectAnswerProblems] = useState<any[]>([]);
     const [regradeChoices, setRegradeChoices] = useState<any[]>([]);
     const [timer, setTimer] = useState(false);
-    const [equation, setEquation] = useState('');
-    const [showEquationEditor, setShowEquationEditor] = useState(false);
     const [showImportOptions, setShowImportOptions] = useState(false);
     const [shuffleQuiz, setShuffleQuiz] = useState(props.shuffleQuiz);
-    const [problemRefs, setProblemRefs] = useState<any[]>(props.problems.map(() => createRef(null)));
     const [showFormulas, setShowFormulas] = useState<any[]>(props.problems.map((prob: any) => false));
-    const [responseEquations, setResponseEquations] = useState<any[]>(props.problems.map((prob: any) => ''));
     // const [getRef, setRef] = useDynamicRefs();
     const [optionEquations, setOptionEquations] = useState<any[]>([]);
-    const [showOptionFormulas, setShowOptionFormulas] = useState<any[]>([]);
     const regradeOptions: any = {
         awardCorrectBoth: 'Award points for both corrected and previously correct answers (no scores will be reduced)',
         onlyAwardPointsForNew: "Only award points for new correct answer (some students' scores may be deducted)",
@@ -87,7 +82,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const [optionEditorRefs, setOptionEditorRefs] = useState<boolean[]>([]);
     const [solutionEditorRefs, setSolutionEditorRefs] = useState<boolean[]>([]);
     const [multipartEditorRefs, setMultipartEditorRefs] = useState<boolean[]>([]);
-    // const [testValue, setTestValue] = useState('')
     const { width: contentWidth } = useWindowDimensions();
     const [editTextEntryQuestionNumber, setEditTextEntryQuestionNumber] = useState(-1);
     const [editTextEntrySpanId, setEditTextEntrySpanID] = useState(-1);
@@ -95,11 +89,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const partBRef: any = useRef(null);
     const solutionRef: any = useRef(null);
     const [editEquationEditorQuestionNumber, setEditEquationEditorQuestionNumber] = useState(-1);
-
-    // const OptionImageRenderer: CustomBlockRenderer = (props) => {
-    //     const imgProps = useIMGElementProps(props);
-    //     return <Image resizeMode="contain" style={imgProps.style} source={imgProps.source} />;
-    // };
 
     // HOOKS
 
@@ -109,7 +98,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     useEffect(() => {
         setHeaders(props.headers);
         setInstructions(props.instructions);
-        setInitialInstructions(props.instructions);
         setShuffleQuiz(props.shuffleQuiz);
         if (props.duration) {
             setTimer(true);
@@ -165,32 +153,19 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     useEffect(() => {
         if (editEquationEditorQuestionNumber === -1) return;
 
-        console.log('Problems', problems);
-        console.log('editTextEntryQuestionNumber', editEquationEditorQuestionNumber);
-        console.log('Props.equationEditorValue', props.equationEditorValue);
-
         if (props.isOwner) {
             const newProbs = [...problems];
-            console.log('New probs', newProbs[editEquationEditorQuestionNumber]);
             newProbs[editEquationEditorQuestionNumber].correctEquations[0] = props.equationEditorValue;
             setProblems(newProbs);
             return;
         }
-
-        console.log('Solutions', solutions);
 
         const updatedSolution = [...solutions];
 
         updatedSolution[editEquationEditorQuestionNumber].equationResponse = props.equationEditorValue;
         setSolutions(updatedSolution);
         props.setSolutions(updatedSolution);
-    }, [
-        props.isOwner,
-        props.showEquationEditorInput,
-        props.equationEditorValue,
-        editEquationEditorQuestionNumber,
-        // solutions,
-    ]);
+    }, [props.isOwner, props.showEquationEditorInput, props.equationEditorValue, editEquationEditorQuestionNumber]);
 
     /**
      * @description Over here the solutions object for Quiz is first set and updated based on changes...
@@ -539,12 +514,9 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 height: 2,
                                             },
                                             shadowColor: '#000',
-                                            // overflow: 'hidden',
                                             shadowOpacity: 0.07,
                                             shadowRadius: 7,
                                             padding: 10,
-                                            // borderWidth: 1,
-                                            // borderColor: '#CCC'
                                         }}
                                     >
                                         {hours.map((hour: any) => {
@@ -803,7 +775,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const handleUploadVideoQuestion = useCallback(
         async (index: number) => {
-            const res = await handleFile(true, props.userId);
+            const res = await handleFile(true, userId);
 
             // console.log('File upload result', res);
 
@@ -819,7 +791,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             setProblems(newProbs);
             setShowImportOptions(false);
         },
-        [props.userId, problems]
+        [userId, problems]
     );
 
     /**
@@ -1157,19 +1129,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             </View>
         );
     }
-
-    // let optionRefs: any[] = [];
-    // let solutionRefs: any[] = [];
-
-    // if (editQuestionNumber !== 0) {
-    //     problems[editQuestionNumber - 1].options.map((_: any, index: number) => {
-    //         optionRefs.push(props.getRef(index.toString()));
-    //     });
-    // }
-
-    // problems.map((prob: any, index: number) => {
-    //     solutionRefs.push(props.getRef(index.toString()));
-    // });
 
     // MAIN RETURN
     return (
@@ -1539,14 +1498,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     }
 
                     const dragDropOptions = dndOptions;
-
-                    console.log('DragDropOptions', dragDropOptions);
-
-                    // const solutionRef: any = props.setRef(index.toString());
-
-                    // const : any = {}
-
-                    // Refs for Multipart
 
                     return (
                         <View
@@ -5150,7 +5101,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 );
                             }}
                             style={{ backgroundColor: 'white', width: 150 }}
-                            disabled={props.user.email === disableEmailId}
+                            disabled={user.email === disableEmailId}
                         >
                             <Text
                                 style={{

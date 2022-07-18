@@ -1,14 +1,10 @@
 // REACT
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-    Animated,
     ActivityIndicator,
     StyleSheet,
-    Image,
     Dimensions,
     Linking,
-    // ScrollView,
-    // Switch,
     Platform,
     TextInput as DefaultInput,
     Keyboard,
@@ -25,15 +21,11 @@ import * as Clipboard from 'expo-clipboard';
 
 // API
 import axios from 'axios';
-import { fetchAPI } from '../graphql/FetchAPI';
 import {
     checkChannelStatus,
     subscribe,
-    markAttendance,
-    meetingRequest,
     startInstantMeeting,
     getOngoingMeetings,
-    createMessage,
     addUsersByEmail,
 } from '../graphql/QueriesAndMutations';
 
@@ -43,9 +35,7 @@ import Create from './Create';
 import CalendarX from './Calendar';
 import { TextInput } from './CustomTextInput';
 import alert from './Alert';
-import Performance from './Performance';
 import SearchResultCard from './SearchResultCard';
-import Inbox from './Inbox';
 import Alert from '../components/Alert';
 import Discussion from './Discussion';
 import ChannelSettings from './ChannelSettings';
@@ -56,11 +46,12 @@ import AccountPage from './AccountPage';
 import GradesList from './GradesList';
 import Reanimated from 'react-native-reanimated';
 import Chat from './Chat';
+import AttendanceList from './AttendanceList';
 
 // HELPERS
 import { PreferredLanguageText } from '../helpers/LanguageContext';
 import { htmlStringParser } from '../helpers/HTMLParser';
-import { disableEmailId, zoomClientId, zoomRedirectUri } from '../constants/zoomCredentials';
+import { disableEmailId } from '../constants/zoomCredentials';
 
 import { contentsModalHeight, getDropdownHeight } from '../helpers/DropdownHeight';
 import { validateEmail } from '../helpers/emailCheck';
@@ -68,14 +59,30 @@ import { validateEmail } from '../helpers/emailCheck';
 import { useOrientation } from '../hooks/useOrientation';
 import { filterLibraryModalHeight } from '../helpers/ModalHeights';
 import { paddingResponsive } from '../helpers/paddingHelper';
-import AttendanceList from './AttendanceList';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
 
 const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const server = useApolloClient();
+    const {
+        userId,
+        org,
+        user,
+        subscriptions,
+        allCues,
+        sortBy,
+        setSortBy,
+        recentSearches,
+        setRecentSearches,
+        refreshSubscriptions,
+        loadingSubs,
+        refreshCues,
+        loadingCues,
+        setOpenMessageId,
+        setOpenChannelId: setOpenChatChannelId,
+    } = useAppContext();
+
     const styles = styleObject();
-    const [userId, setUserId] = useState('');
-    const [role, setRole] = useState('');
-    const [userCreatedOrg, setUserCreatedOrg] = useState(false);
-    const [allowQuizCreation, setAllowQuizCreation] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [collapseMap, setCollapseMap] = useState<any>({});
     const [results, setResults] = useState<any>({
@@ -86,32 +93,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     });
     const [resultCount, setResultCount] = useState(0);
     const [loadingSearchResults, setLoadingSearchResults] = useState(false);
-    // const [filterStart, setFilterStart] = useState<any>(null);
-    // const [filterEnd, setFilterEnd] = useState<any>(null);
     const [searchOptions] = useState(['Content', 'Messages', 'Discussion', 'Courses']);
-    const [sortBy, setSortBy] = useState('Date ↑');
     const [cueMap, setCueMap] = useState<any>({});
     const [categoryMap, setCategoryMap] = useState<any>({});
     const [editFolderChannelId, setEditFolderChannelId] = useState('');
     const [cueIds, setCueIds] = useState<any[]>([]);
     const [filterByChannel, setFilterByChannel] = useState('All');
-    const [indexMap, setIndexMap] = useState<any>({});
     const [channelKeyList, setChannelKeyList] = useState<any[]>([]);
     const [channelHeightList, setChannelHeightList] = useState<any[]>([]);
-    const [activityChannelId, setActivityChannelId] = useState<any>('');
     const [filterEventsType, setFilterEventsType] = useState('All');
-    const [showFilterPopup, setShowFilterPopup] = useState(false);
     const [loadDiscussionForChannelId, setLoadDiscussionForChannelId] = useState();
     const [openChannelId, setOpenChannelId] = useState('');
     let cancelTokenRef: any = useRef({});
-    const tabs = ['Content', 'Discuss', 'Meet', 'Scores', 'Settings'];
-    const tabNames: any = {
-        Content: 'Library',
-        Discuss: 'Discussion',
-        Meet: 'Meetings',
-        Scores: 'Scores',
-        Settings: 'Settings',
-    };
+
     const width = Dimensions.get('window').width;
     const windowHeight = Dimensions.get('window').height;
     const sortbyOptions = [
@@ -130,16 +124,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     ];
     const currentTime = new Date();
     const [showInstantMeeting, setShowInstantMeeting] = useState(false);
-    const [instantMeetingChannelId, setInstantMeetingChannelId] = useState<any>('');
-    const [instantMeetingCreatedBy, setInstantMeetingCreatedBy] = useState<any>('');
+
     const [instantMeetingTitle, setInstantMeetingTitle] = useState<any>('');
     const [instantMeetingDescription, setInstantMeetingDescription] = useState<any>('');
     const [instantMeetingStart, setInstantMeetingStart] = useState<any>('');
     const [instantMeetingEnd, setInstantMeetingEnd] = useState<any>(new Date(currentTime.getTime() + 1000 * 40 * 60));
     const [instantMeetingAlertUsers, setInstantMeetingAlertUsers] = useState<any>(true);
     const [ongoingMeetings, setOngoingMeetings] = useState<any[]>([]);
-    const [userZoomInfo, setUserZoomInfo] = useState<any>('');
-    const [meetingProvider, setMeetingProvider] = useState('');
     const [selectedWorkspace, setSelectedWorkspace] = useState<any>(
         props.selectedWorkspace ? props.selectedWorkspace : ''
     );
@@ -185,7 +176,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const [showInviteByEmailsModal, setShowInviteByEmailsModal] = useState(false);
     const [emails, setEmails] = useState('');
     const [refreshChannelSettings, setRefreshChannelSettings] = useState(false);
-    const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [reversedSearches, setReversedSearches] = useState<string[]>([]);
     const DashboardScrollViewRef: any = useRef();
     const orientation = useOrientation();
@@ -196,13 +186,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const somethingWrongAlert = PreferredLanguageText('somethingWentWrong');
     const checkConnectionAlert = PreferredLanguageText('checkConnection');
     const doesNotExistAlert = PreferredLanguageText('doesNotExists');
-    const somethingWentWrongAlert = PreferredLanguageText('somethingWentWrong');
 
     // HOOKS
-
-    useEffect(() => {
-        loadRecentSearches();
-    }, []);
 
     useEffect(() => {
         props.setShowWorkspaceFilterModal(showFilterModal);
@@ -214,7 +199,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         }
         if (props.showNewMeeting) {
             // setShowInstantMeeting(true);
-            if (userZoomInfo || (meetingProvider && meetingProvider !== '')) {
+            if (user.zoomInfo || (org.meetingProvider && org.meetingProvider !== '')) {
                 const current = new Date();
                 setInstantMeetingStart(current);
                 setInstantMeetingEnd(new Date(current.getTime() + 1000 * 40 * 60));
@@ -249,7 +234,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 // ZOOM OATH
             }
         }
-    }, [props.showNewPost, props.showNewMeeting, userZoomInfo, meetingProvider]);
+    }, [props.showNewPost, props.showNewMeeting, user, org]);
 
     useEffect(() => {
         if (props.option === 'Search') {
@@ -259,37 +244,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             setShowSearchMobile(false);
         }
     }, [props.option]);
-
-    /**
-     * @description Fetch meeting provider for org
-     */
-    useEffect(() => {
-        (async () => {
-            const org = await AsyncStorage.getItem('school');
-
-            if (org) {
-                const school = JSON.parse(org);
-
-                setMeetingProvider(school.meetingProvider ? school.meetingProvider : '');
-            }
-        })();
-    }, []);
-
-    // /**
-    //  * @description Fetch meeting provider for org
-    //  */
-    //  useEffect(() => {
-    //     (async () => {
-    //         const activeWorkspace = await AsyncStorage.getItem('activeWorkspace');
-
-    //         if (activeWorkspace) {
-    //             // const school = JSON.parse(org);
-    //             setSelectedWorkspace(activeWorkspace)
-
-    //             await AsyncStorage.setItem('activeWorkspace', '');
-    //         }
-    //     })();
-    // }, []);
 
     /**
      * @description Update selected Workspace in Home
@@ -352,35 +306,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, [channelKeyList, channelHeightList, loadDiscussionForChannelId]);
 
     /**
-     * @description Load user and set user properties
-     */
-    useEffect(() => {
-        (async () => {
-            const u = await AsyncStorage.getItem('user');
-            if (u) {
-                const user = JSON.parse(u);
-                setUserId(user._id);
-
-                if (user.zoomInfo) {
-                    setUserZoomInfo(user.zoomInfo);
-                }
-
-                if (user.role) {
-                    setRole(user.role);
-                }
-
-                if (user.userCreatedOrg) {
-                    setUserCreatedOrg(user.userCreatedOrg);
-                }
-
-                if (user.allowQuizCreation) {
-                    setAllowQuizCreation(true);
-                }
-            }
-        })();
-    }, []);
-
-    /**
      * @description Prepares all the data to be displayed in workspace
      */
     useEffect(() => {
@@ -395,16 +320,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         // Sort by start and end date
         let dateFilteredCues: any[] = [];
         if (filterStart && filterEnd) {
-            dateFilteredCues = props.cues.filter((item: any) => {
+            dateFilteredCues = allCues.filter((item: any) => {
                 const date = new Date(item.date);
                 return date >= filterStart && date <= filterEnd;
             });
         } else {
-            dateFilteredCues = props.cues;
+            dateFilteredCues = allCues;
         }
 
         //
-        props.subscriptions.map((sub: any) => {
+        subscriptions.map((sub: any) => {
             // const tempCategories: any = {}
             const tempCues: any[] = [];
             const cat: any = { '': [] };
@@ -453,9 +378,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 });
             }
 
-            console.log('Sort by', sortBy);
-            console.log('Sorted cues', tempCues);
-
             const key =
                 sub.channelName +
                 '-SPLIT-' +
@@ -474,7 +396,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         });
 
         const cat: any = { '': [] };
-        props.cues.map((cue: any) => {
+        allCues.map((cue: any) => {
             if (!cue.channelId || cue.channelId === '') {
                 mycues.push(cue);
                 if (!cat[cue.customCategory]) {
@@ -523,46 +445,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             });
         }
 
-        console.log('Sort by', sortBy);
-        console.log('Sorted cues my notes', mycues);
-
         temp['My Notes'] = mycues;
         if (!cat['']) {
             delete cat[''];
         }
         tempCat['My Notes'] = Object.keys(cat);
-        // tempIndexes['My Notes'] = 0;
-
-        // console.log("Set Cue Map", temp["My Notes"])
 
         setCueMap(temp);
         setCollapseMap(tempCollapse);
         setCategoryMap(tempCat);
-        // setIndexMap(tempIndexes);
-    }, [sortBy, filterStart, filterEnd, props.subscriptions, props.cues]);
-
-    /**
-     * @description Seperate setting active tab from setting index map since everytime the cues refresh the tabs will also change so we dont want that to happen
-     */
-    // useEffect(() => {
-    //     const tempIndexes: any = {};
-
-    //     props.subscriptions.map((sub: any) => {
-    //         const key =
-    //             sub.channelName +
-    //             '-SPLIT-' +
-    //             sub.channelId +
-    //             '-SPLIT-' +
-    //             sub.channelCreatedBy +
-    //             '-SPLIT-' +
-    //             sub.colorCode;
-
-    //         tempIndexes[key] = 0;
-    //     });
-
-    //     tempIndexes['My Notes'] = 0;
-    //     setIndexMap(tempIndexes);
-    // }, [props.subscriptions]);
+    }, [sortBy, filterStart, filterEnd, subscriptions, allCues]);
 
     useEffect(() => {
         if (DashboardScrollViewRef && DashboardScrollViewRef.current) {
@@ -701,17 +593,73 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         tabsFound.push('Courses');
                         activeTab = activeTab !== '' ? activeTab : 'Courses';
                     }
+                    // Sort all the search results by date
+                    const sortContent = [...tempResults['Content']];
+                    sortContent.sort((a: any, b: any) => {
+                        const aDate = new Date(a.date);
+                        const bDate = new Date(b.date);
 
+                        if (aDate < bDate) {
+                            return 1;
+                        } else if (aDate > bDate) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    });
+
+                    const sortThreads = [...tempResults['Discussion']];
+                    sortThreads.sort((a: any, b: any) => {
+                        const aDate = new Date(a.time);
+                        const bDate = new Date(b.time);
+
+                        if (aDate < bDate) {
+                            return 1;
+                        } else if (aDate > bDate) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    });
+
+                    const sortMessages = [...tempResults['Messages']];
+
+                    const messages = sortMessages.map((msg) => msg.message);
+
+                    messages.sort((a: any, b: any) => {
+                        const aDate = new Date(a.created_at);
+                        const bDate = new Date(b.created_at);
+
+                        if (aDate < bDate) {
+                            return 1;
+                        } else if (aDate > bDate) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    });
+
+                    const sortCourses = [...tempResults['Courses']];
+                    sortCourses.sort((a: any, b: any) => {
+                        return a.name < b.name ? 1 : -1;
+                    });
+
+                    let sortedResults = {
+                        Content: sortContent,
+                        Courses: sortCourses,
+                        Discussion: sortThreads,
+                        Messages: messages,
+                    };
+
+                    setResults(sortedResults);
                     setActiveSearchResultsTab(activeTab);
                     setSearchResultTabs(tabsFound);
 
                     setResultCount(totalCount);
-                    setResults(tempResults);
                     setLoadingSearchResults(false);
                 });
         } catch (error) {
             setLoadingSearchResults(false);
-            console.log(error);
         }
     }, [searchTerm, userId]);
 
@@ -726,17 +674,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
         const startDate = new Date();
 
-        console.log('Create instant meeting', {
-            userId,
-            channelId: selectedWorkspace.split('-SPLIT-')[1],
-            title: instantMeetingTitle,
-            description: instantMeetingDescription,
-            start: startDate.toUTCString(),
-            end: instantMeetingEnd.toUTCString(),
-            notifyUsers: instantMeetingAlertUsers,
-        });
+        if (instantMeetingEnd < new Date()) {
+            Alert('Meeting end time must be set in the future.');
+            return;
+        } else if (startDate > instantMeetingEnd) {
+            Alert('Meeting end time must be set after the start time.');
+            return;
+        }
 
-        const server = fetchAPI('');
         server
             .mutate({
                 mutation: startInstantMeeting,
@@ -751,9 +696,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 },
             })
             .then((res) => {
-                console.log('Meeting res', res);
                 if (res.data && res.data.channel.startInstantMeeting !== 'error') {
-                    if (meetingProvider !== '' && res.data.channel.startInstantMeeting === 'MEETING_LINK_NOT_SET') {
+                    if (org.meetingProvider !== '' && res.data.channel.startInstantMeeting === 'MEETING_LINK_NOT_SET') {
                         Alert(
                             'No meeting link has been set for the course. Go to Course settings and add a meeting link.'
                         );
@@ -786,7 +730,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         instantMeetingDescription,
         instantMeetingEnd,
         instantMeetingAlertUsers,
-        meetingProvider,
+        org,
         userId,
         selectedWorkspace,
     ]);
@@ -794,11 +738,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     /**
      * @description Handle create instant meeting for channel owners
      */
-    const getCurrentMeetings = useCallback(async () => {
-        console.log('Get ongoing meetings channelId', selectedWorkspace);
-
+    const getCurrentMeetings = useCallback(() => {
         if (userId !== '' && selectedWorkspace !== '') {
-            const server = fetchAPI('');
             server
                 .query({
                     query: getOngoingMeetings,
@@ -813,19 +754,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     }
                 })
                 .catch((err) => {
-                    console.log('Error in getCurrentMeeting', err);
                     Alert('Something went wrong.');
                 });
         }
     }, [userId, selectedWorkspace]);
-
-    const loadRecentSearches = useCallback(async () => {
-        const recentSearches = await AsyncStorage.getItem('recentSearches');
-
-        if (recentSearches) {
-            setRecentSearches(JSON.parse(recentSearches));
-        }
-    }, []);
 
     useEffect(() => {
         setReversedSearches(recentSearches.reverse());
@@ -858,57 +790,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     );
 
     /**
-     * @description Call to enter classroom
-     */
-    const handleEnterClassroom = useCallback(async () => {
-        const u = await AsyncStorage.getItem('user');
-
-        if (u) {
-            const user = JSON.parse(u);
-            if (user.zoomInfo) {
-                // Zoom is connected
-                const server = fetchAPI('');
-                server
-                    .mutate({
-                        mutation: meetingRequest,
-                        variables: {
-                            userId,
-                            channelId: instantMeetingChannelId,
-                            isOwner: user._id.toString().trim() === instantMeetingCreatedBy,
-                        },
-                    })
-                    .then((res) => {
-                        if (res.data && res.data.channel.meetingRequest !== 'error') {
-                            server.mutate({
-                                mutation: markAttendance,
-                                variables: {
-                                    userId: userId,
-                                    channelId: props.channelId,
-                                },
-                            });
-
-                            if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                                Linking.openURL(res.data.channel.meetingRequest);
-                            } else {
-                                window.open(res.data.channel.meetingRequest, '_blank');
-                            }
-                        } else {
-                            Alert('Classroom not in session. Waiting for instructor.');
-                        }
-                    })
-                    .catch((err) => {
-                        console.log('Error', err);
-                        Alert('Something went wrong.');
-                    });
-            }
-        }
-    }, [userId, instantMeetingChannelId, instantMeetingCreatedBy]);
-
-    /**
      * @description Fetches status of channel and depending on that handles subscription to channel
      */
     const handleSub = useCallback(async (channelId) => {
-        const server = fetchAPI('');
         server
             .query({
                 query: checkChannelStatus,
@@ -943,56 +827,15 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     }, []);
 
     /**
-     * @description Called from Modal for creating a new thread
-     */
-    const createNewThread = useCallback(
-        async (message: any, category: any, isPrivate: any) => {
-            const server = fetchAPI('');
-            server
-                .mutate({
-                    mutation: createMessage,
-                    variables: {
-                        message,
-                        userId,
-                        channelId: selectedWorkspace.split('-SPLIT-')[1],
-                        isPrivate,
-                        anonymous: false,
-                        cueId: !props.cueId ? 'NULL' : props.cueId,
-                        parentId: 'INIT',
-                        category: category === 'None' ? '' : category,
-                    },
-                })
-                .then((res) => {
-                    if (res.data.thread.writeMessage) {
-                        setDiscussionReloadKey(Math.random());
-                        setShowNewPostModal(false);
-                        props.setShowNewPost(false);
-                    } else {
-                        Alert(checkConnectionAlert);
-                    }
-                })
-                .catch((err) => {
-                    console.log('Error', err);
-                    Alert(somethingWentWrongAlert, checkConnectionAlert);
-                });
-        },
-        [props.cueId, props.channelId, userId, selectedWorkspace]
-    );
-
-    /**
      * @description Subscribes user to a channel
      */
     const handleSubscribe = useCallback(
-        async (channelId, pass) => {
-            const uString: any = await AsyncStorage.getItem('user');
-            const user = JSON.parse(uString);
-
-            const server = fetchAPI('');
+        (channelId, pass) => {
             server
                 .mutate({
                     mutation: subscribe,
                     variables: {
-                        userId: user._id,
+                        userId,
                         channelId,
                         password: pass,
                     },
@@ -1004,7 +847,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             case 'subscribed':
                                 alert('Subscribed successfully!');
                                 setSearchTerm('');
-                                props.reloadData();
+                                refreshSubscriptions();
                                 break;
                             case 'incorrect-password':
                                 Alert(incorrectPasswordAlert);
@@ -1151,8 +994,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                             if (!selectedDate) return;
                             const currentDate: any = selectedDate;
                             const roundedValue = roundSeconds(currentDate);
-                            console.log('End date', roundedValue);
-                            console.log('Start date', filterStart);
 
                             if (roundedValue < filterStart) {
                                 Alert('End date cannot be before start date');
@@ -1241,18 +1082,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 key={xScrollOffset.toString()}
                 style={{
                     width: '100%',
-                    // height: windowHeight,
                     height: categoryPositionList.length * 40 > 500 ? 500 : categoryPositionList.length * 40,
-                    // maxHeight: 500,
                     backgroundColor: 'white',
                     borderTopRightRadius: 0,
                     borderTopLeftRadius: 0,
                 }}
-                contentContainerStyle={
-                    {
-                        // paddingHorizontal: 20
-                    }
-                }
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={true}
                 scrollEventThrottle={1}
@@ -1324,9 +1158,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const addViewersWithEmail = useCallback(
-        async (emails: string[]) => {
-            const server = fetchAPI('');
-
+        (emails: string[]) => {
             server
                 .mutate({
                     mutation: addUsersByEmail,
@@ -1339,7 +1171,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 .then((res) => {
                     if (res.data && res.data.channel.addUsersByEmail) {
                         const { success, failed, error } = res.data.channel.addUsersByEmail;
-                        console.log('Response', res.data.channel.addUsersByEmail);
 
                         if (error) {
                             alert(error);
@@ -1490,11 +1321,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 return;
                             }
 
-                            console.log('Add viewers with email', santizedEmails);
-
                             addViewersWithEmail(santizedEmails);
                         }}
-                        disabled={props.user.email === disableEmailId}
+                        disabled={user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -1637,7 +1466,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             { value: '', label: 'My Notes' },
         ];
 
-        props.subscriptions.map((sub: any) => {
+        subscriptions.map((sub: any) => {
             filterChannelOptions.push({
                 value: sub.channelName,
                 label: sub.channelName,
@@ -1781,7 +1610,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     //         { value: 'My Events', text: 'My Events' }
     //     ];
 
-    //     props.subscriptions.map((sub: any) => {
+    //     subscriptions.map((sub: any) => {
     //         channelOptions.push({
     //             value: sub.channelName,
     //             text: sub.channelName
@@ -1860,7 +1689,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     };
 
     const renderOngoingMeetings = (createdBy: string, colorCode: string) => {
-        console.log('Render ongoing meetings');
         return (
             <View
                 style={{
@@ -1904,8 +1732,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         indicatorStyle="black"
                     >
                         {ongoingMeetings.map((meeting: any, ind: number) => {
-                            console.log('Ongoing meeting', meeting);
-
                             let startTime = emailTimeDisplay(meeting.start);
                             let endTime = emailTimeDisplay(meeting.end);
 
@@ -1967,7 +1793,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <TouchableOpacity
                                                 onPress={() => {
-                                                    if (meetingProvider !== '' && meeting.joinUrl) {
+                                                    if (org.meetingProvider !== '' && meeting.joinUrl) {
                                                         if (
                                                             Platform.OS === 'web' ||
                                                             Platform.OS === 'macos' ||
@@ -1977,10 +1803,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         } else {
                                                             Linking.openURL(meeting.joinUrl);
                                                         }
-                                                    } else if (meetingProvider !== '' && !meeting.joinUrl) {
+                                                    } else if (org.meetingProvider !== '' && !meeting.joinUrl) {
                                                         Alert('No meeting link found. Contact your instructor.');
                                                         return;
-                                                    } else if (!userZoomInfo || userZoomInfo.accountId === '') {
+                                                    } else if (!user.zoomInfo || user.zoomInfo.accountId === '') {
                                                         Alert('Join Meeting?', '', [
                                                             {
                                                                 text: 'Cancel',
@@ -2040,7 +1866,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                         }
                                                     }
                                                 }}
-                                                disabled={props.user.email === disableEmailId}
+                                                disabled={user.email === disableEmailId}
                                             >
                                                 <Text
                                                     style={{
@@ -2405,7 +2231,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     onPress={() => {
                         createInstantMeeting();
                     }}
-                    disabled={props.user.email === disableEmailId}
+                    disabled={user.email === disableEmailId}
                 >
                     <Text
                         style={{
@@ -2433,7 +2259,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
     const renderCarouselItem = (obj: any) => {
         const { item } = obj;
 
-        const { category, index, cues, channelId } = item;
+        const { category, index, cues } = item;
 
         return (
             <View
@@ -2467,14 +2293,12 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 </Text>
                 <ScrollView
                     horizontal={false}
-                    // key={JSON.stringify(results)}
                     showsVerticalScrollIndicator={true}
                     contentContainerStyle={{
                         flexDirection: 'column',
                         width: '100%',
                         justifyContent: 'center',
                         backgroundColor: '#fff',
-                        // paddingTop: ,
                         padding: 5,
                     }}
                     nestedScrollEnabled={true}
@@ -2521,13 +2345,10 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     elevation: 1,
                                 }}
                                 onPress={() => {
-                                    props.openUpdate(
-                                        cue.key,
-                                        cue.index,
-                                        0,
+                                    props.openCue(
+                                        cue.channelId ? cue.channelId : '',
                                         cue._id,
-                                        cue.createdBy ? cue.createdBy : '',
-                                        cue.channelId ? cue.channelId : ''
+                                        cue.createdBy ? cue.createdBy : ''
                                     );
                                 }}
                                 key={ind.toString()}
@@ -2648,6 +2469,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
             </View>
         );
     };
+
+    console.log('activeSearchResultsTab', activeSearchResultsTab);
+    console.log('results', results['Messages']);
 
     /**
      * @description Renders View for search results
@@ -2785,7 +2609,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 style={{
                                                     paddingLeft: 12,
                                                     color: '#000',
-                                                    // fontFamily: 'Inter',
                                                     fontSize: 16,
                                                 }}
                                             >
@@ -2841,14 +2664,16 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 let colorCode = '';
                                 let subscribed = false;
                                 let messageSenderName = '';
+                                let messageSenderChannel = '';
                                 let messageSenderAvatar = '';
                                 let createdAt = '';
+                                let messageSenderOnline = false;
 
                                 if (activeSearchResultsTab === 'Content') {
                                     const { title, subtitle } = htmlStringParser(obj.cue);
                                     t = title;
                                     s = subtitle;
-                                    const filterChannel = props.subscriptions.filter((channel: any) => {
+                                    const filterChannel = subscriptions.filter((channel: any) => {
                                         return channel.channelId === obj.channelId;
                                     });
 
@@ -2863,7 +2688,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
 
                                     channelName = obj.name;
                                     // Determine if already subscribed or not
-                                    const existingSubscription = props.subscriptions.filter((channel: any) => {
+                                    const existingSubscription = subscriptions.filter((channel: any) => {
                                         return channel.channelId === obj._id;
                                     });
 
@@ -2893,7 +2718,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         t = title;
                                         s = subtitle;
                                     }
-                                    const filterChannel = props.subscriptions.filter((channel: any) => {
+                                    const filterChannel = subscriptions.filter((channel: any) => {
                                         return channel.channelId === obj.channelId;
                                     });
 
@@ -2903,31 +2728,19 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     }
 
                                     createdAt = obj.time;
-                                } else if (activeSearchResultsTab === 'Messages') {
-                                    const users = obj.groupId.users;
+                                } else {
+                                    messageSenderName = obj.user?.name;
+                                    messageSenderAvatar = obj.user?.image;
+                                    messageSenderChannel = obj.channel?.name;
+                                    messageSenderOnline = obj.user?.online;
 
-                                    const sender = users.filter((user: any) => user._id === obj.sentBy)[0];
+                                    t = obj.text;
 
-                                    if (obj.groupId && obj.groupId.name) {
-                                        messageSenderName = obj.groupId.name + ' > ' + sender.fullName;
-                                        messageSenderAvatar = obj.groupId.image ? obj.groupId.image : '';
-                                    } else if (sender) {
-                                        messageSenderName = sender.fullName;
-                                        messageSenderAvatar = sender.avatar ? sender.avatar : '';
-                                    }
-
-                                    if (obj.message[0] === '{' && obj.message[obj.message.length - 1] === '}') {
-                                        const o = JSON.parse(obj.message);
-                                        t = o.title;
-                                        s = o.type;
-                                    } else {
-                                        const { title, subtitle } = htmlStringParser(obj.message);
-                                        t = title;
-                                        s = subtitle;
-                                    }
-
-                                    createdAt = obj.sentAt;
+                                    createdAt = obj.created_at;
                                 }
+
+                                console.log('Message sender avatar', messageSenderAvatar);
+                                console.log('Message sender channel', messageSenderChannel);
 
                                 return (
                                     <SearchResultCard
@@ -2939,12 +2752,14 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         option={activeSearchResultsTab}
                                         subscribed={subscribed}
                                         messageSenderName={messageSenderName}
+                                        messageSenderChannel={messageSenderChannel}
                                         messageSenderAvatar={messageSenderAvatar}
+                                        messageSenderOnline={messageSenderOnline}
                                         createdAt={createdAt}
                                         handleSub={() => handleSub(obj._id)}
                                         onPress={async () => {
                                             if (activeSearchResultsTab === 'Content') {
-                                                props.openCueFromCalendar(obj.channelId, obj._id, obj.createdBy);
+                                                props.openCue(obj.channelId, obj._id, obj.createdBy);
                                                 setSearchTerm('');
                                             } else if (activeSearchResultsTab === 'Discussion') {
                                                 await AsyncStorage.setItem(
@@ -2952,37 +2767,27 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     obj.parentId && obj.parentId !== '' ? obj.parentId : obj._id
                                                 );
 
-                                                if (obj.cueId && obj.cueId !== '') {
-                                                    props.openQAFromSearch(obj.channelId, obj.cueId);
-                                                } else {
-                                                    props.openDiscussionFromSearch(obj.channelId);
+                                                props.openDiscussionFromSearch(obj.channelId);
 
-                                                    props.setLoadDiscussionForChannelId(obj.channelId);
-                                                }
+                                                props.setLoadDiscussionForChannelId(obj.channelId);
 
                                                 setSearchTerm('');
                                             } else if (activeSearchResultsTab === 'Messages') {
                                                 // open chat and set Chat ID and users in Async storage to open that specific chat
 
-                                                await AsyncStorage.setItem(
-                                                    'openChat',
-                                                    JSON.stringify({
-                                                        _id: obj.groupId._id,
-                                                        users: obj.users,
-                                                    })
-                                                );
-
+                                                setOpenMessageId(obj.id);
+                                                setOpenChatChannelId(obj.channel.id);
                                                 props.setOption('Inbox');
 
                                                 setSearchTerm('');
                                             } else if (activeSearchResultsTab === 'Courses') {
                                                 if (subscribed) {
+                                                    setSearchTerm('');
                                                     // Open the channel meeting
                                                     props.openChannelFromActivity(obj._id);
                                                 }
                                             }
                                         }}
-                                        user={props.user}
                                     />
                                 );
                             })}
@@ -3004,6 +2809,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
         else return date.format('MM/DD/YYYY');
     }
 
+    console.log('selectedWorkspace', selectedWorkspace);
+
     const overviewMobile = (
         <View
             style={{
@@ -3018,8 +2825,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 <View
                     style={{
                         paddingHorizontal: paddingResponsive(),
-                        // height: 60,
-                        // paddingVertical: 10,
                         paddingTop: 15,
                         paddingBottom: 10,
                     }}
@@ -3027,12 +2832,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     {selectedWorkspace !== '' ? (
                         <View
                             style={{
-                                // paddingVertical: 6,
                                 paddingTop: 0,
-                                // marginHorizontal: 12,
                                 backgroundColor: '#fff',
                                 flexDirection: 'row',
-                                // justifyContent: 'center',
                                 alignItems: 'center',
                             }}
                         >
@@ -3168,13 +2970,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             fontSize: 15,
                                             flex: 1,
                                             paddingVertical: 8,
-                                            // marginTop: 10,
                                             marginRight: searchTerm === '' ? 10 : 15,
-                                            // backgroundColor: '#f8f8f8',
-                                            // borderRadius: 18,
-                                            // borderBottomColor: '#cfcfcf',
-
-                                            // borderBottomWidth: 1
                                         }}
                                         placeholder={'Search'}
                                         placeholderTextColor="#656565"
@@ -3204,119 +3000,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     ) : null}
                                 </View>
                             ) : null}
-
-                            {/* {showSearchMobile ? <DefaultInput
-                                style={{
-                                    paddingHorizontal: 10,
-                                    marginLeft: 10,
-                                    width: 300,
-                                    color: '#000',
-                                    fontSize: 14,
-                                    flex: 1,
-                                    paddingVertical: 8,
-                                    // marginTop: 10,
-                                    marginRight: searchTerm === '' ? 10 : 15,
-                                    // backgroundColor: '#f8f8f8',
-                                    // borderRadius: 18,
-                                    borderBottomColor: '#cfcfcf',
-
-                                    borderBottomWidth: 1
-                                }}
-                                placeholder={'🔍'}
-                                placeholderTextColor="#656565"
-                                value={searchTerm}
-                                autoFocus={false}
-                                onChangeText={(val) => setSearchTerm(val)}
-                                onFocus={() => setShowSearchMobile(true)}
-                                returnKeyType="search"
-                            /> : null} */}
-
-                            {/* {showSearchMobile ? null : <Image
-                            source={logo}
-                            style={{
-                                width: 60,
-                                marginTop: 10,
-                                height: 30,
-                                marginRight: 13
-                            }}
-                            resizeMode={'contain'}
-                        />}
-                        {showSearchMobile ? (
-                            <DefaultInput
-                                style={{
-                                    paddingHorizontal: 10,
-                                    width: 300,
-                                    color: '#000',
-                                    fontSize: 14,
-                                    flex: 1,
-                                    paddingVertical: 8,
-                                    marginTop: 10,
-                                    marginRight: 15,
-                                    backgroundColor: '#f8f8f8',
-                                    borderRadius: 18
-                                }}
-                                placeholder="Search..."
-                                placeholderTextColor="#656565"
-                                value={searchTerm}
-                                autoFocus={true}
-                                onChangeText={(val) => setSearchTerm(val)}
-                            />
-                        ) : (
-                            <DefaultInput
-                                style={{
-                                    paddingHorizontal: 10,
-                                    width: 300,
-                                    color: '#000',
-                                    fontSize: 14,
-                                    flex: 1,
-                                    paddingVertical: 8,
-                                    marginTop: 10,
-                                    marginRight: 15,
-                                    backgroundColor: '#f8f8f8',
-                                    borderRadius: 18
-                                }}
-                                placeholder="Search..."
-                                placeholderTextColor="#656565"
-                                value={searchTerm}
-                                autoFocus={false}
-                                onChangeText={(val) => setSearchTerm(val)}
-                                onFocus={() => setShowSearchMobile(true)}
-                            />
-                        )} */}
-                            {/* {showSearchMobile ? null : <TouchableOpacity
-                            onPress={() => {
-                                props.setShowSettings(true)
-                            }}
-                            style={{
-                                // position: 'absolute',
-                                paddingVertical: 6,
-                                marginLeft: 'auto',
-                            }}
-                        >
-                            <Ionicons
-                                // name={showSearchMobile ? 'close-outline' : 'search-outline'}
-                                size={20}
-                                name={'settings-outline'}
-                                color="black"
-                            />
-                        </TouchableOpacity>} */}
-                            {/* {showSearchMobile && searchTerm !== '' ? <TouchableOpacity
-                            onPress={() => {
-                                // setShowSearchMobile(!showSearchMobile);
-                                Keyboard.dismiss()
-                                setSearchTerm('');
-                            }}
-                            containerStyle={{
-                                marginLeft: 'auto',
-
-                            }}
-                        >
-                            <Ionicons
-                                size={22}
-                                name={'close-outline'}
-                                color="black"
-                            />
-                        </TouchableOpacity> : null} */}
                         </View>
                     )}
                 </View>
@@ -3335,8 +3018,11 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         }}
                         refreshControl={
                             <RefreshControl
-                                refreshing={props.refreshingWorkspace}
-                                onRefresh={() => props.onRefreshWorkspace(true)}
+                                refreshing={loadingCues || loadingSubs}
+                                onRefresh={() => {
+                                    refreshCues();
+                                    refreshSubscriptions();
+                                }}
                                 tintColor={'#1f1f1f'}
                                 progressBackgroundColor={Platform.OS === 'ios' ? '#1f1f1f' : '#f2f2f2'}
                                 size={14}
@@ -3362,13 +3048,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         key={ind}
                                         containerStyle={{
                                             backgroundColor: '#fff',
-                                            // borderRadius: 17,
                                             marginRight: ind % 2 === 0 ? 20 : 0,
-                                            // maxWidth: '100%',
                                             width: '100%',
-                                            // marginRight: '5%',
-                                            // borderColor: key.split('-SPLIT-')[3],
-                                            // borderLeftWidth: 3,
                                             shadowOffset: {
                                                 width: 5,
                                                 height: 5,
@@ -3411,8 +3092,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 fontFamily: 'Inter',
                                                 fontSize: Dimensions.get('window').width < 768 ? 19 : 21,
                                                 width: 'auto',
-
-                                                // color: key.split('-SPLIT-')[3]
                                             }}
                                         >
                                             {key.split('-SPLIT-')[0]}
@@ -3435,12 +3114,20 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         maxHeight: '100%',
                     }}
                     scrollEnabled={
-                        !props.hideNavbarDiscussions && !props.hideNavbarGrades && !props.hideNavbarAttendance
+                        !props.hideNavbarDiscussions &&
+                        !props.hideNavbarGrades &&
+                        !props.hideNavbarAttendance &&
+                        props.activeWorkspaceTab !== 'Discuss'
                     }
                     nestedScrollEnabled={true}
                     indicatorStyle="black"
                     ref={DashboardScrollViewRef}
-                    bounces={!props.hideNavbarDiscussions && !props.hideNavbarGrades && !props.hideNavbarAttendance}
+                    bounces={
+                        !props.hideNavbarDiscussions &&
+                        !props.hideNavbarGrades &&
+                        !props.hideNavbarAttendance &&
+                        props.activeWorkspaceTab !== 'Discuss'
+                    }
                 >
                     <View
                         style={{
@@ -3463,7 +3150,9 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                     props.activeWorkspaceTab === 'Meet'
                                         ? 'auto'
                                         : props.activeWorkspaceTab === 'Discuss'
-                                        ? windowHeight
+                                        ? Dimensions.get('window').width >= 768
+                                            ? windowHeight - 70
+                                            : windowHeight
                                         : windowHeight - (Platform.OS === 'android' ? 90 : 200),
                             }}
                         >
@@ -3498,7 +3187,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                 channelColor={selectedWorkspace.split('-SPLIT-')[3]}
                                                 setHideNavbarDiscussions={props.setHideNavbarDiscussions}
                                                 hideNavbarDiscussions={props.hideNavbarDiscussions}
-                                                user={props.user}
                                             />
                                         ) : // Meet
                                         props.activeWorkspaceTab === 'Meet' ? (
@@ -3515,8 +3203,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     channelCreatedBy={selectedWorkspace.split('-SPLIT-')[2]}
                                                     channelColor={selectedWorkspace.split('-SPLIT-')[3]}
                                                     isOwner={selectedWorkspace.split('-SPLIT-')[2] === userId}
-                                                    userId={userId}
-                                                    user={props.user}
                                                     showNewAttendance={props.showNewAttendance}
                                                     setShowNewAttendance={props.setShowNewAttendance}
                                                 />
@@ -3524,9 +3210,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         ) : // Scores
                                         props.activeWorkspaceTab === 'Scores' ? (
                                             <GradesList
-                                                user={props.user}
-                                                userId={userId}
-                                                openCueFromGrades={props.openCueFromCalendar}
+                                                openCueFromGrades={props.openCue}
                                                 isOwner={selectedWorkspace.split('-SPLIT-')[2] === userId}
                                                 showNewAssignment={props.showNewAssignment}
                                                 setShowNewAssignment={props.setShowNewAssignment}
@@ -3547,13 +3231,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             >
                                                 <ChannelSettings
                                                     channelId={selectedWorkspace.split('-SPLIT-')[1]}
-                                                    refreshSubscriptions={() => {
-                                                        setSelectedWorkspace('');
-                                                        props.refreshSubscriptions();
-                                                    }}
-                                                    closeModal={() => {
-                                                        props.onRefreshWorkspace(true);
-                                                    }}
                                                     handleUpdateChannel={(newName: string, newColorCode: string) => {
                                                         const currentCourseDetails = selectedWorkspace.split('-SPLIT-');
 
@@ -3567,11 +3244,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                             newColorCode;
 
                                                         setSelectedWorkspace(updateSelectedWorkspace);
-
-                                                        props.onRefreshWorkspace(true);
+                                                    }}
+                                                    handleDeleteChannel={() => {
+                                                        setSelectedWorkspace('');
+                                                        props.setOpenChannelId('');
+                                                        props.setWorkspaceActiveTab('Content');
                                                     }}
                                                     channelColor={selectedWorkspace.split('-SPLIT-')[3]}
-                                                    userId={userId}
                                                     scrollToTop={() => {
                                                         if (DashboardScrollViewRef && DashboardScrollViewRef.current) {
                                                             DashboardScrollViewRef.current.scrollTo({
@@ -3587,8 +3266,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                                     setShowInviteByEmailsModal={(show: boolean) =>
                                                         setShowInviteByEmailsModal(show)
                                                     }
-                                                    userCreatedOrg={userCreatedOrg}
-                                                    user={props.user}
                                                 />
                                             </View>
                                         )
@@ -3613,147 +3290,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                         </Text>
                                     ) : (
                                         renderMobileCuesCarousel()
-                                        // <ScrollView
-                                        //     horizontal={false}
-                                        //     contentContainerStyle={{
-                                        //         // maxWidth: '100%',
-                                        //         backgroundColor: '#f8f8f8',
-                                        //         paddingHorizontal: 10
-                                        //     }}
-                                        //     showsVerticalScrollIndicator={true}
-                                        //     showsHorizontalScrollIndicator={false}
-                                        //     key={editFolderChannelId.toString() + cueIds.toString() + cueMap.toString()}
-                                        //     indicatorStyle="black"
-                                        // >
-                                        //     {categoryMap[selectedWorkspace].map((category: any, i: any) => {
-                                        //         // Check if even one category exists in cues
-
-                                        //         const foundCue = cueMap[selectedWorkspace].find(
-                                        //             (cue: any) =>
-                                        //                 cue.customCategory.toString().trim() ===
-                                        //                 category.toString().trim()
-                                        //         );
-
-                                        //         if (!foundCue) return null;
-
-                                        //         return (
-                                        //             <View
-                                        //                 style={{
-                                        //                     width: '100%',
-                                        //                     backgroundColor: '#f8f8f8',
-                                        //                     marginRight: 15,
-                                        //                     marginBottom: 20
-                                        //                 }}
-                                        //                 key={i}
-                                        //             >
-                                        //                 <View
-                                        //                     style={{
-                                        //                         backgroundColor: '#f8f8f8',
-                                        //                         paddingLeft: 5
-                                        //                     }}
-                                        //                 >
-                                        //                     {category === '' ? null : (
-                                        //                         <Text
-                                        //                             style={{
-                                        //                                 flex: 1,
-                                        //                                 flexDirection: 'row',
-                                        //                                 color: '#838383',
-                                        //                                 fontSize: 16,
-                                        //                                 lineHeight: 25,
-                                        //                                 marginBottom: category === '' ? 0 : 5,
-                                        //                                 fontFamily: 'inter',
-                                        //                                 backgroundColor: '#f8f8f8'
-                                        //                             }}
-                                        //                             ellipsizeMode="tail"
-                                        //                         >
-                                        //                             {category === '' ? ' ' : category}
-                                        //                         </Text>
-                                        //                     )}
-                                        //                 </View>
-                                        //                 <ScrollView
-                                        //                     horizontal={true}
-                                        //                     style={{
-                                        //                         paddingLeft: 5,
-                                        //                         backgroundColor: '#f8f8f8',
-                                        //                         width: '100%'
-                                        //                     }}
-                                        //                     key={i.toString() + selectedWorkspace.toString()}
-                                        //                     showsHorizontalScrollIndicator={false}
-                                        //                 >
-                                        //                     {cueMap[selectedWorkspace].map((cue: any, index: any) => {
-                                        //                         if (
-                                        //                             cue.customCategory.toString().trim() !==
-                                        //                             category.toString().trim()
-                                        //                         ) {
-                                        //                             return null;
-                                        //                         }
-                                        //                         return (
-                                        //                             <View
-                                        //                                 style={{
-                                        //                                     marginBottom: 15,
-                                        //                                     backgroundColor: '#f8f8f8',
-                                        //                                     width: '100%',
-                                        //                                     maxWidth: 130,
-                                        //                                     marginRight: 15
-                                        //                                 }}
-                                        //                                 key={index}
-                                        //                             >
-                                        //                                 <Card
-                                        //                                     gray={true}
-                                        //                                     cueIds={cueIds}
-                                        //                                     onLongPress={() => {
-                                        //                                         setCueIds([]);
-                                        //                                         setEditFolderChannelId(
-                                        //                                             cue.channelId
-                                        //                                                 ? cue.channelId
-                                        //                                                 : 'Home'
-                                        //                                         );
-                                        //                                     }}
-                                        //                                     add={() => {
-                                        //                                         const temp = JSON.parse(
-                                        //                                             JSON.stringify(cueIds)
-                                        //                                         );
-                                        //                                         const found = temp.find((i: any) => {
-                                        //                                             return i === cue._id;
-                                        //                                         });
-                                        //                                         if (!found) {
-                                        //                                             temp.push(cue._id);
-                                        //                                         }
-                                        //                                         setCueIds(temp);
-                                        //                                     }}
-                                        //                                     remove={() => {
-                                        //                                         const temp = JSON.parse(
-                                        //                                             JSON.stringify(cueIds)
-                                        //                                         );
-                                        //                                         const upd = temp.filter((i: any) => {
-                                        //                                             return i !== cue._id;
-                                        //                                         });
-                                        //                                         setCueIds(upd);
-                                        //                                     }}
-                                        //                                     editFolderChannelId={editFolderChannelId}
-                                        //                                     fadeAnimation={props.fadeAnimation}
-                                        //                                     updateModal={() => {
-                                        //                                         props.openUpdate(
-                                        //                                             cue.key,
-                                        //                                             cue.index,
-                                        //                                             0,
-                                        //                                             cue._id,
-                                        //                                             cue.createdBy ? cue.createdBy : '',
-                                        //                                             cue.channelId ? cue.channelId : ''
-                                        //                                         );
-                                        //                                     }}
-                                        //                                     cue={cue}
-                                        //                                     channelId={props.channelId}
-                                        //                                     subscriptions={props.subscriptions}
-                                        //                                 />
-                                        //                             </View>
-                                        //                         );
-                                        //                     })}
-                                        //                 </ScrollView>
-                                        //             </View>
-                                        //         );
-                                        //     })}
-                                        // </ScrollView>
                                     )}
                                 </View>
                             ) : null}
@@ -3801,7 +3337,7 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                         justifyContent: 'center',
                         flexDirection: 'row',
                     }}
-                    disabled={props.user.email === disableEmailId}
+                    disabled={user.email === disableEmailId}
                 >
                     <Text
                         style={{
@@ -3834,320 +3370,41 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                 backgroundColor: props.option === 'To Do' ? '#f2f2f2' : '#fff',
             }}
         >
-            {/* {renderInstantMeetingPopup()} */}
-            {/* <View
-                style={{
-                    backgroundColor: '#000000',
-                    borderBottomWidth: 2,
-                    paddingHorizontal: Dimensions.get('window').width < 768 ? 20 : 0,
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    width: '100%',
-                    height: 52,
-                    paddingVertical: 2,
-                    shadowColor: '#000',
-                    shadowOffset: {
-                        width: 0,
-                        height: 7
-                    },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 10,
-                    zIndex: 500000
-                }}
-            >
+            {props.modalType === 'Create' && props.option === 'Classroom' ? (
+                <Create
+                    closeModal={() => props.closeModal()}
+                    option={props.option}
+                    createOption={props.createOption}
+                    showImportCreate={props.showImportCreate}
+                    setShowImportCreate={props.setShowImportCreate}
+                    setCreateActiveTab={props.setCreateActiveTab}
+                    createActiveTab={props.createActiveTab}
+                    setDisableCreateNavbar={props.setDisableCreateNavbar}
+                    channelId={
+                        selectedWorkspace.split('-SPLIT-')[0] === 'My Notes'
+                            ? ''
+                            : selectedWorkspace.split('-SPLIT-')[1]
+                    }
+                />
+            ) : (
                 <View
                     style={{
-                        flexDirection: 'row',
-                        width: '100%',
-                        maxWidth: undefined,
                         alignSelf: 'center',
-                        backgroundColor: '#000000',
-                        paddingVertical: 10,
-                        flex: 1,
-                        height: 48
+                        width: '100%',
+                        backgroundColor: props.option === 'To Do' ? '#fff' : '#fff',
+                        height: width < 768 ? windowHeight : windowHeight - 52,
                     }}
                 >
-                    {Dimensions.get('window').width < 768 ? null : (
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: '#000000',
-                                flex: 1,
-                                height: 28,
-                                paddingTop: 0
-                            }}
-                        >
-                            <Image
-                                source={{
-                                    uri:
-                                        'https://cues-files.s3.amazonaws.com/logo/cues-logo-white-exclamation-hidden.jpg'
-                                }}
-                                style={{
-                                    width: 50,
-                                    marginTop: 1,
-                                    height: 22,
-                                    marginRight: 13
-                                }}
-                                resizeMode={'contain'}
-                            />
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    paddingRight: 30,
-                                    flex: 1,
-                                    backgroundColor: '#000000',
-                                    paddingTop: 1
-                                }}
-                            >
-                                {props.options.map((op: any) => {
-                                    if (op === 'Settings' || op === 'Channels') {
-                                        return;
-                                    }
-                                    return (
-                                        <TouchableOpacity
-                                            style={{
-                                                backgroundColor: '#000000'
-                                            }}
-                                            onPress={() => {
-                                                if (op === 'To Do') {
-                                                    setFilterEventsType('');
-                                                    setFilterByChannel('');
-                                                    setActivityChannelId('');
-                                                }
-                                                if (op === 'Classroom') {
-                                                    props.closeCreateModal();
-                                                }
-                                                props.setOption(op);
-                                                if (op === 'Browse') {
-                                                    props.openCreate();
-                                                }
-                                            }}
-                                        >
-                                            <Text style={op === props.option ? styles.allGrayFill : styles.all}>
-                                                {op === 'Classroom'
-                                                    ? props.version === 'read'
-                                                        ? 'Library'
-                                                        : 'Workspace'
-                                                    : op === 'Performance'
-                                                    ? 'Performance'
-                                                    : op === 'To Do'
-                                                    ? 'Agenda'
-                                                    : op}
-                                            </Text>
-
-                                            {op === 'Inbox' && props.unreadMessages > 0 ? (
-                                                <View
-                                                    style={{
-                                                        width: 7,
-                                                        height: 7,
-                                                        borderRadius: 7,
-                                                        backgroundColor: '#f94144',
-                                                        position: 'absolute',
-                                                        top: -3,
-                                                        right: 5
-                                                    }}
-                                                />
-                                            ) : null}
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        </View>
-                    )}
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: '#000000',
-                            width: Dimensions.get('window').width < 768 ? '100%' : 'auto',
-                            margin: 0
-                        }}
-                    >
-                        {Dimensions.get('window').width < 768 ? (
-                            <Image
-                                source={{
-                                    uri:
-                                        'https://cues-files.s3.amazonaws.com/logo/cues-logo-white-exclamation-hidden.jpg'
-                                }}
-                                style={{
-                                    width: 50,
-                                    marginTop: 1,
-                                    height: 18,
-                                    marginRight: 13
-                                }}
-                                resizeMode={'contain'}
-                            />
-                        ) : null}
-                        <TextInput
-                            value={searchTerm}
-                            style={{
-                                color: '#fff',
-                                backgroundColor: '#1F1F1F',
-                                borderRadius: 15,
-                                fontSize: 12,
-                                paddingBottom: 5,
-                                paddingTop: 4,
-                                paddingHorizontal: 16,
-                                marginTop: 10,
-                                marginRight: 2,
-                                maxWidth: 225
-                            }}
-                            autoCompleteType={'xyz'}
-                            placeholder={'Search'}
-                            onChangeText={val => setSearchTerm(val)}
-                            placeholderTextColor={'#fff'}
+                    {props.option === 'Account' ? (
+                        <AccountPage
+                            setShowHelp={(val: any) => props.setShowHelp(val)}
+                            showHelp={props.showHelp}
+                            setShowCreate={(val: any) => props.setShowCreate(val)}
+                            showCreate={props.showCreate}
                         />
-                        {Dimensions.get('window').width < 768 ? (
-                            <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#000000' }} />
-                        ) : null}
-                        {props.option === 'To Do' || props.option === 'Classroom' ? (
-                            <TouchableOpacity
-                                style={{ backgroundColor: 'none', marginLeft: 15 }}
-                                onPress={() => {
-                                    setShowFilterPopup(true);
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        fontSize: 11,
-                                        color: '#f2f2f2',
-                                        marginTop: 1,
-                                        textAlign: 'right'
-                                    }}
-                                >
-                                    <Ionicons name="filter-outline" size={18} />
-                                </Text>
-                            </TouchableOpacity>
-                        ) : null}
-                        <Menu
-                            style={{
-                                marginLeft: 15,
-                                right: 0,
-                                marginTop: 3
-                            }}
-                            onSelect={(op: any) => {
-                                if (op === 'Settings') {
-                                    props.setShowHelp(false);
-                                }
-                                props.setOption(op);
-                            }}
-                        >
-                            <MenuTrigger>
-                                <Text>
-                                    <Ionicons
-                                        name={
-                                            props.option === 'Settings' && !props.showHelp
-                                                ? 'person-circle-outline'
-                                                : props.option === 'Channels'
-                                                ? 'file-tray-stacked-outline'
-                                                : 'settings-outline'
-                                        }
-                                        size={16}
-                                        color={
-                                            (props.option === 'Settings' && !props.showHelp) ||
-                                            props.option === 'Channels'
-                                                ? '#007AFF'
-                                                : '#f2f2f2'
-                                        }
-                                    />
-                                </Text>
-                            </MenuTrigger>
-                            <MenuOptions
-                                customStyles={{
-                                    optionsContainer: {
-                                        padding: 5,
-                                        borderRadius: 15,
-                                        shadowOpacity: 0,
-                                        borderWidth: 1,
-                                        borderColor: '#f2f2f2',
-                                        maxWidth: 150
-                                    }
-                                }}
-                            >
-                                <MenuOption value={'Channels'}>
-                                    <Text
-                                        style={{
-                                            fontFamily: 'inter',
-                                            fontSize: 14,
-                                            
-                                            color: '#000000'
-                                        }}
-                                    >
-                                        &nbsp;{props.version !== 'read' ? 'COURSES' : 'SHELVES'}
-                                    </Text>
-                                </MenuOption>
-                                <MenuOption value={'Settings'}>
-                                    <Text
-                                        style={{
-                                            fontFamily: 'inter',
-                                            fontSize: 14,
-                                            
-                                            color: '#000000'
-                                        }}
-                                    >
-                                        &nbsp;ACCOUNT
-                                    </Text>
-                                </MenuOption>
-                            </MenuOptions>
-                        </Menu>
-                    </View>
-                </View>
-            </View> */}
-            {
-                // searchTerm === '' ? (
-                props.modalType === 'Create' && (props.option === 'Classroom' || props.option === 'Browse') ? (
-                    <Create
-                        key={JSON.stringify(props.customCategories)}
-                        customCategories={props.customCategories}
-                        closeModal={() => props.closeModal()}
-                        closeAfterCreatingMyNotes={() => props.closeAfterCreatingMyNotes()}
-                        option={props.option}
-                        version={props.version}
-                        createOption={props.createOption}
-                        showImportCreate={props.showImportCreate}
-                        setShowImportCreate={props.setShowImportCreate}
-                        setCreateActiveTab={props.setCreateActiveTab}
-                        createActiveTab={props.createActiveTab}
-                        setDisableCreateNavbar={props.setDisableCreateNavbar}
-                        channelId={
-                            selectedWorkspace.split('-SPLIT-')[0] === 'My Notes'
-                                ? ''
-                                : selectedWorkspace.split('-SPLIT-')[1]
-                        }
-                        user={props.user}
-                    />
-                ) : (
-                    <View
-                        style={{
-                            alignSelf: 'center',
-                            width: '100%',
-                            backgroundColor: props.option === 'To Do' ? '#fff' : '#fff',
-                            height: width < 768 ? windowHeight : windowHeight - 52,
-                        }}
-                    >
-                        {props.option === 'Account' ? (
-                            <AccountPage
-                                closeModal={() => {}}
-                                saveDataInCloud={() => props.saveDataInCloud()}
-                                reOpenProfile={() => props.reOpenProfile()}
-                                reloadData={() => props.reloadData()}
-                                setShowHelp={(val: any) => props.setShowHelp(val)}
-                                showHelp={props.showHelp}
-                                setShowCreate={(val: any) => props.setShowCreate(val)}
-                                showCreate={props.showCreate}
-                                // closeModal={() => {}}
-                                subscriptions={props.subscriptions}
-                                refreshSubscriptions={props.refreshSubscriptions}
-                                user={props.user}
-                            />
-                        ) : null}
-                        {props.option === 'Classroom' || showSearchMobile
-                            ? Dimensions.get('window').width < 768
-                                ? overviewMobile
-                                : overviewMobile
-                            : null}
-                        {/* {Dimensions.get('window').width < 768 &&
+                    ) : null}
+                    {props.option === 'Classroom' || showSearchMobile ? overviewMobile : null}
+                    {/* {Dimensions.get('window').width < 768 &&
                         selectedWorkspace &&
                         indexMap[selectedWorkspace] === 0 && categoryPositionList.length > 5 ? (
                             <TouchableOpacity
@@ -4188,40 +3445,25 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 </Text>
                             </TouchableOpacity>
                         ) : null} */}
-                        {props.option === 'To Do' && !showSearchMobile ? (
-                            <CalendarX
-                                tab={props.tab}
-                                version={props.version}
-                                setTab={(val: any) => props.setTab(val)}
-                                filterStart={filterStart}
-                                filterEnd={filterEnd}
-                                cues={props.calendarCues}
-                                subscriptions={props.subscriptions}
-                                openCueFromCalendar={props.openCueFromCalendar}
-                                openDiscussion={props.openDiscussionFromActivity}
-                                openChannel={props.openChannelFromActivity}
-                                openQA={props.openQAFromActivity}
-                                filterByChannel={filterByChannel}
-                                activityChannelId={activityChannelId}
-                                filterEventsType={filterEventsType}
-                                showSearchMobile={showSearchMobile}
-                                setShowSearchMobile={(val: boolean) => setShowSearchMobile(val)}
-                                user={props.user}
-                            />
-                        ) : null}
-                        {props.option === 'Inbox' ? (
-                            <Chat
-                                user={props.user}
-                                subscriptions={props.subscriptions}
-                                meetingProvider={meetingProvider}
-                            />
-                        ) : null}
-                    </View>
-                    //     )
-                    // ) : (
-                    //     searchResults
-                )
-            }
+                    {props.option === 'To Do' && !showSearchMobile ? (
+                        <CalendarX
+                            tab={props.tab}
+                            setTab={(val: any) => props.setTab(val)}
+                            filterStart={filterStart}
+                            filterEnd={filterEnd}
+                            cues={props.calendarCues}
+                            openCue={props.openCue}
+                            openDiscussion={props.openDiscussionFromActivity}
+                            openChannel={props.openChannelFromActivity}
+                            filterByChannel={filterByChannel}
+                            filterEventsType={filterEventsType}
+                            showSearchMobile={showSearchMobile}
+                            setShowSearchMobile={(val: boolean) => setShowSearchMobile(val)}
+                        />
+                    ) : null}
+                    {props.option === 'Inbox' ? <Chat /> : null}
+                </View>
+            )}
             {showNewContentModal && (
                 <BottomSheet
                     snapPoints={[0, 400]}
@@ -4352,27 +3594,13 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                     ></TouchableOpacity>
                 </Reanimated.View>
             ) : null}
-            {/* {showNewPostModal && (
-                <NewPostModal
-                    show={showNewPostModal}
-                    // categories={categories}
-                    categoriesOptions={newPostCategories}
-                    onClose={() => {
-                        setShowNewPostModal(false);
-                        props.setShowNewPost(false);
-                    }}
-                    onSend={createNewThread}
-                    callbackNode={fall}
-                />
-            )} */}
+
             {showInstantMeeting ? (
                 <BottomSheet
                     snapPoints={[0, Dimensions.get('window').height]}
                     close={() => {
                         setShowInstantMeeting(false);
                         props.setShowNewMeeting(false);
-                        setInstantMeetingChannelId('');
-                        setInstantMeetingCreatedBy('');
                         setInstantMeetingTitle('');
                         setInstantMeetingDescription('');
                         setInstantMeetingStart('');

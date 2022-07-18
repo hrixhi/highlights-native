@@ -1,6 +1,6 @@
 // // REACT
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { StyleSheet, TextInput, Dimensions, Platform, Keyboard, KeyboardAvoidingView, Image } from 'react-native';
+import { Dimensions, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Switch } from 'react-native-gesture-handler';
 import Alert from './Alert';
@@ -12,13 +12,15 @@ import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
-import { fetchAPI } from '../graphql/FetchAPI';
+
 import {
     createChannelAttendance,
     deleteChannelAttendance,
     editChannelAttendance,
 } from '../graphql/QueriesAndMutations';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useApolloClient } from '@apollo/client';
+import { useAppContext } from '../contexts/AppContext';
 
 const attendanceTypeOptions = [
     {
@@ -37,6 +39,7 @@ const attendanceTypeLabels = {
 };
 
 const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
+    const { user } = useAppContext();
     // STATE
     const [newAttendanceTitle, setNewAttendanceTitle] = useState('');
     const [newAttendanceDate, setNewAttendanceDate] = useState(new Date());
@@ -47,6 +50,8 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
 
     const [isCreatingAttendance, setIsCreatingAttendance] = useState(false);
     const [isDeletingAttendance, setIsDeletingAttendance] = useState(false);
+
+    const server = useApolloClient();
 
     const resetNewEntryForm = () => {
         setNewAttendanceTitle('');
@@ -104,11 +109,6 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
                 channelId: props.channelId,
                 attendances: sanitizeAttendances,
             };
-
-            console.log('New Assignment Input', attendanceEntryInput);
-
-            // return;
-            const server = fetchAPI('');
 
             if (editing) {
                 server
@@ -176,8 +176,6 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
 
     const handleDeleteAttendance = useCallback(async () => {
         setIsDeletingAttendance(true);
-
-        const server = fetchAPI('');
 
         server
             .mutate({
@@ -432,7 +430,7 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
                             placeholder={''}
                             onChangeText={(val) => setNewAttendanceRecordingLink(val)}
                             placeholderTextColor={'#1F1F1F'}
-                            required={true}
+                            required={false}
                         />
                     </View>
                 </View>
@@ -788,7 +786,7 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
                                 marginBottom: 20,
                             }}
                             onPress={() => handleCreateAttendance(true)}
-                            disabled={isCreatingAttendance || props.user.email === disableEmailId}
+                            disabled={isCreatingAttendance || user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -816,7 +814,7 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
                                 marginBottom: 20,
                             }}
                             onPress={() => handleDeleteAttendance()}
-                            disabled={isDeletingAttendance || props.user.email === disableEmailId}
+                            disabled={isDeletingAttendance || user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -845,7 +843,7 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
                             marginBottom: 20,
                         }}
                         onPress={() => handleCreateAttendance(false)}
-                        disabled={isCreatingAttendance || props.user.email === disableEmailId}
+                        disabled={isCreatingAttendance || user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -898,7 +896,7 @@ const NewAttendanceModal: React.FunctionComponent<{ [label: string]: any }> = (p
                         left: 0,
                     }}
                     onPress={() => {
-                        // resetNewEntryForm();
+                        resetNewEntryForm();
                         props.onClose();
                     }}
                 >

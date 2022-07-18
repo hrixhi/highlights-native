@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { useAppContext } from '../ChatContext/AppContext';
+import { useAppChatContext } from '../ChatContext/AppChatContext';
 import { getUserActivityStatus } from '../helpers/getUserActivityStatus';
 
 import type { Channel } from 'stream-chat';
@@ -32,7 +32,7 @@ export const useChannelMembersStatus = (channel: Channel<StreamChatGenerics>) =>
     };
 
     const [status, setStatus] = useState(getStatus());
-    const { chatClient } = useAppContext();
+    const { chatClient } = useAppChatContext();
 
     useEffect(() => {
         setStatus(getStatus());

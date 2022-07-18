@@ -10,17 +10,17 @@ import {
 } from 'react-native';
 import { Text, View } from './Themed';
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
-import { RichEditor } from 'react-native-pell-rich-editor';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import RenderHtml from 'react-native-render-html';
 import MathJax from 'react-native-mathjax';
-import HTMLView from 'react-native-htmlview';
 import { disableEmailId } from '../constants/zoomCredentials';
+import { useAppContext } from '../contexts/AppContext';
 
 const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
-    const [problems] = useState<any[]>(props.problems);
+    const { user } = useAppContext();
+
     const [solutions, setSolutions] = useState<any[]>(props.solutions.solutions);
     const [problemScores, setProblemScores] = useState<any[]>(props.solutions.problemScores);
     const [problemComments, setProblemComments] = useState<any[]>(
@@ -111,7 +111,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     const renderAudioVideoPlayer = (url: string, type: string) => {
         return (
             <Video
-                // ref={audioRef}
                 style={{
                     width: '100%',
                     height: 250,
@@ -122,7 +121,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 useNativeControls
                 resizeMode="contain"
                 isLooping
-                // onPlaybackStatusUpdate={status => setStatus(() => status)}
             />
         );
     };
@@ -2184,30 +2182,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         {!props.isOwner && problemComments[index] === '' ? null : (
                             <View style={{ width: '100%', marginBottom: 40 }}>
                                 {props.isOwner ? (
-                                    // <TextareaAutosize
-                                    //     value={problemComments[index]}
-                                    //     placeholder='Remark'
-                                    //     minRows={3}
-                                    //     style={{
-                                    //         fontFamily: 'overpass',
-                                    //         marginTop: 20,
-                                    //         marginBottom: 20,
-                                    //         fontSize: 14,
-                                    //         borderRadius: 1,
-                                    //         paddingTop: 12,
-                                    //         paddingBottom: 12,
-                                    //         width: '100%',
-                                    //         maxWidth: "100%",
-                                    //         borderBottom: '1px solid #f2f2f2',
-                                    //         paddingLeft: 10,
-                                    //         paddingRight: 10
-                                    //     }}
-                                    //     onChange={(e: any) => {
-                                    //         const updateProblemComments = [...problemComments];
-                                    //         updateProblemComments[index] = e.target.value;
-                                    //         setProblemComments(updateProblemComments)
-                                    //     }}
-                                    // />
                                     <AutoGrowingTextInput
                                         value={problemComments[index]}
                                         onChange={(event: any) => {
@@ -2253,24 +2227,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     {!props.isOwner ? <Text style={{ width: '100%', textAlign: 'left' }}>Feedback</Text> : null}
                     {props.isOwner ? (
                         <View style={{ width: Dimensions.get('window').width < 768 ? '100%' : '80%', maxWidth: 600 }}>
-                            {/* <TextareaAutosize
-                        style={{ 
-                            fontFamily: 'overpass',
-                            marginTop: 20,
-                            marginBottom: 20,
-                            fontSize: 14,
-                            paddingTop: 12,
-                            borderRadius: 1,
-                            paddingBottom: 12,
-                            width: '100%',
-                            maxWidth: "100%",
-                            borderBottom: '1px solid #f2f2f2',
-                        }}
-                        value={comment}
-                        onChange={(e: any) => setComment(e.target.value)}
-                        minRows={3}
-                        placeholder={"Feedback"}
-                    /> */}
                             <AutoGrowingTextInput
                                 value={comment}
                                 onChange={(event: any) => setComment(event.nativeEvent.text || '')}
@@ -2279,7 +2235,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                     maxWidth: 400,
                                     marginBottom: 10,
                                     marginTop: 10,
-                                    // borderRadius: 10,
                                     borderBottomWidth: 1,
                                     borderStyle: 'solid',
                                     borderColor: '#CCC',
@@ -2293,7 +2248,6 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 maxHeight={200}
                                 minHeight={80}
                                 enableScrollToCaret
-                                // ref={}
                             />
                         </View>
                     ) : (
@@ -2327,7 +2281,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 borderRadius: 15,
                                 marginBottom: 20,
                             }}
-                            disabled={props.user.email === disableEmailId}
+                            disabled={user.email === disableEmailId}
                         >
                             <Text
                                 style={{
@@ -2356,7 +2310,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             backgroundColor: 'white',
                             borderRadius: 15,
                         }}
-                        disabled={props.user.email === disableEmailId}
+                        disabled={user.email === disableEmailId}
                     >
                         <Text
                             style={{
@@ -2389,8 +2343,6 @@ export default Quiz;
 const styles = StyleSheet.create({
     input: {
         width: '50%',
-        // borderBottomColor: '#f2f2f2',
-        // borderBottomWidth: 1,
         fontSize: 14,
         paddingTop: 12,
         paddingBottom: 12,

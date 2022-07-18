@@ -86,7 +86,12 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
         let nameParts = name.split('.');
         let type = nameParts[nameParts.length - 1];
         if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
-            Alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
+            Alert('Error! Use gallery icon from toolbar to upload images.');
+            return { type: '', url: '', name: '' };
+        }
+
+        if (type === 'txt') {
+            alert('txt files are not supported. Convert to pdf and upload.');
             return { type: '', url: '', name: '' };
         }
 
@@ -156,8 +161,29 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
 export const fileUpload = async (file: any, type: any, userId: string) => {
     // LIVE
     const url = 'https://api.learnwithcues.com/api/upload';
+
     // DEV
     // const url = "http://localhost:8081/api/upload";
+    const formData = new FormData();
+    formData.append('attachment', file);
+    formData.append('typeOfUpload', type);
+    formData.append('userId', userId);
+    const config = {
+        headers: {
+            'content-type': 'multipart/form-data',
+        },
+    };
+    const res = await axios.post(url, formData, config);
+
+    return res;
+};
+
+export const fileUploadInbox = async (file: any, type: any, userId: string) => {
+    // LIVE
+    const url = 'https://api.learnwithcues.com/api/uploadInbox';
+
+    // DEV
+    // const url = 'http://localhost:8081/api/uploadInbox';
     const formData = new FormData();
     formData.append('attachment', file);
     formData.append('typeOfUpload', type);
