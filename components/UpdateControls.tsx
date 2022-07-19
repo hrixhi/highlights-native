@@ -9,11 +9,9 @@ import {
     ScrollView,
     Animated,
     Platform,
-    Linking,
     ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import lodash from 'lodash';
 import moment from 'moment';
 
@@ -434,7 +432,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
             return;
         }
         const remainingTime = duration - diff_seconds(initiatedAt, current);
-        if (remainingTime <= 0 && !submittingQuizEndTime) {
+        if (remainingTime <= 0) {
             // Submit quiz when time runs out
             submitQuizEndTime();
         } else {
@@ -448,7 +446,6 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
         isOwner,
         allowLateSubmission,
         availableUntil,
-        submittingQuizEndTime,
         submission,
         props.showOriginal,
     ]);
@@ -2064,7 +2061,12 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
      * @description Submit quiz when time gets over
      */
     const submitQuizEndTime = useCallback(async () => {
-        setSubmittingQuizEndTime(true);
+        // Add additional check to ensure that quiz doesn't autosubmit twice
+        if (isSubmitting) {
+            return;
+        }
+
+        // This should disable submit button also
         setIsSubmitting(true);
 
         const saveCue = JSON.stringify({
@@ -2096,7 +2098,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                 Alert(somethingWentWrongAlert, tryAgainLaterAlert);
                 setIsSubmitting(false);
             });
-    }, [props.cue, isQuiz, quizId, initiatedAt, solutions]);
+    }, [props.cue, isQuiz, quizId, initiatedAt, solutions, userId, isSubmitting]);
 
     const submitResponse = useCallback(() => {
         let now = new Date();
@@ -3258,7 +3260,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                     size={120}
                                     key={initDuration}
                                     children={({ remainingTime }: any) => {
-                                        if ((!remainingTime || remainingTime === 0) && !submittingQuizEndTime) {
+                                        if (!remainingTime || remainingTime === 0) {
                                             submitQuizEndTime();
                                         }
 

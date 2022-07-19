@@ -1,5 +1,5 @@
 // LIVE
-const isDevelopment = true;
+const isDevelopment = false;
 
 export const zoomClientId = 'yRzKFwGRTq8bNKLQojwnA';
 export const zoomRedirectUri = 'https://app.learnwithcues.com/zoom_auth';
@@ -12,5 +12,5 @@ export const origin = isDevelopment ? 'http://localhost:19006' : 'https://app.le
 
 export const disableEmailId = 'instructor@learnwithcues.com';
 export const STREAM_CHAT_API_KEY = isDevelopment ? 'fa2jhu3kqpah' : 'hfh5wcccsja6';
-// export const apiURL = isDevelopment ? 'http://localhost:8081' : 'https://api.learnwithcues.com';
-export const apiURL = 'https://3aef-99-23-138-109.ngrok.io';
+export const apiURL = isDevelopment ? 'http://localhost:8081' : 'https://api.learnwithcues.com';
+// export const apiURL = 'https://3aef-99-23-138-109.ngrok.io';

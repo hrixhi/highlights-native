@@ -64,10 +64,7 @@ import { StreamChatGenerics } from '../components/ChatComponents/types';
 import { AppChatContext } from '../ChatContext/AppChatContext';
 import { useApolloClient, useLazyQuery, useQuery } from '@apollo/client';
 import { useAppContext } from '../contexts/AppContext';
-
-const STREAM_CHAT_API_KEY = 'fa2jhu3kqpah';
-
-// import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { STREAM_CHAT_API_KEY } from '../constants/zoomCredentials';
 
 const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => {
     const window = Dimensions.get('window');
@@ -319,6 +316,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                 Alert('Failed to login user. Try again.');
                             } else {
                                 updateExpoNotificationId(u);
+                                setShowLoginWindow(false);
+                                setShowHome(true);
                             }
 
                             setIsLoggingIn(false);
@@ -864,6 +863,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                         Alert('Failed to login user. Try again.');
                     } else {
                         updateExpoNotificationId(u);
+                        setShowLoginWindow(false);
+                        setShowHome(true);
                     }
                 } else {
                     const { error } = r.data.user.login;
@@ -1654,7 +1655,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     !loadingOrg &&
                     ((option === 'Classroom' &&
                         modalType !== 'Create' &&
-                        (workspaceActiveTab === 'Content' ||
+                        ((workspaceActiveTab === 'Content' &&
+                            (selectedWorkspace.split('-SPLIT-')[2] === userId || selectedWorkspace === 'My Notes')) ||
                             (workspaceActiveTab === 'Discuss' && !showNewDiscussionPost && !hideNavbarDiscussions) ||
                             (workspaceActiveTab === 'Meet' &&
                                 selectedWorkspace.split('-SPLIT-')[2] === userId &&

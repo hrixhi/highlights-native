@@ -12,6 +12,7 @@ import { omitTypename } from '../helpers/omitTypename';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { origin } from '../constants/zoomCredentials';
 import * as Notifications from 'expo-notifications';
+import * as Updates from 'expo-updates';
 
 export const AppContext = React.createContext<{ [label: string]: any }>({});
 
@@ -518,10 +519,7 @@ export const AppContextProvider: React.FC<React.ReactNode> = ({ value, children 
     const logoutUser = async () => {
         await AsyncStorage.clear();
         await Notifications.cancelAllScheduledNotificationsAsync();
-
-        dispatch({
-            type: 'LOGOUT',
-        });
+        await Updates.reloadAsync();
     };
 
     const loginUser = async (loginUserId: string, jwt_token: string) => {

@@ -76,6 +76,8 @@ export default function App() {
     const logoutUser = async () => {
         const u = await AsyncStorage.getItem('user');
 
+        await Notifications.cancelAllScheduledNotificationsAsync();
+
         if (u) {
             const user: any = await JSON.parse(u);
 
@@ -147,7 +149,7 @@ export default function App() {
         if (graphQLErrors) {
             for (let err of graphQLErrors) {
                 if (err.message === 'NOT_AUTHENTICATED') {
-                    alert('Session Timed out. You will be logged out.');
+                    // alert('Session Timed out. You will be logged out.');
                     // timeoutMessageDisplayed = true;
                     // setUserId('');
                     logoutUser();
