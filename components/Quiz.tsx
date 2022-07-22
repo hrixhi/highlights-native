@@ -1347,6 +1347,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                             <View
                                                 style={{
                                                     minWidth: 100,
+                                                    minHeight: 60,
                                                 }}
                                             >
                                                 <MathJax
@@ -1780,6 +1781,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         <View
                                                             style={{
                                                                 minWidth: 100,
+                                                                minHeight: 60,
                                                             }}
                                                         >
                                                             <MathJax
@@ -1872,6 +1874,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                         <View
                                                             style={{
                                                                 minWidth: 100,
+                                                                minHeight: 60,
                                                             }}
                                                         >
                                                             <MathJax
@@ -2253,6 +2256,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                         <View
                                                                             style={{
                                                                                 minWidth: 100,
+                                                                                minHeight: 60,
                                                                             }}
                                                                         >
                                                                             <MathJax
@@ -4026,6 +4030,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                     <View
                                                                         style={{
                                                                             minWidth: 100,
+                                                                            minHeight: 60,
                                                                         }}
                                                                     >
                                                                         <MathJax
@@ -4183,6 +4188,7 @@ const Quiz: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                                                 <View
                                                                                     style={{
                                                                                         minWidth: 100,
+                                                                                        minHeight: 60,
                                                                                     }}
                                                                                 >
                                                                                     <MathJax

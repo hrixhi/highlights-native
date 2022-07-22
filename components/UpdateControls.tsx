@@ -2519,6 +2519,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                                 .then((res1) => {
                                     if (res1.data.cue.create) {
                                         Alert(sharedAlert, 'Cue has been successfully shared.');
+                                        refreshCues();
                                     }
                                 })
                                 .catch((err) => {

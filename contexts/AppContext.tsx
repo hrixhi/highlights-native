@@ -517,21 +517,22 @@ export const AppContextProvider: React.FC<React.ReactNode> = ({ value, children 
 
     // AUTHENTICATION FUNCTIONS (ADD LOGIN FOR DESKTOP AND NATIVE APPS)
     const logoutUser = async () => {
-        await AsyncStorage.clear();
+        await AsyncStorage.multiRemove(['user', 'jwt_token', 'cueDraft', 'quizDraft']);
         await Notifications.cancelAllScheduledNotificationsAsync();
-        await Updates.reloadAsync();
+        // await Updates.reloadAsync();
+
+        dispatch({
+            type: 'LOGOUT',
+        });
     };
 
     const loginUser = async (loginUserId: string, jwt_token: string) => {
-        console.log('LOGIN USER ID', loginUserId);
-        console.log('JWT TOKEN', jwt_token);
         const res = await fetchUser({
             variables: {
                 id: loginUserId,
             },
         });
 
-        console.log('Response fetch user', res);
         if (res.data && res.data.user.findById) {
             const items: [string, string][] = [
                 ['user', JSON.stringify({ _id: loginUserId })],

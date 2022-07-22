@@ -5,20 +5,25 @@ import { Text, View } from './Themed';
 
 export const renderLoadingSpinner = () => {
     return (
-        <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: 0 }}>
+        <View
+            style={{
+                position: 'absolute',
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%',
+                width: '100%',
+                backgroundColor: 'white',
+            }}
+        >
             <View
                 style={{
                     flexDirection: 'column',
                     alignSelf: 'center',
                     alignItems: 'center',
-                    marginTop: 100,
                 }}
             >
-                <View
-                    style={{
-                        marginTop: 10,
-                    }}
-                >
+                <View>
                     <ActivityIndicator size={30} color={'#1f1f1f'} />
                     <Text
                         style={{
@@ -37,20 +42,25 @@ export const renderLoadingSpinner = () => {
 
 export const renderLoadingSpinnerFormula = () => {
     return (
-        <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: 0 }}>
+        <View
+            style={{
+                position: 'absolute',
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%',
+                width: '100%',
+                backgroundColor: 'white',
+            }}
+        >
             <View
                 style={{
                     flexDirection: 'column',
                     alignSelf: 'center',
                     alignItems: 'center',
-                    marginTop: 100,
                 }}
             >
-                <View
-                    style={{
-                        marginTop: 10,
-                    }}
-                >
+                <View>
                     <ActivityIndicator size={30} color={'#1f1f1f'} />
                     <Text
                         style={{

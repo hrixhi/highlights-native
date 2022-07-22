@@ -179,33 +179,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     // QUERIES
 
-    const [fetchUser, { loading: loadingUser, error: userError, data: userData }] = useLazyQuery(findUserById, {
-        variables: { id: userId },
-    });
+    const [fetchUser, { loading: loadingUser, error: userError, data: userData }] = useLazyQuery(findUserById);
 
-    const [fetchOrg, { loading: loadingOrg, error: orgError, data: orgData }] = useLazyQuery(getOrganisation, {
-        variables: { userId },
-    });
+    const [fetchOrg, { loading: loadingOrg, error: orgError, data: orgData }] = useLazyQuery(getOrganisation);
 
-    const [fetchCues, { loading: loadingCues, error: cuesError, data: cuesData }] = useLazyQuery(getCuesFromCloud, {
-        variables: { userId },
-    });
+    const [fetchCues, { loading: loadingCues, error: cuesError, data: cuesData }] = useLazyQuery(getCuesFromCloud);
 
-    const [fetchSubs, { loading: loadingSubs, error: subsError, data: subsData }] = useLazyQuery(getSubscriptions, {
-        variables: { userId },
-    });
-
-    // INIT
-    useEffect(() => {
-        if (userId) {
-            fetchSubs();
-            fetchUser();
-            fetchOrg();
-            fetchCues();
-            fetchStreamUserToken(userId);
-            setupEventsNotifications(userId);
-        }
-    }, [userId]);
+    const [fetchSubs, { loading: loadingSubs, error: subsError, data: subsData }] = useLazyQuery(getSubscriptions);
 
     useEffect(() => {
         if (userData) {
@@ -315,9 +295,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             if (!res) {
                                 Alert('Failed to login user. Try again.');
                             } else {
-                                updateExpoNotificationId(u);
                                 setShowLoginWindow(false);
                                 setShowHome(true);
+                                setEmail('');
+                                setPassword('');
+                                updateExpoNotificationId(u);
                             }
 
                             setIsLoggingIn(false);
@@ -348,11 +330,34 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     // FOR NATIVE AND DESKTOP APPS WE WILL SHOW LOGIN SCREEN
     useEffect(() => {
         if (!userId || userId === '') {
-            setShowHome(false);
             setShowLoginWindow(true);
+            setShowHome(false);
+            setStreamUserToken('');
         } else {
-            setShowHome(true);
+            fetchSubs({
+                variables: {
+                    userId,
+                },
+            });
+            fetchUser({
+                variables: {
+                    id: userId,
+                },
+            });
+            fetchOrg({
+                variables: {
+                    userId,
+                },
+            });
+            fetchCues({
+                variables: {
+                    userId,
+                },
+            });
+            fetchStreamUserToken(userId);
+            setupEventsNotifications(userId);
             setShowLoginWindow(false);
+            setShowHome(true);
         }
     }, [userId]);
 
@@ -639,66 +644,73 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, []);
 
     const updateExpoNotificationId = useCallback(async (user: any) => {
-        let existingStatus = await Notifications.getPermissionsAsync();
+        try {
+            let existingStatus = await Notifications.getPermissionsAsync();
 
-        if (
-            !existingStatus.granted &&
-            existingStatus.ios?.status !== Notifications.IosAuthorizationStatus.PROVISIONAL
-        ) {
-            // permission granted
+            if (
+                !existingStatus.granted &&
+                existingStatus.ios?.status !== Notifications.IosAuthorizationStatus.PROVISIONAL
+            ) {
+                // permission granted
 
-            await Notifications.requestPermissionsAsync({
-                ios: {
-                    allowAlert: true,
-                    allowBadge: true,
-                    allowSound: true,
-                    allowAnnouncements: true,
-                },
-            });
+                await Notifications.requestPermissionsAsync({
+                    ios: {
+                        allowAlert: true,
+                        allowBadge: true,
+                        allowSound: true,
+                        allowAnnouncements: true,
+                    },
+                });
 
-            existingStatus = await Notifications.getPermissionsAsync();
-        }
-
-        if (existingStatus.granted || existingStatus.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
-            let experienceId = undefined;
-            if (!Constants.manifest) {
-                // Absence of the manifest means we're in bare workflow
-                experienceId = user._id + Platform.OS;
+                existingStatus = await Notifications.getPermissionsAsync();
             }
-            const expoToken = await Notifications.getExpoPushTokenAsync({
-                experienceId,
-            });
 
-            const notificationId = expoToken.data;
+            if (
+                existingStatus.granted ||
+                existingStatus.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+            ) {
+                let experienceId = undefined;
+                if (!Constants.manifest) {
+                    // Absence of the manifest means we're in bare workflow
+                    experienceId = user._id + Platform.OS;
+                }
+                const expoToken = await Notifications.getExpoPushTokenAsync({
+                    experienceId,
+                });
 
-            console.log('Update notification id INIT', notificationId);
+                const notificationId = expoToken.data;
 
-            const updatedNotificationId =
-                user.notificationId === 'NOT_SET' || user.notificationId === 'undefined'
-                    ? notificationId
-                    : user.notificationId + '-BREAK-' + notificationId;
+                console.log('Update notification id INIT', notificationId);
 
-            if (!user.notificationId || !user.notificationId.includes(notificationId)) {
-                server
-                    .mutate({
-                        mutation: updateNotificationId,
-                        variables: {
-                            userId: user._id,
-                            notificationId: updatedNotificationId,
-                        },
-                    })
-                    .then((res: any) => {
-                        const updateAsyncStorageUser = {
-                            ...user,
-                            notificationId: updatedNotificationId,
-                        };
+                const updatedNotificationId =
+                    user.notificationId === 'NOT_SET' || user.notificationId === 'undefined'
+                        ? notificationId
+                        : user.notificationId + '-BREAK-' + notificationId;
 
-                        AsyncStorage.setItem('user', JSON.stringify(updateAsyncStorageUser));
-                    })
-                    .catch((e) => {
-                        console.log('error', e);
-                    });
+                if (!user.notificationId || !user.notificationId.includes(notificationId)) {
+                    server
+                        .mutate({
+                            mutation: updateNotificationId,
+                            variables: {
+                                userId: user._id,
+                                notificationId: updatedNotificationId,
+                            },
+                        })
+                        .then((res: any) => {
+                            const updateAsyncStorageUser = {
+                                ...user,
+                                notificationId: updatedNotificationId,
+                            };
+
+                            AsyncStorage.setItem('user', JSON.stringify(updateAsyncStorageUser));
+                        })
+                        .catch((e) => {
+                            console.log('error', e);
+                        });
+                }
             }
+        } catch (e) {
+            console.log('Error', e);
         }
     }, []);
 
@@ -862,9 +874,11 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     if (!res) {
                         Alert('Failed to login user. Try again.');
                     } else {
-                        updateExpoNotificationId(u);
                         setShowLoginWindow(false);
                         setShowHome(true);
+                        setEmail('');
+                        setPassword('');
+                        updateExpoNotificationId(u);
                     }
                 } else {
                     const { error } = r.data.user.login;
@@ -1542,7 +1556,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                                                 >
                                                     {showForgotPassword
                                                         ? PreferredLanguageText('reset')
-                                                        : PreferredLanguageText('login')}
+                                                        : isLoggingIn
+                                                        ? 'Signing In...'
+                                                        : 'Sign In'}
                                                 </Text>
                                             </TouchableOpacity>
                                             {/* Sign up button */}

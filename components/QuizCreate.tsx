@@ -817,6 +817,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                         <View
                                                                             style={{
                                                                                 minWidth: 100,
+                                                                                minHeight: 60,
                                                                             }}
                                                                         >
                                                                             <MathJax
@@ -889,6 +890,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                 </View>
                                             ) : (
                                                 <RenderHtml
+                                                    key={'1323'}
                                                     contentWidth={contentWidth}
                                                     source={{
                                                         html: problem.question,
@@ -912,6 +914,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                     <View
                                                                         style={{
                                                                             minWidth: 100,
+                                                                            minHeight: 60,
                                                                         }}
                                                                     >
                                                                         <MathJax
@@ -1468,6 +1471,7 @@ const QuizCreate: React.FunctionComponent<{ [label: string]: any }> = (props: an
                                                                         <View
                                                                             style={{
                                                                                 minWidth: 100,
+                                                                                minHeight: 60,
                                                                             }}
                                                                         >
                                                                             <MathJax

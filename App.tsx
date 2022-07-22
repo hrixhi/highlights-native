@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, Fragment } from 'react';
+import React, { useCallback, useEffect, Fragment, useState } from 'react';
 import { StyleSheet, LogBox, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useCachedResources from './hooks/useCachedResources';
@@ -43,6 +43,8 @@ export default function App() {
     // LogBox.ignoreAllLogs();
 
     const { userId, isConnecting, sortByWorkspace, recentSearches, setUserId } = useAppClient();
+
+    const [reloadContextKey, setReloadContextKey] = useState(Math.random().toString());
 
     const httpLink = new HttpLink({
         uri: apiURL,
@@ -114,20 +116,25 @@ export default function App() {
                     })
                     .then(async (res: any) => {
                         await AsyncStorage.clear();
-                        Updates.reloadAsync();
+                        setUserId('');
+                        setReloadContextKey(Math.random().toString());
                     })
                     .catch(async (err: any) => {
                         console.log(err);
                         await AsyncStorage.clear();
-                        Updates.reloadAsync();
+                        setUserId('');
+                        setReloadContextKey(Math.random().toString());
                     });
             } else {
                 await AsyncStorage.clear();
-                Updates.reloadAsync();
+                setUserId('');
+                setReloadContextKey(Math.random().toString());
             }
         } else {
             await AsyncStorage.clear();
-            Updates.reloadAsync();
+            setUserId('');
+
+            setReloadContextKey(Math.random().toString());
         }
     };
 
@@ -151,7 +158,6 @@ export default function App() {
                 if (err.message === 'NOT_AUTHENTICATED') {
                     // alert('Session Timed out. You will be logged out.');
                     // timeoutMessageDisplayed = true;
-                    // setUserId('');
                     logoutUser();
                     return;
                 }
@@ -205,7 +211,7 @@ export default function App() {
                         sortByWorkspace,
                         recentSearches,
                     }}
-                    key={userId}
+                    key={reloadContextKey}
                 >
                     <Fragment>
                         <SafeAreaView style={{ flex: 0, backgroundColor: 'white' }} />

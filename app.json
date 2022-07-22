@@ -1,84 +1,89 @@
 {
-  "expo": {
-    "name": "Cues - learn",
-    "slug": "cues",
-    "version": "1.0.2",
-    "icon": "./assets/images/cues-app-logo.png",
-    "scheme": "cues",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 30000
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.cues-technologies.learnwithcues",
-      "buildNumber": "1.1",
-      "usesIcloudStorage": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "Allow access to camera for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
-        "NSMicrophoneUsageDescription": "Allow access to microphone for creating coursework & notes, sending messages & discussion posts." 
-      }
-    },
-    "android": {
-      "useNextNotificationsApi": true,
-      "versionCode": 1,
-      "softwareKeyboardLayoutMode": "pan",
-      "backgroundColor": "#ffffff",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/cues-app-logo.png",
-        "backgroundColor": "#000000"
-      },
-      "package": "com.cuestechnologies.learnwithcues"
-    },
-    "web": {
-      "favicon": "./assets/images/favicon.png"
-    },
-    "packagerOpts": {
-      "config": "metro.config.js",
-      "sourceExts": [
-        "js",
-        "jsx",
-        "css"
-      ],
-      "transformer": "node_modules/react-native-css-transformer/index.js",
-      "permissions": ["CAMERA", "WRITE_EXTERNAL_STORAGE", "RECORD_AUDIO"]
-    },
-    "plugins": [
-      "sentry-expo",  [
-        "expo-media-library",
-        {
-          "photosPermission": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
-          "savePhotosPermission": "Allow access to save photos from coursework, notes, messages, discussion posts on your device.",
-          "isAccessMediaLocationEnabled": "true"
-        }
-      ],
-      [
-        "expo-media-library",
-        {
-          "expo-image-picker": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
-          "cameraPermission": "Allow access to camera for creating coursework & notes, sending messages & discussion posts and uploading profile picture."
-        }
-      ]
-    ],
-    "hooks": {
-      "postPublish": [
-        {
-          "file": "sentry-expo/upload-sourcemaps",
-          "config": {
-            "organization": "cues-technologies",
-            "project": "cues-technologies-native-app",
-            "authToken": "8b7031031fcc48078435f3d9e320d5f8b0a195d925db40949d5996d7427803b0"
-          }
-        }
-      ]
+    "expo": {
+        "name": "Cues - learn",
+        "slug": "cues",
+        "version": "1.0.2",
+        "icon": "./assets/images/cues-app-logo.png",
+        "scheme": "cues",
+        "userInterfaceStyle": "automatic",
+        "splash": {
+            "image": "./assets/images/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#000000"
+        },
+        "updates": {
+            "fallbackToCacheTimeout": 30000,
+            "url": "https://u.expo.dev/654cdd01-36a4-45ea-9515-bf6b768fd8f7"
+        },
+        "assetBundlePatterns": ["**/*"],
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.cues-technologies.learnwithcues",
+            "buildNumber": "1.0",
+            "usesIcloudStorage": true,
+            "infoPlist": {
+                "NSCameraUsageDescription": "Allow access to camera for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
+                "NSMicrophoneUsageDescription": "Allow access to microphone for creating coursework & notes, sending messages & discussion posts.",
+                "NSPhotoLibraryUsageDescription": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
+                "NSPhotoLibraryAddUsageDescription": "Allow access to save photos from coursework, notes, messages, discussion posts on your device."
+            }
+        },
+        "android": {
+            "useNextNotificationsApi": true,
+            "versionCode": 1,
+            "softwareKeyboardLayoutMode": "pan",
+            "backgroundColor": "#ffffff",
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/cues-app-logo.png",
+                "backgroundColor": "#000000"
+            },
+            "package": "com.cuestechnologies.learnwithcues",
+            "googleServicesFile": "./google-services.json",
+            "permissions": [
+                "android.permission.READ_EXTERNAL_STORAGE",
+                "android.permission.WRITE_EXTERNAL_STORAGE",
+                "true"
+            ]
+        },
+        "web": {
+            "favicon": "./assets/images/favicon.png"
+        },
+        "packagerOpts": {
+            "config": "metro.config.js",
+            "sourceExts": ["js", "jsx", "css"],
+            "transformer": "node_modules/react-native-css-transformer/index.js",
+            "permissions": ["CAMERA", "WRITE_EXTERNAL_STORAGE", "RECORD_AUDIO"]
+        },
+        "plugins": [
+            "sentry-expo",
+            [
+                "expo-media-library",
+                {
+                    "photosPermission": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
+                    "savePhotosPermission": "Allow access to save photos from coursework, notes, messages, discussion posts on your device.",
+                    "isAccessMediaLocationEnabled": "true"
+                }
+            ],
+            [
+                "expo-media-library",
+                {
+                    "expo-image-picker": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
+                    "cameraPermission": "Allow access to camera for creating coursework & notes, sending messages & discussion posts and uploading profile picture."
+                }
+            ]
+        ],
+        "hooks": {
+            "postPublish": [
+                {
+                    "file": "sentry-expo/upload-sourcemaps",
+                    "config": {
+                        "organization": "cues-technologies",
+                        "project": "cues-technologies-native-app",
+                        "authToken": "8b7031031fcc48078435f3d9e320d5f8b0a195d925db40949d5996d7427803b0"
+                    }
+                }
+            ]
+        },
+        "runtimeVersion": "1.0.3"
     }
-  }
 }

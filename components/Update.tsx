@@ -2643,7 +2643,10 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             ) : null}
             <BottomSheet
                 isOpen={fullScreenWebview}
-                snapPoints={[0, Dimensions.get('window').height - 60]}
+                snapPoints={[
+                    0,
+                    Platform.OS === 'ios' ? Dimensions.get('window').height - 60 : Dimensions.get('window').height,
+                ]}
                 close={() => {
                     setFullScreenWebview(false);
                     setFullScreenPdfUrl('');

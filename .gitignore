@@ -70,3 +70,4 @@ web-build/
 dist/
 
 # @end expo-cli
+google-play-store-key-eas.json
