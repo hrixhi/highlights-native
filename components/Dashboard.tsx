@@ -3025,7 +3025,6 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                 }}
                                 tintColor={'#1f1f1f'}
                                 progressBackgroundColor={Platform.OS === 'ios' ? '#1f1f1f' : '#f2f2f2'}
-                                size={14}
                             />
                         }
                     >

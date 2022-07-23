@@ -2,7 +2,7 @@
     "expo": {
         "name": "Cues - learn",
         "slug": "cues",
-        "version": "1.0.2",
+        "version": "1.0.3",
         "icon": "./assets/images/cues-app-logo.png",
         "scheme": "cues",
         "userInterfaceStyle": "automatic",
@@ -70,6 +70,13 @@
                     "expo-image-picker": "Allow access to photos for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
                     "cameraPermission": "Allow access to camera for creating coursework & notes, sending messages & discussion posts and uploading profile picture."
                 }
+            ],
+            [
+                "expo-document-picker",
+                {
+                    "appleTeamId": "RKX5YB46M5",
+                    "iCloudContainerEnvironment": "Production"
+                }
             ]
         ],
         "hooks": {
@@ -84,6 +91,8 @@
                 }
             ]
         },
-        "runtimeVersion": "1.0.3"
+        "runtimeVersion": {
+            "policy": "nativeVersion"
+        }
     }
 }

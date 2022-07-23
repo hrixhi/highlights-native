@@ -1000,9 +1000,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         );
     };
 
-    console.log('Props.channelCues', props.channelCues);
-    console.log('channel cues', channelCues);
-
     /**
      * @description method to render the cue selections for new folder
      * Two Sections (First section shows all options and the second one shows the selected cues)
@@ -1599,7 +1596,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
         return (
             <React.Fragment>
                 {/* Edit folder button */}
-                {channelOwner && folderId !== '' && !editFolder && showOriginal && props.channelId ? (
+                {channelOwner && folderId && !editFolder && showOriginal && props.channelId ? (
                     <TouchableOpacity
                         onPress={async () => {
                             setEditFolder(true);
@@ -1626,18 +1623,14 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                     </TouchableOpacity>
                 ) : null}
                 {/* Create new folder button */}
-                {channelOwner &&
-                folderId === '' &&
-                !createNewFolder &&
-                !editFolder &&
-                showOriginal &&
-                props.channelId ? (
+                {channelOwner && !folderId && !createNewFolder && !editFolder && showOriginal && props.channelId ? (
                     <TouchableOpacity
                         onPress={() => {
                             setCreateNewFolder(true);
                             setSelectedCues([cue]);
                             const filter = props.channelCues.filter(
-                                (cue: any) => cue._id !== cue._id && (!cue.folderId || cue.folderId === '')
+                                (channelCue: any) =>
+                                    channelCue._id !== cue._id && (!channelCue.folderId || channelCue.folderId === '')
                             );
                             setChannelCues(filter);
                         }}
@@ -1665,7 +1658,7 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
                 {/* Add to existing folder button */}
                 {channelFolders.length > 0 &&
                 channelOwner &&
-                folderId === '' &&
+                !folderId &&
                 !createNewFolder &&
                 !editFolder &&
                 showOriginal ? (
@@ -2459,8 +2452,6 @@ const Update: React.FunctionComponent<{ [label: string]: any }> = (props: any) =
             </View>
         );
     };
-
-    console.log('Sync Error', syncCueError);
 
     return (
         <View style={{ flex: 1, height: '100%' }}>

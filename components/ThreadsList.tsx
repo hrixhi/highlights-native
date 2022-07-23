@@ -40,7 +40,6 @@ import moment from 'moment';
 //     MenuTrigger,
 // } from 'react-native-popup-menu';
 import { htmlStringParser } from '../helpers/HTMLParser';
-import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import FileUpload from './UploadFiles';
 import { Video } from 'expo-av';
 import NewPostModal from './NewPostModal';
@@ -56,6 +55,11 @@ import RenderHtml from 'react-native-render-html';
 import { WebView } from 'react-native-webview';
 
 import MathJax from 'react-native-mathjax';
+
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 // Editor
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
@@ -826,62 +830,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         else return date.format('MM/DD/YYYY');
     }
 
-    /**
-     * Human readable elapsed or remaining time (example: 3 minutes ago)
-     * @param  {Date|Number|String} date A Date object, timestamp or string parsable with Date.parse()
-     * @param  {Date|Number|String} [nowDate] A Date object, timestamp or string parsable with Date.parse()
-     * @param  {Intl.RelativeTimeFormat} [trf] A Intl formater
-     * @return {string} Human readable elapsed or remaining time
-     * @author github.com/victornpb
-     * @see https://stackoverflow.com/a/67338038/938822
-     */
-    function fromNow(
-        date: Date,
-        replace: boolean,
-        nowDate = Date.now(),
-        rft = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
-    ) {
-        const SECOND = 1000;
-        const MINUTE = 60 * SECOND;
-        const HOUR = 60 * MINUTE;
-        const DAY = 24 * HOUR;
-        const WEEK = 7 * DAY;
-        const MONTH = 30 * DAY;
-        const YEAR = 365 * DAY;
-        const intervals = [
-            { ge: YEAR, divisor: YEAR, unit: 'year' },
-            { ge: MONTH, divisor: MONTH, unit: 'month' },
-            { ge: WEEK, divisor: WEEK, unit: 'week' },
-            { ge: DAY, divisor: DAY, unit: 'day' },
-            { ge: HOUR, divisor: HOUR, unit: 'hour' },
-            { ge: MINUTE, divisor: MINUTE, unit: 'minute' },
-            { ge: 30 * SECOND, divisor: SECOND, unit: 'seconds' },
-            { ge: 0, divisor: 1, text: 'just now' },
-        ];
-        const now = typeof nowDate === 'object' ? nowDate.getTime() : new Date(nowDate).getTime();
-        const diff = now - (typeof date === 'object' ? date : new Date(date)).getTime();
-        const diffAbs = Math.abs(diff);
-        for (const interval of intervals) {
-            if (diffAbs >= interval.ge) {
-                const x = Math.round(Math.abs(diff) / interval.divisor);
-                const isFuture = diff < 0;
-                const outputTime = interval.unit ? rft.format(isFuture ? x : -x, interval.unit) : interval.text;
-                if (replace) {
-                    return outputTime
-                        .replace(' ago', '')
-                        .replace(' minutes', 'min')
-                        .replace(' months', 'mth')
-                        .replace(' days', 'd')
-                        .replace(' weeks', 'wks')
-                        .replace(' hours', 'h')
-                        .replace(' seconds', 's');
-                } else {
-                    return outputTime;
-                }
-            }
-        }
-    }
-
     console.log('Editor Focus', editorFocus);
 
     const renderDiscussionEditor = () => {
@@ -964,6 +912,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                         ref={scrollRef}
                     >
                         <RichEditor
+                            androidLayerType="software"
                             initialFocus={editorFocus}
                             ref={RichText}
                             useContainer={true}
@@ -1001,7 +950,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             }}
                             onHeightChange={handleHeightChange}
                             onFocus={() => {
-                                setEditorFocus(true);
+                                setTimeout(() => {
+                                    setEditorFocus(true);
+                                }, 100);
                             }}
                             onBlur={() => {
                                 setEditorFocus(false);
@@ -1343,7 +1294,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                         color: '#1f1f1f',
                                     }}
                                 >
-                                    {fromNow(new Date(selectedThread.time), false)}{' '}
+                                    {dayjs(new Date(selectedThread.time)).fromNow()}{' '}
                                     {selectedThread.category ? ' in ' + selectedThread.category : ''}
                                 </Text>
                             </View>
@@ -1546,6 +1497,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             <View
                                                 style={{
                                                     minWidth: 100,
+                                                    minHeight: 60,
                                                 }}
                                             >
                                                 <MathJax
@@ -1923,7 +1875,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             color: '#1f1f1f',
                                         }}
                                     >
-                                        {fromNow(thread.time, true)}
+                                        {dayjs(thread.time).fromNow()}
                                     </Text>
                                     {thread.edited ? (
                                         <View
@@ -2135,6 +2087,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                         <View
                                                             style={{
                                                                 minWidth: 100,
+                                                                minHeight: 60,
                                                             }}
                                                         >
                                                             <MathJax
@@ -2855,7 +2808,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                               }}
                                                               ellipsizeMode="tail"
                                                           >
-                                                              {fromNow(thread.time, true)}
+                                                              {dayjs(thread.time).fromNow()}
                                                           </Text>
                                                       </View>
                                                   </View>
