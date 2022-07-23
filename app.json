@@ -30,7 +30,7 @@
         },
         "android": {
             "useNextNotificationsApi": true,
-            "versionCode": 1,
+            "versionCode": 2,
             "softwareKeyboardLayoutMode": "pan",
             "backgroundColor": "#ffffff",
             "adaptiveIcon": {

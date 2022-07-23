@@ -23,6 +23,15 @@
                 "track": "internal"
             }
         },
-        "production": {}
+        "production": {
+            "ios": {
+                "appleId": "rvora@tradingacademy.com",
+                "ascAppId": "1614537827",
+                "appleTeamId": "RKX5YB46M5"
+            },
+            "android": {
+                "serviceAccountKeyPath": "./google-play-store-key-eas.json"
+            }
+        }
     }
 }

@@ -10,6 +10,7 @@
         "preset": "jest-expo"
     },
     "name": "app",
+    "description": "Mobile Application developed by Cues Technologies Inc.",
     "dependencies": {
         "@apollo/client": "^3.6.9",
         "@expo/metro-config": "^0.1.60",
