@@ -782,7 +782,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     {!showSavePassword ? (
                         <TouchableOpacity
                             style={{}}
-                            onPress={() => Linking.openURL('https://www.learnwithcues.com/privacypolicy.pdf')}
+                            onPress={() => Linking.openURL('https://learnwithcues.com/privacy-policy')}
                         >
                             <Text style={{ fontSize: 12, textAlign: 'center', marginBottom: 10, color: '#797979' }}>
                                 Privacy Policy
@@ -792,7 +792,7 @@ const ProfileControls: React.FunctionComponent<{ [label: string]: any }> = (prop
                     {!showSavePassword ? (
                         <TouchableOpacity
                             style={{}}
-                            onPress={() => Linking.openURL('https://www.learnwithcues.com/eula.pdf')}
+                            onPress={() => Linking.openURL('https://learnwithcues.com/terms-of-use')}
                         >
                             <Text style={{ fontSize: 12, textAlign: 'center', color: '#797979' }}>Terms of Use</Text>
                         </TouchableOpacity>
