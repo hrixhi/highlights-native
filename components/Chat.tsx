@@ -54,8 +54,10 @@ const Inbox = (props: any) => {
             <View
                 style={{
                     height:
-                        Dimensions.get('window').width < 1024
+                        Dimensions.get('window').width < 768
                             ? Dimensions.get('window').height - (Platform.OS === 'ios' ? 135 : 70)
+                            : Dimensions.get('window').width < 1024
+                            ? Dimensions.get('window').height - 100
                             : Dimensions.get('window').height - 113,
                 }}
             >

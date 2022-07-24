@@ -152,6 +152,7 @@ const ChannelListScreen = ({}) => {
     return (
         <View style={{ flex: 1 }}>
             <ScreenHeader
+                inSafeArea
                 LeftContent={() => null}
                 RightContent={() => (
                     <TouchableOpacity

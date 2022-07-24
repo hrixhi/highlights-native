@@ -62,6 +62,7 @@ const ChannelHeader: React.FC<ChannelHeaderProps> = ({ channel }) => {
 
     return (
         <ScreenHeader
+            inSafeArea
             onBack={() => {
                 if (!navigation.canGoBack()) {
                     // if no previous screen was present in history, go to the list screen
@@ -267,7 +268,7 @@ const ChannelScreen: React.FC<ChannelScreenProps> = ({
     };
 
     return (
-        <View style={[styles.flex, { backgroundColor: white, paddingBottom: bottom }]}>
+        <View style={[{ backgroundColor: white, paddingBottom: Platform.OS === 'android' ? bottom : 15 }]}>
             <Channel
                 channel={channel}
                 disableTypingIndicator

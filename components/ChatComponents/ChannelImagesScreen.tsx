@@ -142,7 +142,7 @@ export const ChannelImagesScreen: React.FC<ChannelImagesScreenProps> = ({
     }, [imageString, numberOfMessagesWithImages]);
 
     return (
-        <SafeAreaView style={[styles.flex, { backgroundColor: white }]}>
+        <View style={[styles.flex, { backgroundColor: white }]}>
             <ScreenHeader inSafeArea titleText="Photos and Videos" />
             <View style={styles.flex}>
                 <FlatList
@@ -185,7 +185,7 @@ export const ChannelImagesScreen: React.FC<ChannelImagesScreenProps> = ({
                     </View>
                 ) : null}
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 

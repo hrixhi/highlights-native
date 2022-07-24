@@ -93,7 +93,7 @@ const HEADER_CONTENT_HEIGHT = 55;
 
 const ScreenHeader: React.FC<ScreenHeaderProps> = (props) => {
     const {
-        inSafeArea,
+        inSafeArea = true,
         LeftContent,
         onBack,
         RightContent = () => <View style={{ height: 24, width: 24 }} />,

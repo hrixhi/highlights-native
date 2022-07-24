@@ -215,7 +215,7 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
     if (!user) return null;
 
     return (
-        <SafeAreaView style={[{ backgroundColor: white }, styles.container]}>
+        <View style={[{ backgroundColor: white }, styles.container]}>
             <ScrollView contentContainerStyle={styles.contentContainer} style={styles.container}>
                 <View style={styles.userInfoContainer}>
                     {/* Avatar */}
@@ -513,6 +513,6 @@ export const OneOnOneChannelDetailScreen: React.FC<Props> = ({
                     </View>
                 </TouchableOpacity> */}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };

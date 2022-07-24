@@ -311,7 +311,7 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                         style={[styles.container, panStyle]}
                     >
                         <Animated.View style={[styles.containerInner, { backgroundColor: white }, showScreenStyle]}>
-                            <SafeAreaView>
+                            <View>
                                 <View
                                     style={{
                                         // alignItems: 'center',
@@ -663,7 +663,7 @@ export const DirectoryFilterOverlay = (props: DirectoryFilterOverlayProps) => {
                                         </View>
                                     </TapGestureHandler>
                                 </View>
-                            </SafeAreaView>
+                            </View>
                         </Animated.View>
                     </Animated.View>
                     {/* </TapGestureHandler> */}

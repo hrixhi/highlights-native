@@ -253,7 +253,7 @@ export const ChannelInfoOverlay = (props: ChannelInfoOverlayProps) => {
                             style={[styles.container, panStyle]}
                         >
                             <Animated.View style={[styles.containerInner, { backgroundColor: white }, showScreenStyle]}>
-                                <SafeAreaView>
+                                <View>
                                     {channel && (
                                         <>
                                             <View style={styles.detailsContainer}>
@@ -422,7 +422,7 @@ export const ChannelInfoOverlay = (props: ChannelInfoOverlayProps) => {
                                             </TapGestureHandler>
                                         </>
                                     )}
-                                </SafeAreaView>
+                                </View>
                             </Animated.View>
                         </Animated.View>
                     </TapGestureHandler>

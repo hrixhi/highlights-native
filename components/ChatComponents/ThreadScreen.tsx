@@ -62,7 +62,7 @@ export const ThreadScreen: React.FC<ThreadScreenProps> = ({
     }, []);
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: white }]}>
+        <View style={[styles.container, { backgroundColor: white }]}>
             <Channel<StreamChatGenerics>
                 channel={channel}
                 enforceUniqueReaction
@@ -75,6 +75,6 @@ export const ThreadScreen: React.FC<ThreadScreenProps> = ({
                     <Thread<StreamChatGenerics> />
                 </View>
             </Channel>
-        </SafeAreaView>
+        </View>
     );
 };

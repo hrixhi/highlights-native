@@ -271,7 +271,7 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
     console.log('Members', members);
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: white }]}>
+        <View style={[styles.container, { backgroundColor: white }]}>
             <ScreenHeader
                 inSafeArea
                 RightContent={() =>
@@ -571,6 +571,6 @@ export const GroupChannelDetailsScreen: React.FC<GroupChannelDetailsProps> = ({
                     </TouchableOpacity>
                 </>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
