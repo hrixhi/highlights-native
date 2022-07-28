@@ -2894,6 +2894,8 @@ const Dashboard: React.FunctionComponent<{ [label: string]: any }> = (props: any
                                             ? 'Discussion'
                                             : props.activeWorkspaceTab === 'Meet'
                                             ? 'Meetings'
+                                            : props.activeWorkspaceTab === 'Scores'
+                                            ? 'Grades'
                                             : props.activeWorkspaceTab}
                                     </Text>
                                 ) : null}

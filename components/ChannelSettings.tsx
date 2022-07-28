@@ -803,7 +803,7 @@ const ChannelSettings: React.FunctionComponent<{ [label: string]: any }> = (prop
                     width: '100%',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    paddingBottom: Dimensions.get('window').width < 768 ? 100 : 150,
+                    marginBottom: Dimensions.get('window').width < 768 ? 200 : 150,
                 }}
             >
                 <View style={styles.screen}>

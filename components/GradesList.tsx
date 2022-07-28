@@ -3271,7 +3271,7 @@ const GradesList: React.FunctionComponent<{ [label: string]: any }> = (props: an
                             value={userAnalyticsSelected}
                             items={userAnalyticsOptions}
                             setOpen={setIsUsersDropdownOpen}
-                            setValue={setAssignmentAnalyticsSelected}
+                            setValue={setUserAnalyticsSelected}
                             style={{
                                 borderWidth: 1,
                                 borderColor: '#ccc',

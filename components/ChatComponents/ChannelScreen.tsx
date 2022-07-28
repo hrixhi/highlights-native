@@ -278,7 +278,6 @@ const ChannelScreen: React.FC<ChannelScreenProps> = ({
                 messageId={messageId}
                 thread={selectedThread}
                 Card={CustomAttachment}
-                doImageUploadRequest={handleFileUpload}
                 doDocUploadRequest={handleFileUpload}
             >
                 <ChannelHeader channel={channel} />

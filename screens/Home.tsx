@@ -150,6 +150,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
     const [streamUserToken, setStreamUserToken] = useState('');
     const [chatClient, setChatClient] = useState<any>(undefined);
+    const [connectUserCalled, setConnectUserCalled] = useState(false);
 
     const orientation = useOrientation();
 
@@ -210,6 +211,24 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             handleSetCues(cuesData.cue.getCuesFromCloud);
         }
     }, [cuesData]);
+
+    useEffect(() => {
+        async function onFetchUpdateAsync() {
+            try {
+                const update = await Updates.checkForUpdateAsync();
+
+                if (update.isAvailable) {
+                    console.log('New Update Visible');
+                    await Updates.fetchUpdateAsync();
+                    await Updates.reloadAsync();
+                }
+            } catch (error) {
+                console.log(`Error fetching latest Expo update: ${error}`);
+            }
+        }
+
+        onFetchUpdateAsync();
+    }, []);
 
     useEffect(() => {
         (async () => {
@@ -332,7 +351,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
         if (!userId || userId === '') {
             setShowLoginWindow(true);
             setShowHome(false);
-            setStreamUserToken('');
+
+            disconnectChat();
         } else {
             fetchSubs({
                 variables: {
@@ -354,12 +374,20 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     userId,
                 },
             });
-            fetchStreamUserToken(userId);
-            setupEventsNotifications(userId);
             setShowLoginWindow(false);
             setShowHome(true);
+            fetchStreamUserToken(userId);
+            setupEventsNotifications(userId);
         }
     }, [userId]);
+
+    const disconnectChat = useCallback(() => {
+        if (chatClient) {
+            chatClient.disconnectUser();
+        }
+        setStreamUserToken('');
+        setConnectUserCalled(false);
+    }, [chatClient]);
 
     //   Validate Submit on Login state change
     useEffect(() => {
@@ -404,9 +432,9 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, []);
 
     useEffect(() => {
-        Dimensions.addEventListener('change', onDimensionsChange);
+        const sub = Dimensions.addEventListener('change', onDimensionsChange);
         return () => {
-            Dimensions.removeEventListener('change', onDimensionsChange);
+            sub.remove();
         };
     }, []);
 
@@ -697,6 +725,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                             },
                         })
                         .then((res: any) => {
+                            console.log('Res from update Notification id', res);
                             const updateAsyncStorageUser = {
                                 ...user,
                                 notificationId: updatedNotificationId,
@@ -710,9 +739,12 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                 }
             }
         } catch (e) {
-            console.log('Error', e);
+            console.log('Error from updateNotificationId', e);
         }
     }, []);
+
+    console.log('Show Home', showHome);
+    console.log('Show Login', showLoginWindow);
 
     const handleSocialAuth = (user: any) => {
         const profile = user._profile;
@@ -871,6 +903,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
 
                     const res = await loginUser(userId, token);
 
+                    console.log('Res from sign in', res);
+
                     if (!res) {
                         Alert('Failed to login user. Try again.');
                     } else {
@@ -882,12 +916,13 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
                     }
                 } else {
                     const { error } = r.data.user.login;
+
                     Alert(error);
                 }
                 setIsLoggingIn(false);
             })
             .catch((e) => {
-                console.log(e);
+                console.log('Error from logging in', e);
                 Alert('Something went wrong. Try again.');
                 setIsLoggingIn(false);
             });
@@ -904,6 +939,8 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             .then((res: any) => {
                 if (res.data && res.data.streamChat.getUserToken !== '') {
                     setStreamUserToken(res.data.streamChat.getUserToken);
+                } else {
+                    console.log('Res', res);
                 }
             })
             .catch((e) => {
@@ -913,55 +950,41 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
     }, []);
 
     console.log('Stream chat token', streamUserToken);
+    console.log('Chat Client', chatClient);
+    console.log('User', user);
 
-    // CHAT
-    // INITIALIZE CHAT
     useEffect(() => {
-        if (!streamUserToken && chatClient) {
-            setChatClient(undefined);
-            // Refetch user token
-            return;
+        if (streamUserToken && user) {
+            initChat();
         }
-
-        if (!streamUserToken || !user) {
-            return;
-        }
-
-        const initChat = async (userObj: any, userToken: string) => {
-            try {
-                const client = StreamChat.getInstance<StreamChatGenerics>(STREAM_CHAT_API_KEY);
-                // open the WebSocket connection to start receiving events
-                // Updates the user in the application (will add/modify existing fields but will not overwrite/delete previously set fields unless the key is used)
-                const res = await client.connectUser(
-                    {
-                        id: userObj._id,
-                        name: userObj.fullName,
-                        avatar: userObj.avatar,
-                    },
-                    userToken
-                );
-
-                console.log('Res', res);
-
-                setUnreadMessages(res.me.total_unread_count);
-
-                setChatClient(client);
-            } catch (error: any) {
-                console.log('Error', error);
-                console.log('Status code', JSON.parse(error.message).StatusCode);
-            }
-        };
-
-        if (streamUserToken && !chatClient) {
-            initChat(user, streamUserToken);
-        }
-
-        return () => {
-            if (chatClient) {
-                chatClient.disconnectUser();
-            }
-        };
     }, [streamUserToken, user]);
+
+    const initChat = useCallback(async () => {
+        if (connectUserCalled || !streamUserToken || !user) return;
+
+        console.log('Init Chat called with User', user);
+        console.log('Init Chat called with Token', streamUserToken);
+
+        try {
+            setConnectUserCalled(true);
+            const client = StreamChat.getInstance<StreamChatGenerics>(STREAM_CHAT_API_KEY);
+            // open the WebSocket connection to start receiving events
+            const res = await client.connectUser(
+                {
+                    id: user._id,
+                    name: user.fullName,
+                    avatar: user.avatar,
+                },
+                streamUserToken
+            );
+            console.log('Connect User Called', res);
+            setUnreadMessages(res.me.total_unread_count);
+            setChatClient(client);
+        } catch (error: any) {
+            console.log('Error', error);
+            console.log('Status code', JSON.parse(error.message).StatusCode);
+        }
+    }, [user, streamUserToken, connectUserCalled]);
 
     const openCue = useCallback(
         (channelId, cueId, createdBy) => {
@@ -1129,7 +1152,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             case 'Meet':
                 return 'Meetings';
             case 'Scores':
-                return 'Scores';
+                return 'Grades';
             default:
                 return 'Settings';
         }
@@ -1155,7 +1178,7 @@ const Home: React.FunctionComponent<{ [label: string]: any }> = (props: any) => 
             <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', height: '100%', flexDirection: 'row' }}>
                 <View
                     style={styles(channelId).container}
-                    key={showHome.toString() + option.toString() + tab.toString()}
+                    key={showHome.toString() + option.toString() + tab.toString() + streamUserToken.toString()}
                 >
                     {showLoginWindow && showSignupWindow ? (
                         <View

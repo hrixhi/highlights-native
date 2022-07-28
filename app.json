@@ -19,7 +19,7 @@
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "com.cues-technologies.learnwithcues",
-            "buildNumber": "1.0",
+            "buildNumber": "1.1",
             "usesIcloudStorage": true,
             "infoPlist": {
                 "NSCameraUsageDescription": "Allow access to camera for creating coursework & notes, sending messages & discussion posts and uploading profile picture.",
@@ -30,7 +30,7 @@
         },
         "android": {
             "useNextNotificationsApi": true,
-            "versionCode": 2,
+            "versionCode": 3,
             "softwareKeyboardLayoutMode": "pan",
             "backgroundColor": "#ffffff",
             "adaptiveIcon": {
@@ -90,9 +90,6 @@
                     }
                 }
             ]
-        },
-        "runtimeVersion": {
-            "policy": "nativeVersion"
         }
     }
 }

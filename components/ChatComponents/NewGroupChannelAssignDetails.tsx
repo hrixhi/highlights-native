@@ -12,6 +12,7 @@ import ScreenHeader from './ScreenHeader';
 import { UserSearchResults } from './UserResults';
 import { useAppChatContext } from '../../ChatContext/AppChatContext';
 import { useUserSearchContext } from '../../ChatContext/useSearchContext';
+import 'react-native-get-random-values';
 import { nanoid } from 'nanoid';
 
 const styles = StyleSheet.create({

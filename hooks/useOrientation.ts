@@ -1,13 +1,13 @@
 // useOrientation.tsx
-import {useEffect, useState} from 'react';
-import {Dimensions} from 'react-native';
+import { useEffect, useState } from 'react';
+import { Dimensions } from 'react-native';
 
 /**
  * Returns true if the screen is in portrait mode
  */
 const isPortrait = () => {
-  const dim = Dimensions.get('screen');
-  return dim.height >= dim.width;
+    const dim = Dimensions.get('screen');
+    return dim.height >= dim.width;
 };
 
 /**
@@ -15,20 +15,18 @@ const isPortrait = () => {
  * @returns whether the user is in 'PORTRAIT' or 'LANDSCAPE'
  */
 export function useOrientation(): 'PORTRAIT' | 'LANDSCAPE' {
-  // State to hold the connection status
-  const [orientation, setOrientation] = useState<'PORTRAIT' | 'LANDSCAPE'>(
-    isPortrait() ? 'PORTRAIT' : 'LANDSCAPE',
-  );
+    // State to hold the connection status
+    const [orientation, setOrientation] = useState<'PORTRAIT' | 'LANDSCAPE'>(isPortrait() ? 'PORTRAIT' : 'LANDSCAPE');
 
-  useEffect(() => {
-    const callback = () => setOrientation(isPortrait() ? 'PORTRAIT' : 'LANDSCAPE');
+    useEffect(() => {
+        const callback = () => setOrientation(isPortrait() ? 'PORTRAIT' : 'LANDSCAPE');
 
-    Dimensions.addEventListener('change', callback);
+        const sub = Dimensions.addEventListener('change', callback);
 
-    return () => {
-      Dimensions.removeEventListener('change', callback);
-    };
-  }, []);
+        return () => {
+            sub.remove();
+        };
+    }, []);
 
-  return orientation;
+    return orientation;
 }

@@ -158,6 +158,149 @@ export const handleFile = async (audioVideoOnly: boolean, userId: string) => {
     }
 };
 
+export const handleFileDiscussion = async (audioVideoOnly: boolean, userId: string) => {
+    // e.preventDefault();
+    if (audioVideoOnly) {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (permissionResult.granted === false) {
+            alert("You've refused to allow this app to access your photos!");
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+            allowsEditing: false,
+            quality: 0.8,
+            allowsMultipleSelection: false,
+        });
+
+        if (!result.cancelled && result.type) {
+            // const img = await fetchImageFromUri(result.uri);
+
+            // Check size first
+            const fileInfo = await getFileSize(result.uri);
+
+            if (!fileInfo.exists || !fileInfo.size) {
+                Alert('Error parsing file. Try a different video.');
+                return { type: '', url: '', name: '' };
+            }
+
+            if (!isLessThanTheMB(fileInfo.size, 20)) {
+                Alert('File must be less than 20 mb');
+                return { type: '', url: '', name: '' };
+            }
+
+            const file = {
+                name: 'default.mp4',
+                // size: size,
+                uri: result.uri,
+                type: 'application/mp4',
+            };
+
+            // const file = blobToFile(img, 'default.jpg');
+
+            alert('Upload in progress! Large files may take longer to process.');
+
+            const response = await fileUploadInbox(file, 'mp4', userId);
+
+            const { data } = response;
+            if (data.status === 'success') {
+                return {
+                    url: data.url,
+                    type: 'mp4',
+                    name: 'default.mp4',
+                };
+            } else {
+                return { type: '', url: '', name: '' };
+            }
+        } else {
+            return { type: '', url: '', name: '' };
+        }
+    } else {
+        const res: any = await DocumentPicker.getDocumentAsync();
+
+        if (res.type === 'cancel' || res.type !== 'success') {
+            return { type: '', url: '', name: '' };
+        }
+
+        let { name, size, uri } = res;
+
+        let nameParts = name.split('.');
+        let type = nameParts[nameParts.length - 1];
+        if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
+            Alert('Error! Use gallery icon from toolbar to upload images.');
+            return { type: '', url: '', name: '' };
+        }
+
+        if (type === 'txt') {
+            alert('txt files are not supported. Convert to pdf and upload.');
+            return { type: '', url: '', name: '' };
+        }
+
+        // const { file } = res;
+
+        if (size > 26214400) {
+            alert('File size must be less than 25 mb');
+            return;
+        }
+        // if (file === null) {
+        //     return { type: '', url: '' };
+        // }
+
+        // let type = mime.extension(file.type);
+
+        if (type === 'video/avi') {
+            type = 'avi';
+        } else if (type === 'video/quicktime') {
+            type = 'mov';
+        }
+
+        if (type === 'wma' || type === 'avi') {
+            alert('This video format is not supported. Upload mp4.');
+            return { type: '', url: '', name: '' };
+        }
+
+        if (type === 'mpga') {
+            type = 'mp3';
+        }
+
+        // if (type === 'png' || type === 'jpeg' || type === 'jpg' || type === 'gif') {
+        //     alert('Error! Images should be directly added to the text editor using the gallery icon in the toolbar.');
+        //     return { type: '', url: '' };
+        // }
+
+        if (type === 'svg') {
+            alert('This file type is not supported.');
+            return { type: '', url: '', name: '' };
+        }
+
+        const file = {
+            name: name.split('.')[0],
+            size: size,
+            uri: uri,
+            type: 'application/' + type,
+        };
+
+        alert('Upload in progress! Large files may take longer to process.');
+
+        // return { type: '', url: '' };
+
+        const response = await fileUploadInbox(file, type, userId);
+
+        const { data } = response;
+        if (data.status === 'success') {
+            return {
+                url: data.url,
+                type,
+                name: name.split('.')[0],
+            };
+        } else {
+            return { type: '', url: '', name: '' };
+        }
+    }
+};
+
 export const fileUpload = async (file: any, type: any, userId: string) => {
     // LIVE
     const url = 'https://api.learnwithcues.com/api/upload';

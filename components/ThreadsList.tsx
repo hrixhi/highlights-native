@@ -46,7 +46,7 @@ import NewPostModal from './NewPostModal';
 import DropDownPicker from 'react-native-dropdown-picker';
 import BottomSheet from './BottomSheet';
 import { handleImageUpload } from '../helpers/ImageUpload';
-import { handleFile } from '../helpers/FileUpload';
+import { handleFileDiscussion } from '../helpers/FileUpload';
 import Reanimated from 'react-native-reanimated';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import { useOrientation } from '../hooks/useOrientation';
@@ -60,6 +60,11 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
+
+const customFontFamily = `@font-face {
+    font-family: 'Overpass';
+    src: url('https://cues-files.s3.amazonaws.com/fonts/Omnes-Pro-Regular.otf'); 
+}`;
 
 // Editor
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
@@ -244,6 +249,8 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         loadCategories();
     }, [props.channelId]);
 
+    console.log('props.channelCreatedBy', props.channelCreatedBy);
+    console.log('userId', userId);
     /**
      * Set is Owner on init
      */
@@ -256,7 +263,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
         if (userId.toString().trim() === props.channelCreatedBy.toString().trim()) {
             setIsOwner(true);
         }
-    }, [props.channelCreatedBy]);
+    }, [props.channelCreatedBy, userId, user]);
+
+    console.log('Is owner', isOwner);
 
     /**
      * Load discussion from Search or Activity
@@ -330,6 +339,9 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                 .then((res) => {
                     if (res.data.thread.writeMessage) {
                         props.setShowNewDiscussionPost(false);
+                        if (Dimensions.get('window').width < 768) {
+                            props.setHideNavbarDiscussions(false);
+                        }
                         props.reload();
                     } else {
                         Alert(checkConnectionAlert);
@@ -570,7 +582,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     }, [hiliteColor]);
 
     const handleUploadFile = useCallback(async () => {
-        const res = await handleFile(false, userId);
+        const res = await handleFileDiscussion(false, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -582,7 +594,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
     }, [RichText, RichText.current]);
 
     const handleUploadAudioVideo = useCallback(async () => {
-        const res = await handleFile(true, userId);
+        const res = await handleFileDiscussion(true, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -832,6 +844,145 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
 
     console.log('Editor Focus', editorFocus);
 
+    const renderPreviewHtml = () => {
+        const previewContent = editDiscussionThreadId !== '' ? editDiscussionThreadHtml : html;
+        return (
+            <View
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    flex: 1,
+                }}
+            >
+                <ScrollView
+                    style={{
+                        borderWidth: 1,
+                        borderColor: '#f2f2f2',
+                        maxHeight: 200,
+                        minHeight: 200,
+                    }}
+                    contentContainerStyle={{
+                        padding: 10,
+                    }}
+                >
+                    {previewContent === '' ? (
+                        <View>
+                            <Text
+                                style={{
+                                    fontFamily: 'Inter',
+                                }}
+                            >
+                                No Content{' '}
+                            </Text>
+                        </View>
+                    ) : (
+                        <RenderHtml
+                            contentWidth={contentWidth}
+                            source={{
+                                html: previewContent,
+                            }}
+                            defaultTextProps={{
+                                selectable: false,
+                            }}
+                            // renderers={renderers}
+                            renderers={{
+                                img: ({ TDefaultRenderer, ...rendererProps }) => {
+                                    const node = rendererProps.tnode.domNode;
+
+                                    const attribs = node.attribs;
+
+                                    if (attribs && attribs['data-eq']) {
+                                        const formula = '$' + decodeURIComponent(attribs['data-eq'] + '$');
+                                        console.log('Formula', formula);
+
+                                        return (
+                                            <View
+                                                style={{
+                                                    minWidth: 100,
+                                                    minHeight: 60,
+                                                }}
+                                            >
+                                                <MathJax
+                                                    html={formula}
+                                                    mathJaxOptions={{
+                                                        messageStyle: 'none',
+                                                        extensions: ['tex2jax.js', 'MathMenu.js', 'MathZoom.js'],
+                                                        jax: ['input/TeX', 'output/HTML-CSS'],
+                                                        tex2jax: {
+                                                            inlineMath: [
+                                                                ['$', '$'],
+                                                                ['\\(', '\\)'],
+                                                            ],
+                                                            displayMath: [
+                                                                ['$$', '$$'],
+                                                                ['\\[', '\\]'],
+                                                            ],
+                                                            processEscapes: false,
+                                                        },
+                                                        SVG: {
+                                                            useGlobalCache: false,
+                                                        },
+                                                        TeX: {
+                                                            extensions: [
+                                                                'AMSmath.js',
+                                                                'AMSsymbols.js',
+                                                                'noErrors.js',
+                                                                'noUndefined.js',
+                                                                'AMSmath.js',
+                                                                'AMSsymbols.js',
+                                                                'autoload-all.js',
+                                                            ],
+                                                        },
+                                                    }}
+                                                />
+                                            </View>
+                                        );
+                                    }
+
+                                    return (
+                                        <Image
+                                            source={{
+                                                uri: attribs.src,
+                                            }}
+                                            style={{
+                                                maxWidth: Dimensions.get('window').width,
+                                                width: 300,
+                                                height: 300,
+                                                flex: 1,
+                                            }}
+                                            resizeMode={'contain'}
+                                        />
+                                    );
+                                },
+                            }}
+                            tagsStyles={{
+                                p: {
+                                    lineHeight: 50,
+                                    fontSize: 16,
+                                },
+                            }}
+                        />
+                    )}
+                </ScrollView>
+                <TouchableOpacity
+                    onPress={() => {
+                        setEditorFocus(true);
+                    }}
+                    style={{
+                        // backgroundColor: '#f2f2f2',
+                        paddingLeft: 20,
+                        height: 50,
+                        width: 50,
+                    }}
+                >
+                    <Text>
+                        <Ionicons name={'pencil-outline'} size={20} />
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
     const renderDiscussionEditor = () => {
         return (
             <View
@@ -918,22 +1069,19 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                             useContainer={true}
                             style={{
                                 width: '100%',
-                                // paddingHorizontal: 10,
                                 backgroundColor: '#fff',
-                                // borderRadius: 15,
                                 display: 'flex',
-                                // borderTopWidth: 1,
-                                // borderColor: '#f2f2f2',
                                 flex: 1,
                                 height: '100%',
-                                // minHeight: 200,
                             }}
                             editorStyle={{
                                 backgroundColor: '#fff',
                                 placeholderColor: '#a2a2ac',
                                 color: '#2f2f3c',
-                                cssText: 'Overpass',
-                                contentCSSText: 'font-size: 16px; min-height: 200px; font-family: Overpass;',
+                                cssText: customFontFamily,
+                                initialCSSText: customFontFamily,
+                                contentCSSText: 'font-size: 16px; min-height: 400px; font-family: Overpass;',
+                                // initialCSSText: 'font-size: 16px; min-height: 400px; font-family: Overpass;',
                             }}
                             initialContentHTML={editDiscussionThreadId !== '' ? editDiscussionThreadHtml : html}
                             initialHeight={200}
@@ -949,11 +1097,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 }
                             }}
                             onHeightChange={handleHeightChange}
-                            onFocus={() => {
-                                setTimeout(() => {
-                                    setEditorFocus(true);
-                                }, 100);
-                            }}
                             onBlur={() => {
                                 setEditorFocus(false);
                             }}
@@ -1331,7 +1474,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                     disabled={user.email === disableEmailId}
                                 >
                                     <Text>
-                                        <Ionicons name={'pencil-outline'} size={16} color="#000" />
+                                        <Ionicons name={'pencil-outline'} size={18} color="#000" />
                                     </Text>
                                 </TouchableOpacity>
                             ) : null}
@@ -1360,7 +1503,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 flexDirection: 'column',
                             }}
                         >
-                            {editorFocus ? null : renderDiscussionEditor()}
+                            {editorFocus ? null : renderPreviewHtml()}
 
                             <View
                                 style={{
@@ -1464,7 +1607,6 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 color: '#000',
                                                 fontSize: 15,
                                                 fontFamily: 'inter',
-                                                textTransform: 'uppercase',
                                             }}
                                         >
                                             {isSendingReply ? 'Updating...' : 'Update'}
@@ -1663,7 +1805,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                 }}
                             />
                         </View>
-                        {editorFocus ? null : renderDiscussionEditor()}
+                        {editorFocus ? null : renderPreviewHtml()}
                     </View>
                 ) : (
                     <DefaultTextInput
@@ -1920,7 +2062,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                                 disabled={user.email === disableEmailId}
                                             >
                                                 <Text>
-                                                    <Ionicons name={'pencil-outline'} size={14} color="#000" />
+                                                    <Ionicons name={'pencil-outline'} size={16} color="#000" />
                                                 </Text>
                                             </TouchableOpacity>
                                         ) : null}
@@ -1947,7 +2089,7 @@ const ThreadsList: React.FunctionComponent<{ [label: string]: any }> = (props: a
                                             flexDirection: 'column',
                                         }}
                                     >
-                                        {editorFocus ? null : renderDiscussionEditor()}
+                                        {editorFocus ? null : renderPreviewHtml()}
 
                                         <View
                                             style={{

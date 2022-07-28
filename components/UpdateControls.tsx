@@ -7420,7 +7420,7 @@ const UpdateControls: React.FunctionComponent<{ [label: string]: any }> = (props
                     snapPoints={[0, 350]}
                     close={() => {
                         setShowTextEntryInput(false);
-                        Keyboard.dismiss();
+                        // Keyboard.dismiss();
                     }}
                     isOpen={showTextEntryInput}
                     title={(textEntryInputType === 'numeric' ? 'Numeric' : 'Text') + ' Entry'}

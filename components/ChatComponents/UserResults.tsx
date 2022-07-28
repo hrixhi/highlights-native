@@ -320,52 +320,54 @@ export const UserSearchResults: React.FC<UserSearchResultsProps> = ({
                         </View>
                     )}
                     onEndReached={searchText !== '' ? loadMore : () => {}}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            key={item.id}
-                            onPress={() => {
-                                if (!createGroup) {
-                                    startChat(item);
-                                    return;
-                                }
+                    renderItem={({ item }) => {
+                        console.log('Item', item);
+                        return (
+                            <TouchableOpacity
+                                key={item.id}
+                                onPress={() => {
+                                    if (!createGroup) {
+                                        startChat(item);
+                                        return;
+                                    }
 
-                                if (toggleSelectedUser) {
-                                    toggleSelectedUser(item);
-                                } else {
-                                    toggleUser(item);
-                                }
-                            }}
-                            style={[
-                                styles.searchResultContainer,
-                                {
-                                    backgroundColor: white_snow,
-                                    borderBottomColor: border,
-                                },
-                            ]}
-                        >
-                            <Avatar id={item?.id} image={item.image} name={item.name} size={40} />
-                            <View style={styles.searchResultUserDetails}>
-                                <Text
-                                    style={[
-                                        styles.searchResultUserName,
-                                        {
-                                            color: black,
-                                        },
-                                    ]}
-                                >
-                                    {item.name}
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.searchResultUserLastOnline,
-                                        {
-                                            color: grey,
-                                        },
-                                    ]}
-                                >
-                                    {item.roleDescription}
-                                </Text>
-                                {/* {showOnlineStatus && item.last_active && (
+                                    if (toggleSelectedUser) {
+                                        toggleSelectedUser(item);
+                                    } else {
+                                        toggleUser(item);
+                                    }
+                                }}
+                                style={[
+                                    styles.searchResultContainer,
+                                    {
+                                        backgroundColor: white_snow,
+                                        borderBottomColor: border,
+                                    },
+                                ]}
+                            >
+                                <Avatar id={item?.id} image={item.image} name={item.name} size={40} />
+                                <View style={styles.searchResultUserDetails}>
+                                    <Text
+                                        style={[
+                                            styles.searchResultUserName,
+                                            {
+                                                color: black,
+                                            },
+                                        ]}
+                                    >
+                                        {item.name}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.searchResultUserLastOnline,
+                                            {
+                                                color: grey,
+                                            },
+                                        ]}
+                                    >
+                                        {item.roleDescription}
+                                    </Text>
+                                    {/* {showOnlineStatus && item.last_active && (
                                     <Text
                                         style={[
                                             styles.searchResultUserLastOnline,
@@ -377,18 +379,19 @@ export const UserSearchResults: React.FC<UserSearchResultsProps> = ({
                                         Last online {dayjs(item.last_active).calendar()}
                                     </Text>
                                 )} */}
-                            </View>
-                            {selectedUserIds.indexOf(item.id) > -1 && (
-                                <>
-                                    {removeOnPressOnly ? (
-                                        <Close pathFill={black} />
-                                    ) : (
-                                        <CheckSend pathFill={accent_blue} />
-                                    )}
-                                </>
-                            )}
-                        </TouchableOpacity>
-                    )}
+                                </View>
+                                {selectedUserIds.indexOf(item.id) > -1 && (
+                                    <>
+                                        {removeOnPressOnly ? (
+                                            <Close pathFill={black} />
+                                        ) : (
+                                            <CheckSend pathFill={accent_blue} />
+                                        )}
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    }}
                     renderSectionHeader={({ section: { title } }) => {
                         if (searchText || !groupedAlphabetically) {
                             return null;

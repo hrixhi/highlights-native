@@ -11,7 +11,7 @@ import { TextInput as CustomTextInput } from './CustomTextInput';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { getDropdownHeight } from '../helpers/DropdownHeight';
 import { actions, RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
-import { handleFile } from '../helpers/FileUpload';
+import { handleFile, handleFileDiscussion } from '../helpers/FileUpload';
 import { handleImageUpload } from '../helpers/ImageUpload';
 import ColorPicker from './ColorPicker';
 import { EmojiView, InsertLink } from './ToolbarComponents';
@@ -59,10 +59,6 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         }
     }, [editorFocus]);
 
-    useEffect(() => {
-        if (RichText && RichText.current) RichText.current?.setFontName('Overpass');
-    }, [RichText, RichText.current]);
-
     // EDITOR METHODS
 
     useEffect(() => {
@@ -73,8 +69,10 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
         changeHiliteColor(hiliteColor);
     }, [hiliteColor]);
 
+    console.log('Editor Focus new post', editorFocus);
+
     const handleUploadFile = useCallback(async () => {
-        const res = await handleFile(false, userId);
+        const res = await handleFileDiscussion(false, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -86,7 +84,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
     }, [RichText, RichText.current]);
 
     const handleUploadAudioVideo = useCallback(async () => {
-        const res = await handleFile(true, userId);
+        const res = await handleFileDiscussion(true, userId);
 
         if (!res || res.url === '' || res.type === '') {
             return;
@@ -577,7 +575,7 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                         contentCSSText: 'font-size: 16px; min-height: 400px; font-family: Overpass;',
                                         // initialCSSText: 'font-size: 16px; min-height: 400px; font-family: Overpass;',
                                     }}
-                                    initialContentHTML={html}
+                                    initialContentHTML={''}
                                     initialHeight={400}
                                     onScroll={() => Keyboard.dismiss()}
                                     placeholder={'Content'}
@@ -600,9 +598,6 @@ const NewPost: React.FunctionComponent<{ [label: string]: any }> = (props: any) 
                                     allowsLinkPreview={true}
                                     allowsBackForwardNavigationGestures={true}
                                     onCursorPosition={handleCursorPosition}
-                                    editorInitializedCallback={() => {
-                                        RichText.current.setFontName('Overpass');
-                                    }}
                                 />
                             </ScrollView>
 
